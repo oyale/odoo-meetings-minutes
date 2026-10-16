@@ -41,6 +41,10 @@
     .o_live_task_owner { max-width: 200px; }
     .o_live_task_deadline { max-width: 150px; }
     .o_live_task_state { max-width: 150px; }
+    .o_live_general_records { padding-top: 24px; }
+    .o_live_general_records > h2 { font-size: 1.35rem; }
+    .o_live_general_task { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+    .o_live_general_task > input:first-child { flex: 1; }
     .o_live_add_row textarea, .o_live_add_row input:first-child { flex: 1; }
     .o_live_task_form input[type="date"] { max-width: 180px; }
     @media (max-width: 800px) {
@@ -52,5 +56,6 @@
         .o_live_card_body { padding-left: 16px; }
         .o_live_add_row { align-items: stretch; flex-direction: column; }
         .o_live_record_editor, .o_live_resolution_editor, .o_live_resolution_form { grid-template-columns: minmax(0, 1fr); }
+        .o_live_general_task { align-items: stretch; flex-direction: column; }
     }
 }

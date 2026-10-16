@@ -119,13 +119,22 @@ export class LiveMeeting extends Component {
         return item.disposition;
     }
     outcomeOptions(item) { return OUTCOMES[this.typeBehavior(item)] || OUTCOMES.discussion; }
-    pointDissents(item) { return this.state.dissents.filter((row) => row.agenda_item_id?.[0] === item.id); }
+    pointDissents(item) {
+        const resolutionIds = new Set(this.pointResolutions(item).map((row) => row.id));
+        return this.state.dissents.filter((row) => row.agenda_item_id?.[0] === item.id || resolutionIds.has(row.resolution_id?.[0]));
+    }
     pointResolutions(item) { return this.state.resolutions.filter((row) => row.agenda_item_id?.[0] === item.id); }
     pointPrivateNotes(item) { return this.state.privateNotes.filter((row) => row.agenda_item_id?.[0] === item.id); }
     pointActions(item) {
         const resolutionIds = new Set(this.pointResolutions(item).map((row) => row.id));
         return this.state.actions.filter((row) => row.agenda_item_id?.[0] === item.id || resolutionIds.has(row.resolution_id?.[0]));
     }
+    get generalResolutions() { return this.state.resolutions.filter((row) => !row.agenda_item_id); }
+    get generalDissents() {
+        const resolutionIds = new Set(this.generalResolutions.map((row) => row.id));
+        return this.state.dissents.filter((row) => !row.agenda_item_id && (!row.resolution_id || resolutionIds.has(row.resolution_id[0])));
+    }
+    get generalActions() { return this.state.actions.filter((row) => !row.agenda_item_id && !row.resolution_id); }
     get visibleItems() {
         return this.state.showPendingOnly
             ? this.state.items.filter((item) => item.disposition === "open" || (this.typeBehavior(item) === "decision" && item.decision_result === "pending"))
@@ -284,6 +293,19 @@ export class LiveMeeting extends Component {
             this.state.newDissent[item.id] = "";
         });
     }
+    async addGeneralDissent() {
+        const form = this.state.newDissent.general || {};
+        const body = (form.body || "").trim();
+        if (!body) return;
+        await this.createRecord("dissent:general", "community.meeting.dissent", {
+            meeting_id: this.meetingId, body, kind: form.kind || "dissent",
+            author_display_name: form.author_display_name || false,
+            include_in_minutes: form.include_in_minutes !== false,
+        }, (record) => {
+            this.state.dissents.push(record);
+            this.state.newDissent.general = {};
+        });
+    }
 
     async addAction(item) {
         const form = this.state.newAction[item.id] || {};
@@ -292,6 +314,17 @@ export class LiveMeeting extends Component {
         await this.createRecord(`action:${item.id}`, "community.meeting.action", values, (record) => {
             this.state.actions.push(record);
             this.state.newAction[item.id] = {};
+        });
+    }
+    async addGeneralAction() {
+        const form = this.state.newAction.general || {};
+        if (!form.name?.trim()) return;
+        await this.createRecord("action:general", "community.meeting.action", {
+            meeting_id: this.meetingId, name: form.name.trim(), deadline: form.deadline || false,
+            responsible_user_id: Number(form.responsible_user_id) || false,
+        }, (record) => {
+            this.state.actions.push(record);
+            this.state.newAction.general = {};
         });
     }
 
@@ -323,6 +356,16 @@ export class LiveMeeting extends Component {
             this.state.newResolution[item.id] = {};
         });
     }
+    async addGeneralResolution() {
+        const form = this.state.newResolution.general || {};
+        if (!form.title?.trim()) return;
+        await this.createRecord("resolution:general", "community.meeting.resolution", {
+            meeting_id: this.meetingId, title: form.title.trim(), body: form.body || false,
+        }, (record) => {
+            this.state.resolutions.push(record);
+            this.state.newResolution.general = {};
+        });
+    }
     async addPrivateNote(item) {
         const content = (this.state.newPrivateNote[item.id] || "").trim();
         if (!content) return;
@@ -334,6 +377,10 @@ export class LiveMeeting extends Component {
         });
     }
     setPrivateNote(item, value) { this.state.newPrivateNote[item.id] = value; }
+    setGeneralValue(collection, field, value) {
+        this.state[collection].general ||= {};
+        this.state[collection].general[field] = value;
+    }
     setResolution(item, key, value) {
         this.state.newResolution[item.id] ||= {};
         this.state.newResolution[item.id][key] = value;
