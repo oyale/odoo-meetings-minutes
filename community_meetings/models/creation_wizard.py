@@ -31,6 +31,7 @@ class MeetingCreateWizard(models.TransientModel):
     attendee_partner_ids = fields.Many2many("res.partner", string="Attendees")
     defaults_applied = fields.Boolean()
     last_default_duration = fields.Float(default=1.0)
+    last_default_start = fields.Datetime()
     last_default_attendee_ids = fields.Many2many(
         "res.partner", "community_meeting_wizard_defaults_rel"
     )
@@ -70,6 +71,10 @@ class MeetingCreateWizard(models.TransientModel):
             ):
                 self.attendee_partner_ids = self.series_id.attendee_partner_ids
             self.company_id = self.series_id.company_id
+            proposed = self.series_id._proposed_next_meeting_datetime()
+            if proposed and (not self.start_datetime or self.start_datetime == self.last_default_start):
+                self.start_datetime = proposed
+            self.last_default_start = self.start_datetime
             self._suggest_series_name()
             self.last_default_duration = self.series_id.duration_hours
             self.last_default_attendee_ids = self.series_id.attendee_partner_ids

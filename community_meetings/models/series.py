@@ -103,6 +103,23 @@ class CommunityMeetingSeries(models.Model):
             if series.next_meeting_rule == "day_of_month" and not 1 <= series.next_meeting_day_of_month <= 31:
                 raise ValidationError(_("Choose a day of month between 1 and 31."))
 
+    def _proposed_next_meeting_datetime(self):
+        """Date agreed in the last meeting, else the series rule."""
+        self.ensure_one()
+        meetings = self.env["community.meeting"].search([
+            ("series_id", "=", self.id), ("state", "!=", "cancelled"),
+        ], order="start_datetime desc, id desc")
+        for meeting in meetings:
+            agreed = meeting.agenda_item_ids.filtered(
+                lambda item: item.kind == "next_meeting" and item.next_meeting_datetime
+            )
+            if agreed:
+                return agreed[:1].next_meeting_datetime
+        last = meetings[:1]
+        if last and last.start_datetime:
+            return self._propose_next_meeting_datetime(last.start_datetime)
+        return False
+
     def action_new_meeting(self):
         self.ensure_one()
         self.check_access_rights("read")

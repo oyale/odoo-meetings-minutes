@@ -192,6 +192,22 @@ class TestMeetingDomain(TransactionCase):
             str(series._propose_next_meeting_datetime("2026-10-20 10:00:00")),
             "2026-10-27 10:00:00",
         )
+
+    def test_new_meeting_uses_the_agreed_next_date(self):
+        series = self.env["community.meeting.series"].create({
+            "name": "Agreed date", "has_next_meeting_point": True,
+        })
+        meeting = self.env["community.meeting"].create({
+            "name": "First", "series_id": series.id,
+            "start_datetime": "2026-10-01 10:00:00",
+        })
+        agreed = fields.Datetime.to_datetime("2026-10-15 17:30:00")
+        meeting.agenda_item_ids.filtered(lambda i: i.kind == "next_meeting").write({
+            "next_meeting_datetime": agreed,
+        })
+        self.assertEqual(series._proposed_next_meeting_datetime(), agreed)
+        action = series.action_new_meeting()
+        self.assertEqual(action["context"]["default_start_datetime"], agreed)
         series.write({"next_meeting_rule": "weekday", "next_meeting_weekday": "1"})
         self.assertEqual(
             str(series._propose_next_meeting_datetime("2026-10-19 10:00:00")),

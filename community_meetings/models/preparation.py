@@ -61,9 +61,11 @@ class MeetingSeries(models.Model):
 
     def action_new_meeting(self):
         self.ensure_one()
-        return self.env["community.meeting.create.wizard"]._open(
-            {"default_series_id": self.id}
-        )
+        context = {"default_series_id": self.id}
+        proposed = self._proposed_next_meeting_datetime()
+        if proposed:
+            context["default_start_datetime"] = proposed
+        return self.env["community.meeting.create.wizard"]._open(context)
 
 
 class Meeting(models.Model):
