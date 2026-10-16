@@ -1,6 +1,6 @@
 # Reuniones: modelo técnico y reglas de negocio
 
-Estado contrastado con el código en `1f6f2b4` (Odoo 18). Describe lo implementado;
+Modelo para Odoo 18. Describe lo implementado;
 las divergencias y decisiones abiertas figuran en **Concerns**. Los diagramas son Mermaid.
 
 ## 1. Límites del sistema
@@ -145,16 +145,22 @@ proponer no concede acceso general a las reuniones.
 flowchart LR
     P[Punto] --> A[Seguimiento: responsable, plazo y estado]
     A --> K{Tipo}
-    K --> T[task: trabajo propio del core]
+    K --> T[task: tarea Project, módulo opcional]
     K --> M[activity: mail.activity configurable]
     K --> O[todo: mail.activity de tipo To-do]
-    T -->|Módulo Project| PT[Enlace a project.task]
+    T --> PT[Enlace a project.task]
 ```
 
 `todo` significa una actividad de tipo To-do; no es una entidad del módulo
-`project_todo`. La actividad se vincula al registro `.action`, no directamente
-a la reunión. El seguimiento conserva la trazabilidad cuando la actividad se
-completa. El responsable actual es único.
+`project_todo`. Core ofrece actividad, To-do o ambas opciones, con un tipo
+predeterminado. La política se hereda de empresa a serie y puede sobrescribirse
+en el punto persistente. Cada seguimiento crea el tipo elegido. La actividad se
+vincula al registro `.action`, que conserva la trazabilidad; no se crea trabajo
+paralelo independiente. Project añade su propio tipo sin generar actividades.
+Se admiten varios responsables: una actividad por persona, o varios asignados a
+la tarea Project. La actividad parcial completada se conserva; el seguimiento
+termina cuando todos han completado su parte. El responsable lector puede
+completar su actividad sin adquirir permisos editoriales.
 
 Project resuelve configuración de empresa → serie: sin proyecto predeterminado,
 proyecto común o proyecto por serie. Distingue el destino predeterminado, el
@@ -178,20 +184,20 @@ invalide silenciosamente un cierre histórico.
   Manager implica Editor y Approver. Proposer es una capacidad separada.
   La empresa y el ámbito de reunión/serie limitan el acceso de cada rol.
 
-## 7. Concerns
+## 7. Concerns y resolución
 
-Hallazgos de lectura del código; no equivalen a una auditoría completa ni a
-fallos reproducidos mediante nuevas pruebas en esta revisión.
+Los siete hallazgos originales se han abordado con el siguiente diseño. El
+desglose de implementación y validación se mantiene en [PLAN_CONCERNS.md](PLAN_CONCERNS.md).
 
-| Prioridad | Hallazgo y consecuencia | Dirección recomendada |
+| Prioridad original | Hallazgo | Solución |
 |---|---|---|
-| Alta | **Aprobador sin Editor no puede entrar en live.** Los grupos son independientes, pero `action_open_live_meeting` exige Editor. El circuito Review → aprobar no cubre a todos los aprobadores. | Permitir lectura live al aprobador autorizado y separar explícitamente edición de aprobación. |
-| Media | **La pausa bloquea la UI, no todas las escrituras ORM de notas.** `write()` de la participación no exige cronómetro activo para `discussion_notes`. Otra vista o cliente puede editarlas durante una pausa. | Decidir si pausa es regla de integridad o sólo de interacción; si es regla, validarla en servidor preservando la edición posterior del acta. |
-| Media | **El snapshot de arrastre no incluye la serie destino.** Si aún no existe reunión destino, la evidencia aprobada no conserva adónde se pidió enviar el acuerdo. | Incluir identificador y nombre de serie destino en el esquema del snapshot. |
-| Media | **La selección del asistente y las solicitudes de acuerdos son circuitos distintos.** Las opciones iniciales se calculan desde participaciones; las solicitudes pendientes de acuerdos pueden aparecer sólo tras crear la reunión, para revisión en form/live. | Unificar la previsualización de candidatos y solicitudes antes de confirmar. |
-| Media | **Promover un seguimiento no lo incorpora por sí solo a la próxima agenda.** `_promote_followups` crea un topic; `_carryover_candidates` busca participaciones existentes. No se observa una conexión automática entre ese nuevo topic y el selector de arrastre. | Incorporar los puntos promovidos a la preparación de agenda, con deduplicación respecto al seguimiento original. |
-| Media | **Dos significados de “tarea”.** El core conserva `task` propio y crea actividades auxiliares para otros tipos; Project añade tareas enlazadas. No implementa todavía la simplificación solicitada de seguimiento nativo/múltiples responsables. | Resolver representación canónica y estrategia de migración antes de añadir más tipos. |
-| Media | **Fecha de próxima reunión pierde precisión en live.** `setNextMeetingDate` recibe un input de fecha para un campo datetime. La hora/zona no tienen un flujo explícito. | Definir fecha frente a instante; añadir hora/zona o usar un campo Date coherente. |
+| Alta | Aprobador sin Editor no podía entrar en live. | Capacidades separadas de lectura, edición y aprobación; proyección pública del disenso; sin carga de notas privadas ni editores en modo lectura. |
+| Media | La pausa sólo bloqueaba la UI. | Validación editorial en servidor y bloqueo común de reunión para guardados y cronómetros; redacción posterior y progreso operativo permitidos. |
+| Media | El snapshot omitía la serie destino. | Esquema v2 con identificador/nombre de serie y representación en PDF; revisiones anteriores conservadas. |
+| Media | Asistente y solicitudes seguían circuitos diferentes. | Servicio común de candidatos y materialización, revalidado al confirmar; excluir una reunión no descarta la solicitud. |
+| Media | Puntos promovidos sin conexión con la próxima agenda. | Candidatos identificados por seguimiento original, con primera participación en el punto promovido y deduplicación. |
+| Media | Dos significados de tarea. | Actividades/To-dos nativos configurables en core; task pertenece a Project; varios responsables con trazabilidad y evidencia de cierre. |
+| Media | Fecha sin hora ni zona explícita. | Fecha y hora locales en live, zona por serie, UTC en almacenamiento; recurrencia local y rechazo de horas ambiguas/inexistentes. |
 
 Fuentes principales: [modelo de reunión](../community_meetings/models/meeting.py),
 [puntos y participaciones](../community_meetings/models/topic.py),

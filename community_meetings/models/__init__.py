@@ -12,5 +12,8 @@ from . import revision
 from . import res_users
 from . import topic
 from . import preparation
-from . import creation_wizard
 from . import followup_activity
+from . import creation_wizard
+from . import series_wizard
+from . import agenda_preparation
+from . import editorial_policy

@@ -2,6 +2,7 @@ import uuid
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 from .topic import PRIORITIES
+from .followup_activity import FOLLOWUP_POLICIES, FOLLOWUP_KINDS
 
 
 class MeetingCreateWizard(models.TransientModel):
@@ -112,14 +113,16 @@ class MeetingCreateWizard(models.TransientModel):
         ):
             raise ValidationError(_("Enter a title, start time and positive duration."))
         if self.step == "people":
-            choices = {line.source_id.id: line.accept for line in self.carry_line_ids}
+            choices = {line.candidate_key: line.accept for line in self.carry_line_ids}
             self.carry_line_ids.unlink()
-            candidates = self.env["community.meeting"]._carryover_candidates(
+            candidates = self.env["community.meeting"]._agenda_candidates(
                 self.series_id, self.start_datetime
             )
             self.carry_line_ids = [
-                (0, 0, {"source_id": source.id, "accept": choices.get(source.id, True)})
-                for source in candidates
+                (0, 0, {"candidate_key": candidate["key"],
+                        **{k: v for k, v in candidate.items() if k != "key"},
+                        "accept": choices.get(candidate["key"], True)})
+                for candidate in candidates
             ]
         self.step = steps[min(steps.index(self.step) + 1, len(steps) - 1)]
         return self._reload()
@@ -154,7 +157,7 @@ class MeetingCreateWizard(models.TransientModel):
                 )
             meeting = (
                 self.env["community.meeting"]
-                .with_context(review_carryovers_in_wizard=True)
+                .with_context(review_carryovers_in_wizard=True, defer_carryover_processing=True)
                 .create(
                     {
                         "name": self.name,
@@ -171,40 +174,8 @@ class MeetingCreateWizard(models.TransientModel):
                 self.env["community.meeting.agenda.item"].create(
                     line._item_values(meeting)
                 )
-            choices = {line.source_id.id: line.accept for line in self.carry_line_ids}
-            # Wizard candidates come from agenda state (review flag/follow-ups),
-            # and may not have a carryover request yet. Create that request for
-            # each selected candidate before accepting it below.
             for line in self.carry_line_ids.filtered("accept"):
-                source = line.source_id
-                transfer = self.env["community.meeting.carryover"].search(
-                    [
-                        ("origin_model", "=", "agenda_item"),
-                        ("origin_record_id", "=", source.id),
-                        ("destination_meeting_id", "=", meeting.id),
-                        ("status", "in", ("pending", "proposed")),
-                    ],
-                    limit=1,
-                )
-                if not transfer:
-                    self.env["community.meeting.carryover"].create(
-                        {
-                            "origin_model": "agenda_item",
-                            "origin_record_id": source.id,
-                            "destination_meeting_id": meeting.id,
-                        }
-                    )
-            for transfer in meeting.incoming_carryover_ids.filtered(
-                lambda t: t.status in ("pending", "proposed")
-            ):
-                if transfer.origin_agenda_item_id.id in choices:
-                    if choices[transfer.origin_agenda_item_id.id]:
-                        # A series has one carryover record per source point. It
-                        # may already target another future meeting, so always
-                        # materialize the wizard's explicit selection here.
-                        transfer.action_accept(meeting.id)
-                    else:
-                        transfer.action_dismiss()
+                meeting._include_agenda_candidate({"key": line.candidate_key})
             self.created_meeting_id = meeting
         return {
             "type": "ir.actions.act_window",
@@ -223,10 +194,13 @@ class CarryReviewLine(models.TransientModel):
     wizard_id = fields.Many2one(
         "community.meeting.create.wizard", required=True, ondelete="cascade"
     )
-    source_id = fields.Many2one("community.meeting.agenda.item", required=True)
-    name = fields.Char(related="source_id.name")
-    origin_meeting_id = fields.Many2one(related="source_id.meeting_id")
-    reason = fields.Text(related="source_id.deferral_reason")
+    candidate_key = fields.Char(required=True)
+    source_id = fields.Many2one("community.meeting.agenda.item")
+    transfer_id = fields.Many2one("community.meeting.carryover")
+    topic_id = fields.Many2one("community.meeting.topic")
+    name = fields.Char()
+    origin_meeting_id = fields.Many2one("community.meeting")
+    reason = fields.Text()
     accept = fields.Boolean(string="Include")
 
 
@@ -241,6 +215,8 @@ class PointWizard(models.TransientModel):
     series_id = fields.Many2one("community.meeting.series", compute="_compute_scope")
     company_id = fields.Many2one("res.company", compute="_compute_scope")
     topic_id = fields.Many2one("community.meeting.topic", string="Existing point")
+    followup_policy = fields.Selection([("inherit", "Series/company default")] + FOLLOWUP_POLICIES, default="inherit", required=True)
+    default_followup_kind = fields.Selection([("inherit", "Series/company default")] + FOLLOWUP_KINDS, default="inherit", required=True)
     name = fields.Char(string="Title")
     agenda_type_id = fields.Many2one(
         "community.meeting.agenda.type",
@@ -291,6 +267,8 @@ class PointWizard(models.TransientModel):
             "priority": self.priority,
             "deadline": self.deadline,
             "estimated_minutes": self.estimated_minutes,
+            "followup_policy": self.followup_policy,
+            "default_followup_kind": self.default_followup_kind,
         }
 
     def action_save(self):

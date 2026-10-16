@@ -77,6 +77,12 @@ class Series(models.Model):
 class Meeting(models.Model):
     _inherit = "community.meeting"
 
+    def get_followup_defaults(self, item_id=False):
+        values = super().get_followup_defaults(item_id)
+        if self.env.user.has_group("project.group_project_user"):
+            values["allowed_kinds"].append("task")
+        return values
+
     def _project_policy(self):
         self.ensure_one()
         result = {}

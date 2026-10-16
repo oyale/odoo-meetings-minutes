@@ -5,13 +5,15 @@
             <div class="o_live_topbar">
                 <button class="btn btn-secondary" t-att-disabled="state.saving > 0" t-on-click="close">Back to Meetings</button>
                 <div class="o_live_workflow_buttons">
+                  <t t-if="state.capabilities?.can_edit">
                     <button t-if="state.meeting.state === 'scheduled' and !state.meeting.actual_start_datetime" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="startMeeting">Start Meeting</button>
                     <button t-if="state.meeting.state === 'scheduled' and state.meeting.actual_start_datetime and !meetingPaused" class="btn btn-outline-secondary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="pauseMeeting">Pause Meeting</button>
                     <button t-if="state.meeting.state === 'scheduled' and meetingPaused" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="resumeMeeting">Resume Meeting</button>
                     <button t-if="state.meeting.state === 'scheduled' and state.meeting.actual_start_datetime" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="markHeld">Finish Meeting</button>
                     <button t-if="state.meeting.state === 'scheduled' and !state.meeting.actual_start_datetime" class="btn btn-outline-secondary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="markHeld">Record as Already Held</button>
-                    <button t-if="state.meeting.state === 'minutes_draft' and canApproveMinutes" class="btn btn-primary" t-att-disabled="state.saving > 0 or state.submitting['meeting:' + meetingId]" t-on-click="approveMinutes">Approve Minutes</button>
                     <button t-if="state.meeting.state === 'held'" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="prepareMinutes">Prepare Minutes</button>
+                  </t>
+                    <button t-if="state.meeting.state === 'minutes_draft' and canApproveMinutes" class="btn btn-primary" t-att-disabled="state.saving > 0 or state.submitting['meeting:' + meetingId]" t-on-click="approveMinutes">Approve Minutes</button>
                 </div>
                 <span t-if="state.saving" class="text-muted" role="status" aria-live="polite">Saving…</span>
                 <span t-elif="state.saveError" class="text-danger" role="alert">Some changes could not be saved. Retry by editing the affected field.</span>
@@ -117,14 +119,15 @@
                             </div>
                             <div t-if="typeBehavior(item) === 'next_meeting'" class="o_live_subsection o_live_next_meeting">
                                 <label class="form-label" t-att-for="'next-date-' + item.id">Next meeting date</label>
-                                <input type="date" class="form-control" t-att-id="'next-date-' + item.id" aria-label="Next meeting date" t-att-value="item.next_meeting_datetime ? item.next_meeting_datetime.slice(0, 10) : ''" t-att-disabled="readOnly" t-on-change="(ev) => this.setNextMeetingDate(item, ev.target.value)"/>
+                                <input type="datetime-local" class="form-control" t-att-id="'next-date-' + item.id" aria-label="Next meeting date" t-att-value="nextMeetingLocalValue(item)" t-att-disabled="readOnly" t-on-change="(ev) => this.setNextMeetingDate(item, ev.target.value)"/>
+                                <span class="text-muted" t-out="state.capabilities.timezone"/>
                             </div>
                             <div t-if="typeBehavior(item) === 'minutes_approval'" class="o_live_subsection o_live_minutes_approval">
                                 <label class="form-label">Pending minutes to approve</label>
                                 <ul t-if="state.pendingMinutes.length" class="list-unstyled mb-0">
                                     <li t-foreach="state.pendingMinutes" t-as="pm" t-key="pm.id" class="d-flex align-items-center gap-2">
                                         <span><t t-out="pm.code"/> — <t t-out="pm.name"/> (<t t-out="stateLabel(pm.state)"/>)</span>
-                                        <button t-if="!locked" class="btn btn-sm btn-link p-0" t-on-click="() => this.openMeeting(pm.id)" aria-label="Open minutes">Review</button>
+                                        <button class="btn btn-sm btn-link p-0" t-on-click="() => this.openMeeting(pm.id)" aria-label="Open minutes">Review</button>
                                     </li>
                                 </ul>
                                 <p t-if="!state.pendingMinutes.length" class="text-muted mb-0">No pending minutes.</p>
@@ -223,6 +226,8 @@
                                             <div class="o_live_followup_badges"><span class="badge text-bg-light"><t t-out="followupKindLabel(task)"/></span><span t-if="task.followup_kind === 'activity' and actionActivityType(task)" class="badge text-bg-light"><t t-out="actionActivityType(task)"/></span><span class="badge text-bg-light"><t t-out="actionStateLabel(task.state)"/></span></div>
                                         </div>
                                         <div class="o_live_followup_task_fields">
+                                            <span class="text-muted" t-if="task.responsible_user_ids?.length > 1"><t t-out="state.users.filter(person => task.responsible_user_ids.includes(person.id)).map(person => person.name).join(', ')"/></span>
+                                            <details class="o_live_advanced"><summary>Several responsible people</summary><select multiple="multiple" class="form-select" aria-label="Responsible people" t-on-change="(ev) => this.updateActionOwners(task, this.selectedUserIds(ev))"><option t-foreach="state.users" t-as="person" t-key="person.id" t-att-value="person.id" t-att-selected="task.responsible_user_ids?.includes(person.id)"><t t-out="person.name"/></option></select></details>
                                             <label class="o_live_task_field"><span>Assigned to</span>
                                                 <select class="form-select o_live_task_owner" aria-label="Task owner" t-att-value="task.responsible_user_id?.[0] || ''" t-on-change="(ev) => this.updateAction(task, 'responsible_user_id', ev.target.value)">
                                                     <option value="">Unassigned</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id"><t t-out="user.name"/></option>
@@ -242,16 +247,27 @@
                                 <button t-if="!readOnly and !state.panels[item.id]?.followup" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.togglePanel(item, 'followup')"><i class="fa fa-tasks" aria-hidden="true"/> Add follow-up</button>
                                 <div t-if="!readOnly and state.panels[item.id]?.followup" class="o_live_add_row o_live_task_form">
                                     <label class="o_live_task_field"><span>Follow-up title</span><input class="form-control" aria-label="Task name" placeholder="Follow-up" t-att-value="state.newAction[item.id]?.name || ''" t-on-input="(ev) => this.setAction(item, 'name', ev.target.value)"/></label>
-                                    <label class="o_live_task_field"><span>Follow-up type</span><select class="form-select" aria-label="Follow-up type" t-att-value="state.newAction[item.id]?.followup_kind || state.followupDefaults.kind" t-on-change="(ev) => this.setAction(item, 'followup_kind', ev.target.value)"><option value="task">Meeting task</option><option value="activity">Odoo activity</option><option value="todo">Odoo To-do</option></select></label>
-                                    <label t-if="(state.newAction[item.id]?.followup_kind || state.followupDefaults.kind) === 'activity'" class="o_live_task_field"><span>Activity type</span><select class="form-select" aria-label="Activity type" t-att-value="state.newAction[item.id]?.followup_activity_type_id || state.followupDefaults.activity_type_id || ''" t-on-change="(ev) => this.setAction(item, 'followup_activity_type_id', ev.target.value)"><option value="">Choose activity type</option><option t-foreach="state.activityTypes" t-as="activityType" t-key="activityType.id" t-att-value="activityType.id"><t t-out="activityType.name"/></option></select></label>
+                                    <label class="o_live_task_field"><span>Follow-up type</span><select class="form-select" aria-label="Follow-up type" t-att-value="state.newAction[item.id]?.followup_kind || followupDefaults(item).kind" t-on-change="(ev) => this.setAction(item, 'followup_kind', ev.target.value)"><option t-foreach="followupChoices(item)" t-as="choice" t-key="choice.kind" t-att-value="choice.kind" t-att-selected="choice.kind === (state.newAction[item.id]?.followup_kind || followupDefaults(item).kind)"><t t-out="choice.label"/></option></select></label>
+                                    <label t-if="(state.newAction[item.id]?.followup_kind || followupDefaults(item).kind) === 'activity'" class="o_live_task_field"><span>Activity type</span><select class="form-select" aria-label="Activity type" t-att-value="state.newAction[item.id]?.followup_activity_type_id || followupDefaults(item).activity_type_id || ''" t-on-change="(ev) => this.setAction(item, 'followup_activity_type_id', ev.target.value)"><option value="">Choose activity type</option><option t-foreach="state.activityTypes" t-as="activityType" t-key="activityType.id" t-att-value="activityType.id"><t t-out="activityType.name"/></option></select></label>
                                     <label class="o_live_task_field"><span>Assigned to</span><select class="form-select o_live_task_owner" aria-label="Task owner" t-att-value="state.newAction[item.id]?.responsible_user_id ?? state.defaultOwner" t-on-change="(ev) => this.setAction(item, 'responsible_user_id', ev.target.value)"><option value="">Unassigned</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id"><t t-out="user.name"/></option></select></label>
                                     <label class="o_live_task_field"><span>Due date</span><input class="form-control" type="date" aria-label="Deadline" t-att-value="state.newAction[item.id]?.deadline || ''" t-on-change="(ev) => this.setAction(item, 'deadline', ev.target.value)"/></label>
+                                    <details class="o_live_advanced"><summary>Several responsible people</summary><label class="o_live_task_field"><span>Responsible people</span><select multiple="multiple" class="form-select" aria-label="Responsible people" t-on-change="(ev) => this.setAction(item, 'responsible_user_ids', this.selectedUserIds(ev))"><option t-foreach="state.users" t-as="person" t-key="person.id" t-att-value="person.id" t-att-selected="(state.newAction[item.id]?.responsible_user_ids || [state.defaultOwner]).includes(person.id)"><t t-out="person.name"/></option></select></label></details>
                                     <button class="btn btn-outline-primary" t-att-disabled="state.submitting['action:' + item.id]" t-on-click="() => this.addAction(item)">Add follow-up</button>
                                     <button class="btn btn-link" t-on-click="() => this.togglePanel(item, 'followup')">Cancel</button>
                                 </div>
                             <label t-if="!readOnly" class="form-check-label"><input class="form-check-input" type="checkbox" aria-label="Review at next meeting" t-att-checked="item.review_next_meeting" t-att-disabled="state.submitting['review:' + item.id]" t-on-change="(ev) => this.toggleReview(item, ev.target.checked)"/> Review at next meeting</label>
                             <div t-if="state.deferrals[item.id]" class="o_live_subsection o_live_deferral">
-                                <label class="form-label" t-att-for="'deferral-' + item.id">Reason for postponing</label>
+                                <label class="form-label" t-att-for="'deferral-code-' + item.id">Quick reason</label>
+                                <select t-att-id="'deferral-code-' + item.id" class="form-select o_live_deferral_reason" aria-label="Quick reason" t-on-change="(ev) => this.setDeferralCode(item, ev.target.value)">
+                                    <option value="">Choose a reason</option>
+                                    <option t-foreach="deferralReasonChoices" t-as="choice" t-key="choice[0]" t-att-value="choice[0]" t-att-selected="choice[0] === state.deferrals[item.id].code"><t t-out="choice[1]"/></option>
+                                </select>
+                                <label t-if="isBlockedReason(state.deferrals[item.id].code)" class="form-label mt-2" t-att-for="'deferral-blocked-' + item.id">Blocked by (optional)</label>
+                                <select t-if="isBlockedReason(state.deferrals[item.id].code)" t-att-id="'deferral-blocked-' + item.id" class="form-select" aria-label="Blocked by" t-on-change="(ev) => this.setDeferralBlockedBy(item, ev.target.value)">
+                                    <option value="">Not linked</option>
+                                    <option t-foreach="deferralBlockedOptions(item)" t-as="option" t-key="option.value" t-att-value="option.value" t-att-selected="option.value === state.deferrals[item.id].blocked_by"><t t-out="option.label"/></option>
+                                </select>
+                                <label class="form-label mt-2" t-att-for="'deferral-' + item.id">Reason for postponing</label>
                                 <textarea t-att-id="'deferral-' + item.id" class="form-control" rows="2" t-att-value="state.deferrals[item.id].reason" t-on-input="(ev) => this.setDeferralReason(item, ev.target.value)"/>
                                 <div class="o_live_add_row mt-2">
                                     <button class="btn btn-primary" t-on-click="() => this.saveDeferral(item)">Leave postponed</button>

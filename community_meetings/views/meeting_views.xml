@@ -11,7 +11,7 @@
                 <field name="organizer_id"/>
                 <field name="company_id" groups="base.group_multi_company"/>
                 <field name="state" widget="badge"/>
-                <button name="action_open_live_meeting" type="object" icon="fa-play" title="Open Live Meeting" invisible="state not in ['scheduled', 'held', 'minutes_draft']" groups="community_meetings.group_meeting_editor"/>
+                <button name="action_open_live_meeting" type="object" icon="fa-play" title="Open Live Meeting" invisible="state not in ['scheduled', 'held', 'minutes_draft']" groups="community_meetings.group_meeting_reader"/>
             </list>
         </field>
     </record>
@@ -33,7 +33,7 @@
         <field name="arch" type="xml">
             <form string="Meeting">
                 <header>
-                    <button name="action_open_live_meeting" type="object" string="Open Live Meeting" invisible="state not in ['scheduled', 'held', 'minutes_draft']" groups="community_meetings.group_meeting_editor"/>
+                    <button name="action_open_live_meeting" type="object" string="Open Live Meeting" invisible="state not in ['scheduled', 'held', 'minutes_draft']" groups="community_meetings.group_meeting_reader"/>
                     <button name="action_schedule" type="object" string="Schedule" class="oe_highlight" invisible="state != 'draft'" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_start_meeting" type="object" string="Start Meeting" class="oe_highlight" invisible="state != 'scheduled' or actual_start_datetime" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_pause_meeting" type="object" string="Pause Meeting" invisible="state != 'scheduled' or not actual_start_datetime or actual_paused_at" groups="community_meetings.group_meeting_editor"/>

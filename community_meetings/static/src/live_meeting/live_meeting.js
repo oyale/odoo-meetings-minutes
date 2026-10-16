@@ -2,12 +2,13 @@
 
 import { Component, markup, onMounted, onPatched, onWillStart, onWillUnmount, useState } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
-import { deserializeDateTime, formatDateTime } from "@web/core/l10n/dates";
+import { deserializeDateTime, formatDateTime, serializeDateTime } from "@web/core/l10n/dates";
 import { registry } from "@web/core/registry";
 import { loadBundle } from "@web/core/assets";
 import { ensureJQuery } from "@web/core/ensure_jquery";
-import { user } from "@web/core/user";
 import { useService } from "@web/core/utils/hooks";
+
+const { DateTime } = luxon;
 
 const OUTCOMES = {
     information: [["open", _t("Pending")], ["discussed", _t("Discussed")], ["deferred", _t("Postponed")]],
@@ -72,27 +73,29 @@ export class LiveMeeting extends Component {
         return action.params?.meeting_id || action.context?.active_id || action.context?.params?.id
             || Number(routeIds.at(-1)?.[1]) || false;
     }
-    get locked() { return ["approved", "cancelled"].includes(this.state.meeting.state); }
+    get locked() { return !this.state.capabilities?.can_edit || ["approved", "cancelled"].includes(this.state.meeting.state); }
     get meetingPaused() { return Boolean(this.state.meeting.actual_paused_at); }
     get readOnly() { return this.locked || this.meetingPaused; }
     get draftingMinutes() { return ["held", "minutes_draft"].includes(this.state.meeting.state); }
     get hasUnsavedEditors() { return Object.values(this.state.unsavedEditors).some(Boolean); }
 
     async load() {
-        this.canApproveMinutes = await user.hasGroup("community_meetings.group_meeting_approver");
         if (!this.meetingId) {
             this.state.loading = false;
             this.notification.add(_t("Could not identify the meeting to open. Return to the Meetings list and open it again."), { type: "danger" });
             return;
         }
+        this.state.capabilities = await this.orm.call("community.meeting", "get_live_capabilities", [[this.meetingId]]);
+        this.canApproveMinutes = this.state.capabilities.can_approve;
+        const editorial = this.state.capabilities.can_view_editorial;
         const [meetings, items, types, dissents, actions, resolutions, privateNotes] = await Promise.all([
             this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "company_id", "start_datetime", "end_datetime", "actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_end_datetime", "actual_duration_minutes", "organizer_id", "secretary_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id", "duration_minutes"]),
-            this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "sequence", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "deferral_reason", "presenter_partner_id", "priority", "deadline", "estimated_minutes", "actual_minutes", "actual_seconds", "actual_started_at", "has_started", "review_next_meeting", "is_followup", "topic_state", "topic_outcome", "next_meeting_datetime"], { order: "sequence, id" }),
+            this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "topic_id", "sequence", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "deferral_reason", "deferral_reason_code", "deferral_blocked_by", "presenter_partner_id", "priority", "deadline", "estimated_minutes", "actual_minutes", "actual_seconds", "actual_started_at", "has_started", "review_next_meeting", "is_followup", "topic_state", "topic_outcome", "next_meeting_datetime"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.agenda.type", [], ["name", "behavior", "active"], { order: "sequence, name", context: { active_test: false } }),
-            this.orm.searchRead("community.meeting.dissent", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "body", "kind", "author_display_name", "author_partner_id"], { order: "sequence, id" }),
+            editorial ? this.orm.searchRead("community.meeting.dissent", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "body", "kind", "author_display_name", "author_partner_id"], { order: "sequence, id" }) : this.orm.call("community.meeting", "get_live_published_dissents", [[this.meetingId]]),
             this.orm.searchRead("community.meeting.action", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "name", "description", "responsible_user_id", "deadline", "state"], { order: "deadline, id" }),
             this.orm.searchRead("community.meeting.resolution", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "title", "body", "status", "decision_outcome"], { order: "id" }),
-            this.orm.searchRead("community.meeting.editor.note", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "content"], { order: "id" }),
+            editorial ? this.orm.searchRead("community.meeting.editor.note", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "content"], { order: "id" }) : Promise.resolve([]),
         ]);
         this.state.meeting = meetings[0];
         this.state.followupDefaults = await this.orm.call("community.meeting", "get_followup_defaults", [[this.meetingId]]);
@@ -105,12 +108,14 @@ export class LiveMeeting extends Component {
             ? await this.orm.searchRead("res.partner", [["id", "in", meetings[0].attendee_partner_ids]], ["name"], { order: "name" })
             : [];
         this.state.items = items;
+        this.state.followupByItem = Object.fromEntries(await Promise.all(items.map(async (item) => [item.id,
+            await this.orm.call("community.meeting", "get_followup_defaults", [[this.meetingId], item.id])])));
         this.state.types = types;
         this.state.dissents = dissents;
         this.state.defaultOwner = (await this.orm.call("community.meeting.action", "default_get", [["responsible_user_id"]])).responsible_user_id;
         const topicIds = items.map((i) => i.topic_id?.[0]).filter(Boolean);
-        this.state.actions = await this.orm.searchRead("community.meeting.action", [["topic_id", "in", topicIds]], ["agenda_item_id", "topic_id", "name", "description", "responsible_user_id", "deadline", "state", "followup_kind", "followup_activity_type_id", "followup_activity_id", "followup_activity_completed_on"], { order: "deadline, id" });
-        this.state.incoming = await this.orm.searchRead("community.meeting.carryover", [["destination_meeting_id", "=", this.meetingId], ["status", "in", ["pending", "proposed"]]], ["origin_name", "origin_meeting_id", "reason"]);
+        this.state.actions = await this.orm.searchRead("community.meeting.action", [["topic_id", "in", topicIds]], ["agenda_item_id", "topic_id", "name", "description", "responsible_user_id", "responsible_user_ids", "deadline", "state", "followup_kind", "followup_activity_type_id", "followup_activity_id", "followup_activity_completed_on"], { order: "deadline, id" });
+        this.state.incoming = this.state.capabilities.can_edit ? await this.orm.searchRead("community.meeting.carryover", [["destination_meeting_id", "=", this.meetingId], ["status", "in", ["pending", "proposed"]]], ["origin_name", "origin_meeting_id", "reason"]) : [];
         this.state.pendingMinutes = await this.orm.call("community.meeting", "get_pending_minutes_for_approval", [[this.meetingId]]);
         this.state.resolutions = resolutions;
         this.state.privateNotes = privateNotes;
@@ -126,11 +131,12 @@ export class LiveMeeting extends Component {
     actionStateLabel(value) { return ACTION_STATES[value] || value || ""; }
     followupKindLabel(action) {
         return {
-            task: _t("Meeting task"),
             activity: _t("Odoo activity"),
             todo: _t("Odoo To-do"),
-        }[action.followup_kind] || _t("Meeting task");
+        }[action.followup_kind] || _t("Follow-up");
     }
+    followupDefaults(item) { return this.state.followupByItem?.[item.id] || this.state.followupDefaults; }
+    followupChoices(item) { return (this.followupDefaults(item).allowed_kinds || []).map(kind => ({ kind, label: this.followupKindLabel({followup_kind: kind}) })); }
     actionActivityType(action) {
         return this.state.activityTypes.find(
             (type) => type.id === action.followup_activity_type_id?.[0]
@@ -206,6 +212,7 @@ export class LiveMeeting extends Component {
         return savedSuccessfully;
     }
     async flushEditors() {
+        if (this.locked) return true;
         const saves = [...this.editorMeta.entries()].map(([key, meta]) =>
             this.saveRichText(key, meta.recordId, meta.model, meta.field)
         );
@@ -338,7 +345,8 @@ export class LiveMeeting extends Component {
         const resolutionIds = new Set(this.pointResolutions(item).map((row) => row.id));
         return this.state.actions.filter((row) => row.topic_id?.[0] === item.topic_id?.[0] || row.agenda_item_id?.[0] === item.id || resolutionIds.has(row.resolution_id?.[0]));
     }
-    hasTodoAction(item) { return this.pointActions(item).some((action) => action.state !== "cancelled" && action.responsible_user_id); }
+    actionHasExecutionEvidence(action) { return Boolean(action.followup_activity_id || action.followup_activity_completed_on); }
+    hasTodoAction(item) { return this.pointActions(item).some((action) => action.state !== "cancelled" && action.responsible_user_id && this.actionHasExecutionEvidence(action)); }
     get visibleItems() {
         return this.state.showPendingOnly
             ? this.state.items.filter((item) => !["closed", "discussed"].includes(item.disposition) || (this.typeBehavior(item) === "decision" && item.decision_result === "pending"))
@@ -493,10 +501,19 @@ export class LiveMeeting extends Component {
     }
 
     async setNextMeetingDate(item, value) {
-        return this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], { next_meeting_datetime: value || false }, async () => {
+        const zone = this.state.capabilities.timezone;
+        const local = value ? DateTime.fromISO(value, { zone }) : null;
+        if (local && (!local.isValid || local.toFormat("yyyy-MM-dd'T'HH:mm") !== value || local.getPossibleOffsets().length > 1)) {
+            this.notification.add(_t("Choose an unambiguous date and time in the meeting timezone."), { type: "warning" });
+            return;
+        }
+        return this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], { next_meeting_datetime: local ? serializeDateTime(local) : false }, async () => {
             const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["next_meeting_datetime"]);
             item.next_meeting_datetime = saved.next_meeting_datetime;
         });
+    }
+    nextMeetingLocalValue(item) {
+        return item.next_meeting_datetime ? deserializeDateTime(item.next_meeting_datetime).setZone(this.state.capabilities.timezone).toFormat("yyyy-MM-dd'T'HH:mm") : "";
     }
 
     async openMeeting(id) {
@@ -515,7 +532,7 @@ export class LiveMeeting extends Component {
             if (["approved", "denied"].includes(value)) return this.applyPointAction(item, value);
         }
         if (value === "deferred") {
-            this.state.deferrals[item.id] = { reason: item.deferral_reason || "" };
+            this.state.deferrals[item.id] = { reason: item.deferral_reason || "", code: item.deferral_reason_code || "", blocked_by: item.deferral_blocked_by || "" };
             this.state.expanded[item.id] = true;
             return;
         }
@@ -537,26 +554,74 @@ export class LiveMeeting extends Component {
     }
 
     setDeferralReason(item, value) {
-        this.state.deferrals[item.id] ||= { reason: item.deferral_reason || "" };
+        this.state.deferrals[item.id] ||= { reason: item.deferral_reason || "", code: item.deferral_reason_code || "", blocked_by: item.deferral_blocked_by || "" };
         this.state.deferrals[item.id].reason = value;
+    }
+
+    setDeferralCode(item, value) {
+        this.state.deferrals[item.id] ||= { reason: item.deferral_reason || "", code: item.deferral_reason_code || "", blocked_by: item.deferral_blocked_by || "" };
+        this.state.deferrals[item.id].code = value;
+        if (!this.isBlockedReason(value)) this.state.deferrals[item.id].blocked_by = "";
+    }
+
+    setDeferralBlockedBy(item, value) {
+        this.state.deferrals[item.id] ||= { reason: item.deferral_reason || "", code: item.deferral_reason_code || "", blocked_by: item.deferral_blocked_by || "" };
+        this.state.deferrals[item.id].blocked_by = value;
+    }
+
+    isBlockedReason(code) {
+        return ["blocked_point", "blocked_task", "blocked_activity", "blocked_todo"].includes(code);
+    }
+
+    get deferralReasonChoices() {
+        return [
+            ["blocked_point", _t("Blocked by another point")],
+            ["blocked_task", _t("Blocked by a task")],
+            ["blocked_activity", _t("Blocked by an activity")],
+            ["blocked_todo", _t("Blocked by a To-do")],
+            ["no_time", _t("Lack of time")],
+            ["other", _t("Other reason")],
+        ];
+    }
+
+    deferralBlockedOptions(item) {
+        const options = [];
+        for (const point of this.state.items) {
+            if (point.id !== item.id && point.topic_id) {
+                options.push({ value: `community.meeting.topic,${point.topic_id[0]}`, label: point.name });
+            }
+        }
+        for (const action of this.pointActions(item)) {
+            if (action.state !== "cancelled") {
+                options.push({ value: `community.meeting.action,${action.id}`, label: action.name });
+            }
+        }
+        return options;
     }
 
     cancelDeferral(item) { delete this.state.deferrals[item.id]; }
 
     async saveDeferral(item) {
-        const reason = (this.state.deferrals[item.id]?.reason || "").trim();
-        if (!reason) {
-            this.notification.add("Add a reason before postponing this point.", { type: "warning" });
+        const draft = this.state.deferrals[item.id] || {};
+        const reason = (draft.reason || "").trim();
+        const code = draft.code || "";
+        if (!code && !reason) {
+            this.notification.add(_t("Choose a reason before postponing this point."), { type: "warning" });
+            return;
+        }
+        if (code === "other" && !reason) {
+            this.notification.add(_t("Describe the reason before postponing this point."), { type: "warning" });
             return;
         }
         const agreement = this.decisionAgreement(item);
         if (agreement && !(await this.updateResolution(agreement, "status", "withdrawn"))) return;
         await this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], {
-            disposition: "deferred", deferral_reason: reason,
+            disposition: "deferred", deferral_reason: reason, deferral_reason_code: code || false,
+            deferral_blocked_by: this.isBlockedReason(code) ? (draft.blocked_by || false) : false,
             review_next_meeting: true,
             ...(this.typeBehavior(item) === "decision" ? { decision_result: "pending" } : {}),
         }, async () => {
-            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "deferral_reason", "review_next_meeting", "actual_started_at", "actual_minutes", "actual_seconds"]);
+            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "deferral_reason", "deferral_reason_code", "deferral_blocked_by", "review_next_meeting", "actual_started_at", "actual_minutes", "actual_seconds"]);
             Object.assign(item, saved);
             if (!item.actual_started_at) this.setPointEditorsEditable(item, false);
             delete this.state.deferrals[item.id];
@@ -623,15 +688,17 @@ export class LiveMeeting extends Component {
     async addAction(item) {
         const form = this.state.newAction[item.id] || {};
         if (!form.name?.trim()) return;
-        const followupKind = form.followup_kind || this.state.followupDefaults.kind;
-        const activityType = Number(form.followup_activity_type_id || this.state.followupDefaults.activity_type_id) || false;
+        const defaults = this.followupDefaults(item);
+        const followupKind = form.followup_kind || defaults.kind;
+        const activityType = Number(form.followup_activity_type_id || defaults.activity_type_id) || false;
         if (followupKind === "activity" && !activityType) {
             this.notification.add(_t("Choose an Odoo activity type."), { type: "warning" });
             return;
         }
         const values = { meeting_id: this.meetingId, agenda_item_id: item.id, name: form.name.trim(), deadline: form.deadline || false, responsible_user_id: form.responsible_user_id === undefined ? this.state.defaultOwner : (Number(form.responsible_user_id) || false), followup_kind: followupKind, followup_activity_type_id: followupKind === "todo" ? this.state.followupDefaults.todo_activity_type_id : activityType };
+        if (form.responsible_user_ids) values.responsible_user_ids = [[6, 0, form.responsible_user_ids]];
         await this.createRecord(`action:${item.id}`, "community.meeting.action", values, async (record) => {
-            const [saved] = await this.orm.read("community.meeting.action", [record.id], ["topic_id", "followup_activity_id", "followup_activity_completed_on", "responsible_user_id", "followup_kind", "followup_activity_type_id"]);
+            const [saved] = await this.orm.read("community.meeting.action", [record.id], ["topic_id", "followup_activity_id", "followup_activity_completed_on", "responsible_user_id", "responsible_user_ids", "followup_kind", "followup_activity_type_id"]);
             this.state.actions.push({ ...record, ...saved });
             this.state.newAction[item.id] = {};
         });
@@ -644,13 +711,25 @@ export class LiveMeeting extends Component {
         this.state.newAction[item.id] ||= {};
         this.state.newAction[item.id][key] = value;
     }
+    selectedUserIds(event) { return Array.from(event.target.selectedOptions, option => Number(option.value)); }
     async updateAction(action, field, value) {
         const normalized = field === "responsible_user_id" ? (Number(value) || false) : (value || false);
+        if (field === "responsible_user_id" && action.responsible_user_ids?.length > 1) {
+            const owners = action.responsible_user_ids.filter(id => id !== action.responsible_user_id?.[0]);
+            if (normalized) owners.push(normalized);
+            return this.updateActionOwners(action, [...new Set(owners)]);
+        }
         const values = field === "state" && normalized !== "done"
             ? { state: normalized, completed_on: false }
             : { [field]: normalized };
         await this.write(`action:${action.id}`, "community.meeting.action", [action.id], values, async () => {
             const [saved] = await this.orm.read("community.meeting.action", [action.id], field === "state" ? ["state", "completed_on"] : [field]);
+            Object.assign(action, saved);
+        });
+    }
+    async updateActionOwners(action, owners) {
+        return this.write(`action:${action.id}`, "community.meeting.action", [action.id], { responsible_user_ids: [[6, 0, owners]] }, async () => {
+            const [saved] = await this.orm.read("community.meeting.action", [action.id], ["responsible_user_id", "responsible_user_ids"]);
             Object.assign(action, saved);
         });
     }

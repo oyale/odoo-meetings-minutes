@@ -138,6 +138,13 @@ class CommunityMeetingAction(models.Model):
     _name = "community.meeting.action"
     _inherit = ["community.meeting.action", "community.meeting.project.task.mixin"]
     _description = "Meeting Follow-up Action"
+    followup_kind = fields.Selection(selection_add=[("task", "Project task")], ondelete={"task": "set default"})
+
+    def _has_execution_evidence(self):
+        self.ensure_one()
+        if self.followup_kind != "task":
+            return super()._has_execution_evidence()
+        return bool(self.project_task_ids.filtered(lambda task: task.active and task.user_ids and task.state != "1_canceled"))
 
     project_task_ids = fields.Many2many(
         "project.task", "community_meeting_action_task_rel", "action_id", "task_id",
@@ -163,6 +170,10 @@ class CommunityMeetingAction(models.Model):
                 self.env["community.meeting.project.task.mixin"]._check_task_links(ids, record.meeting_id)
         agenda_items = self.mapped("agenda_item_id")
         result = super().write(vals)
+        if {"responsible_user_ids", "responsible_user_id"}.intersection(vals):
+            for action in self.filtered(lambda record: record.followup_kind == "task"):
+                if action.project_task_ids:
+                    action.project_task_ids.write({"user_ids": [(4, uid) for uid in action.responsible_user_ids.ids]})
         items = self.env['community.meeting.agenda.item'].sudo().search([('topic_id', 'in', (agenda_items | self.mapped('agenda_item_id')).topic_id.ids)])
         self._check_closed_todo_project_tasks(items)
         return result
@@ -243,8 +254,10 @@ class CommunityMeetingProjectTaskWizard(models.TransientModel):
             project.check_access("read")
             task = self.env["project.task"].create({
                 "name": self.name, "project_id": project.id,
-                "user_ids": [(6, 0, self.action_id.responsible_user_id.ids)],
+                "user_ids": [(6, 0, self.action_id.responsible_user_ids.ids)],
             })
+        if self.existing_task_id:
+            task.write({"user_ids": [(4, uid) for uid in self.action_id.responsible_user_ids.ids]})
         self.action_id.write({"project_task_ids": [(4, task.id)]})
         return {"type": "ir.actions.act_window_close"}
 

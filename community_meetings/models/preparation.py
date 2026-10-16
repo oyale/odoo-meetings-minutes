@@ -339,54 +339,6 @@ class Meeting(models.Model):
 class ContinuingPoints(models.Model):
     _inherit = "community.meeting.carryover"
 
-    @api.model
-    def _process_new_meetings(self, meetings):
-        result = super()._process_new_meetings(meetings)
-        for meeting in meetings.filtered(
-            lambda m: (
-                m.series_id
-                and m.state in ("draft", "scheduled")
-                and not m.actual_start_datetime
-            )
-        ):
-            meeting.check_access("write")
-            for source in self.env["community.meeting"]._carryover_candidates(
-                meeting.series_id, meeting.start_datetime
-            ):
-                if source.meeting_id == meeting or self.env[
-                    "community.meeting.agenda.item"
-                ].search_count(
-                    [
-                        ("meeting_id", "=", meeting.id),
-                        ("topic_id", "=", source.topic_id.id),
-                    ]
-                ):
-                    continue
-                existing = self.search([("origin_agenda_item_id", "=", source.id)])
-                if existing:
-                    for transfer in existing.filtered(
-                        lambda t: (
-                            t.status in ("pending", "proposed")
-                            and t.destination_meeting_id.state == "cancelled"
-                        )
-                    ):
-                        transfer.action_retarget(meeting.id)
-                    if not existing.filtered(
-                        lambda t: (
-                            t.status == "accepted"
-                            and t.destination_meeting_id.state == "cancelled"
-                        )
-                    ):
-                        continue
-                self.create(
-                    {
-                        "origin_model": "agenda_item",
-                        "origin_record_id": source.id,
-                        "destination_meeting_id": meeting.id,
-                    }
-                )
-        return result
-
     def _materialize(self, destination, automatic=False):
         item = super()._materialize(destination, automatic=automatic)
         if self.origin_agenda_item_id:

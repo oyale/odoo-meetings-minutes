@@ -26,6 +26,7 @@ def main():
     password = secrets.token_urlsafe(32)
     project_name = "Browser project " + secrets.token_hex(8)
     proposer_login = login + "-proposer"
+    reviewer_login = login + "-reviewer"
     remote_command = shlex.join(
         [
             "sudo",
@@ -68,7 +69,8 @@ groups = [env.ref('base.group_user').id, env.ref('community_meetings.group_meeti
 project_installed = 'project.project' in env.registry.models
 if project_installed:
     groups.append(env.ref('project.group_project_manager').id)
-user = env['res.users'].create({{'name': {login!r}, 'login': {login!r}, 'password': {password!r}, 'lang': 'en_US', 'groups_id': [(6, 0, groups)]}})
+user = env['res.users'].create({{'name': {login!r}, 'login': {login!r}, 'email': 'browser-editor@example.test', 'password': {password!r}, 'lang': 'en_US', 'groups_id': [(6, 0, groups)]}})
+env['res.users'].create({{'name': {reviewer_login!r}, 'login': {reviewer_login!r}, 'email': 'browser-reviewer@example.test', 'password': {password!r}, 'lang': 'en_US', 'groups_id': [(6, 0, [env.ref('base.group_user').id, env.ref('community_meetings.group_meeting_approver').id])]}})
 env['res.users'].create({{'name': {proposer_login!r}, 'login': {proposer_login!r}, 'password': {password!r}, 'lang': 'en_US', 'groups_id': [(6, 0, [env.ref('base.group_user').id, env.ref('community_meetings.group_agenda_proposer').id])]}})
 if project_installed:
     env['project.project'].create({{'name': {project_name!r}, 'user_id': user.id}})
@@ -109,6 +111,10 @@ if user:
     partner = user.partner_id
     user.unlink()
     partner.unlink()
+    reviewer = env['res.users'].search([('login', '=', {reviewer_login!r})])
+    reviewer_partner = reviewer.partner_id
+    reviewer.unlink()
+    reviewer_partner.unlink()
     env.cr.commit()
 """
     try:
@@ -121,6 +127,7 @@ if user:
             ODOO_TEST_PROJECT=project_name,
             ODOO_PROPOSER_LOGIN=proposer_login,
             ODOO_PROPOSER_PASSWORD=password,
+            ODOO_REVIEWER_LOGIN=reviewer_login,
         )
         script = Path(__file__).with_name("full_meeting_playwright.py")
         return subprocess.run(

@@ -5,6 +5,12 @@ import { _t } from "@web/core/l10n/translation";
 import { LiveMeeting } from "@community_meetings/live_meeting/live_meeting";
 
 patch(LiveMeeting.prototype, {
+    followupKindLabel(action) {
+        return action.followup_kind === "task" ? _t("Project task") : super.followupKindLabel(action);
+    },
+    actionHasExecutionEvidence(action) {
+        return action.followup_kind === "task" ? (this.state.projectTasksByAction?.[action.id] || []).some(task => task.valid) : super.actionHasExecutionEvidence(action);
+    },
     async load(...args) {
         await super.load(...args);
         const requirements = await this.orm.read('community.meeting.agenda.item', this.state.items.map(i => i.id), ['requires_project_task']);
@@ -41,7 +47,7 @@ patch(LiveMeeting.prototype, {
     pointOutcomeLabel(item) {
         if (
             this.typeBehavior(item) === "todo" && item.disposition === "open" &&
-            super.hasTodoAction(item) && !this.hasTodoAction(item)
+            this.pointActions(item).some(action => action.state !== "cancelled" && action.responsible_user_id) && !this.hasTodoAction(item)
         ) {
             return _t("Project task required");
         }

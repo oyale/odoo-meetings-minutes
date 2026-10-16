@@ -1,9 +1,18 @@
 <odoo>
+    <record id="action_series_wizard" model="ir.actions.act_window">
+        <field name="name">New Meeting Series</field>
+        <field name="res_model">community.meeting.series.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
     <record id="view_community_meeting_series_list" model="ir.ui.view">
         <field name="name">community.meeting.series.list</field>
         <field name="model">community.meeting.series</field>
         <field name="arch" type="xml">
             <list default_order="name">
+                <header>
+                    <button name="%(action_series_wizard)d" type="action" string="New Series" class="btn-primary"/>
+                </header>
                 <field name="name"/>
                 <field name="company_id" groups="base.group_multi_company"/>
                 <field name="coordinator_user_ids" widget="many2many_tags"/>
@@ -45,6 +54,7 @@
                         </group>
                         <group>
                             <field name="next_meeting_rule"/>
+                            <field name="timezone"/>
                             <field name="next_meeting_weekday" invisible="next_meeting_rule != 'weekday'"/>
                             <field name="next_meeting_day_of_month" invisible="next_meeting_rule != 'day_of_month'"/>
                             <field name="next_meeting_interval_days" invisible="next_meeting_rule != 'interval_days'"/>
@@ -63,6 +73,56 @@
                         </page>
                     </notebook>
                 </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_series_wizard" model="ir.ui.view">
+        <field name="name">community.meeting.series.wizard</field>
+        <field name="model">community.meeting.series.wizard</field>
+        <field name="arch" type="xml">
+            <form string="New Meeting Series">
+                <header><field name="step" widget="statusbar"/></header>
+                <field name="created_series_id" invisible="1"/>
+                <group invisible="step != 'basics'">
+                    <field name="name" placeholder="Series name"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                    <field name="coordinator_user_ids" widget="many2many_tags"/>
+                    <field name="carryover_policy"/>
+                    <field name="active"/>
+                </group>
+                <group invisible="step != 'schedule'">
+                    <field name="timezone"/>
+                    <field name="duration_hours" widget="float_time"/>
+                    <field name="attendee_partner_ids" widget="many2many_tags"/>
+                    <field name="meeting_name_pattern" placeholder="{date} {series}"/>
+                </group>
+                <group invisible="step != 'structure'">
+                    <field name="has_minutes_approval_point"/>
+                    <field name="has_next_meeting_point"/>
+                    <field name="next_meeting_rule"/>
+                    <field name="next_meeting_weekday" invisible="next_meeting_rule != 'weekday'"/>
+                    <field name="next_meeting_day_of_month" invisible="next_meeting_rule != 'day_of_month'"/>
+                    <field name="next_meeting_interval_days" invisible="next_meeting_rule != 'interval_days'"/>
+                </group>
+                <group invisible="step != 'review'">
+                    <field name="name" readonly="1"/>
+                    <field name="company_id" readonly="1"/>
+                    <field name="coordinator_user_ids" widget="many2many_tags" readonly="1"/>
+                    <field name="carryover_policy" readonly="1"/>
+                    <field name="timezone" readonly="1"/>
+                    <field name="duration_hours" widget="float_time" readonly="1"/>
+                    <field name="attendee_partner_ids" widget="many2many_tags" readonly="1"/>
+                    <field name="meeting_name_pattern" readonly="1"/>
+                    <field name="has_minutes_approval_point" readonly="1"/>
+                    <field name="has_next_meeting_point" readonly="1"/>
+                    <field name="next_meeting_rule" readonly="1"/>
+                </group>
+                <footer>
+                    <button name="action_back" type="object" string="Back" invisible="step == 'basics'"/>
+                    <button name="action_next" type="object" string="Next" class="btn-primary" invisible="step == 'review'"/>
+                    <button name="action_finish" type="object" string="Create Series" class="btn-primary" invisible="step != 'review'"/>
+                    <button string="Cancel" special="cancel"/>
+                </footer>
             </form>
         </field>
     </record>

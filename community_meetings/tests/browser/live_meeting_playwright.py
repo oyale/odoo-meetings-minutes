@@ -424,6 +424,66 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.assertEqual(transfers[0]["destination_series_id"][0], series)
         self.assertFalse(transfers[0]["destination_meeting_id"])
 
+    def test_approver_without_editor_can_review_and_approve_live(self):
+        login = os.environ.get("ODOO_REVIEWER_LOGIN")
+        if not login:
+            self.skipTest("Disposable reviewer is not configured")
+        reviewer = self.rpc("res.users", "search", [[("login", "=", login)]], {"limit": 1})[0]
+        self.rpc("community.meeting", "write", [[self.meeting_id], {"reader_user_ids": [[4, reviewer]]}])
+        self.rpc("community.meeting.editor.note", "create", [{"meeting_id": self.meeting_id, "agenda_item_id": self.item_ids["discussion"], "content": "PRIVATE_EDITORIAL_CONTENT"}])
+        self.rpc("community.meeting", "action_mark_held", [[self.meeting_id]])
+        self.rpc("community.meeting", "action_draft_minutes", [[self.meeting_id]])
+        context = self.browser.new_context()
+        try:
+            page = context.new_page()
+            page.goto(BASE_URL + "/web/login")
+            page.locator('input[name="login"]').fill(login)
+            page.locator('input[name="password"]').fill(PASSWORD)
+            page.locator('button[type="submit"]').click()
+            page.wait_for_url("**/odoo**")
+            page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
+            page.get_by_role("button", name="Open Live Meeting").click()
+            expect(page.get_by_role("button", name="Approve Minutes", exact=True)).to_be_visible()
+            expect(page.get_by_role("button", name="Add Point", exact=True)).to_have_count(0)
+            expect(page.locator('[contenteditable="true"]')).to_have_count(0)
+            expect(page.get_by_text("PRIVATE_EDITORIAL_CONTENT")).to_have_count(0)
+            page.get_by_role("button", name="Approve Minutes", exact=True).click()
+            expect(page.locator(".o_live_topbar")).to_contain_text("Approved")
+            self.assertEqual(self.record("community.meeting", self.meeting_id, ["state"])["state"], "approved")
+        finally:
+            context.close()
+
+    def test_native_policy_and_multiple_responsible_people_persist(self):
+        login = os.environ.get("ODOO_REVIEWER_LOGIN")
+        if not login:
+            self.skipTest("Disposable reviewer is not configured")
+        reviewer = self.rpc("res.users", "search", [[("login", "=", login)]], {"limit": 1})[0]
+        owner = self.record("community.meeting", self.meeting_id, ["organizer_id"])["organizer_id"][0]
+        self.rpc("community.meeting", "write", [[self.meeting_id], {"reader_user_ids": [[4, reviewer]]}])
+        self.rpc("community.meeting.agenda.item", "write", [[self.item_ids["discussion"]], {"followup_policy": "todo"}])
+        self.page.reload(wait_until="domcontentloaded")
+        card = self.card("discussion")
+        card.get_by_role("button", name="Add follow-up", exact=True).click()
+        form = card.locator(".o_live_task_form")
+        expect(form.get_by_label("Follow-up type").locator('option[value="activity"]')).to_have_count(0)
+        expect(form.get_by_label("Follow-up type")).to_have_value("todo")
+        form.get_by_label("Task name").fill("Shared native to-do")
+        form.get_by_text("Several responsible people", exact=True).click()
+        form.get_by_label("Responsible people").select_option([str(owner), str(reviewer)])
+        form.get_by_role("button", name="Add follow-up", exact=True).click()
+        row = card.locator(".o_live_followup_task").filter(has_text="Shared native to-do")
+        expect(row).to_be_visible()
+        rows = self.rpc("community.meeting.action", "search_read", [[("agenda_item_id", "=", self.item_ids["discussion"])]], {"fields": ["responsible_user_ids", "followup_activity_ids"]})
+        self.assertEqual(set(rows[0]["responsible_user_ids"]), {owner, reviewer})
+        self.assertEqual(len(rows[0]["followup_activity_ids"]), 2)
+        self.page.reload(wait_until="domcontentloaded")
+        card = self.card("discussion")
+        row = card.locator(".o_live_followup_task").filter(has_text="Shared native to-do")
+        expect(row).to_be_visible()
+        row.get_by_text("Several responsible people", exact=True).click()
+        row.get_by_label("Responsible people").select_option([str(owner)])
+        expect(row.get_by_label("Responsible people").locator("option:checked")).to_have_count(1)
+
     def test_header_details_and_add_point_remain_available_while_paused(self):
         self.page.get_by_role("button", name="Start Meeting").click()
         self.page.get_by_role("button", name="Pause Meeting").click()

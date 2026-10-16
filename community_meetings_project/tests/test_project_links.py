@@ -28,6 +28,9 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
             {"name": "Source project link meeting", "series_id": cls.series.id, "start_datetime": "2026-11-01 10:00:00"},
             {"name": "Destination project link meeting", "series_id": cls.series.id, "start_datetime": "2026-11-08 10:00:00"},
         ])
+        cls.item = cls.env["community.meeting.agenda.item"].with_user(cls.editor).create({
+            "meeting_id": cls.meetings[0].id, "name": "Project integration point",
+        })
 
     def test_multiple_task_links_and_reverse_navigation(self):
         meeting = self.meetings[0]
@@ -37,10 +40,13 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         })
         resolution = self.env["community.meeting.resolution"].with_user(self.editor).create({
             "meeting_id": meeting.id, "title": "Linked resolution",
+            "agenda_item_id": agenda.id,
             "project_task_ids": [(6, 0, [self.tasks[0].id])],
         })
         action = self.env["community.meeting.action"].with_user(self.editor).create({
             "meeting_id": meeting.id, "name": "Linked action",
+            "followup_kind": "task",
+            "agenda_item_id": agenda.id,
             "project_task_ids": [(6, 0, [self.tasks[0].id])],
         })
 
@@ -61,6 +67,7 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         })
         action = self.env["community.meeting.action"].with_user(self.editor).create({
             "meeting_id": meeting.id, "agenda_item_id": item.id, "name": "Implement proposal",
+            "followup_kind": "task",
         })
         with self.assertRaises(ValidationError), self.cr.savepoint():
             item.with_user(self.editor).write({"disposition": "closed"})
@@ -95,6 +102,8 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         action = self.env["community.meeting.action"].with_user(self.editor).create({
             "meeting_id": self.meetings[0].id,
             "name": "Create in another project",
+            "followup_kind": "task",
+            "agenda_item_id": self.item.id,
         })
         wizard_model = self.env["community.meeting.project.task.wizard"].with_user(self.editor)
         defaults = wizard_model.with_context(default_action_id=action.id).default_get(
@@ -112,6 +121,7 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         wizard.action_create()
 
         task = action.project_task_ids
+        self.assertFalse(action.followup_activity_ids)
         self.assertEqual(task.project_id, alternate_project)
         self.assertEqual(task.name, "Task in alternate project")
 
@@ -136,6 +146,8 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         action = self.env["community.meeting.action"].with_user(self.editor).create({
             "meeting_id": source.id,
             "name": "Continue this work",
+            "followup_kind": "task",
+            "agenda_item_id": self.item.id,
             "project_task_ids": [(6, 0, [self.tasks[0].id])],
         })
         transfer = self.env["community.meeting.carryover"].with_user(self.editor).create({
@@ -163,6 +175,7 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         action = self.env["community.meeting.action"].with_user(self.editor).create({
             "meeting_id": meeting.id,
             "name": "Send an update",
+            "agenda_item_id": self.item.id,
             "followup_kind": "activity",
         })
 

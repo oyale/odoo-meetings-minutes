@@ -58,6 +58,7 @@ class CommunityMeetingRevision(models.Model):
                 "decision_result": item.decision_result or "",
                 "decision_result_label": dict(item._fields["decision_result"]._description_selection(self.env)).get(item.decision_result, ""),
                 "deferral_reason": item.deferral_reason or "",
+                "deferral_reason_code": item.deferral_reason_code or "",
                 "resolutions": [{
                     "title": resolution.title,
                     "body": self._clean_html(resolution.body),
@@ -88,9 +89,13 @@ class CommunityMeetingRevision(models.Model):
             "status": transfer.status,
             "reason": transfer.reason or "",
             "destination": transfer.destination_meeting_id.code if transfer.destination_meeting_id else "",
+            "destination_series": {
+                "id": (transfer.destination_series_id or transfer.series_id).id,
+                "name": (transfer.destination_series_id or transfer.series_id).name or "",
+            },
         } for transfer in carryover_records]
         snapshot = {
-            "schema_version": 1,
+            "schema_version": 2,
             "meeting": {
                 "code": meeting.code,
                 "name": meeting.name,
@@ -118,6 +123,8 @@ class CommunityMeetingRevision(models.Model):
                 "resolution": action.resolution_id.title if action.resolution_id else "",
                 "agenda_item": action.agenda_item_id.name if action.agenda_item_id else "",
                 "responsible": action.responsible_user_id.name or "",
+                "responsibles": sorted(action.responsible_user_ids.mapped("name")),
+                "followup_kind": action.followup_kind,
                 "deadline": fields.Date.to_string(action.deadline) if action.deadline else "",
                 "state": action.state,
             } for action in meeting.action_ids.sorted(lambda row: (row.deadline or fields.Date.today(), row.id))],

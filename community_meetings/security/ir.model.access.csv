@@ -42,4 +42,5 @@ access_topic_reader,Point reader,model_community_meeting_topic,group_meeting_rea
 access_topic_editor,Point editor,model_community_meeting_topic,group_meeting_editor,1,1,1,0
 access_create_wizard,Create meeting wizard,model_community_meeting_create_wizard,group_meeting_editor,1,1,1,1
 access_point_wizard,Point wizard,model_community_meeting_point_wizard,group_meeting_editor,1,1,1,1
+access_series_wizard,Series wizard,model_community_meeting_series_wizard,group_meeting_editor,1,1,1,1
 access_carry_review_line,Carry review line,model_community_meeting_carry_review_line,group_meeting_editor,1,1,1,1

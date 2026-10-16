@@ -39,6 +39,31 @@ class TestMeetingSecurity(TransactionCase):
         with self.assertRaises(AccessError):
             self.env["community.meeting"].with_user(self.reader).create({"name": "Denied"})
 
+    def test_approver_can_review_live_without_editorial_access(self):
+        approver = self.reader
+        approver.write({"groups_id": [(4, self.env.ref("community_meetings.group_meeting_approver").id)]})
+        meeting = self.env["community.meeting"].with_user(self.editor).create({
+            "name": "Read-only minutes review", "start_datetime": "2026-12-01 10:00:00",
+            "reader_user_ids": [(4, approver.id)],
+        })
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({"meeting_id": meeting.id, "name": "Review"})
+        self.env["community.meeting.dissent"].with_user(self.editor).create([
+            {"meeting_id": meeting.id, "agenda_item_id": item.id, "body": "Public dissent", "include_in_minutes": True},
+            {"meeting_id": meeting.id, "agenda_item_id": item.id, "body": "Private dissent", "include_in_minutes": False},
+        ])
+        meeting.action_schedule()
+        reviewed = meeting.with_user(approver)
+        self.assertEqual(reviewed.action_open_live_meeting()["tag"], "community_meetings.live_meeting")
+        self.assertFalse(reviewed.get_live_capabilities()["can_edit"])
+        self.assertFalse(reviewed.get_live_capabilities()["can_view_editorial"])
+        published = reviewed.get_live_published_dissents()
+        self.assertEqual(len(published), 1)
+        self.assertIn("Public dissent", published[0]["body"])
+        with self.assertRaises(AccessError):
+            reviewed.write({"minutes_notes": "Forbidden"})
+        with self.assertRaises(AccessError):
+            meeting.with_user(self.outsider).get_live_capabilities()
+
     def test_internal_user_gets_proposal_capability_only(self):
         self.assertTrue(self.outsider.has_group("community_meetings.group_agenda_proposer"))
         self.assertFalse(self.outsider.has_group("community_meetings.group_meeting_reader"))

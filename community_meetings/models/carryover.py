@@ -244,8 +244,11 @@ class CommunityMeetingCarryover(models.Model):
             raise UserError(_("The destination agenda is no longer editable."))
         labels = {"agenda_item": _("Continued topic"), "resolution": _("Resolution follow-up"), "action": _("Action follow-up")}
         source = self.origin_agenda_item_id or self.origin_action_id.agenda_item_id or self.origin_resolution_id.agenda_item_id
+        promoted = self.env["community.meeting.topic"].search([
+            ("origin_action_id", "=", self.origin_action_id.id), ("series_id", "=", destination.series_id.id),
+        ], limit=1) if self.origin_action_id else self.env["community.meeting.topic"]
         item = self.env["community.meeting.agenda.item"].create({
-            "topic_id": source.topic_id.id if source and source.meeting_id.series_id == destination.series_id else False,
+            "topic_id": promoted.id or (source.topic_id.id if source and source.meeting_id.series_id == destination.series_id else False),
             "meeting_id": destination.id,
             "name": f"{labels[self.origin_model]}: {self.origin_name}",
             "description": _("Carried forward from %(meeting)s.", meeting=self.origin_meeting_id.code),
@@ -309,8 +312,9 @@ class CommunityMeetingCarryover(models.Model):
         destination.check_access_rights("write")
         destination.check_access_rule("write")
         self._validate_destination(destination)
-        policy = self.series_id.carryover_policy if self.series_id else "manual"
-        cycle_key = self.cycle_key if self.series_id else f"{self.origin_model}:{self.origin_record_id}:meeting:{destination.id}"
+        series = self.destination_series_id or self.series_id
+        policy = series.carryover_policy if series else "manual"
+        cycle_key = self.cycle_key if series else f"{self.origin_model}:{self.origin_record_id}:meeting:{destination.id}"
         try:
             with self.env.cr.savepoint():
                 super(CommunityMeetingCarryover, self).write({
@@ -346,28 +350,15 @@ class CommunityMeetingCarryover(models.Model):
 
     @api.model
     def _process_new_meetings(self, meetings):
+        if self.env.context.get("defer_carryover_processing"):
+            return
         for meeting in meetings.filtered("series_id"):
-            pending = self.search([
-                "|", ("destination_series_id", "=", meeting.series_id.id),
-                "&", ("destination_series_id", "=", False), ("series_id", "=", meeting.series_id.id),
-                ("company_id", "=", meeting.company_id.id),
-                ("status", "=", "pending"),
-                ("destination_meeting_id", "=", False),
-                ("origin_meeting_id.start_datetime", "<", meeting.start_datetime),
-            ], order="create_date, id")
-            for transfer in pending:
-                next_meeting = self._find_next_meeting(transfer.origin_meeting_id, transfer.destination_series_id or transfer.series_id)
-                if next_meeting != meeting:
+            if meeting.state not in ("draft", "scheduled") or meeting.actual_start_datetime or not meeting.start_datetime:
+                continue
+            for candidate in meeting._agenda_candidates(meeting.series_id, meeting.start_datetime):
+                if meeting.series_id.carryover_policy == "manual" and not candidate.get("transfer_id"):
                     continue
-                transfer._validate_destination(meeting)
-                meeting.check_access_rights("write")
-                meeting.check_access_rule("write")
-                super(CommunityMeetingCarryover, transfer).write({"destination_meeting_id": meeting.id})
-                policy = "review" if self.env.context.get("review_carryovers_in_wizard") else (transfer.destination_series_id or transfer.series_id).carryover_policy
-                if policy == "review":
-                    super(CommunityMeetingCarryover, transfer).write({"status": "proposed"})
-                elif policy == "automatic":
-                    transfer._materialize(meeting, automatic=True)
+                meeting._include_agenda_candidate(candidate, accept=False)
 
 
 class CommunityMeetingCarryoverWizard(models.TransientModel):

@@ -38,6 +38,27 @@ class CommunityMeetingAgendaItem(models.Model):
         string="Decision outcome",
     )
     deferral_reason = fields.Text()
+    deferral_reason_code = fields.Selection(
+        [
+            ("blocked_point", "Blocked by another point"),
+            ("blocked_task", "Blocked by a task"),
+            ("blocked_activity", "Blocked by an activity"),
+            ("blocked_todo", "Blocked by a To-do"),
+            ("no_time", "Lack of time"),
+            ("other", "Other reason"),
+        ],
+        string="Reason for postponing",
+        copy=False,
+    )
+    deferral_blocked_by = fields.Reference(
+        selection=[
+            ("community.meeting.topic", "Point"),
+            ("community.meeting.action", "Follow-up"),
+        ],
+        string="Blocked by",
+        copy=False,
+        help="Optional link to the point or follow-up that blocks this one.",
+    )
     next_meeting_datetime = fields.Datetime(
         string="Next meeting date", copy=False,
         help="Date chosen for the next meeting by a 'Next Meeting' point.",
@@ -82,6 +103,24 @@ class CommunityMeetingAgendaItem(models.Model):
                     raise ValidationError(_("Record an active agreement approving or rejecting this decision before closing it. The point's result must match that agreement."))
             if item.kind == "todo" and item.disposition == "closed" and not item._followup_actions():
                 raise ValidationError(_("Create a follow-up task for this TODO before resolving it."))
+
+    @api.constrains("disposition", "deferral_reason_code", "deferral_reason", "deferral_blocked_by")
+    def _check_deferral_reason(self):
+        blocked = {"blocked_point", "blocked_task", "blocked_activity", "blocked_todo"}
+        for item in self:
+            if item.disposition != "deferred":
+                continue
+            if item.deferral_reason_code == "other" and not (item.deferral_reason or "").strip():
+                raise ValidationError(_("Describe the reason for postponing this point."))
+            if item.deferral_blocked_by:
+                if item.deferral_reason_code not in blocked:
+                    raise ValidationError(_("Choose a blocking reason before linking a record."))
+                record = item.deferral_blocked_by
+                if record.exists():
+                    record.check_access("read")
+                    company = record.company_id if "company_id" in record._fields else False
+                    if company and company != item.company_id:
+                        raise ValidationError(_("The blocking record must belong to the meeting company."))
 
     @api.onchange("kind")
     def _onchange_kind(self):

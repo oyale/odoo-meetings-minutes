@@ -137,6 +137,11 @@ class CommunityMeeting(models.Model):
         """Extension hook for approval checks. Core operational rules run separately."""
         return True
 
+    def _lock_live_workflow(self):
+        for meeting in self.sorted("id"):
+            self.env.cr.execute("UPDATE community_meeting SET write_date=clock_timestamp() WHERE id=%s", [meeting.id])
+        self.invalidate_recordset(["state", "actual_start_datetime", "actual_paused_at", "actual_end_datetime"])
+
     @api.model_create_multi
     def create(self, vals_list):
         if not self.env.user.has_group("community_meetings.group_meeting_editor"):
@@ -319,8 +324,6 @@ class CommunityMeeting(models.Model):
 
     def action_open_live_meeting(self):
         self.ensure_one()
-        if not self.env.user.has_group("community_meetings.group_meeting_editor"):
-            raise AccessError(_("Only meeting editors can open the live meeting view."))
         self.check_access_rights("read")
         self.check_access_rule("read")
         if self.state not in ("scheduled", "held", "minutes_draft"):
@@ -329,6 +332,30 @@ class CommunityMeeting(models.Model):
                 "name": _("Live Meeting"), "target": "main",
                 "context": {"active_model": self._name, "active_id": self.id, "active_ids": self.ids},
                 "params": {"meeting_id": self.id}}
+
+    def get_live_capabilities(self):
+        self.ensure_one()
+        self.check_access("read")
+        editorial = self.env.user.has_group("community_meetings.group_meeting_editor")
+        return {
+            "timezone": self.series_id.timezone or self.env.user.tz or "UTC",
+            "can_edit": editorial and self.has_access("write") and self.state not in ("approved", "cancelled"),
+            "can_view_editorial": editorial and self.has_access("write"),
+            "can_approve": self.env.user.has_group("community_meetings.group_meeting_approver"),
+        }
+
+    def get_live_published_dissents(self):
+        """Read only the publishable projection after checking meeting visibility."""
+        self.ensure_one()
+        self.check_access("read")
+        records = self.env["community.meeting.dissent"].sudo().search(
+            [("meeting_id", "=", self.id), ("include_in_minutes", "=", True)],
+            order="sequence, id",
+        )
+        return [{"id": record.id, "agenda_item_id": [record.agenda_item_id.id, record.agenda_item_id.name] if record.agenda_item_id else False,
+                 "resolution_id": [record.resolution_id.id, record.resolution_id.title] if record.resolution_id else False,
+                 "body": record.body, "kind": record.kind,
+                 "author_display_name": record.author_display_name or record.author_partner_id.name or ""} for record in records]
 
     def unlink(self):
         if any(meeting.state not in ("draft", "cancelled") for meeting in self):

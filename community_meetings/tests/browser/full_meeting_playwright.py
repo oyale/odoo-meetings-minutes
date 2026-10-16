@@ -1148,7 +1148,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         card = self.card("discussion")
         card.get_by_role("button", name="Add follow-up", exact=True).click()
         form = card.locator(".o_live_task_form")
-        form.get_by_label("Task name").fill("Standalone meeting task")
+        form.get_by_label("Task name").fill("Native meeting to-do")
         form.get_by_role("button", name="Add follow-up").click()
         row = card.locator('li:has(select[aria-label="Task status"])').last
         expect(row).to_be_visible()
@@ -1157,7 +1157,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             card.get_by_role("button", name="Complete activity", exact=True)
         ).to_have_count(0)
         task_id = self.related("community.meeting.action", "discussion")
-        self.assertFalse(
+        self.assertTrue(
             self.record("community.meeting.action", task_id, ["followup_activity_id"])[
                 "followup_activity_id"
             ]
@@ -1166,7 +1166,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             self.record("community.meeting.action", task_id, ["followup_kind"])[
                 "followup_kind"
             ],
-            "task",
+            "todo",
         )
 
         form.get_by_label("Task name").fill("Odoo call activity")
@@ -1405,6 +1405,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         card.get_by_label("Task name", exact=True).fill(
             "Assigned follow-up with Project"
         )
+        card.get_by_label("Follow-up type", exact=True).select_option("task")
         card.get_by_role("button", name="Add follow-up", exact=True).click()
         expect(self.outcome("todo")).to_have_text("Project task required")
         expect(card.get_by_role("button", name="Done")).to_be_disabled()

@@ -82,6 +82,20 @@ class TestMeetingRevisions(TransactionCase):
         self.assertEqual(first.state, "approved")
         self.assertEqual(second.state, "approved")
 
+    def test_snapshot_records_pending_destination_series(self):
+        meeting = self._drafted_meeting("Pending follow-up destination")
+        destination = self.env["community.meeting.series"].with_user(self.editor).create({"name": "Future assembly"})
+        resolution = self.env["community.meeting.resolution"].with_user(self.editor).create({
+            "meeting_id": meeting.id, "agenda_item_id": meeting.agenda_item_ids[0].id, "title": "Review later",
+        })
+        self.env["community.meeting.carryover"].with_user(self.editor).create({
+            "origin_model": "resolution", "origin_record_id": resolution.id, "destination_series_id": destination.id,
+        })
+        revision = meeting.with_user(self.approver).action_approve_minutes()
+        snapshot = json.loads(revision.snapshot_json)
+        self.assertEqual(snapshot["schema_version"], 2)
+        self.assertEqual(snapshot["carryovers"][0]["destination_series"], {"id": destination.id, "name": destination.name})
+
     def test_pdf_and_snapshot_are_stable_after_action_changes(self):
         meeting, action, revision = self._approved_meeting()
         before_json = revision.snapshot_json

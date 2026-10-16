@@ -1,0 +1,94 @@
+from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
+
+
+class AgendaPreparation(models.Model):
+    _inherit = "community.meeting"
+
+    @api.model
+    def _agenda_candidates(self, series, start):
+        """Pure preview shared by the wizard and ordinary meeting creation."""
+        if not series or not start:
+            return []
+        series.check_access("read")
+        start = fields.Datetime.to_datetime(start)
+        transfers = self.env["community.meeting.carryover"].search([
+            ("company_id", "=", series.company_id.id), ("status", "in", ("pending", "proposed")),
+            ("origin_meeting_id.state", "!=", "cancelled"), ("origin_meeting_id.start_datetime", "<", start),
+            "|", ("destination_series_id", "=", series.id),
+            "&", ("destination_series_id", "=", False), ("series_id", "=", series.id),
+        ]).filtered(lambda t: not t.destination_meeting_id or t.destination_meeting_id.state == "cancelled" or t.destination_meeting_id.start_datetime >= start)
+        promoted = self.env["community.meeting.topic"].search([
+            ("series_id", "=", series.id), ("state", "=", "open"), ("origin_action_id", "!=", False),
+            ("origin_action_id.meeting_id.state", "!=", "cancelled"),
+            ("origin_action_id.meeting_id.start_datetime", "<", start),
+        ]        ).filtered(lambda t: not t.participation_ids.filtered(lambda i: i.meeting_id.state != "cancelled"))
+        # A source whose carryover for this series was already dismissed or
+        # cancelled must not be offered again: re-adding it would reuse the closed
+        # transfer and fail (the next review needs explicit reprogramming).
+        sources = self._carryover_candidates(series, start)
+        closed = self._closed_carryover_keys({
+            f"agenda_item:{source.id}:series:{series.id}" for source in sources
+        } | {
+            f"action:{topic.origin_action_id.id}:series:{series.id}" for topic in promoted
+        })
+        results, represented = [], set()
+        for transfer in transfers:
+            source = transfer.origin_agenda_item_id
+            if transfer.origin_action_id in promoted.origin_action_id:
+                continue
+            if source:
+                represented.add(source.topic_id.id)
+            results.append({"key": f"transfer:{transfer.id}", "transfer_id": transfer.id,
+                            "source_id": source.id, "name": transfer.origin_name,
+                            "origin_meeting_id": transfer.origin_meeting_id.id, "reason": transfer.reason})
+        for source in sources:
+            if source.topic_id.id in represented:
+                continue
+            if f"agenda_item:{source.id}:series:{series.id}" in closed:
+                continue
+            if not source.review_next_meeting and source.topic_id in promoted.origin_topic_id:
+                continue
+            represented.add(source.topic_id.id)
+            results.append({"key": f"source:{source.id}", "source_id": source.id,
+                            "name": source.name, "origin_meeting_id": source.meeting_id.id,
+                            "reason": source.deferral_reason})
+        for topic in promoted:
+            if f"action:{topic.origin_action_id.id}:series:{series.id}" in closed:
+                continue
+            results.append({"key": f"topic:{topic.id}", "topic_id": topic.id,
+                            "name": topic.name, "origin_meeting_id": topic.origin_action_id.meeting_id.id,
+                            "reason": _("Follow-up promoted from a closed point.")})
+        return results
+
+    @api.model
+    def _closed_carryover_keys(self, cycle_keys):
+        if not cycle_keys:
+            return set()
+        return set(self.env["community.meeting.carryover"].sudo().search([
+            ("cycle_key", "in", list(cycle_keys)),
+            ("status", "in", ("dismissed", "cancelled")),
+        ]).mapped("cycle_key"))
+
+    def _include_agenda_candidate(self, candidate, accept=True):
+        self.ensure_one()
+        self.check_access("write")
+        eligible = {c["key"]: c for c in self._agenda_candidates(self.series_id, self.start_datetime)}
+        candidate = eligible.get(candidate["key"])
+        if not candidate:
+            raise ValidationError(_("A selected point is no longer eligible. Review the points to continue."))
+        transfers = self.env["community.meeting.carryover"]
+        if candidate.get("transfer_id"):
+            transfer = transfers.browse(candidate["transfer_id"])
+            if not accept:
+                transfer.action_retarget(self.id)
+        else:
+            topic = self.env["community.meeting.topic"].browse(candidate.get("topic_id"))
+            transfer = transfers.create({
+                "origin_model": "action" if topic else "agenda_item",
+                "origin_record_id": topic.origin_action_id.id if topic else candidate["source_id"],
+                "destination_series_id": self.series_id.id, "destination_meeting_id": self.id,
+            })
+        if accept and transfer.status != "accepted":
+            transfer.action_accept(self.id)
+        return transfer.destination_item_id

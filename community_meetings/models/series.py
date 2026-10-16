@@ -1,5 +1,6 @@
 import calendar
 from datetime import timedelta
+import pytz
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
@@ -12,6 +13,8 @@ class CommunityMeetingSeries(models.Model):
     _check_company_auto = True
 
     name = fields.Char(required=True)
+    timezone = fields.Selection([(tz, tz) for tz in pytz.all_timezones], required=True,
+                                default=lambda self: self.env.user.tz or "UTC", string="Meeting timezone")
     active = fields.Boolean(default=True)
     company_id = fields.Many2one(
         "res.company", required=True, default=lambda self: self.env.company, index=True,
@@ -61,17 +64,20 @@ class CommunityMeetingSeries(models.Model):
         base = fields.Datetime.to_datetime(from_datetime)
         if not base:
             return False
+        zone = pytz.timezone(self.timezone)
+        base = pytz.UTC.localize(base).astimezone(zone).replace(tzinfo=None)
+        target = None
         if self.next_meeting_rule == "interval_days":
             if not self.next_meeting_interval_days:
                 return False
-            return base + timedelta(days=self.next_meeting_interval_days)
+            target = base + timedelta(days=self.next_meeting_interval_days)
         if self.next_meeting_rule == "weekday":
             if self.next_meeting_weekday is False:
                 return False
             days_ahead = (int(self.next_meeting_weekday) - base.weekday()) % 7
             if days_ahead == 0:
                 days_ahead = 7
-            return base + timedelta(days=days_ahead)
+            target = base + timedelta(days=days_ahead)
         if self.next_meeting_rule == "day_of_month":
             if not self.next_meeting_day_of_month:
                 return False
@@ -81,8 +87,21 @@ class CommunityMeetingSeries(models.Model):
                 if month > 12:
                     month, year = 1, year + 1
             day = min(self.next_meeting_day_of_month, calendar.monthrange(year, month)[1])
-            return base.replace(year=year, month=month, day=day)
-        return False
+            target = base.replace(year=year, month=month, day=day)
+        if target is None:
+            return False
+        try:
+            return zone.localize(target, is_dst=None).astimezone(pytz.UTC).replace(tzinfo=None)
+        except (pytz.AmbiguousTimeError, pytz.NonExistentTimeError):
+            raise ValidationError(_("The proposed meeting time is ambiguous or does not exist in the series timezone. Choose another time."))
+
+    @api.constrains("next_meeting_rule", "next_meeting_interval_days", "next_meeting_day_of_month")
+    def _check_next_meeting_rule(self):
+        for series in self:
+            if series.next_meeting_rule == "interval_days" and series.next_meeting_interval_days <= 0:
+                raise ValidationError(_("The interval must be positive."))
+            if series.next_meeting_rule == "day_of_month" and not 1 <= series.next_meeting_day_of_month <= 31:
+                raise ValidationError(_("Choose a day of month between 1 and 31."))
 
     def action_new_meeting(self):
         self.ensure_one()

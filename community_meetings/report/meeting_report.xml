@@ -33,9 +33,9 @@
                         <div t-if="doc['general_resolutions']"><h3>Meeting-wide resolutions</h3><div t-foreach="doc['general_resolutions']" t-as="resolution"><strong t-esc="resolution['title']"/><div t-out="resolution['body_html']"/></div></div>
                         <div t-if="doc['minutes_notes']"><h3>Minutes</h3><div t-out="doc['minutes_notes']"/></div>
                         <h3>Follow-up actions</h3>
-                        <ul><li t-foreach="doc['actions']" t-as="action"><span t-esc="action['name']"/> — <span t-esc="action['responsible']"/> — <span t-esc="action['deadline']"/> (<span t-esc="action['state']"/>)</li></ul>
+                        <ul><li t-foreach="doc['actions']" t-as="action"><span t-esc="action['name']"/> — <span t-esc="', '.join(action.get('responsibles', [])) or action['responsible']"/> — <span t-esc="action['deadline']"/> (<span t-esc="action['state']"/>)</li></ul>
                         <div t-if="doc['dissents']"><h3>Dissents and reservations</h3><div t-foreach="doc['dissents']" t-as="dissent"><strong t-esc="dissent['kind']"/> · <span t-esc="dissent['author']"/> · <span t-esc="dissent['scope']"/><div t-out="dissent['body_html']"/></div></div>
-                        <div t-if="doc['snapshot']['carryovers']"><h3>Carryover</h3><ul><li t-foreach="doc['snapshot']['carryovers']" t-as="carry"><span t-esc="carry['origin_name']"/> — <span t-esc="carry['status']"/> — <span t-esc="carry['reason']"/></li></ul></div>
+                        <div t-if="doc['snapshot']['carryovers']"><h3>Carryover</h3><ul><li t-foreach="doc['snapshot']['carryovers']" t-as="carry"><span t-esc="carry['origin_name']"/> — <span t-esc="carry['status']"/> — <span t-esc="carry['reason']"/><t t-if="carry.get('destination_series', {}).get('name')"> — <span t-esc="carry['destination_series']['name']"/></t><t t-if="carry.get('destination')"> / <span t-esc="carry['destination']"/></t></li></ul></div>
                         <p class="text-muted">Snapshot SHA-256: <span t-esc="doc['revision'].snapshot_sha256"/></p>
                     </div>
                 </t>

@@ -9,6 +9,8 @@ CONTENT_FIELDS = (
     "priority",
     "deadline",
     "estimated_minutes",
+    "followup_policy",
+    "default_followup_kind",
 )
 
 
@@ -330,6 +332,7 @@ class AgendaParticipation(models.Model):
                         _("Reopen the point with a reason before changing its result.")
                     )
         if {"disposition", "decision_result"}.intersection(vals):
+            self.meeting_id._lock_live_workflow()
             # Serialize changes across sessions sharing a point.
             for topic in self.mapped("topic_id").sorted("id"):
                 topic._lock_workflow()
@@ -356,6 +359,8 @@ class AgendaParticipation(models.Model):
         return result
 
     def _pause_timing(self):
+        self.meeting_id._lock_live_workflow()
+        self.invalidate_recordset(["actual_started_at", "actual_seconds", "actual_minutes"])
         now = fields.Datetime.now()
         for item in self.filtered("actual_started_at"):
             started = fields.Datetime.to_datetime(item.actual_started_at)
@@ -374,6 +379,8 @@ class AgendaParticipation(models.Model):
             item.check_access("write")
             meeting = item.meeting_id
             meeting.check_access("write")
+            meeting._lock_live_workflow()
+            item.invalidate_recordset(["disposition", "actual_started_at", "actual_seconds", "actual_minutes"])
             if not self.env.user.has_group("community_meetings.group_meeting_editor"):
                 raise UserError(_("Only meeting editors can start a point timer."))
             if (
@@ -454,8 +461,4 @@ class AgendaParticipation(models.Model):
                 ("responsible_user_id", "!=", False),
             ]
         )
-        return actions.filtered(
-            lambda action: action.followup_kind == "task"
-            or action.followup_activity_id
-            or action.followup_activity_completed_on
-        )
+        return actions.filtered(lambda action: action._has_execution_evidence())
