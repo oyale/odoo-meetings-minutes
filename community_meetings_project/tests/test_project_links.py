@@ -158,6 +158,24 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         item.write({'disposition': 'closed'})
         self.assertEqual(item.project_requirement_snapshot, 'core')
 
+    def test_project_task_creation_is_limited_to_project_task_followups(self):
+        meeting = self.meetings[0]
+        action = self.env["community.meeting.action"].with_user(self.editor).create({
+            "meeting_id": meeting.id,
+            "name": "Send an update",
+            "followup_kind": "activity",
+        })
+
+        with self.assertRaises(ValidationError):
+            action.with_user(self.editor).action_create_project_task()
+        wizard = self.env["community.meeting.project.task.wizard"].with_user(self.editor).create({
+            "action_id": action.id,
+            "project_id": self.project.id,
+            "name": "Misconfigured Project task",
+        })
+        with self.assertRaises(ValidationError):
+            wizard.action_create()
+
     def test_series_project_is_lazy_and_existing_task_can_be_external(self):
         self.editor.write({'groups_id': [(4, self.env.ref('project.group_project_manager').id)]})
         self.series.write({'meeting_project_mode': 'series'})

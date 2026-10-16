@@ -176,6 +176,8 @@ class CommunityMeetingAction(models.Model):
 
     def action_create_project_task(self):
         self.ensure_one()
+        if self.followup_kind != "task":
+            raise ValidationError(_("Project tasks can only be linked to Project task follow-ups."))
         self.check_access_rights("write")
         self.check_access_rule("write")
         return {
@@ -221,6 +223,8 @@ class CommunityMeetingProjectTaskWizard(models.TransientModel):
         self.ensure_one()
         self.action_id.check_access_rights("write")
         self.action_id.check_access_rule("write")
+        if self.action_id.followup_kind != "task":
+            raise ValidationError(_("Project tasks can only be linked to Project task follow-ups."))
         self.env["project.task"].check_access_rights("create")
         if (
             self.choose_another_project
