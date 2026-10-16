@@ -22,6 +22,9 @@
                         <button name="action_new_meeting" type="object" class="oe_stat_button" icon="fa-plus">
                             <span class="o_stat_text">New Meeting</span>
                         </button>
+                        <button name="action_propose_point" type="object" class="oe_stat_button" icon="fa-lightbulb-o" groups="base.group_user">
+                            <span class="o_stat_text">Propose a point</span>
+                        </button>
                     </div>
                     <div class="oe_title">
                         <label for="name"/>

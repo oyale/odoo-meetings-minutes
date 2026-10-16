@@ -67,6 +67,13 @@ class MeetingSeries(models.Model):
             context["default_start_datetime"] = proposed
         return self.env["community.meeting.create.wizard"]._open(context)
 
+    def action_propose_point(self):
+        self.ensure_one()
+        return self.env["community.meeting.point.wizard"]._open({
+            "default_propose": True,
+            "default_proposal_series_id": self.id,
+        })
+
 
 class Meeting(models.Model):
     _inherit = "community.meeting"

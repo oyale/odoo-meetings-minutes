@@ -1,87 +1,10 @@
 <odoo>
-    <record id="view_community_meeting_proposal_list" model="ir.ui.view">
-        <field name="name">community.meeting.agenda.proposal.list</field>
-        <field name="model">community.meeting.agenda.proposal</field>
-        <field name="arch" type="xml">
-            <list create="1" edit="0" delete="0">
-                <field name="submitted_at"/>
-                <field name="name"/>
-                <field name="series_id"/>
-                <field name="proposer_partner_id"/>
-                <field name="submitted_by_user_id" groups="community_meetings.group_meeting_editor"/>
-                <field name="status" widget="badge"/>
-            </list>
-        </field>
-    </record>
-    <record id="view_community_meeting_proposal_form" model="ir.ui.view">
-        <field name="name">community.meeting.agenda.proposal.form</field>
-        <field name="model">community.meeting.agenda.proposal</field>
-        <field name="arch" type="xml">
-            <form string="Agenda Proposal" create="1" edit="0" delete="0">
-                <header>
-                    <button name="action_submit" type="object" string="Submit Proposal" class="oe_highlight" invisible="id"/>
-                    <button name="action_withdraw" type="object" string="Withdraw" invisible="not id or status != 'submitted'" groups="community_meetings.group_agenda_proposer"/>
-                    <button name="action_open_accept_wizard" type="object" string="Accept into Draft Agenda" class="oe_highlight" invisible="status != 'submitted'" groups="community_meetings.group_meeting_editor"/>
-                    <field name="status" widget="statusbar" statusbar_visible="submitted,accepted,rejected,withdrawn"/>
-                </header>
-                <sheet>
-                    <group>
-                        <field name="name"/>
-                        <field name="series_id" readonly="status != 'submitted'"/>
-                        <field name="company_id" groups="community_meetings.group_meeting_manager"/>
-                        <field name="proposer_partner_id" readonly="1"/>
-                        <field name="submitted_by_user_id" readonly="1" groups="community_meetings.group_meeting_editor"/>
-                        <field name="submitted_at" readonly="1"/>
-                        <field name="description"/>
-                        <field name="response" readonly="1"/>
-                        <field name="destination_item_id" readonly="1" groups="community_meetings.group_meeting_editor"/>
-                    </group>
-                </sheet>
-            </form>
-        </field>
-    </record>
-    <record id="view_community_meeting_proposal_accept_wizard" model="ir.ui.view">
-        <field name="name">community.meeting.proposal.accept.wizard.form</field>
-        <field name="model">community.meeting.proposal.accept.wizard</field>
-        <field name="arch" type="xml">
-            <form string="Accept Agenda Proposal">
-                <group>
-                    <field name="proposal_id"/>
-                    <field name="proposal_company_id" invisible="1"/>
-                    <field name="proposal_series_id" invisible="1"/>
-                    <field name="meeting_id"/>
-                </group>
-                <footer>
-                    <button name="action_accept" type="object" string="Accept" class="oe_highlight"/>
-                    <button string="Cancel" special="cancel"/>
-                </footer>
-            </form>
-        </field>
-    </record>
-    <record id="action_community_meeting_proposals" model="ir.actions.act_window">
-        <field name="name">Agenda Proposals</field>
-        <field name="res_model">community.meeting.agenda.proposal</field>
-        <field name="view_mode">list,form</field>
-    </record>
-    <record id="view_community_meeting_proposal_search" model="ir.ui.view">
-        <field name="name">community.meeting.agenda.proposal.search</field>
-        <field name="model">community.meeting.agenda.proposal</field>
-        <field name="arch" type="xml">
-            <search>
-                <field name="name"/>
-                <field name="series_id"/>
-                <filter name="my_proposals" string="My Proposals" domain="[('submitted_by_user_id', '=', uid)]"/>
-                <filter name="pending" string="Pending Review" domain="[('status', '=', 'submitted')]" groups="community_meetings.group_meeting_editor"/>
-                <group expand="0" string="Group By"><filter name="group_status" string="Status" context="{'group_by': 'status'}"/></group>
-            </search>
-        </field>
-    </record>
-    <record id="action_community_meeting_proposal_accept" model="ir.actions.act_window">
-        <field name="name">Accept Agenda Proposal</field>
-        <field name="res_model">community.meeting.proposal.accept.wizard</field>
+    <record id="action_propose_point" model="ir.actions.act_window">
+        <field name="name">Propose a Point</field>
+        <field name="res_model">community.meeting.point.wizard</field>
         <field name="view_mode">form</field>
-        <field name="view_id" ref="view_community_meeting_proposal_accept_wizard"/>
         <field name="target">new</field>
+        <field name="context">{'default_propose': True}</field>
     </record>
-    <menuitem id="menu_community_meeting_proposals" name="Agenda Proposals" parent="community_meetings.menu_community_meetings_root" action="action_community_meeting_proposals" sequence="20" groups="base.group_user"/>
+    <menuitem id="menu_propose_point" name="Propose a Point" parent="community_meetings.menu_community_meetings_root" action="action_propose_point" sequence="20" groups="base.group_user"/>
 </odoo>
