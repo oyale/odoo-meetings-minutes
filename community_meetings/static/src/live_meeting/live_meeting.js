@@ -5,6 +5,7 @@ import { _t } from "@web/core/l10n/translation";
 import { deserializeDateTime, formatDateTime } from "@web/core/l10n/dates";
 import { registry } from "@web/core/registry";
 import { loadBundle } from "@web/core/assets";
+import { ensureJQuery } from "@web/core/ensure_jquery";
 import { useService } from "@web/core/utils/hooks";
 
 const OUTCOMES = {
@@ -21,7 +22,6 @@ const MEETING_STATES = {
 export class LiveMeeting extends Component {
     static template = "community_meetings.LiveMeeting";
     static props = ["action", "*", "close?"];
-    static components = {};
 
     setup() {
         this.orm = useService("orm");
@@ -40,9 +40,10 @@ export class LiveMeeting extends Component {
             }
         };
         onWillStart(async () => {
+            await ensureJQuery();
             await loadBundle("web_editor.backend_assets_wysiwyg");
             const { Wysiwyg } = await odoo.loader.modules.get("@web_editor/js/wysiwyg/wysiwyg");
-            this.constructor.components = { Wysiwyg };
+            this.Wysiwyg = Wysiwyg;
             await this.load();
         });
         onMounted(() => window.addEventListener("beforeunload", this.beforeUnload));
@@ -101,6 +102,9 @@ export class LiveMeeting extends Component {
             userGeneratedContent: true,
             onWysiwygBlur: () => this.saveRichText(key, recordId, model, field),
         };
+    }
+    richTextStarter(key, recordId, model, field) {
+        return (wysiwyg) => this.startRichText(key, wysiwyg, recordId, model, field);
     }
     async startRichText(key, wysiwyg, recordId, model, field) {
         this.editors.set(key, wysiwyg);
