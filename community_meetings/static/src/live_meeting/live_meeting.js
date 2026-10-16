@@ -645,12 +645,14 @@ export class LiveMeeting extends Component {
         });
     }
 
+    deferralReasonLabel(code) {
+        const entry = this.deferralReasonChoices.find(([value]) => value === code);
+        return entry ? entry[1] : "";
+    }
+
     async requestCarryover(item) {
-        const reason = (this.state.deferrals[item.id]?.reason || "").trim();
-        if (!reason) {
-            this.notification.add("Add a reason before requesting a carryover.", { type: "warning" });
-            return;
-        }
+        const draft = this.state.deferrals[item.id] || {};
+        const reason = (draft.reason || "").trim() || this.deferralReasonLabel(draft.code);
         try {
             const action = await this.orm.call("community.meeting.agenda.item", "action_request_followup", [[item.id]]);
             action.context = { ...action.context, default_reason: reason };

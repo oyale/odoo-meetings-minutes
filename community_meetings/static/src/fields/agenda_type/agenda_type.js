@@ -51,7 +51,7 @@ export class AgendaTypeField extends Component {
 
     select(item) {
         if (this.props.readonly) return;
-        this.props.record.update({ [this.props.name]: item.id });
+        this.props.record.update({ [this.props.name]: [item.id, item.name] });
     }
 }
 
