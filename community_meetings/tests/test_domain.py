@@ -150,6 +150,16 @@ class TestMeetingDomain(TransactionCase):
                 "meeting_id": meeting.id, "body": "General dissent",
             })
 
+    def test_existing_meeting_cannot_change_series(self):
+        series = self.env["community.meeting.series"].create({"name": "Original series"})
+        other = self.env["community.meeting.series"].create({"name": "Other series"})
+        meeting = self.env["community.meeting"].create({"name": "Fixed series", "series_id": series.id})
+        meeting.write({"series_id": series.id})
+        with self.assertRaises(UserError):
+            meeting.write({"series_id": other.id})
+        with self.assertRaises(UserError):
+            meeting.write({"series_id": False})
+
     def test_series_defaults_are_copied(self):
         series = self.env["community.meeting.series"].create(
             {

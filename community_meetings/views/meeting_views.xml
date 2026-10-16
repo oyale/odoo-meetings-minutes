@@ -69,7 +69,7 @@
                             <field name="secretary_id"/>
                             <field name="attendee_partner_ids" widget="many2many_tags"/>
                             <field name="company_id" groups="base.group_multi_company"/>
-                            <field name="series_id" domain="[('company_id', '=', company_id), ('meeting_kind', '=', meeting_kind)]"/>
+                            <field name="series_id" readonly="id" domain="[('company_id', '=', company_id), ('meeting_kind', '=', meeting_kind)]"/>
                             <field name="series_carryover_policy" invisible="not series_id" readonly="1"/>
                         </group>
                     </group>

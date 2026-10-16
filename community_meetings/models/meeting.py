@@ -160,6 +160,8 @@ class CommunityMeeting(models.Model):
         return meetings
 
     def write(self, vals):
+        if "series_id" in vals and any(meeting.series_id and meeting.series_id.id != vals["series_id"] for meeting in self):
+            raise UserError(_("A meeting cannot be moved to another series."))
         if "state" in vals:
             raise UserError(_("Use a meeting workflow action to change its state."))
         if "code" in vals:
