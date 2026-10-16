@@ -271,18 +271,3 @@ class CommunityMeetingAgendaProposal(models.Model):
             "responded_at": fields.Datetime.now(),
         })
         return True
-
-    def action_open_accept_wizard(self):
-        self.ensure_one()
-        self._review_access()
-        self.check_access_rights("read")
-        self.check_access_rule("read")
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Accept Agenda Proposal"),
-            "res_model": "community.meeting.proposal.accept.wizard",
-            "views": [(self.env.ref("community_meetings.view_community_meeting_proposal_accept_wizard").id, "form")],
-            "view_mode": "form",
-            "target": "new",
-            "context": {"default_proposal_id": self.id, "default_meeting_id": self.meeting_id.id},
-        }
