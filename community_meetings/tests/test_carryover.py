@@ -85,6 +85,24 @@ class TestAgendaCarryover(TransactionCase):
         self.assertEqual(transfer.destination_item_id.meeting_id, self.destination)
         self.assertEqual(action.state, "done")
 
+    def test_resolution_can_be_requested_as_followup(self):
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": self.source.id, "name": "Decision point", "kind": "decision",
+        })
+        resolution = self.env["community.meeting.resolution"].with_user(self.editor).create({
+            "meeting_id": self.source.id, "agenda_item_id": item.id,
+            "title": "Agreement title", "body": "Agreement body",
+        })
+        wizard = self.env["community.meeting.carryover.wizard"].with_user(self.editor).create({
+            "origin_model": "resolution", "origin_record_id": resolution.id,
+            "origin_meeting_id": self.source.id, "destination_meeting_id": self.destination.id,
+        })
+        wizard.action_request()
+        transfer = self.env["community.meeting.carryover"].with_user(self.editor).search([
+            ("origin_resolution_id", "=", resolution.id),
+        ], limit=1)
+        self.assertEqual(transfer.origin_name, "Agreement title")
+
     def test_direct_status_write_is_rejected(self):
         item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
             "meeting_id": self.source.id, "name": "Workflow guard",

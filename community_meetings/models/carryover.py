@@ -126,7 +126,7 @@ class CommunityMeetingCarryover(models.Model):
             vals.update({
                 "origin_meeting_id": origin_meeting.id,
                 source_field: source.id,
-                "origin_name": source.name if model_name != "action" else source.name,
+                "origin_name": source.title if model_name == "resolution" else source.name,
                 "origin_record_id": source.id,
                 "initiator_id": self.env.uid,
                 "status": "pending",
