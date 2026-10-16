@@ -258,10 +258,14 @@
                             <label t-if="!readOnly" class="form-check-label"><input class="form-check-input" type="checkbox" aria-label="Review at next meeting" t-att-checked="item.review_next_meeting" t-att-disabled="state.submitting['review:' + item.id]" t-on-change="(ev) => this.toggleReview(item, ev.target.checked)"/> Review at next meeting</label>
                             <div t-if="state.deferrals[item.id]" class="o_live_subsection o_live_deferral">
                                 <label class="form-label" t-att-for="'deferral-code-' + item.id">Quick reason</label>
-                                <select t-att-id="'deferral-code-' + item.id" class="form-select o_live_deferral_reason" aria-label="Quick reason" t-on-change="(ev) => this.setDeferralCode(item, ev.target.value)">
-                                    <option value="">Choose a reason</option>
-                                    <option t-foreach="deferralReasonChoices" t-as="choice" t-key="choice[0]" t-att-value="choice[0]" t-att-selected="choice[0] === state.deferrals[item.id].code"><t t-out="choice[1]"/></option>
-                                </select>
+                                <div t-att-id="'deferral-code-' + item.id" class="o_live_reason_choices" role="radiogroup" aria-label="Quick reason">
+                                    <button t-foreach="deferralReasonChoices" t-as="choice" t-key="choice[0]" type="button"
+                                            t-att-class="'btn btn-sm o_live_reason_choice ' + (state.deferrals[item.id].code === choice[0] ? 'btn-primary' : 'btn-outline-secondary')"
+                                            t-att-aria-pressed="state.deferrals[item.id].code === choice[0]"
+                                            t-on-click="() => this.setDeferralCode(item, choice[0])">
+                                        <i t-attf-class="fa #{choice[2]} me-1" aria-hidden="true"/><t t-out="choice[1]"/>
+                                    </button>
+                                </div>
                                 <label t-if="isBlockedReason(state.deferrals[item.id].code)" class="form-label mt-2" t-att-for="'deferral-blocked-' + item.id">Blocked by (optional)</label>
                                 <select t-if="isBlockedReason(state.deferrals[item.id].code)" t-att-id="'deferral-blocked-' + item.id" class="form-select" aria-label="Blocked by" t-on-change="(ev) => this.setDeferralBlockedBy(item, ev.target.value)">
                                     <option value="">Not linked</option>
@@ -271,8 +275,8 @@
                                 <textarea t-att-id="'deferral-' + item.id" class="form-control" rows="2" t-att-value="state.deferrals[item.id].reason" t-on-input="(ev) => this.setDeferralReason(item, ev.target.value)"/>
                                 <div class="o_live_add_row mt-2">
                                     <button class="btn btn-primary" t-on-click="() => this.saveDeferral(item)">Leave postponed</button>
-                                    <button class="btn btn-outline-primary" t-if="state.meeting.series_id" t-on-click="() => this.requestCarryover(item)">Request next meeting carryover</button>
-                                    <button class="btn btn-outline-primary" t-if="!state.meeting.series_id" t-on-click="() => this.requestCarryover(item)">Choose destination meeting</button>
+                                    <button class="btn btn-outline-primary" t-if="state.meeting.series_id" t-on-click="() => this.requestCarryover(item)"><i class="fa fa-exchange me-1" aria-hidden="true"/>Move to another meeting series</button>
+                                    <button class="btn btn-outline-primary" t-if="!state.meeting.series_id" t-on-click="() => this.requestCarryover(item)"><i class="fa fa-exchange me-1" aria-hidden="true"/>Move to another meeting</button>
                                     <button class="btn btn-link" t-on-click="() => this.cancelDeferral(item)">Cancel</button>
                                 </div>
                             </div>

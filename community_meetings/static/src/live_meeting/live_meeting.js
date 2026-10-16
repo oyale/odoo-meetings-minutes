@@ -592,12 +592,12 @@ export class LiveMeeting extends Component {
 
     get deferralReasonChoices() {
         return [
-            ["blocked_point", _t("Blocked by another point")],
-            ["blocked_task", _t("Blocked by a task")],
-            ["blocked_activity", _t("Blocked by an activity")],
-            ["blocked_todo", _t("Blocked by a To-do")],
-            ["no_time", _t("Lack of time")],
-            ["other", _t("Other reason")],
+            ["blocked_point", _t("Blocked by another point"), "fa-dot-circle-o"],
+            ["blocked_task", _t("Blocked by a task"), "fa-tasks"],
+            ["blocked_activity", _t("Blocked by an activity"), "fa-bell-o"],
+            ["blocked_todo", _t("Blocked by a To-do"), "fa-check-square-o"],
+            ["no_time", _t("Lack of time"), "fa-clock-o"],
+            ["other", _t("Other reason"), "fa-ellipsis-h"],
         ];
     }
 
