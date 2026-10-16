@@ -36,7 +36,10 @@ class TestProposalConvergence(TransactionCase):
     def test_withdraw_only_by_proposer_while_submitted(self):
         other = self.env["res.users"].create({
             "name": "Other", "login": "proposal-other-conv-test",
-            "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
+            "groups_id": [(6, 0, [
+                self.env.ref("base.group_user").id,
+                self.env.ref("community_meetings.group_meeting_editor").id,
+            ])],
         })
         topic = self.env["community.meeting.topic"].with_user(self.editor).create({
             "name": "P", "series_id": self.series.id,
@@ -57,3 +60,26 @@ class TestProposalConvergence(TransactionCase):
         })
         with self.assertRaises(UserError), self.cr.savepoint():
             topic.write({"proposal_status": "accepted"})
+
+    def test_propose_creates_a_proposed_topic(self):
+        topic = self.env["community.meeting.topic"].with_user(self.editor).propose({
+            "name": "New idea", "series_id": self.series.id,
+            "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+            "description": "<p>Explain</p>", "priority": "2",
+        })
+        self.assertEqual(topic.state, "proposed")
+        self.assertEqual(topic.proposal_status, "submitted")
+        self.assertEqual(topic.proposer_partner_id, self.editor.partner_id)
+        self.assertEqual(topic.submitted_by_user_id, self.editor)
+        self.assertEqual(topic.priority, "2")
+
+    def test_ineligible_user_cannot_propose(self):
+        outsider = self.env["res.users"].create({
+            "name": "Out", "login": "proposal-outsider-conv-test",
+            "groups_id": [(6, 0, [self.env.ref("base.group_portal").id])],
+        })
+        with self.assertRaises(AccessError), self.cr.savepoint():
+            self.env["community.meeting.topic"].with_user(outsider).propose({
+                "name": "Nope", "series_id": self.series.id,
+                "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+            })

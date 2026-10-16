@@ -264,6 +264,74 @@ class MeetingTopic(models.Model):
             })
         return True
 
+    @api.model
+    def _has_proposal_capability(self):
+        user = self.env.user
+        if user.has_group("community_meetings.group_agenda_proposer"):
+            return True
+        policy_groups = self.env["community.meeting.proposal.group.policy"].sudo().search(
+            [("active", "=", True)]
+        ).group_id
+        return bool(user.groups_id & policy_groups)
+
+    @api.model
+    def _validate_proposal_target(self, company_id, series_id):
+        if company_id not in self.env.user.company_ids.ids:
+            raise AccessError(_("You cannot submit proposals for this company."))
+        series = self.env["community.meeting.series"].sudo().browse(series_id).exists()
+        if not series or series.company_id.id != company_id or not series.active:
+            raise ValidationError(_("The selected proposal scope is unavailable."))
+        return series
+
+    @api.model
+    def propose(self, values):
+        values = dict(values)
+        company_id = values.get("company_id", self.env.company.id)
+        series = self._validate_proposal_target(company_id, values.get("series_id"))
+        values["company_id"] = company_id
+        values["series_id"] = series.id
+        return self._create_proposal(values, self.env.user.partner_id, self.env.uid)
+
+    @api.model
+    def _create_proposal(self, values, proposer_partner, submitted_by):
+        if not self._has_proposal_capability():
+            raise AccessError(_("You are not authorized to submit agenda proposals."))
+        values = dict(values)
+        for guarded in ("proposal_status", "submitted_by_user_id", "submitted_at"):
+            values.pop(guarded, None)
+        values.update({
+            "state": "proposed",
+            "proposal_status": "submitted",
+            "proposer_partner_id": proposer_partner.id,
+            "submitted_by_user_id": submitted_by.id if hasattr(submitted_by, "id") else submitted_by,
+            "submitted_at": fields.Datetime.now(),
+        })
+        return self.sudo().create(values)
+
+    @api.model
+    def submit_on_behalf(self, partner_id, values):
+        if not (
+            self.env.user.has_group("community_meetings.group_meeting_editor")
+            or self.env.user.has_group("community_meetings.group_meeting_manager")
+        ):
+            raise AccessError(_("Only a meeting editor can record a proposal on behalf of a contact."))
+        partner = self.env["res.partner"].browse(partner_id).exists()
+        if not partner:
+            raise ValidationError(_("The proposed contact is unavailable."))
+        company_id = values.get("company_id", self.env.company.id)
+        series = self._validate_proposal_target(company_id, values.get("series_id"))
+        today = fields.Date.context_today(self)
+        grant = self.env["community.meeting.proposal.grant"].sudo().search([
+            ("partner_id", "=", partner.id), ("company_id", "=", company_id), ("active", "=", True),
+            "|", ("active_from", "=", False), ("active_from", "<=", today),
+            "|", ("active_until", "=", False), ("active_until", ">=", today),
+            "|", ("series_id", "=", False), ("series_id", "=", series.id),
+        ], limit=1)
+        if not grant:
+            raise AccessError(_("This contact is not eligible to propose topics in the selected scope."))
+        values = dict(values, company_id=company_id, series_id=series.id)
+        return self._create_proposal(values, partner, self.env.uid)
+
     def action_open(self):
         self.ensure_one()
         return {

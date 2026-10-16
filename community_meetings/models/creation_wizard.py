@@ -245,15 +245,17 @@ class PointWizard(models.TransientModel):
     estimated_minutes = fields.Integer()
     included = fields.Boolean(readonly=True)
     created_item_id = fields.Many2one("community.meeting.agenda.item", readonly=True)
+    propose = fields.Boolean()
+    proposal_series_id = fields.Many2one("community.meeting.series")
 
     @api.depends(
-        "meeting_id", "creation_wizard_id.series_id", "creation_wizard_id.company_id"
+        "meeting_id", "creation_wizard_id.series_id", "creation_wizard_id.company_id", "proposal_series_id"
     )
     def _compute_scope(self):
         for w in self:
-            parent = w.meeting_id or w.creation_wizard_id
-            w.series_id = parent.series_id
-            w.company_id = parent.company_id
+            parent = w.meeting_id or w.creation_wizard_id or w.proposal_series_id
+            w.series_id = parent.series_id if parent else False
+            w.company_id = parent.company_id if parent else self.env.company
 
     @api.onchange("topic_id")
     def _onchange_topic_id(self):
@@ -324,6 +326,14 @@ class PointWizard(models.TransientModel):
             [self.id],
         )
         self.invalidate_recordset(["included", "created_item_id"])
+        if self.propose:
+            if not self.proposal_series_id:
+                raise ValidationError(_("Choose a series for the proposal."))
+            if not self.name or not self.agenda_type_id:
+                raise ValidationError(_("Enter a title and select a point type."))
+            self.env["community.meeting.topic"].propose(self._proposal_values())
+            self.included = True
+            return {"type": "ir.actions.act_window_close"}
         if not self.name and not self.topic_id:
             raise ValidationError(_("Enter a title or select an existing point."))
         if self.estimated_minutes < 0:
@@ -342,6 +352,20 @@ class PointWizard(models.TransientModel):
             if self.creation_wizard_id
             else {"type": "ir.actions.act_window_close"}
         )
+
+    def _proposal_values(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "agenda_type_id": self.agenda_type_id.id,
+            "priority": self.priority,
+            "deadline": self.deadline,
+            "estimated_minutes": self.estimated_minutes,
+            "followup_policy": self.followup_policy,
+            "default_followup_kind": self.default_followup_kind,
+            "series_id": self.proposal_series_id.id,
+            "company_id": self.proposal_series_id.company_id.id,
+        }
 
     def action_cancel(self):
         self.ensure_one()
