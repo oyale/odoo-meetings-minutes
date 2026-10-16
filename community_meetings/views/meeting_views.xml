@@ -3,7 +3,7 @@
         <field name="name">community.meeting.list</field>
         <field name="model">community.meeting</field>
         <field name="arch" type="xml">
-            <list default_order="start_datetime desc">
+            <list default_order="start_datetime asc">
                 <field name="code"/>
                 <field name="name"/>
                 <field name="start_datetime"/>
@@ -216,6 +216,8 @@
                 <filter name="my_meetings" string="My Meetings" domain="[('organizer_id', '=', uid)]"/>
                 <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
                 <filter name="scheduled" string="Scheduled" domain="[('state', '=', 'scheduled')]"/>
+                <filter name="upcoming" string="Upcoming" domain="[('state', '=', 'scheduled'), ('start_datetime', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter name="scheduled_past" string="Scheduled in the Past" domain="[('state', '=', 'scheduled'), ('start_datetime', '&lt;', context_today().strftime('%Y-%m-%d'))]"/>
                 <filter name="in_progress" string="In Progress" domain="[('state', '=', 'scheduled'), ('actual_start_datetime', '!=', False)]"/>
                 <filter name="minutes" string="Minutes to Prepare" domain="[('state', 'in', ['held', 'minutes_draft'])]"/>
                 <filter name="archive" string="Archive" domain="[('state', 'in', ['approved', 'cancelled'])]"/>
