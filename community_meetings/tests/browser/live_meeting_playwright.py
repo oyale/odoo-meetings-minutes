@@ -347,6 +347,27 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             "contenteditable", "true",
         )
 
+    def test_series_structural_points_render_in_live_meeting(self):
+        series = self.rpc("community.meeting.series", "create", [{
+            "name": "Structural live",
+            "has_minutes_approval_point": True,
+            "has_next_meeting_point": True,
+        }])
+        start = (datetime.utcnow() + timedelta(days=1)).replace(microsecond=0)
+        meeting_id = self.rpc("community.meeting", "create", [{
+            "name": "Structural live meeting",
+            "series_id": series,
+            "start_datetime": start.strftime("%Y-%m-%d %H:%M:%S"),
+        }])
+        self.rpc("community.meeting", "action_schedule", [[meeting_id]])
+        self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, meeting_id))
+        self.page.get_by_role("button", name="Open Live Meeting").click(timeout=30000)
+        self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
+        self.page.get_by_role("button", name="Expand / Collapse all").click()
+        expect(self.page.locator('[aria-label="Next meeting date"]')).to_be_visible()
+        expect(self.page.locator(".o_live_minutes_approval")).to_be_visible()
+        expect(self.page.locator(".o_live_minutes_approval")).to_contain_text("No pending minutes")
+
     def test_decision_can_be_undone_during_running_meeting(self):
         self.page.get_by_role("button", name="Start Meeting").click()
         expect(self.page.get_by_role("button", name="Finish Meeting")).to_be_visible()

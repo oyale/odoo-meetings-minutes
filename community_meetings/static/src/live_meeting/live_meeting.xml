@@ -113,6 +113,17 @@
                                 <t t-if="locked"><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></t>
                                 <t t-else=""><t t-component="Wysiwyg" t-props="{ options: richTextOptions(item.discussion_notes, 'discussion_notes:' + item.id, 'community.meeting.agenda.item', item.id, 'discussion_notes'), editingValue: item.discussion_notes || '', startWysiwyg: richTextStarter('discussion_notes:' + item.id, item.id, 'community.meeting.agenda.item', 'discussion_notes') }"/></t>
                             </div>
+                            <div t-if="typeBehavior(item) === 'next_meeting'" class="o_live_subsection o_live_next_meeting">
+                                <label class="form-label" t-att-for="'next-date-' + item.id">Next meeting date</label>
+                                <input type="date" class="form-control" t-att-id="'next-date-' + item.id" aria-label="Next meeting date" t-att-value="item.next_meeting_datetime ? item.next_meeting_datetime.slice(0, 10) : ''" t-att-disabled="readOnly" t-on-change="(ev) => this.setNextMeetingDate(item, ev.target.value)"/>
+                            </div>
+                            <div t-if="typeBehavior(item) === 'minutes_approval'" class="o_live_subsection o_live_minutes_approval">
+                                <label class="form-label">Pending minutes to approve</label>
+                                <ul t-if="state.pendingMinutes.length" class="list-unstyled mb-0">
+                                    <li t-foreach="state.pendingMinutes" t-as="pm" t-key="pm.id"><t t-out="pm.code"/> — <t t-out="pm.name"/> (<t t-out="stateLabel(pm.state)"/>)</li>
+                                </ul>
+                                <p t-if="!state.pendingMinutes.length" class="text-muted mb-0">No pending minutes.</p>
+                            </div>
                             <div class="text-muted o_live_point_meta"><span t-if="item.presenter_partner_id">Proposed by <t t-out="label(item.presenter_partner_id)"/> · </span><span t-if="item.deadline">Due <t t-out="item.deadline"/> · </span><span t-if="item.estimated_minutes">Estimated <t t-out="item.estimated_minutes"/> min</span></div>
                             <details t-if="item.actual_started_at and !readOnly" class="o_live_advanced"><summary>Point options</summary><button class="btn btn-link" t-on-click="() => this.editPoint(item)">Edit point details</button></details>
                             <t t-if="item.has_started">
@@ -265,63 +276,6 @@
                     </article>
                 </section>
 
-                <!-- Pending product decision: remove or restore meeting-wide records. -->
-                <section t-if="false" class="o_live_general_records">
-                    <h2>Meeting level records</h2>
-                    <div class="o_live_subsection">
-                        <h3>General agreements</h3>
-                        <div t-foreach="generalResolutions" t-as="resolution" t-key="resolution.id" class="o_live_resolution_editor">
-                            <input class="form-control" aria-label="Agreement title" t-att-value="resolution.title" t-on-change="(ev) => this.updateResolution(resolution, 'title', ev.target.value)"/>
-                            <select class="form-select" aria-label="Agreement status" t-att-value="resolution.status" t-on-change="(ev) => this.updateResolution(resolution, 'status', ev.target.value)"><option value="active">Active</option><option value="superseded">Superseded</option><option value="withdrawn">Withdrawn</option></select>
-                            <button class="btn btn-link" t-on-click="() => this.requestRecordCarryover('community.meeting.resolution', resolution)">Follow up at another meeting</button>
-                            <div t-if="!state.editingRecords['resolution-' + resolution.id]" class="o_live_rich_readonly" t-out="safeHtml(resolution.body)"/>
-                            <t t-else=""><t t-component="Wysiwyg" t-props="{ options: richTextOptions(resolution.body, 'resolution:' + resolution.id, 'community.meeting.resolution', resolution.id, 'body'), editingValue: resolution.body || '', startWysiwyg: richTextStarter('resolution:' + resolution.id, resolution.id, 'community.meeting.resolution', 'body') }"/></t>
-                            <button class="btn btn-link" t-on-click="() => this.toggleRecordEditor('resolution-' + resolution.id)">Edit agreement</button>
-                        </div>
-                        <div t-if="!readOnly" class="o_live_add_row o_live_resolution_form">
-                            <input class="form-control" aria-label="General agreement title" placeholder="Agreement title" t-att-value="state.newResolution.general?.title || ''" t-on-input="(ev) => this.setGeneralValue('newResolution', 'title', ev.target.value)"/>
-                            <textarea class="form-control" rows="2" aria-label="General agreement" placeholder="What was agreed?" t-att-value="state.newResolution.general?.body || ''" t-on-input="(ev) => this.setGeneralValue('newResolution', 'body', ev.target.value)"/>
-                            <button class="btn btn-outline-primary" t-att-disabled="state.submitting['resolution:general']" t-on-click="addGeneralResolution">Add agreement</button>
-                        </div>
-                    </div>
-                    <div class="o_live_subsection">
-                        <h3>General follow-up tasks</h3>
-                        <div t-foreach="generalActions" t-as="task" t-key="task.id" class="o_live_general_task">
-                            <span class="badge text-bg-light"><t t-out="followupKindLabel(task)"/></span>
-                            <input class="form-control" aria-label="Task name" t-att-value="task.name" t-on-change="(ev) => this.updateAction(task, 'name', ev.target.value)"/>
-                            <select class="form-select o_live_task_owner" aria-label="Task owner" t-att-value="task.responsible_user_id?.[0] || ''" t-on-change="(ev) => this.updateAction(task, 'responsible_user_id', ev.target.value)"><option value="">Unassigned</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id"><t t-out="user.name"/></option></select>
-                            <input class="form-control o_live_task_deadline" type="date" aria-label="Task deadline" t-att-value="task.deadline || ''" t-on-change="(ev) => this.updateAction(task, 'deadline', ev.target.value)"/>
-                            <select class="form-select o_live_task_state" aria-label="Task status" t-att-value="task.state" t-on-change="(ev) => this.updateAction(task, 'state', ev.target.value)"><option value="open">Open</option><option value="in_progress">In progress</option><option value="done">Done</option><option value="cancelled">Cancelled</option></select>
-                            <button t-if="!readOnly" class="btn btn-link" t-on-click="() => this.requestRecordCarryover('community.meeting.action', task)">Follow up at another meeting</button>
-                        </div>
-                        <div t-if="!readOnly" class="o_live_add_row">
-                            <input class="form-control" aria-label="General task name" placeholder="Follow-up" t-att-value="state.newAction.general?.name || ''" t-on-input="(ev) => this.setGeneralValue('newAction', 'name', ev.target.value)"/>
-                            <select class="form-select" aria-label="General follow-up type" t-att-value="state.newAction.general?.followup_kind || state.followupDefaults.kind" t-on-change="(ev) => this.setGeneralValue('newAction', 'followup_kind', ev.target.value)"><option value="task">Meeting task</option><option value="activity">Odoo activity</option><option value="todo">Odoo To-do</option></select>
-                            <select t-if="(state.newAction.general?.followup_kind || state.followupDefaults.kind) === 'activity'" class="form-select" aria-label="General activity type" t-att-value="state.newAction.general?.followup_activity_type_id || state.followupDefaults.activity_type_id || ''" t-on-change="(ev) => this.setGeneralValue('newAction', 'followup_activity_type_id', ev.target.value)"><option value="">Choose activity type</option><option t-foreach="state.activityTypes" t-as="activityType" t-key="activityType.id" t-att-value="activityType.id"><t t-out="activityType.name"/></option></select>
-                            <select class="form-select o_live_task_owner" aria-label="Task owner" t-att-value="state.newAction.general?.responsible_user_id || ''" t-on-change="(ev) => this.setGeneralValue('newAction', 'responsible_user_id', ev.target.value)"><option value="">Unassigned</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id"><t t-out="user.name"/></option></select>
-                            <input class="form-control o_live_task_deadline" type="date" aria-label="Task deadline" t-att-value="state.newAction.general?.deadline || ''" t-on-change="(ev) => this.setGeneralValue('newAction', 'deadline', ev.target.value)"/>
-                            <button class="btn btn-outline-primary" t-att-disabled="state.submitting['action:general']" t-on-click="addGeneralAction">Add follow-up</button>
-                        </div>
-                    </div>
-                    <details class="o_live_subsection">
-                        <summary>General dissent and reservations</summary>
-                        <div t-foreach="generalDissents" t-as="dissent" t-key="dissent.id" class="o_live_record_editor">
-                            <input class="form-control" aria-label="Author" placeholder="Author" t-att-value="dissent.author_display_name || ''" t-on-change="(ev) => this.updateDissent(dissent, 'author_display_name', ev.target.value || false)"/>
-                            <select class="form-select" aria-label="Statement type" t-att-value="dissent.kind" t-on-change="(ev) => this.updateDissent(dissent, 'kind', ev.target.value)"><option value="dissent">Dissent</option><option value="reservation">Reservation</option></select>
-                            <label class="form-check-label"><input class="form-check-input" type="checkbox" t-att-checked="dissent.include_in_minutes" t-on-change="(ev) => this.updateDissent(dissent, 'include_in_minutes', ev.target.checked)"/> Include in minutes</label>
-                            <div t-if="!state.editingRecords['dissent-' + dissent.id]" class="o_live_rich_readonly" t-out="safeHtml(dissent.body)"/>
-                            <t t-else=""><t t-component="Wysiwyg" t-props="{ options: richTextOptions(dissent.body, 'dissent:' + dissent.id, 'community.meeting.dissent', dissent.id, 'body'), editingValue: dissent.body || '', startWysiwyg: richTextStarter('dissent:' + dissent.id, dissent.id, 'community.meeting.dissent', 'body') }"/></t>
-                            <button class="btn btn-link" t-on-click="() => this.toggleRecordEditor('dissent-' + dissent.id)">Edit statement</button>
-                        </div>
-                        <div t-if="!readOnly" class="o_live_add_row">
-                            <input class="form-control" aria-label="Dissent author" placeholder="Author" t-att-value="state.newDissent.general?.author_display_name || ''" t-on-input="(ev) => this.setGeneralValue('newDissent', 'author_display_name', ev.target.value)"/>
-                            <select class="form-select" aria-label="Statement type" t-att-value="state.newDissent.general?.kind || 'dissent'" t-on-change="(ev) => this.setGeneralValue('newDissent', 'kind', ev.target.value)"><option value="dissent">Dissent</option><option value="reservation">Reservation</option></select>
-                            <textarea class="form-control" aria-label="General dissent" rows="2" placeholder="Record a dissent or reservation…" t-att-value="state.newDissent.general?.body || ''" t-on-input="(ev) => this.setGeneralValue('newDissent', 'body', ev.target.value)"/>
-                            <label class="form-check-label"><input class="form-check-input" type="checkbox" t-att-checked="state.newDissent.general?.include_in_minutes !== false" t-on-change="(ev) => this.setGeneralValue('newDissent', 'include_in_minutes', ev.target.checked)"/> Include in minutes</label>
-                            <button class="btn btn-outline-primary" t-att-disabled="state.submitting['dissent:general']" t-on-click="addGeneralDissent">Add statement</button>
-                        </div>
-                    </details>
-                </section>
                 <section class="o_live_minutes">
                     <h2>Meeting notes</h2>
                     <t t-if="locked"><div class="o_live_rich_readonly" t-out="safeHtml(state.meeting.minutes_notes)"/></t>
