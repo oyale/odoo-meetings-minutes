@@ -83,3 +83,27 @@ class TestProposalConvergence(TransactionCase):
                 "name": "Nope", "series_id": self.series.id,
                 "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
             })
+
+    def test_proposed_series_point_is_a_candidate(self):
+        self.env["community.meeting.topic"].with_user(self.editor).propose({
+            "name": "Candidate proposal", "series_id": self.series.id,
+            "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+        })
+        candidates = self.env["community.meeting"]._agenda_candidates(
+            self.series, "2026-11-01 10:00:00"
+        )
+        self.assertTrue(any(c.get("reason") == "Proposed point" for c in candidates))
+
+    def test_including_a_proposal_opens_it_and_creates_a_participation(self):
+        topic = self.env["community.meeting.topic"].with_user(self.editor).propose({
+            "name": "Included proposal", "series_id": self.series.id,
+            "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+        })
+        meeting = self.env["community.meeting"].with_user(self.editor).create({
+            "name": "Next", "series_id": self.series.id,
+            "start_datetime": "2026-11-01 10:00:00",
+        })
+        meeting._include_agenda_candidate({"key": f"proposal:{topic.id}"})
+        self.assertEqual(topic.state, "open")
+        self.assertEqual(topic.proposal_status, "accepted")
+        self.assertTrue(meeting.agenda_item_ids.filtered(lambda i: i.topic_id == topic))
