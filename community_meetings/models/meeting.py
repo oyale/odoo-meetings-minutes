@@ -204,6 +204,7 @@ class CommunityMeeting(models.Model):
             "agenda_item_ids": [(0, 0, {
                 "name": item.name,
                 "sequence": item.sequence,
+                "agenda_type_id": item.agenda_type_id.id,
                 "kind": item.kind,
                 "description": item.description,
                 "presenter_partner_id": item.presenter_partner_id.id,

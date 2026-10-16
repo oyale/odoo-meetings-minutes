@@ -56,6 +56,23 @@ class TestMeetingWorkflow(TransactionCase):
         self.assertEqual(points.mapped("kind"), ["decision", "decision"])
         self.assertEqual(points.mapped("decision_result"), ["pending", "pending"])
 
+    def test_copy_preserves_custom_agenda_type(self):
+        custom_type = self.env["community.meeting.agenda.type"].with_user(self.manager).create({
+            "name": "Consent custom", "behavior": "decision",
+        })
+        meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "Original"})
+        self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": meeting.id,
+            "name": "Approve the proposal",
+            "agenda_type_id": custom_type.id,
+            "decision_result": "approved",
+        })
+
+        duplicate = meeting.with_user(self.editor).copy()
+
+        self.assertEqual(duplicate.agenda_item_ids.agenda_type_id, custom_type)
+        self.assertEqual(duplicate.agenda_item_ids.decision_result, "pending")
+
     def test_manager_can_add_shared_type_but_cannot_redefine_used_behavior(self):
         shared_type = self.env["community.meeting.agenda.type"].with_user(self.manager).create({
             "name": "Consent", "behavior": "decision",
