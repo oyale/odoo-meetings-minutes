@@ -207,6 +207,9 @@ msgstr "No se han podido guardar algunos cambios. Vuelve a editar el campo para 
 msgid "All changes saved"
 msgstr "Todos los cambios están guardados"
 
+msgid "Changes pending"
+msgstr "Cambios pendientes"
+
 msgid "Minutes to prepare"
 msgstr "Acta pendiente de preparar"
 
