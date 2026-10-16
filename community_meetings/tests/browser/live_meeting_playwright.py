@@ -1,0 +1,217 @@
+#!/usr/bin/env python3
+"""Reusable authenticated browser checks for the Community Meetings live screen.
+
+Run with ODOO_BASE_URL, ODOO_LOGIN and ODOO_PASSWORD set to an existing meeting
+editor account, and Python Playwright installed. Example:
+    ODOO_BASE_URL=http://meeting-minutes.local:8069 \\
+    ODOO_LOGIN=dev ODOO_PASSWORD=... python3 live_meeting_playwright.py
+The suite creates and removes one scheduled meeting per case.
+"""
+import os
+import time
+import unittest
+from datetime import datetime, timedelta
+from urllib.parse import urljoin
+
+from playwright.sync_api import expect, sync_playwright
+
+BASE_URL = os.environ.get("ODOO_BASE_URL", "http://meeting-minutes.local:8069").rstrip("/")
+LOGIN = os.environ.get("ODOO_LOGIN")
+PASSWORD = os.environ.get("ODOO_PASSWORD")
+
+
+class LiveMeetingBrowserChecks(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        if not LOGIN or not PASSWORD:
+            raise unittest.SkipTest("Set ODOO_LOGIN and ODOO_PASSWORD to an editor account.")
+        cls.playwright = sync_playwright().start()
+        cls.browser = cls.playwright.chromium.launch(
+            headless=os.environ.get("PLAYWRIGHT_HEADFUL") != "1",
+            args=["--no-sandbox"],
+        )
+        cls.context = cls.browser.new_context(viewport={"width": 1440, "height": 1000})
+        cls.page = cls.context.new_page()
+        cls.console_errors = []
+        cls.page.on("pageerror", lambda error: cls.console_errors.append(str(error)))
+        cls.page.on("console", lambda msg: cls.console_errors.append(msg.text) if msg.type == "error" else None)
+        cls.page.goto(urljoin(BASE_URL + "/", "web/login"), wait_until="domcontentloaded")
+        cls.page.locator('input[name="login"]').fill(LOGIN)
+        cls.page.locator('input[name="password"]').fill(PASSWORD)
+        cls.page.locator('button[type="submit"]').click()
+        cls.page.wait_for_url("**/odoo**", timeout=30000)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.context.close()
+        cls.browser.close()
+        cls.playwright.stop()
+
+    def rpc(self, model, method, args, kwargs=None):
+        response = self.page.request.post(
+            urljoin(BASE_URL + "/", "web/dataset/call_kw/%s/%s" % (model, method)),
+            data={"jsonrpc": "2.0", "method": "call", "params": {
+                "model": model, "method": method, "args": args, "kwargs": kwargs or {},
+            }, "id": 1},
+        )
+        payload = response.json()
+        if response.status != 200 or payload.get("error"):
+            raise AssertionError("Odoo RPC failed: %r" % payload.get("error", payload))
+        return payload["result"]
+
+    def setUp(self):
+        self.meeting_id = False
+        self.item_ids = {}
+        start = (datetime.utcnow() + timedelta(days=1)).replace(microsecond=0)
+        self.meeting_id = self.rpc("community.meeting", "create", [{
+            "name": "Playwright live case %s" % self.id().rsplit(".", 1)[-1],
+            "start_datetime": start.strftime("%Y-%m-%d %H:%M:%S"),
+        }])
+        self.addCleanup(self.cleanup_meeting)
+        for kind in ("information", "discussion", "decision"):
+            agenda_type = self.rpc("community.meeting.agenda.type", "search", [[("behavior", "=", kind), ("active", "=", True)]], {"limit": 1})
+            if not agenda_type:
+                self.fail("No active agenda type for %s" % kind)
+            self.item_ids[kind] = self.rpc("community.meeting.agenda.item", "create", [{
+                "meeting_id": self.meeting_id,
+                "name": "Browser %s case" % kind.title(),
+                "kind": kind,
+                "agenda_type_id": agenda_type[0],
+            }])
+        self.rpc("community.meeting", "action_schedule", [[self.meeting_id]])
+        self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
+        self.page.get_by_role("button", name="Open Live Meeting").click(timeout=30000)
+        self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
+        self.page.get_by_role("button", name="Expand / Collapse all").click()
+        self.errors_before = len(self.console_errors)
+
+    def cleanup_meeting(self):
+        if not self.meeting_id:
+            return
+        self.rpc("community.meeting", "action_cancel", [[self.meeting_id]])
+        resolutions = self.rpc("community.meeting.resolution", "search", [[("meeting_id", "=", self.meeting_id)]])
+        if resolutions:
+            self.rpc("community.meeting.resolution", "unlink", [resolutions])
+        self.rpc("community.meeting", "unlink", [[self.meeting_id]])
+
+    def card(self, kind):
+        return self.page.locator(".o_live_agenda_card").filter(has_text="Browser %s case" % kind.title())
+
+    def outcome(self, kind):
+        return self.card(kind).locator(".o_live_outcome_badge")
+
+    def record(self, model, record_id, fields):
+        return self.rpc(model, "read", [[record_id], fields])[0]
+
+    def test_scroll_and_meeting_wide_records_visibility(self):
+        main = self.page.locator("main.o_community_live_meeting")
+        self.assertEqual(main.evaluate("el => getComputedStyle(el).overflowY"), "auto")
+        self.assertGreater(main.evaluate("el => el.scrollHeight - el.clientHeight"), 0)
+        main.evaluate("el => { el.scrollTop = el.scrollHeight; }")
+        self.assertGreater(main.evaluate("el => el.scrollTop"), 0)
+        self.assertFalse(self.page.get_by_text("Meeting level records", exact=True).count())
+
+    def test_information_point_can_be_marked_done(self):
+        card = self.card("information")
+        card.get_by_role("button", name="Mark as done").click()
+        expect(self.outcome("information")).to_have_text("Done")
+        self.assertEqual(self.record("community.meeting.agenda.item", self.item_ids["information"], ["disposition"])["disposition"], "discussed")
+
+    def test_discussion_point_can_be_resolved(self):
+        card = self.card("discussion")
+        card.get_by_role("button", name="Resolve discussion").click()
+        expect(self.outcome("discussion")).to_have_text("Resolved")
+        self.assertEqual(self.record("community.meeting.agenda.item", self.item_ids["discussion"], ["disposition"])["disposition"], "closed")
+
+    def test_decision_requires_and_uses_agreement_without_direct_edit(self):
+        card = self.card("decision")
+        card.get_by_role("button", name="Approve decision").click()
+        expect(self.outcome("decision")).to_have_text("Pending")
+        title = card.get_by_placeholder("Agreement title")
+        expect(title).to_be_focused()
+        title.fill("Approve the decision")
+        card.get_by_placeholder("What was agreed?").fill("Approved after discussion")
+        card.get_by_role("button", name="Add agreement", exact=True).click()
+        expect(self.outcome("decision")).to_have_text("Approved")
+        agreement = self.rpc("community.meeting.resolution", "search_read", [[("agenda_item_id", "=", self.item_ids["decision"])]], {"fields": ["decision_outcome", "status"], "limit": 1})[0]
+        self.assertEqual((agreement["decision_outcome"], agreement["status"]), ("approved", "active"))
+        self.assertEqual(card.get_by_label("Decision result", exact=True).count(), 0)
+        card.get_by_role("button", name="Withdraw decision agreement").click()
+        expect(self.outcome("decision")).to_have_text("Discussed — decision pending")
+        card.get_by_role("button", name="Reject decision").click()
+        title.fill("Reject the decision")
+        card.get_by_placeholder("What was agreed?").fill("Rejected after reconsideration")
+        card.get_by_role("button", name="Add agreement", exact=True).click()
+        expect(self.outcome("decision")).to_have_text("Rejected")
+        self.assertFalse(self.console_errors[self.errors_before:], self.console_errors[self.errors_before:])
+
+    def test_postponing_an_approved_decision_withdraws_its_agreement(self):
+        card = self.card("decision")
+        card.get_by_role("button", name="Approve decision").click()
+        card.get_by_placeholder("Agreement title").fill("Approve before postponing")
+        card.get_by_placeholder("What was agreed?").fill("Approval must be revisited.")
+        card.get_by_role("button", name="Add agreement", exact=True).click()
+        expect(self.outcome("decision")).to_have_text("Approved")
+        card.get_by_role("button", name="Postpone agenda point").click()
+        card.get_by_label("Reason for postponing").fill("The approval needs review.")
+        card.get_by_role("button", name="Leave postponed").click()
+        deadline = time.time() + 8
+        point = self.record("community.meeting.agenda.item", self.item_ids["decision"], ["disposition"])
+        agreement = self.rpc("community.meeting.resolution", "search_read", [[("agenda_item_id", "=", self.item_ids["decision"])]], {"fields": ["status"], "limit": 1})[0]
+        while time.time() < deadline and point["disposition"] != "deferred":
+            time.sleep(0.2)
+            point = self.record("community.meeting.agenda.item", self.item_ids["decision"], ["disposition"])
+            agreement = self.rpc("community.meeting.resolution", "search_read", [[("agenda_item_id", "=", self.item_ids["decision"])]], {"fields": ["status"], "limit": 1})[0]
+        self.assertEqual(point["disposition"], "deferred")
+        self.assertEqual(agreement["status"], "withdrawn")
+        expect(self.outcome("decision")).to_have_text("Postponed")
+
+    def test_dissent_author_kind_and_statement_are_usable(self):
+        card = self.card("discussion")
+        details = card.locator("details").filter(has_text="Dissents and reservations")
+        details.locator("summary").click()
+        author = card.get_by_label("Dissent author")
+        kind = details.get_by_label("Statement type")
+        statement = details.get_by_label("Dissent statement")
+        expect(author).to_be_visible()
+        expect(statement).to_be_visible()
+        author.fill("Ada Lovelace")
+        kind.select_option("reservation")
+        statement.fill("I disagree with the proposed deadline.")
+        details.get_by_role("button", name="Add dissent").click()
+        deadline = time.time() + 8
+        dissent = []
+        while time.time() < deadline and not dissent:
+            dissent = self.rpc("community.meeting.dissent", "search_read", [[("meeting_id", "=", self.meeting_id)]], {"fields": ["author_display_name", "kind", "body"], "limit": 1})
+            if not dissent:
+                time.sleep(0.2)
+        self.assertTrue(dissent, "The dissent form did not create a record.")
+        dissent = dissent[0]
+        self.assertEqual(dissent["author_display_name"], "Ada Lovelace")
+        self.assertEqual(dissent["kind"], "reservation")
+        self.assertIn("proposed deadline", dissent["body"])
+
+    def test_defer_works_for_each_point_type(self):
+        for kind in ("information", "discussion", "decision"):
+            with self.subTest(kind=kind):
+                card = self.card(kind)
+                card.get_by_role("button", name="Postpone agenda point").click()
+                card.get_by_label("Reason for postponing").fill("Waiting for more information.")
+                card.get_by_role("button", name="Leave postponed").click()
+                expect(self.outcome(kind)).to_have_text("Postponed")
+                deadline = time.time() + 8
+                saved = self.record("community.meeting.agenda.item", self.item_ids[kind], ["disposition"])
+                while time.time() < deadline and saved["disposition"] != "deferred":
+                    time.sleep(0.2)
+                    saved = self.record("community.meeting.agenda.item", self.item_ids[kind], ["disposition"])
+                self.assertEqual(saved["disposition"], "deferred")
+
+    def test_private_note_form_stays_collapsed_until_requested(self):
+        details = self.card("discussion").locator("details").filter(has_text="Private editorial notes")
+        expect(details.get_by_label("Private editorial note")).not_to_be_visible()
+        details.locator("summary").click()
+        expect(details.get_by_label("Private editorial note")).to_be_visible()
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
