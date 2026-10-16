@@ -58,6 +58,39 @@ class TestAgendaCarryover(TransactionCase):
         transfer.action_accept()
         self.assertEqual(len(self.destination.agenda_item_ids.filtered(lambda row: row.carryover_id == transfer)), 1)
 
+    def test_creation_wizard_does_not_offer_an_already_carried_point_again(self):
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": self.source.id,
+            "name": "Continue the roadmap",
+            "review_next_meeting": True,
+        })
+        self.env["community.meeting.action"].with_user(self.editor).create({
+            "meeting_id": self.source.id,
+            "agenda_item_id": item.id,
+            "name": "Continue the active work",
+        })
+        # Simulate the series automation having already accepted and placed the
+        # source in an earlier future meeting. Its active follow-up would
+        # otherwise make the old participation look eligible again.
+        transfer = self.env["community.meeting.carryover"].with_user(self.editor).create({
+            "origin_model": "agenda_item",
+            "origin_record_id": item.id,
+            "destination_meeting_id": self.destination.id,
+        })
+        transfer.action_accept()
+        self.assertEqual(transfer.status, "accepted")
+        wizard = self.env["community.meeting.create.wizard"].with_user(self.editor).create({
+            "step": "people",
+            "series_id": self.series.id,
+            "name": "Later destination",
+            "start_datetime": "2026-11-15 10:00:00",
+            "duration_hours": 1,
+        })
+
+        wizard.action_next()
+
+        self.assertFalse(wizard.carry_line_ids.filtered(lambda line: line.source_id == item))
+
     def test_dismissed_source_cannot_be_queued_again(self):
         item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
             "meeting_id": self.source.id, "name": "Do not carry forward",

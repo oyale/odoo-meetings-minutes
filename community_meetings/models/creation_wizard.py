@@ -199,7 +199,10 @@ class MeetingCreateWizard(models.TransientModel):
             ):
                 if transfer.origin_agenda_item_id.id in choices:
                     if choices[transfer.origin_agenda_item_id.id]:
-                        transfer.action_accept()
+                        # A series has one carryover record per source point. It
+                        # may already target another future meeting, so always
+                        # materialize the wizard's explicit selection here.
+                        transfer.action_accept(meeting.id)
                     else:
                         transfer.action_dismiss()
             self.created_meeting_id = meeting

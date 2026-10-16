@@ -273,11 +273,21 @@ class Meeting(models.Model):
                 ("state", "!=", "cancelled"),
             ]).mapped("agenda_item_id").ids
         )
+        already_continued = set(
+            self.env["community.meeting.carryover"].search([
+                ("origin_agenda_item_id", "in", sources.ids),
+                ("status", "=", "accepted"),
+            ]).filtered(
+                lambda transfer: transfer.destination_meeting_id.state != "cancelled"
+            ).mapped("origin_agenda_item_id").ids
+        )
         sources = sources.filtered(
-            lambda source: source.review_next_meeting
+            lambda source: source.id not in already_continued and (
+                source.review_next_meeting
             or source.id in active_followup_items
             # Project is optional, so core must not depend on its fields.
             or ("project_task_ids" in source._fields and source.project_task_ids)
+            )
         )
         # Keep the most recent occurrence per point; pending requests survive gaps.
         result = self.env["community.meeting.agenda.item"]
