@@ -8,10 +8,11 @@ import { useService } from "@web/core/utils/hooks";
 import { Wysiwyg } from "@web_editor/js/wysiwyg/wysiwyg";
 
 const OUTCOMES = {
-    information: [["open", "Pending"], ["discussed", "Discussed"], ["deferred", "Postponed"]],
-    discussion: [["open", "Pending"], ["discussed", "Discussed"], ["closed", "Resolved"], ["deferred", "Postponed"]],
-    decision: [["pending", "Pending"], ["discussed", "Discussed — decision pending"], ["approved", "Approved"], ["denied", "Denied"], ["deferred", "Postponed"]],
+    information: [["open", _t("Pending")], ["discussed", _t("Discussed")], ["deferred", _t("Postponed")]],
+    discussion: [["open", _t("Pending")], ["discussed", _t("Discussed")], ["closed", _t("Resolved")], ["deferred", _t("Postponed")]],
+    decision: [["pending", _t("Pending")], ["discussed", _t("Discussed — decision pending")], ["approved", _t("Approved")], ["denied", _t("Denied")], ["deferred", _t("Postponed")]],
 };
+const ACTION_STATES = { open: _t("Open"), in_progress: _t("In progress"), done: _t("Done"), cancelled: _t("Cancelled") };
 const MEETING_STATES = {
     draft: _t("Draft"), scheduled: _t("Scheduled"), held: _t("Held"),
     minutes_draft: _t("Minutes to prepare"), approved: _t("Approved"), cancelled: _t("Cancelled"),
@@ -73,6 +74,7 @@ export class LiveMeeting extends Component {
     label(value) { return Array.isArray(value) ? value[1] : (value || ""); }
     dateTime(value) { return value ? formatDateTime(deserializeDateTime(value)) : _t("Not set"); }
     stateLabel(value) { return MEETING_STATES[value] || value || ""; }
+    actionStateLabel(value) { return ACTION_STATES[value] || value || ""; }
     safeHtml(value) { return markup(value || ""); }
     richTextOptions(value, key, model, recordId, field) {
         return {
@@ -107,7 +109,7 @@ export class LiveMeeting extends Component {
         });
     }
     attendees() {
-        return this.state.attendees.map((partner) => partner.name).join(", ") || "No attendees listed";
+        return this.state.attendees.map((partner) => partner.name).join(", ") || _t("No attendees listed");
     }
     typeBehavior(item) { return this.state.types.find((type) => type.id === item.agenda_type_id?.[0])?.behavior || item.kind; }
     pointOutcome(item) {

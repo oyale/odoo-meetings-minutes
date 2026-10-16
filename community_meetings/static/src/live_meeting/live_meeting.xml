@@ -59,7 +59,7 @@
                                 <option t-foreach="outcomeOptions(item)" t-as="entry" t-key="entry[0]" t-att-value="entry[0]"><t t-out="entry[1]"/></option>
                             </select>
                         </div>
-                        <div t-if="state.expanded[item.id]" t-att-id="'agenda-panel-' + item.id" class="o_live_card_body">
+                        <div t-att-id="'agenda-panel-' + item.id" t-att-class="'o_live_card_body ' + (state.expanded[item.id] ? '' : 'd-none')">
                             <div t-if="item.description" class="o_live_planned"><strong>Planned topic</strong><div t-out="safeHtml(item.description)"/></div>
                             <label class="form-label" t-att-for="'discussion-' + item.id">Discussion notes</label>
                             <t t-if="locked"><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></t>
@@ -110,7 +110,7 @@
                                     <button class="btn btn-link" t-on-click="() => this.toggleRecordEditor('resolution-' + resolution.id)"><t t-if="state.editingRecords['resolution-' + resolution.id]">Done editing</t><t t-else="">Edit agreement</t></button>
                                 </div>
                                 <div t-if="!locked" class="o_live_add_row o_live_resolution_form">
-                                    <input class="form-control" placeholder="Agreement title" t-att-value="state.newResolution[item.id]?.title || ''" t-on-input="(ev) => this.setResolution(item, 'title', ev.target.value)"/>
+                                    <input class="form-control" aria-label="Agreement title" placeholder="Agreement title" t-att-value="state.newResolution[item.id]?.title || ''" t-on-input="(ev) => this.setResolution(item, 'title', ev.target.value)"/>
                                     <textarea class="form-control" rows="2" placeholder="What was agreed?" t-att-value="state.newResolution[item.id]?.body || ''" t-on-input="(ev) => this.setResolution(item, 'body', ev.target.value)"/>
                                     <button class="btn btn-outline-primary" t-att-disabled="state.submitting['resolution:' + item.id]" t-on-click="() => this.addResolution(item)">Add agreement</button>
                                 </div>
@@ -134,7 +134,7 @@
                                 <h3>Follow-up tasks</h3>
                                 <ul t-if="pointActions(item).length" class="o_live_inline_records">
                                     <li t-foreach="pointActions(item)" t-as="task" t-key="task.id">
-                                        <span t-out="task.name"/><span class="badge text-bg-light"><t t-out="task.state.replace('_', ' ')"/></span>
+                                        <span t-out="task.name"/><span class="badge text-bg-light"><t t-out="actionStateLabel(task.state)"/></span>
                                         <span t-if="task.deadline" class="text-muted">Due <t t-out="task.deadline"/></span>
                                         <select class="form-select o_live_task_owner" aria-label="Task owner" t-att-value="task.responsible_user_id?.[0] || ''" t-on-change="(ev) => this.updateAction(task, 'responsible_user_id', ev.target.value)">
                                             <option value="">Unassigned</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id"><t t-out="user.name"/></option>
@@ -145,7 +145,7 @@
                                 </ul>
                                 <p t-else="" class="text-muted">No follow-up tasks.</p>
                                 <div t-if="!locked" class="o_live_add_row o_live_task_form">
-                                    <input class="form-control" placeholder="Task" t-att-value="state.newAction[item.id]?.name || ''" t-on-input="(ev) => this.setAction(item, 'name', ev.target.value)"/>
+                                    <input class="form-control" aria-label="Task name" placeholder="Task" t-att-value="state.newAction[item.id]?.name || ''" t-on-input="(ev) => this.setAction(item, 'name', ev.target.value)"/>
                                     <input class="form-control" type="date" aria-label="Deadline" t-att-value="state.newAction[item.id]?.deadline || ''" t-on-change="(ev) => this.setAction(item, 'deadline', ev.target.value)"/>
                                     <select class="form-select o_live_task_owner" aria-label="Task owner" t-att-value="state.newAction[item.id]?.responsible_user_id || ''" t-on-change="(ev) => this.setAction(item, 'responsible_user_id', ev.target.value)"><option value="">Unassigned</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id"><t t-out="user.name"/></option></select>
                                     <button class="btn btn-outline-primary" t-att-disabled="state.submitting['action:' + item.id]" t-on-click="() => this.addAction(item)">Add task</button>
