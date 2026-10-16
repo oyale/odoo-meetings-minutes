@@ -83,6 +83,36 @@ class TestPointWizard(TransactionCase):
         wizard.action_save()
         self.assertFalse(existing.topic_id.related_topic_ids)
 
+    def test_wizard_exposes_the_reused_origin_point(self):
+        origin = self._item("Origin point")
+        derived = self._item("Derived point")
+        derived.topic_id.origin_topic_id = origin.topic_id
+        wizard = self.env["community.meeting.point.wizard"].with_user(self.editor).create({
+            "meeting_id": self.meeting.id, "topic_id": derived.topic_id.id,
+        })
+        self.assertEqual(wizard.origin_topic_id, origin.topic_id)
+
+    def test_programmatic_reuse_without_related_keeps_existing_links(self):
+        existing = self._item("Guarded reuse")
+        related = self._item("Guarded related")
+        existing.topic_id.related_topic_ids = related.topic_id
+        wizard = self.env["community.meeting.point.wizard"].with_user(self.editor).create({
+            "meeting_id": self.meeting.id, "topic_id": existing.topic_id.id,
+        })
+        wizard.action_save()
+        self.assertEqual(existing.topic_id.related_topic_ids, related.topic_id)
+
+    def test_related_points_can_be_set_on_a_later_save(self):
+        other = self._item("Later related point")
+        wizard = self.env["community.meeting.point.wizard"].with_user(self.editor).create({
+            "meeting_id": self.meeting.id, "name": "Later point",
+        })
+        wizard.action_save()
+        topic = wizard.created_item_id.topic_id
+        wizard.write({"related_topic_ids": [(6, 0, [other.topic_id.id])]})
+        wizard.action_save()
+        self.assertEqual(topic.related_topic_ids, other.topic_id)
+
     def test_live_add_point_marks_the_context(self):
         action = self.meeting.with_user(self.editor).action_add_point_live()
         self.assertTrue(action["context"]["from_live"])

@@ -223,7 +223,8 @@ class PointWizard(models.TransientModel):
         "topic_id",
         string="Related points",
     )
-    origin_topic_id = fields.Many2one(related="topic_id.origin_topic_id")
+    related_loaded = fields.Boolean(default=False, copy=False, readonly=True)
+    origin_topic_id = fields.Many2one(related="topic_id.origin_topic_id", readonly=True)
     followup_policy = fields.Selection([("inherit", "Series/company default")] + FOLLOWUP_POLICIES, default="inherit", required=True)
     default_followup_kind = fields.Selection([("inherit", "Series/company default")] + FOLLOWUP_KINDS, default="inherit", required=True)
     name = fields.Char(string="Title")
@@ -253,6 +254,20 @@ class PointWizard(models.TransientModel):
     def _onchange_topic_id(self):
         if self.topic_id:
             self.related_topic_ids = self.topic_id.related_topic_ids
+            self.related_loaded = True
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        prepared = [
+            dict(vals, related_loaded=True) if "related_topic_ids" in vals else vals
+            for vals in vals_list
+        ]
+        return super().create(prepared)
+
+    def write(self, vals):
+        if "related_topic_ids" in vals:
+            vals = dict(vals, related_loaded=True)
+        return super().write(vals)
 
     @api.model
     def _open(self, context):
@@ -288,6 +303,10 @@ class PointWizard(models.TransientModel):
     def _write_related_points(self, topic):
         if not topic:
             return
+        # A programmatic reuse that never touched the field keeps the point's
+        # existing links; only an explicit selection is authoritative.
+        if self.topic_id and not self.related_loaded:
+            return
         related = self.related_topic_ids - topic
         if set(related.ids) != set(topic.related_topic_ids.ids):
             topic.write({"related_topic_ids": [(6, 0, related.ids)]})
@@ -304,12 +323,13 @@ class PointWizard(models.TransientModel):
             raise ValidationError(_("Enter a title or select an existing point."))
         if self.estimated_minutes < 0:
             raise ValidationError(_("Estimated minutes cannot be negative."))
-        if self.meeting_id and not self.created_item_id:
-            self.created_item_id = self.env["community.meeting.agenda.item"].create(
-                self._item_values(self.meeting_id)
-            )
+        if self.meeting_id:
+            if not self.created_item_id:
+                self.created_item_id = self.env["community.meeting.agenda.item"].create(
+                    self._item_values(self.meeting_id)
+                )
             self._write_related_points(self.created_item_id.topic_id)
-        elif not self.meeting_id and not self.creation_wizard_id:
+        elif not self.creation_wizard_id:
             raise UserError(_("Choose a meeting first."))
         self.included = True
         return (
