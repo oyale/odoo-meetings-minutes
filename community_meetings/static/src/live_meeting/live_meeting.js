@@ -20,10 +20,10 @@ export class LiveMeeting extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
-        this.state = useState({ loading: true, saving: 0, saveError: false, meeting: {}, items: [], types: [], dissents: [], actions: [], expanded: {}, newDissent: {}, newAction: {}, attendees: [] });
+        this.state = useState({ loading: true, saving: 0, saveError: false, submitting: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], expanded: {}, newDissent: {}, newAction: {}, attendees: [] });
         this.pendingWrites = new Map();
         this.beforeUnload = (ev) => {
-            if (this.pendingWrites.size) {
+            if (this.pendingWrites.size || Object.values(this.state.submitting).some(Boolean)) {
                 ev.preventDefault();
                 ev.returnValue = "";
             }
@@ -108,21 +108,45 @@ export class LiveMeeting extends Component {
         }
     }
 
+    async createRecord(key, model, values, onCreated) {
+        if (this.state.submitting[key]) return;
+        this.state.submitting[key] = true;
+        this.state.saving++;
+        this.state.saveError = false;
+        try {
+            const [id] = await this.orm.create(model, [values]);
+            const [record] = await this.orm.read(model, [id], model === "community.meeting.dissent"
+                ? ["agenda_item_id", "body", "kind", "author_display_name", "author_partner_id"]
+                : ["agenda_item_id", "name", "description", "responsible_user_id", "deadline", "state"]);
+            onCreated(record);
+        } catch (error) {
+            this.state.saveError = true;
+            this.notification.add("Could not save this record. Your entry is still available; retry when ready.", { type: "danger" });
+        } finally {
+            this.state.saving--;
+            this.state.submitting[key] = false;
+        }
+    }
+
     async addDissent(item) {
         const body = (this.state.newDissent[item.id] || "").trim();
         if (!body) return;
-        const [created] = await this.orm.create("community.meeting.dissent", [{ meeting_id: this.meetingId, agenda_item_id: item.id, body }]);
-        this.state.dissents.push({ id: created, agenda_item_id: [item.id, item.name], body, kind: "dissent" });
-        this.state.newDissent[item.id] = "";
+        await this.createRecord(`dissent:${item.id}`, "community.meeting.dissent", {
+            meeting_id: this.meetingId, agenda_item_id: item.id, body,
+        }, (record) => {
+            this.state.dissents.push(record);
+            this.state.newDissent[item.id] = "";
+        });
     }
 
     async addAction(item) {
         const form = this.state.newAction[item.id] || {};
         if (!form.name?.trim()) return;
         const values = { meeting_id: this.meetingId, agenda_item_id: item.id, name: form.name.trim(), deadline: form.deadline || false };
-        const [created] = await this.orm.create("community.meeting.action", [values]);
-        this.state.actions.push({ id: created, agenda_item_id: [item.id, item.name], name: values.name, deadline: values.deadline, state: "open" });
-        this.state.newAction[item.id] = {};
+        await this.createRecord(`action:${item.id}`, "community.meeting.action", values, (record) => {
+            this.state.actions.push(record);
+            this.state.newAction[item.id] = {};
+        });
     }
 
     setDissent(item, value) { this.state.newDissent[item.id] = value; }
@@ -131,12 +155,20 @@ export class LiveMeeting extends Component {
         this.state.newAction[item.id][key] = value;
     }
     async updateAction(action, field, value) {
-        await this.orm.write("community.meeting.action", [action.id], { [field]: value || false });
-        action[field] = value;
+        await this.write(`action:${action.id}`, "community.meeting.action", [action.id], { [field]: value || false }, () => { action[field] = value; });
     }
     async transition(method, state) {
-        await this.orm.call("community.meeting", method, [[this.meetingId]]);
-        this.state.meeting.state = state;
+        const key = `meeting:${this.meetingId}`;
+        if (this.state.submitting[key]) return;
+        this.state.submitting[key] = true;
+        try {
+            await this.orm.call("community.meeting", method, [[this.meetingId]]);
+            this.state.meeting.state = state;
+        } catch (error) {
+            this.notification.add("The meeting status could not be changed. Please retry.", { type: "danger" });
+        } finally {
+            this.state.submitting[key] = false;
+        }
     }
     markHeld() { return this.transition("action_mark_held", "held"); }
     prepareMinutes() { return this.transition("action_draft_minutes", "minutes_draft"); }

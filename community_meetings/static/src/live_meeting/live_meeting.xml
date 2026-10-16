@@ -3,10 +3,10 @@
     <t t-name="community_meetings.LiveMeeting">
         <main class="o_community_live_meeting">
             <div class="o_live_topbar">
-                <button class="btn btn-secondary" t-on-click="close">Back to Meetings</button>
+                <button class="btn btn-secondary" t-att-disabled="state.saving > 0" t-on-click="close">Back to Meetings</button>
                 <div class="o_live_workflow_buttons">
-                    <button t-if="state.meeting.state === 'scheduled'" class="btn btn-primary" t-on-click="markHeld">Mark Held</button>
-                    <button t-if="state.meeting.state === 'held'" class="btn btn-primary" t-on-click="prepareMinutes">Prepare Minutes</button>
+                    <button t-if="state.meeting.state === 'scheduled'" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="markHeld">Mark Held</button>
+                    <button t-if="state.meeting.state === 'held'" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="prepareMinutes">Prepare Minutes</button>
                 </div>
                 <span t-if="state.saving" class="text-muted" role="status" aria-live="polite">Saving…</span>
                 <span t-elif="state.saveError" class="text-danger" role="alert">Some changes could not be saved. Retry by editing the affected field.</span>
@@ -62,7 +62,7 @@
                                 <p t-else="" class="text-muted">No dissent recorded.</p>
                                 <div t-if="!locked" class="o_live_add_row">
                                     <textarea class="form-control" rows="2" placeholder="Record a dissent or reservation…" t-att-value="state.newDissent[item.id] || ''" t-on-input="(ev) => this.setDissent(item, ev.target.value)"/>
-                                    <button class="btn btn-outline-primary" t-on-click="() => this.addDissent(item)">Add dissent</button>
+                                    <button class="btn btn-outline-primary" t-att-disabled="state.submitting['dissent:' + item.id]" t-on-click="() => this.addDissent(item)">Add dissent</button>
                                 </div>
                             </div>
                             <div class="o_live_subsection">
@@ -77,7 +77,7 @@
                                 <div t-if="!locked" class="o_live_add_row o_live_task_form">
                                     <input class="form-control" placeholder="Task" t-att-value="state.newAction[item.id]?.name || ''" t-on-input="(ev) => this.setAction(item, 'name', ev.target.value)"/>
                                     <input class="form-control" type="date" aria-label="Deadline" t-att-value="state.newAction[item.id]?.deadline || ''" t-on-change="(ev) => this.setAction(item, 'deadline', ev.target.value)"/>
-                                    <button class="btn btn-outline-primary" t-on-click="() => this.addAction(item)">Add task</button>
+                                    <button class="btn btn-outline-primary" t-att-disabled="state.submitting['action:' + item.id]" t-on-click="() => this.addAction(item)">Add task</button>
                                 </div>
                             </div>
                         </div>
