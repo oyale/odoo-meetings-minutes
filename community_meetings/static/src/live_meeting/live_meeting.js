@@ -27,11 +27,12 @@ export class LiveMeeting extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
-        this.state = useState({ loading: true, saving: 0, saveError: false, unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, deferrals: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, attendees: [] });
+        this.state = useState({ loading: true, saving: 0, saveError: false, unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, attendees: [] });
         this.pendingWrites = new Map();
         this.editors = new Map();
         this.editorTimers = new Map();
         this.editorMeta = new Map();
+        this.partnerSearchToken = 0;
         this.beforeUnload = (ev) => {
             if (this.pendingWrites.size || Object.values(this.state.submitting).some(Boolean) || Object.values(this.state.unsavedEditors).some(Boolean)) {
                 ev.preventDefault();
@@ -61,6 +62,7 @@ export class LiveMeeting extends Component {
             this.orm.searchRead("community.meeting.editor.note", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "content"], { order: "id" }),
         ]);
         this.state.meeting = meetings[0];
+        this.state.attendeeIds = [...meetings[0].attendee_partner_ids];
         const users = await this.orm.searchRead("res.users", [
             ["active", "=", true], ["share", "=", false], ["company_ids", "in", [meetings[0].company_id[0]]],
         ], ["name"], { order: "name", limit: 200 });
@@ -145,6 +147,43 @@ export class LiveMeeting extends Component {
     }
     attendees() {
         return this.state.attendees.map((partner) => partner.name).join(", ") || _t("No attendees listed");
+    }
+    toggleAttendeeEditor() {
+        this.state.attendeeEditorOpen = !this.state.attendeeEditorOpen;
+        this.state.attendeeIds = [...this.state.meeting.attendee_partner_ids];
+        this.state.attendeeSearch = "";
+        this.state.partnerResults = [];
+    }
+    async searchPartners(value) {
+        this.state.attendeeSearch = value;
+        const token = ++this.partnerSearchToken;
+        if (!value.trim()) {
+            this.state.partnerResults = [];
+            return;
+        }
+        try {
+            const results = await this.orm.searchRead("res.partner", [["name", "ilike", value]], ["name"], { order: "name", limit: 20 });
+            if (token === this.partnerSearchToken) this.state.partnerResults = results;
+        } catch (error) {
+            if (token === this.partnerSearchToken) this.notification.add("Contacts could not be searched.", { type: "danger" });
+        }
+    }
+    toggleAttendee(partnerId) {
+        const ids = new Set(this.state.attendeeIds);
+        if (ids.has(partnerId)) ids.delete(partnerId); else ids.add(partnerId);
+        this.state.attendeeIds = [...ids];
+    }
+    async saveAttendees() {
+        await this.write(`meeting:${this.meetingId}`, "community.meeting", [this.meetingId], {
+            attendee_partner_ids: [[6, 0, this.state.attendeeIds]],
+        }, async () => {
+            const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["attendee_partner_ids"]);
+            this.state.meeting.attendee_partner_ids = saved.attendee_partner_ids;
+            this.state.attendees = saved.attendee_partner_ids.length
+                ? await this.orm.searchRead("res.partner", [["id", "in", saved.attendee_partner_ids]], ["name"], { order: "name" })
+                : [];
+            this.state.attendeeEditorOpen = false;
+        });
     }
     typeBehavior(item) { return this.state.types.find((type) => type.id === item.agenda_type_id?.[0])?.behavior || item.kind; }
     pointOutcome(item) {

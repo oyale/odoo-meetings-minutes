@@ -15,6 +15,8 @@
     .o_live_header_details > div { display: flex; flex-direction: column; min-width: 0; }
     .o_live_header_details span { overflow-wrap: anywhere; }
     .o_live_attendees { grid-column: span 2; }
+    .o_live_attendee_editor { max-width: 560px; margin-top: 12px; padding: 12px; border: 1px solid var(--border-color, #ddd); border-radius: 6px; }
+    .o_live_attendee_options { max-height: 240px; overflow: auto; margin: 8px 0; }
     .o_live_agenda, .o_live_minutes { padding-top: 24px; }
     .o_live_section_title { justify-content: space-between; margin-bottom: 14px; }
     .o_live_agenda_tools { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }

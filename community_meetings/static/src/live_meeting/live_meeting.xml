@@ -30,7 +30,24 @@
                         <div><strong>Actual end</strong><span><t t-out="dateTime(state.meeting.actual_end_datetime)"/></span></div>
                         <div><strong>Organizer</strong><span><t t-out="label(state.meeting.organizer_id)"/></span></div>
                         <div><strong>Location</strong><span><t t-out="state.meeting.location || 'Not set'"/></span></div>
-                        <div class="o_live_attendees"><strong>Attendees</strong><span><t t-out="attendees()"/></span></div>
+                        <div class="o_live_attendees"><strong>Attendees</strong><span><t t-out="attendees()"/></span>
+                            <button t-if="!locked and !state.attendeeEditorOpen" class="btn btn-link btn-sm" t-on-click="toggleAttendeeEditor">Edit attendees</button>
+                        </div>
+                    </div>
+                    <div t-if="state.attendeeEditorOpen" class="o_live_attendee_editor">
+                        <label class="form-label" for="attendee-search">Find contacts</label>
+                        <input id="attendee-search" class="form-control" type="search" t-att-value="state.attendeeSearch" t-on-input="(ev) => this.searchPartners(ev.target.value)"/>
+                        <div class="o_live_attendee_options">
+                            <label t-foreach="state.partnerResults" t-as="partner" t-key="partner.id" class="form-check">
+                                <input class="form-check-input" type="checkbox" t-att-checked="state.attendeeIds.includes(partner.id)" t-on-change="() => this.toggleAttendee(partner.id)"/>
+                                <span class="form-check-label"><t t-out="partner.name"/></span>
+                            </label>
+                            <p t-if="state.attendeeSearch and !state.partnerResults.length" class="text-muted">No matching contacts.</p>
+                        </div>
+                        <div class="o_live_add_row">
+                            <button class="btn btn-primary" t-att-disabled="state.saving > 0" t-on-click="saveAttendees">Save attendees</button>
+                            <button class="btn btn-link" t-on-click="toggleAttendeeEditor">Cancel</button>
+                        </div>
                     </div>
                     <a t-if="state.meeting.meeting_url" t-att-href="state.meeting.meeting_url" target="_blank" rel="noreferrer">Open meeting link</a>
                 </header>
