@@ -155,6 +155,7 @@
                                 <list editable="bottom">
                                     <field name="title"/>
                                     <field name="agenda_item_id" domain="[('meeting_id', '=', parent.id)]"/>
+                                    <field name="decision_outcome"/>
                                     <field name="status"/>
                                     <button name="action_request_followup" type="object" string="Follow Up" icon="fa-share"/>
                                 </list>

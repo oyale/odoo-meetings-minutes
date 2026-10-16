@@ -24,6 +24,31 @@ class TestMeetingWorkflow(TransactionCase):
             ])],
         })
 
+    def _decision_agreement(self, item, outcome="approved"):
+        return self.env["community.meeting.resolution"].with_user(self.editor).create({
+            "meeting_id": item.meeting_id.id, "agenda_item_id": item.id,
+            "title": "Recorded decision", "decision_outcome": outcome,
+        })
+
+    def test_decisions_require_an_agreement_and_follow_its_result(self):
+        meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "Decision rules"})
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": meeting.id, "name": "Proposal", "kind": "decision",
+        })
+        for values in ({"disposition": "closed"}, {"decision_result": "approved"}):
+            with self.assertRaises(ValidationError), self.cr.savepoint():
+                item.write(values)
+        agreement = self._decision_agreement(item)
+        self.assertEqual((item.decision_result, item.disposition), ("approved", "closed"))
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            self._decision_agreement(item, "denied")
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            item.write({"decision_result": "denied"})
+        agreement.write({"decision_outcome": "denied"})
+        self.assertEqual(item.decision_result, "denied")
+        agreement.write({"status": "withdrawn"})
+        self.assertEqual((item.decision_result, item.disposition), ("pending", "discussed"))
+
     def test_informational_agenda_and_workflow(self):
         meeting = self.env["community.meeting"].with_user(self.editor).create({
             "name": "Operations check-in",
@@ -61,12 +86,12 @@ class TestMeetingWorkflow(TransactionCase):
             "name": "Consent custom", "behavior": "decision",
         })
         meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "Original"})
-        self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+        original_item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
             "meeting_id": meeting.id,
             "name": "Approve the proposal",
             "agenda_type_id": custom_type.id,
-            "decision_result": "approved",
         })
+        self._decision_agreement(original_item)
 
         duplicate = meeting.with_user(self.editor).copy()
 
@@ -160,7 +185,7 @@ class TestMeetingWorkflow(TransactionCase):
         item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
             "meeting_id": meeting.id, "name": "Decision", "kind": "decision",
         })
-        item.with_user(self.editor).write({"decision_result": "approved"})
+        self._decision_agreement(item)
         self.assertEqual(item.disposition, "closed")
 
     def test_switching_to_decision_clears_old_resolved_status(self):
@@ -171,11 +196,12 @@ class TestMeetingWorkflow(TransactionCase):
         item.with_user(self.editor).write({"kind": "decision"})
         self.assertEqual(item.disposition, "open")
         self.assertEqual(item.decision_result, "pending")
-        item.with_user(self.editor).write({"decision_result": "approved"})
+        agreement = self._decision_agreement(item)
         self.assertEqual(item.decision_result, "approved")
-        item.with_user(self.editor).write({"decision_result": "denied"})
+        agreement.write({"decision_outcome": "denied"})
         self.assertEqual(item.decision_result, "denied")
         self.assertEqual(item.disposition, "closed")
+        agreement.write({"status": "withdrawn"})
         item.with_user(self.editor).write({"disposition": "deferred"})
         self.assertEqual(item.decision_result, "pending")
 
@@ -196,7 +222,8 @@ class TestMeetingWorkflow(TransactionCase):
         item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
             "meeting_id": meeting.id, "name": "Agenda point", "kind": "decision",
         })
-        item.with_user(self.editor).write({"decision_result": "approved"})
+        agreement = self._decision_agreement(item)
+        agreement.write({"status": "withdrawn"})
         item.with_user(self.editor).write({"kind": "information"})
         self.assertFalse(item.decision_result)
         item.with_user(self.editor).write({"kind": "decision"})

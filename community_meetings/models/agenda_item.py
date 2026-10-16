@@ -51,13 +51,25 @@ class CommunityMeetingAgendaItem(models.Model):
         if any(item.meeting_id.state in ("approved", "cancelled") for item in self):
             raise ValidationError(_("Agenda items cannot be added to approved or cancelled meetings."))
 
-    @api.constrains("kind", "decision_result")
+    @api.constrains("kind", "decision_result", "disposition")
     def _check_decision_result(self):
         for item in self:
             if item.kind != "decision" and item.decision_result:
                 raise ValidationError(_("Only decision agenda items can have a decision outcome."))
+            if item.kind != "decision" and self.env["community.meeting.resolution"].search_count([
+                ("agenda_item_id", "=", item.id), ("status", "=", "active"), ("decision_outcome", "!=", False),
+            ]):
+                raise ValidationError(_("Withdraw the decision agreement before changing the point type."))
             if item.decision_result in ("approved", "denied") and item.disposition != "closed":
                 raise ValidationError(_("An approved or denied decision must be marked as resolved."))
+            if item.kind == "decision":
+                agreement = self.env["community.meeting.resolution"].search([
+                    ("agenda_item_id", "=", item.id), ("status", "=", "active"),
+                    ("decision_outcome", "!=", False),
+                ], limit=1)
+                if item.disposition == "closed" or item.decision_result in ("approved", "denied") or agreement:
+                    if not agreement or item.decision_result != agreement.decision_outcome or item.disposition != "closed":
+                        raise ValidationError(_("Record an active agreement approving or rejecting this decision before closing it. The point's result must match that agreement."))
 
     @api.onchange("kind")
     def _onchange_kind(self):

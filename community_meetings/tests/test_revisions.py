@@ -28,19 +28,23 @@ class TestMeetingRevisions(TransactionCase):
     def _approved_meeting(self):
         meeting = self.env["community.meeting"].with_user(self.editor).create({
             "name": "Revision stability test",
+            "start_datetime": "2026-11-01 10:00:00",
             "reader_user_ids": [(4, self.approver.id)],
         })
         self.env["community.meeting.agenda.item"].with_user(self.editor).create({
             "meeting_id": meeting.id,
             "name": "Review open actions",
-            "discussion_notes": "Initial discussion",
+            "discussion_notes": "<p>Initial discussion</p>",
         })
-        self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+        decision = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
             "meeting_id": meeting.id,
             "name": "Approve the budget",
             "kind": "decision",
-            "decision_result": "approved",
             "sequence": 20,
+        })
+        self.env["community.meeting.resolution"].with_user(self.editor).create({
+            "meeting_id": meeting.id, "agenda_item_id": decision.id,
+            "title": "Budget approved", "decision_outcome": "approved",
         })
         action = self.env["community.meeting.action"].with_user(self.editor).create({
             "meeting_id": meeting.id,
@@ -57,8 +61,9 @@ class TestMeetingRevisions(TransactionCase):
         before_json = revision.snapshot_json
         before_pdf = revision.pdf_attachment_id.raw
         snapshot = json.loads(before_json)
-        self.assertEqual(snapshot["agenda"][0]["discussion"], "Initial discussion")
+        self.assertEqual(snapshot["agenda"][0]["discussion"], "<p>Initial discussion</p>")
         self.assertEqual(snapshot["agenda"][1]["decision_result"], "approved")
+        self.assertEqual(snapshot["agenda"][1]["resolutions"][0]["decision_outcome"], "approved")
         self.assertEqual(snapshot["agenda"][1]["decision_result_label"], "Approved")
         self.assertTrue(before_pdf.startswith(b"%PDF"))
         self.assertEqual(len(revision.snapshot_sha256), 64)
@@ -90,6 +95,7 @@ class TestMeetingRevisions(TransactionCase):
 
         manager_meeting = meeting.with_user(self.manager)
         manager_meeting.action_start_amendment()
+        meeting.resolution_ids.with_user(self.manager).write({"status": "withdrawn"})
         decision.with_user(self.manager).write({"kind": "information"})
         second = manager_meeting.action_approve_minutes()
 

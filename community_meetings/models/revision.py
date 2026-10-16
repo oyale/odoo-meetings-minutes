@@ -58,6 +58,7 @@ class CommunityMeetingRevision(models.Model):
                     "title": resolution.title,
                     "body": self._clean_html(resolution.body),
                     "status": resolution.status,
+                "decision_outcome": resolution.decision_outcome or "",
                 } for resolution in meeting.resolution_ids.filtered(lambda row: row.agenda_item_id == item).sorted("id")],
             })
         # Approval has already checked the approver's write access to this meeting.
@@ -105,6 +106,7 @@ class CommunityMeetingRevision(models.Model):
                 "title": resolution.title,
                 "body": self._clean_html(resolution.body),
                 "status": resolution.status,
+                "decision_outcome": resolution.decision_outcome or "",
             } for resolution in meeting.resolution_ids.filtered(lambda row: not row.agenda_item_id).sorted("id")],
             "actions": [{
                 "name": action.name,
