@@ -183,11 +183,7 @@ class MeetingCreateWizard(models.TransientModel):
             for line in self.carry_line_ids.filtered(lambda l: l.decision == "include"):
                 meeting._include_agenda_candidate({"key": line.candidate_key})
             for line in self.carry_line_ids.filtered(lambda l: l.decision == "discard"):
-                topic = self.env["community.meeting.topic"].browse(
-                    int(line.candidate_key.split(":")[1])
-                ) if line.candidate_key.startswith("proposal:") else None
-                if topic:
-                    topic.action_reject_proposal()
+                meeting._discard_agenda_candidate(line.candidate_key)
             self.created_meeting_id = meeting
         return {
             "type": "ir.actions.act_window",

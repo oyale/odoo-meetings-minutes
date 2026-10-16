@@ -239,7 +239,15 @@ class MeetingTopic(models.Model):
             raise UserError(_("Only proposed points can be admitted."))
         return super().write({"state": "open"})
 
+    def _check_proposal_review_access(self):
+        if not (
+            self.env.user.has_group("community_meetings.group_meeting_editor")
+            or self.env.user.has_group("community_meetings.group_meeting_manager")
+        ):
+            raise AccessError(_("Only meeting editors can review agenda proposals."))
+
     def action_accept_proposal(self):
+        self._check_proposal_review_access()
         self.check_access("write")
         if any(t.state != "proposed" or t.proposal_status != "submitted" for t in self):
             raise UserError(_("Only submitted proposals can be accepted."))
@@ -251,6 +259,7 @@ class MeetingTopic(models.Model):
         return True
 
     def action_reject_proposal(self, response=False):
+        self._check_proposal_review_access()
         self.check_access("write")
         if any(t.proposal_status != "submitted" for t in self):
             raise UserError(_("Only submitted proposals can be rejected."))

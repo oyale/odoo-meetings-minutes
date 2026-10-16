@@ -81,6 +81,32 @@ class AgendaPreparation(models.Model):
             ("status", "in", ("dismissed", "cancelled")),
         ]).mapped("cycle_key"))
 
+    def _discard_agenda_candidate(self, key):
+        self.ensure_one()
+        self.check_access("write")
+        candidate = next(
+            (c for c in self._agenda_candidates(self.series_id, self.start_datetime) if c["key"] == key),
+            None,
+        )
+        if not candidate:
+            return
+        if str(key).startswith("proposal:"):
+            self.env["community.meeting.topic"].browse(candidate["topic_id"]).action_reject_proposal()
+            return
+        transfers = self.env["community.meeting.carryover"]
+        if candidate.get("transfer_id"):
+            transfers.browse(candidate["transfer_id"]).action_dismiss(
+                _("Discarded when preparing the meeting.")
+            )
+            return
+        topic = self.env["community.meeting.topic"].browse(candidate.get("topic_id"))
+        transfer = transfers.with_context(review_carryovers_in_wizard=True).create({
+            "origin_model": "action" if topic else "agenda_item",
+            "origin_record_id": topic.origin_action_id.id if topic else candidate["source_id"],
+            "destination_series_id": self.series_id.id,
+        })
+        transfer.action_dismiss(_("Discarded when preparing the meeting."))
+
     def _include_agenda_candidate(self, candidate, accept=True):
         self.ensure_one()
         self.check_access("write")

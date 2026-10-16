@@ -94,6 +94,44 @@ class TestProposalConvergence(TransactionCase):
         topic = self.env["community.meeting.topic"].with_user(allowed).propose(values)
         self.assertEqual(topic.proposal_status, "submitted")
 
+    def test_self_approval_needs_the_review_capability(self):
+        own = self.env["community.meeting.topic"].with_user(self.editor).propose({
+            "name": "My own idea", "series_id": self.series.id,
+            "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+        })
+        own.action_accept_proposal()
+        self.assertEqual(own.proposal_status, "accepted")
+
+        plain = self.env["res.users"].create({
+            "name": "Plain accept proposer", "login": "proposal-plain-accept-conv-test",
+            "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
+        })
+        topic = self.env["community.meeting.topic"].with_user(plain).propose({
+            "name": "No review rights", "series_id": self.series.id,
+            "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+        })
+        with self.assertRaises(AccessError), self.cr.savepoint():
+            topic.with_user(plain).action_accept_proposal()
+
+    def test_discarding_a_carried_point_stops_offering_it(self):
+        source = self.env["community.meeting"].with_user(self.editor).create({
+            "name": "Carried source", "series_id": self.series.id,
+            "start_datetime": "2026-10-01 10:00:00",
+        })
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": source.id, "name": "Continuing point", "kind": "discussion",
+            "review_next_meeting": True,
+        })
+        meeting = self.env["community.meeting"].with_user(self.editor).create({
+            "name": "Prepared meeting", "series_id": self.series.id,
+            "start_datetime": "2026-11-01 10:00:00",
+        })
+        candidates = meeting._agenda_candidates(self.series, meeting.start_datetime)
+        candidate = next(c for c in candidates if c.get("source_id") == item.id)
+        meeting._discard_agenda_candidate(candidate["key"])
+        again = meeting._agenda_candidates(self.series, meeting.start_datetime)
+        self.assertFalse(any(c.get("source_id") == item.id for c in again))
+
     def test_proposed_series_point_is_a_candidate(self):
         self.env["community.meeting.topic"].with_user(self.editor).propose({
             "name": "Candidate proposal", "series_id": self.series.id,
