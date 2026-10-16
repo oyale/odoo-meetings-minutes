@@ -82,7 +82,7 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(len(wizard.carry_line_ids), 2)
         request_line = wizard.carry_line_ids.filtered(lambda line: line.transfer_id == transfer)
         self.assertTrue(request_line)
-        request_line.accept = False
+        request_line.decision = "postpone"
         wizard.action_finish()
         self.assertEqual(transfer.status, "pending")
         self.assertFalse(transfer.destination_meeting_id)
@@ -782,7 +782,7 @@ class TestMeetingDomain(TransactionCase):
         )
         wizard.action_next()
         self.assertEqual(wizard.carry_line_ids.source_id, point)
-        wizard.carry_line_ids.write({"accept": False})
+        wizard.carry_line_ids.write({"decision": "postpone"})
         meeting = self.env["community.meeting"].browse(wizard.action_finish()["res_id"])
         self.assertFalse(meeting.agenda_item_ids)
         self.assertFalse(meeting.incoming_carryover_ids)

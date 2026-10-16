@@ -1032,7 +1032,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             '.o_field_widget[name="carry_line_ids"] tr.o_data_row'
         ).filter(has_text=source_name)
         expect(row).to_be_visible()
-        expect(row.locator('input[type="checkbox"]')).to_be_checked()
+        expect(row.locator('input[data-value="include"]')).to_be_checked()
         wizard.locator('button[name="action_next"]').click()
         wizard.locator('button[name="action_finish"]').click()
         expect(wizard).not_to_be_visible(timeout=30000)
@@ -1705,11 +1705,10 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             '.o_field_widget[name="carry_line_ids"] tr.o_data_row'
         ).filter(has_text="Browser Discussion case")
         expect(row).to_be_visible()
-        row.locator('td[name="accept"]').click()
-        row.locator('input[type="checkbox"]').uncheck()
+        row.locator('input[data-value="postpone"]').check()
         wizard.locator('button[name="action_back"]').click()
         wizard.locator('button[name="action_next"]').click()
-        expect(row.locator('input[type="checkbox"]')).not_to_be_checked()
+        expect(row.locator('input[data-value="postpone"]')).to_be_checked()
         wizard.locator('button[name="action_next"]').click()
         wizard.locator('button[name="action_finish"]').click()
         expect(self.page.get_by_role("dialog")).to_have_count(0)

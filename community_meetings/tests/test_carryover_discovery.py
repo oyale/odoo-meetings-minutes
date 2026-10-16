@@ -88,7 +88,7 @@ class TestCarryoverDiscovery(TransactionCase):
             "duration_hours": 1,
             "carry_line_ids": [(0, 0, {
                 "candidate_key": f"source:{item.id}", "source_id": item.id,
-                "name": item.name, "accept": True,
+                "name": item.name, "decision": "include",
             })],
         })
         with self.assertRaises(ValidationError), self.cr.savepoint():
