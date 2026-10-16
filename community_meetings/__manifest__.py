@@ -4,7 +4,7 @@
     "version": "18.0.1.0.9",
     "category": "Services/Meetings",
     "license": "AGPL-3",
-    "depends": ["base", "web", "mail"],
+    "depends": ["base", "web", "web_editor", "mail"],
     "data": [
         "security/groups.xml",
         "security/ir.model.access.csv",

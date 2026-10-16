@@ -51,9 +51,12 @@
                             </select>
                         </div>
                         <div t-if="state.expanded[item.id]" t-att-id="'agenda-panel-' + item.id" class="o_live_card_body">
-                            <div t-if="item.description" class="o_live_planned"><strong>Planned topic</strong><div t-out="item.description"/></div>
+                            <div t-if="item.description" class="o_live_planned"><strong>Planned topic</strong><div t-out="safeHtml(item.description)"/></div>
                             <label class="form-label" t-att-for="'discussion-' + item.id">Discussion notes</label>
-                            <textarea t-att-id="'discussion-' + item.id" class="form-control" rows="4" t-att-value="item.discussion_notes || ''" t-att-disabled="locked" t-on-change="(ev) => this.saveItemText(item, 'discussion_notes', ev)" placeholder="Record what was discussed…"/>
+                            <t t-if="locked"><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></t>
+                            <t t-else="">
+                                <t t-component="Wysiwyg" t-props="{ options: richTextOptions(item.discussion_notes, 'discussion_notes:' + item.id, 'community.meeting.agenda.item', item.id), editingValue: item.discussion_notes, startWysiwyg: (wysiwyg) => this.startRichText('discussion_notes:' + item.id, wysiwyg) }"/>
+                            </t>
                             <div t-if="item.disposition === 'deferred'" class="mt-3"><strong>Postponed</strong><p t-if="item.deferral_reason" t-out="item.deferral_reason"/></div>
                             <div t-if="state.deferrals[item.id]" class="o_live_subsection o_live_deferral">
                                 <label class="form-label" t-att-for="'deferral-' + item.id">Reason for postponing</label>
@@ -97,7 +100,10 @@
 
                 <section class="o_live_minutes">
                     <h2>Meeting notes</h2>
-                    <textarea class="form-control" rows="5" t-att-value="state.meeting.minutes_notes || ''" t-att-disabled="locked" t-on-change="saveMinutes" placeholder="Notes for the minutes…"/>
+                    <t t-if="locked"><div class="o_live_rich_readonly" t-out="safeHtml(state.meeting.minutes_notes)"/></t>
+                    <t t-else="">
+                        <t t-component="Wysiwyg" t-props="{ options: richTextOptions(state.meeting.minutes_notes, 'minutes_notes', 'community.meeting', meetingId), editingValue: state.meeting.minutes_notes, startWysiwyg: (wysiwyg) => this.startRichText('minutes_notes', wysiwyg) }"/>
+                    </t>
                 </section>
             </t>
         </main>

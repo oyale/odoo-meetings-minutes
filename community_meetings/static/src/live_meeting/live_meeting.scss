@@ -27,6 +27,7 @@
     .o_live_card_body { padding: 4px 18px 18px 42px; }
     .o_live_planned { margin-bottom: 16px; }
     .o_live_planned > div { margin-top: 6px; }
+    .o_live_rich_readonly { min-height: 2rem; padding: 8px 10px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; }
     .o_live_subsection { margin-top: 20px; }
     .o_live_subsection h3 { font-size: 1rem; }
     .o_live_inline_records { list-style: none; padding: 0; margin: 0 0 8px; }

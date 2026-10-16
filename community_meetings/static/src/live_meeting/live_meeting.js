@@ -1,10 +1,11 @@
 /** @odoo-module **/
 
-import { Component, onMounted, onWillStart, onWillUnmount, useState } from "@odoo/owl";
+import { Component, markup, onMounted, onWillStart, onWillUnmount, useState } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { deserializeDateTime, formatDateTime } from "@web/core/l10n/dates";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { Wysiwyg } from "@web_editor/js/wysiwyg/wysiwyg";
 
 const OUTCOMES = {
     information: [["open", "Pending"], ["discussed", "Discussed"], ["deferred", "Postponed"]],
@@ -19,6 +20,7 @@ const MEETING_STATES = {
 export class LiveMeeting extends Component {
     static template = "community_meetings.LiveMeeting";
     static props = ["action", "*", "close?"];
+    static components = { Wysiwyg };
 
     setup() {
         this.orm = useService("orm");
@@ -26,6 +28,7 @@ export class LiveMeeting extends Component {
         this.notification = useService("notification");
         this.state = useState({ loading: true, saving: 0, saveError: false, submitting: {}, deferrals: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], expanded: {}, newDissent: {}, newAction: {}, attendees: [] });
         this.pendingWrites = new Map();
+        this.editors = new Map();
         this.beforeUnload = (ev) => {
             if (this.pendingWrites.size || Object.values(this.state.submitting).some(Boolean)) {
                 ev.preventDefault();
@@ -63,6 +66,42 @@ export class LiveMeeting extends Component {
     label(value) { return Array.isArray(value) ? value[1] : (value || ""); }
     dateTime(value) { return value ? formatDateTime(deserializeDateTime(value)) : _t("Not set"); }
     stateLabel(value) { return MEETING_STATES[value] || value || ""; }
+    safeHtml(value) { return markup(value || ""); }
+    richTextOptions(value, key, model, recordId) {
+        return {
+            value: value || "",
+            autostart: false,
+            recordInfo: { res_model: model, res_id: recordId },
+            allowCommandImage: false,
+            allowCommandVideo: false,
+            userGeneratedContent: true,
+            onWysiwygBlur: () => this.saveRichText(key, recordId),
+        };
+    }
+    async startRichText(key, wysiwyg) {
+        this.editors.set(key, wysiwyg);
+        await wysiwyg.startEdition();
+        wysiwyg.$editable[0].classList.add("odoo-editor-qweb");
+    }
+    async saveRichText(key, recordId) {
+        const editor = this.editors.get(key);
+        if (!editor) return;
+        const value = editor.getValue();
+        if (key === "minutes_notes") {
+            if (value === (this.state.meeting.minutes_notes || "")) return;
+            await this.write(`meeting:${this.meetingId}`, "community.meeting", [this.meetingId], { minutes_notes: value }, async () => {
+                const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["minutes_notes"]);
+                this.state.meeting.minutes_notes = saved.minutes_notes;
+            });
+        } else {
+            const item = this.state.items.find((row) => row.id === recordId);
+            if (!item || value === (item.discussion_notes || "")) return;
+            await this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], { discussion_notes: value }, async () => {
+                const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["discussion_notes"]);
+                item.discussion_notes = saved.discussion_notes;
+            });
+        }
+    }
     attendees() {
         return this.state.attendees.map((partner) => partner.name).join(", ") || "No attendees listed";
     }
@@ -167,19 +206,6 @@ export class LiveMeeting extends Component {
             } });
         } catch (error) {
             this.notification.add("Could not open the carryover request.", { type: "danger" });
-        }
-    }
-
-    async saveItemText(item, field, ev) {
-        const value = ev.target.value;
-        if (value === (item[field] || "")) return;
-        await this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], { [field]: value }, () => { item[field] = value; });
-    }
-
-    async saveMinutes(ev) {
-        const value = ev.target.value;
-        if (value !== (this.state.meeting.minutes_notes || "")) {
-            await this.write(`meeting:${this.meetingId}`, "community.meeting", [this.meetingId], { minutes_notes: value }, () => { this.state.meeting.minutes_notes = value; });
         }
     }
 
