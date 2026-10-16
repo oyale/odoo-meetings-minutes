@@ -1,3 +1,6 @@
+import calendar
+from datetime import timedelta
+
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
@@ -25,6 +28,61 @@ class CommunityMeetingSeries(models.Model):
         [("review", "Review"), ("automatic", "Automatic"), ("manual", "Manual")],
         default="review", required=True,
     )
+    has_minutes_approval_point = fields.Boolean(
+        string="Minutes approval point",
+        help="Add a 'Minutes Approval' point as the first agenda item of each meeting.",
+    )
+    has_next_meeting_point = fields.Boolean(
+        string="Next meeting point",
+        help="Add a 'Next Meeting' point as the last agenda item of each meeting.",
+    )
+    next_meeting_rule = fields.Selection(
+        [
+            ("weekday", "Next weekday"),
+            ("day_of_month", "Next day of month"),
+            ("interval_days", "After N days"),
+        ],
+        string="Next meeting default",
+        help="Default rule used to propose the next meeting date for 'Next Meeting' points.",
+    )
+    next_meeting_weekday = fields.Selection(
+        [
+            ("0", "Monday"), ("1", "Tuesday"), ("2", "Wednesday"),
+            ("3", "Thursday"), ("4", "Friday"), ("5", "Saturday"), ("6", "Sunday"),
+        ],
+        string="Weekday",
+    )
+    next_meeting_day_of_month = fields.Integer(string="Day of month")
+    next_meeting_interval_days = fields.Integer(string="Days")
+
+    def _propose_next_meeting_datetime(self, from_datetime):
+        """Compute the proposed next meeting date from the series default."""
+        self.ensure_one()
+        base = fields.Datetime.to_datetime(from_datetime)
+        if not base:
+            return False
+        if self.next_meeting_rule == "interval_days":
+            if not self.next_meeting_interval_days:
+                return False
+            return base + timedelta(days=self.next_meeting_interval_days)
+        if self.next_meeting_rule == "weekday":
+            if self.next_meeting_weekday is False:
+                return False
+            days_ahead = (int(self.next_meeting_weekday) - base.weekday()) % 7
+            if days_ahead == 0:
+                days_ahead = 7
+            return base + timedelta(days=days_ahead)
+        if self.next_meeting_rule == "day_of_month":
+            if not self.next_meeting_day_of_month:
+                return False
+            year, month = base.year, base.month
+            if base.day >= self.next_meeting_day_of_month:
+                month += 1
+                if month > 12:
+                    month, year = 1, year + 1
+            day = min(self.next_meeting_day_of_month, calendar.monthrange(year, month)[1])
+            return base.replace(year=year, month=month, day=day)
+        return False
 
     def action_new_meeting(self):
         self.ensure_one()

@@ -165,7 +165,40 @@ class Meeting(models.Model):
                     start, minutes=round(vals.get("duration_hours", 1.0) * 60)
                 )
             prepared.append(vals)
-        return super().create(prepared)
+        meetings = super().create(prepared)
+        meetings._add_structural_points()
+        return meetings
+
+    def _add_structural_points(self):
+        """Add series-configured structural points (minutes approval first,
+        next meeting last) when a meeting is created for a series."""
+        for meeting in self:
+            series = meeting.series_id
+            if not series:
+                continue
+            if series.has_minutes_approval_point and not meeting.agenda_item_ids.filtered(
+                lambda item: item.agenda_type_id.behavior == "minutes_approval"
+            ):
+                meeting.agenda_item_ids.create({
+                    "meeting_id": meeting.id,
+                    "name": _("Approve previous minutes"),
+                    "kind": "minutes_approval",
+                    "sequence": -1,
+                })
+            if series.has_next_meeting_point and not meeting.agenda_item_ids.filtered(
+                lambda item: item.agenda_type_id.behavior == "next_meeting"
+            ):
+                proposed = (
+                    series._propose_next_meeting_datetime(meeting.start_datetime)
+                    if meeting.start_datetime else False
+                )
+                meeting.agenda_item_ids.create({
+                    "meeting_id": meeting.id,
+                    "name": _("Next meeting"),
+                    "kind": "next_meeting",
+                    "sequence": 1000,
+                    "next_meeting_datetime": proposed,
+                })
 
     def write(self, vals):
         for meeting in self:

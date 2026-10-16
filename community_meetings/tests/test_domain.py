@@ -51,6 +51,97 @@ class TestMeetingDomain(TransactionCase):
         with self.assertRaises(ValidationError), self.cr.savepoint():
             later.copy({"meeting_id": second.id, "topic_id": point.topic_id.id})
 
+    def test_topic_type_change_syncs_upcoming_participation_kind(self):
+        series = self.env["community.meeting.series"].create({"name": "Type sync"})
+        first, second = self.env["community.meeting"].create(
+            [
+                {"name": "First", "series_id": series.id},
+                {"name": "Second", "series_id": series.id},
+            ]
+        )
+        point = self.env["community.meeting.agenda.item"].create(
+            {"meeting_id": first.id, "name": "Shared point"}
+        )
+        later = self.env["community.meeting.agenda.item"].create(
+            {"meeting_id": second.id, "topic_id": point.topic_id.id}
+        )
+        self.assertEqual(point.kind, "discussion")
+        self.assertEqual(later.kind, "discussion")
+        decision_type = self.env.ref("community_meetings.agenda_type_decision")
+        point.topic_id.write({"agenda_type_id": decision_type.id})
+        # F2: propagation must keep kind == agenda_type_id.behavior on the
+        # shared upcoming participation, not just copy the raw type id.
+        self.assertEqual(later.agenda_type_id.behavior, "decision")
+        self.assertEqual(later.kind, "decision")
+
+    def test_structural_point_types_and_kind_sync(self):
+        for behavior in ("minutes_approval", "next_meeting"):
+            agenda_type = self.env["community.meeting.agenda.type"].search(
+                [("behavior", "=", behavior), ("active", "=", True)], limit=1
+            )
+            self.assertTrue(agenda_type, "Missing agenda type for %s" % behavior)
+        meeting = self.env["community.meeting"].create({"name": "Structural types"})
+        item = self.env["community.meeting.agenda.item"].create({
+            "meeting_id": meeting.id, "name": "Next", "kind": "next_meeting",
+        })
+        self.assertEqual(item.agenda_type_id.behavior, "next_meeting")
+        self.assertEqual(item.kind, "next_meeting")
+
+    def test_series_structural_points_are_added_in_order(self):
+        series = self.env["community.meeting.series"].create({
+            "name": "Structural",
+            "has_minutes_approval_point": True,
+            "has_next_meeting_point": True,
+        })
+        meeting = self.env["community.meeting"].create({
+            "name": "Structural meeting", "series_id": series.id,
+        })
+        self.env["community.meeting.agenda.item"].create({
+            "meeting_id": meeting.id, "name": "Regular point", "kind": "discussion",
+        })
+        items = meeting.agenda_item_ids.sorted("sequence")
+        self.assertEqual(items[0].agenda_type_id.behavior, "minutes_approval")
+        self.assertEqual(items[-1].agenda_type_id.behavior, "next_meeting")
+
+    def test_series_next_meeting_rule_proposes_date(self):
+        series = self.env["community.meeting.series"].create({"name": "Recurrence"})
+        series.write({"next_meeting_rule": "interval_days", "next_meeting_interval_days": 7})
+        self.assertEqual(
+            str(series._propose_next_meeting_datetime("2026-10-20 10:00:00")),
+            "2026-10-27 10:00:00",
+        )
+        series.write({"next_meeting_rule": "weekday", "next_meeting_weekday": "1"})
+        self.assertEqual(
+            str(series._propose_next_meeting_datetime("2026-10-19 10:00:00")),
+            "2026-10-20 10:00:00",
+        )
+        series.write({"next_meeting_rule": "day_of_month", "next_meeting_day_of_month": 15})
+        self.assertEqual(
+            str(series._propose_next_meeting_datetime("2026-10-10 10:00:00")),
+            "2026-10-15 10:00:00",
+        )
+
+    def test_followup_promotes_to_point_when_origin_closes(self):
+        meeting = self.env["community.meeting"].create({
+            "name": "Promotion",
+            "start_datetime": "2026-11-01 10:00:00",
+        })
+        item = self.env["community.meeting.agenda.item"].create({
+            "meeting_id": meeting.id, "name": "Point", "kind": "discussion",
+        })
+        meeting.action_schedule()
+        item.write({"disposition": "closed"})
+        action = self.env["community.meeting.action"].create({
+            "meeting_id": meeting.id, "agenda_item_id": item.id, "name": "Continue work",
+        })
+        meeting.action_mark_held()
+        promoted = self.env["community.meeting.topic"].search([
+            ("origin_action_id", "=", action.id),
+        ])
+        self.assertEqual(len(promoted), 1)
+        self.assertEqual(promoted.origin_topic_id, item.topic_id)
+        self.assertEqual(promoted.name, "Continue work")
+
     def test_series_defaults_are_copied(self):
         series = self.env["community.meeting.series"].create(
             {

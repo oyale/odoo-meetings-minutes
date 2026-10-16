@@ -15,6 +15,7 @@ class CommunityMeetingResolution(models.Model):
     company_id = fields.Many2one(related="meeting_id.company_id", store=True, index=True)
     agenda_item_id = fields.Many2one(
         "community.meeting.agenda.item", ondelete="restrict", check_company=True,
+        required=True,
     )
     title = fields.Char(required=True)
     body = fields.Html()
@@ -81,6 +82,8 @@ class CommunityMeetingResolution(models.Model):
     def create(self, vals_list):
         if not self.env.user.has_group("community_meetings.group_meeting_editor"):
             raise UserError(_("You are not allowed to create resolutions."))
+        if any(not vals.get("agenda_item_id") for vals in vals_list):
+            raise ValidationError(_("A resolution must be linked to an agenda point."))
         meetings = self.env["community.meeting"].browse([vals.get("meeting_id") for vals in vals_list])
         if any(meeting.state in ("approved", "cancelled") for meeting in meetings):
             raise UserError(_("Resolutions cannot be added to approved or cancelled meetings."))

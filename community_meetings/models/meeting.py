@@ -216,7 +216,50 @@ class CommunityMeeting(models.Model):
                 )
                 vals["actual_paused_at"] = False
             super(CommunityMeeting, meeting).write(vals)
+        self._promote_followups()
         return result
+
+    def _promote_followups(self):
+        """At meeting close (held), promote open follow-ups whose origin point
+        is closed into new persistent points, keeping traceability to both."""
+        for meeting in self:
+            actions = self.env["community.meeting.action"].search([
+                ("meeting_id", "=", meeting.id),
+                ("state", "not in", ("done", "cancelled")),
+                ("topic_id.state", "=", "closed"),
+            ])
+            for action in actions:
+                if self.env["community.meeting.topic"].search_count([
+                    ("origin_action_id", "=", action.id),
+                ]):
+                    continue
+                default_type = self.env["community.meeting.agenda.type"].search(
+                    [("behavior", "=", "discussion"), ("active", "=", True)], limit=1
+                )
+                self.env["community.meeting.topic"].create({
+                    "name": action.name,
+                    "agenda_type_id": default_type.id,
+                    "origin_topic_id": action.topic_id.id,
+                    "origin_action_id": action.id,
+                    "company_id": meeting.company_id.id,
+                    "series_id": meeting.series_id.id,
+                })
+
+    def get_pending_minutes_for_approval(self):
+        """Previous meetings in the same series whose minutes are not approved."""
+        self.ensure_one()
+        if not self.series_id or not self.start_datetime:
+            return []
+        meetings = self.env["community.meeting"].search([
+            ("series_id", "=", self.series_id.id),
+            ("state", "in", ("held", "minutes_draft")),
+            ("start_datetime", "<", self.start_datetime),
+            ("id", "!=", self.id),
+        ], order="start_datetime, id")
+        return [
+            {"id": m.id, "code": m.code, "name": m.name, "state": m.state}
+            for m in meetings
+        ]
 
     def action_start_meeting(self):
         for meeting in self:

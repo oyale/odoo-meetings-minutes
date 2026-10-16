@@ -17,7 +17,7 @@ class CommunityMeetingAction(models.Model):
     resolution_id = fields.Many2one(
         "community.meeting.resolution", ondelete="restrict", check_company=True,
     )
-    agenda_item_id = fields.Many2one("community.meeting.agenda.item", ondelete="restrict", check_company=True)
+    agenda_item_id = fields.Many2one("community.meeting.agenda.item", ondelete="restrict", check_company=True, required=True)
     topic_id = fields.Many2one(related="agenda_item_id.topic_id", store=True, index=True)
     name = fields.Char(required=True)
     description = fields.Html()
@@ -47,6 +47,8 @@ class CommunityMeetingAction(models.Model):
     def create(self, vals_list):
         if not self.env.user.has_group("community_meetings.group_meeting_editor"):
             raise UserError(_("You are not allowed to create follow-up actions."))
+        if any(not vals.get("agenda_item_id") for vals in vals_list):
+            raise ValidationError(_("A follow-up action must be linked to an agenda point."))
         meetings = self.env["community.meeting"].browse([vals.get("meeting_id") for vals in vals_list])
         if any(meeting.state in ("approved", "cancelled") for meeting in meetings):
             raise UserError(_("Actions cannot be added to approved or cancelled meetings."))

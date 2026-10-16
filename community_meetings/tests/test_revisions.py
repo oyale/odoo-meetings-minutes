@@ -31,7 +31,7 @@ class TestMeetingRevisions(TransactionCase):
             "start_datetime": "2026-11-01 10:00:00",
             "reader_user_ids": [(4, self.approver.id)],
         })
-        self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+        review = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
             "meeting_id": meeting.id,
             "name": "Review open actions",
             "discussion_notes": "<p>Initial discussion</p>",
@@ -48,6 +48,7 @@ class TestMeetingRevisions(TransactionCase):
         })
         action = self.env["community.meeting.action"].with_user(self.editor).create({
             "meeting_id": meeting.id,
+            "agenda_item_id": review.id,
             "name": "Prepare follow-up",
         })
         meeting.with_user(self.editor).action_schedule()

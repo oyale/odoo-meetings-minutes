@@ -16,7 +16,8 @@ class CommunityMeetingAgendaItem(models.Model):
     sequence = fields.Integer(default=10)
     name = fields.Char(required=True)
     kind = fields.Selection(
-        [("information", "Information"), ("discussion", "Discussion"), ("decision", "Decision"), ("todo", "TODO")],
+        [("information", "Information"), ("discussion", "Discussion"), ("decision", "Decision"), ("todo", "TODO"),
+         ("minutes_approval", "Minutes Approval"), ("next_meeting", "Next Meeting")],
         default="discussion", required=True,
     )
     agenda_type_id = fields.Many2one(
@@ -37,6 +38,10 @@ class CommunityMeetingAgendaItem(models.Model):
         string="Decision outcome",
     )
     deferral_reason = fields.Text()
+    next_meeting_datetime = fields.Datetime(
+        string="Next meeting date", copy=False,
+        help="Date chosen for the next meeting by a 'Next Meeting' point.",
+    )
     private_note_ids = fields.One2many(
         "community.meeting.editor.note", "agenda_item_id",
         groups="community_meetings.group_meeting_editor",

@@ -26,6 +26,12 @@ class MeetingTopic(models.Model):
     series_id = fields.Many2one(
         "community.meeting.series", check_company=True, ondelete="restrict"
     )
+    origin_topic_id = fields.Many2one(
+        "community.meeting.topic", ondelete="set null", string="Origin point", copy=False,
+    )
+    origin_action_id = fields.Many2one(
+        "community.meeting.action", ondelete="set null", string="Promoted from follow-up", copy=False,
+    )
     agenda_type_id = fields.Many2one(
         "community.meeting.agenda.type", required=True, ondelete="restrict"
     )

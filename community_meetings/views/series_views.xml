@@ -38,6 +38,18 @@
                             <field name="carryover_policy"/>
                         </group>
                     </group>
+                    <group string="Agenda structure">
+                        <group>
+                            <field name="has_minutes_approval_point"/>
+                            <field name="has_next_meeting_point"/>
+                        </group>
+                        <group>
+                            <field name="next_meeting_rule"/>
+                            <field name="next_meeting_weekday" invisible="next_meeting_rule != 'weekday'"/>
+                            <field name="next_meeting_day_of_month" invisible="next_meeting_rule != 'day_of_month'"/>
+                            <field name="next_meeting_interval_days" invisible="next_meeting_rule != 'interval_days'"/>
+                        </group>
+                    </group>
                     <notebook>
                         <page string="Meetings">
                             <field name="meeting_ids" readonly="1">

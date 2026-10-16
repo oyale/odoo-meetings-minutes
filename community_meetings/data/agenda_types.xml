@@ -11,4 +11,10 @@
     <record id="agenda_type_todo" model="community.meeting.agenda.type">
         <field name="name">TODO</field><field name="behavior">todo</field><field name="sequence">40</field>
     </record>
+    <record id="agenda_type_minutes_approval" model="community.meeting.agenda.type">
+        <field name="name">Minutes Approval</field><field name="behavior">minutes_approval</field><field name="sequence">5</field>
+    </record>
+    <record id="agenda_type_next_meeting" model="community.meeting.agenda.type">
+        <field name="name">Next Meeting</field><field name="behavior">next_meeting</field><field name="sequence">50</field>
+    </record>
 </odoo>

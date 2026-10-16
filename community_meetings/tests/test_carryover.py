@@ -103,8 +103,12 @@ class TestAgendaCarryover(TransactionCase):
         self.assertFalse(duplicate.destination_item_id)
 
     def test_completed_action_can_be_selected_explicitly(self):
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": self.source.id, "name": "Completed work",
+        })
         action = self.env["community.meeting.action"].with_user(self.editor).create({
-            "meeting_id": self.source.id, "name": "Previously completed action", "state": "done",
+            "meeting_id": self.source.id, "agenda_item_id": item.id,
+            "name": "Previously completed action", "state": "done",
         })
         wizard = self.env["community.meeting.carryover.wizard"].with_user(self.editor).create({
             "origin_model": "action", "origin_record_id": action.id,

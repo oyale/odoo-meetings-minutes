@@ -47,6 +47,14 @@ class CommunityMeetingCarryover(models.Model):
     responded_by_id = fields.Many2one("res.users", readonly=True)
     responded_at = fields.Datetime(readonly=True)
     cycle_key = fields.Char(required=True, readonly=True, index=True)
+    inclusion_reason = fields.Selection(
+        [
+            ("promoted", "Promoted follow-up"),
+            ("postponed", "Postponed point"),
+            ("proposed", "Proposed point"),
+        ],
+        string="Inclusion reason", readonly=True,
+    )
 
     _sql_constraints = [
         ("carryover_cycle_unique", "unique(cycle_key)", "This source already has a carryover in this series or destination."),
