@@ -34,6 +34,12 @@
     .o_live_subsection h3 { font-size: 1rem; }
     .o_live_inline_records { list-style: none; padding: 0; margin: 0 0 8px; }
     .o_live_inline_records li { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; padding: 7px 0; }
+    .o_live_record_editor, .o_live_resolution_editor { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(120px, 1fr) auto; align-items: center; gap: 8px; }
+    .o_live_record_editor textarea { grid-column: 1 / -1; }
+    .o_live_resolution_form { display: grid; grid-template-columns: 1fr 2fr auto; width: 100%; }
+    .o_live_task_owner { max-width: 200px; }
+    .o_live_task_deadline { max-width: 150px; }
+    .o_live_task_state { max-width: 150px; }
     .o_live_add_row textarea, .o_live_add_row input:first-child { flex: 1; }
     .o_live_task_form input[type="date"] { max-width: 180px; }
     @media (max-width: 800px) {
@@ -44,5 +50,6 @@
         .o_live_type, .o_live_status { width: auto; flex: 1 1 145px; }
         .o_live_card_body { padding-left: 16px; }
         .o_live_add_row { align-items: stretch; flex-direction: column; }
+        .o_live_record_editor, .o_live_resolution_editor, .o_live_resolution_form { grid-template-columns: minmax(0, 1fr); }
     }
 }

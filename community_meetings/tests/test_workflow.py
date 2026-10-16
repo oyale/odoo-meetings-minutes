@@ -181,7 +181,9 @@ class TestMeetingWorkflow(TransactionCase):
             item.with_user(self.editor).write({"decision_result": "approved"})
 
     def test_changing_agenda_item_type_resets_inapplicable_decision_result(self):
-        meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "Change agenda type"})
+        meeting = self.env["community.meeting"].with_user(self.editor).create({
+            "name": "Change agenda type", "start_datetime": "2026-11-01 10:00:00",
+        })
         meeting.with_user(self.editor).action_schedule()
         meeting.with_user(self.editor).action_mark_held()
         item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
@@ -194,7 +196,9 @@ class TestMeetingWorkflow(TransactionCase):
         self.assertEqual(item.decision_result, "pending")
 
     def test_editor_can_open_live_meeting_screen_during_meeting(self):
-        meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "Live meeting"})
+        meeting = self.env["community.meeting"].with_user(self.editor).create({
+            "name": "Live meeting", "start_datetime": "2026-11-01 10:00:00",
+        })
         meeting.with_user(self.editor).action_schedule()
         action = meeting.with_user(self.editor).action_open_live_meeting()
         self.assertEqual(action["type"], "ir.actions.client")
