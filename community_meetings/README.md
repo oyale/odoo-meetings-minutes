@@ -88,3 +88,15 @@ blocked after execution starts or when an approved revision exists. The target
 series must be active and match the meeting company and kind. Points used only
 by this meeting follow the new series; points shared with another meeting cannot
 be moved to a different series.
+
+### Core coverage runner
+
+Inside the development container, run `bash /opt/meeting_addons/community_meetings/tests/coverage.sh`
+for core line coverage. The runner records whether the Odoo service was active,
+stops it before accessing the existing database, and restores that initial state
+on success, test/report failure or a handled signal. It fails if Odoo cannot be
+stopped or restarted. `ODOO_TEST_TIMEOUT` controls the test-process limit (120s
+by default); the default test selection excludes PDF revision tests that need
+HTTP assets. Run `bash tests/test_coverage_runner.sh` from this addon checkout
+to check the service recovery paths without touching the real service. SIGKILL
+and host loss cannot run shell cleanup.
