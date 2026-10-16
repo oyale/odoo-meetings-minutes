@@ -215,6 +215,14 @@ class PointWizard(models.TransientModel):
     series_id = fields.Many2one("community.meeting.series", compute="_compute_scope")
     company_id = fields.Many2one("res.company", compute="_compute_scope")
     topic_id = fields.Many2one("community.meeting.topic", string="Existing point")
+    related_topic_ids = fields.Many2many(
+        "community.meeting.topic",
+        "community_meeting_point_wizard_related_rel",
+        "wizard_id",
+        "topic_id",
+        string="Related points",
+    )
+    origin_topic_id = fields.Many2one(related="topic_id.origin_topic_id", readonly=True)
     followup_policy = fields.Selection([("inherit", "Series/company default")] + FOLLOWUP_POLICIES, default="inherit", required=True)
     default_followup_kind = fields.Selection([("inherit", "Series/company default")] + FOLLOWUP_KINDS, default="inherit", required=True)
     name = fields.Char(string="Title")
@@ -271,6 +279,12 @@ class PointWizard(models.TransientModel):
             "default_followup_kind": self.default_followup_kind,
         }
 
+    def _write_related_points(self, topic):
+        if not topic:
+            return
+        related = self.related_topic_ids - topic
+        topic.write({"related_topic_ids": [(6, 0, related.ids)]})
+
     def action_save(self):
         self.ensure_one()
         self.check_access("write")
@@ -287,6 +301,7 @@ class PointWizard(models.TransientModel):
             self.created_item_id = self.env["community.meeting.agenda.item"].create(
                 self._item_values(self.meeting_id)
             )
+            self._write_related_points(self.created_item_id.topic_id)
         elif not self.meeting_id and not self.creation_wizard_id:
             raise UserError(_("Choose a meeting first."))
         self.included = True

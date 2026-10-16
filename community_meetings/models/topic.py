@@ -40,6 +40,13 @@ class MeetingTopic(models.Model):
     priority = fields.Selection(PRIORITIES, default="1", required=True, tracking=True)
     deadline = fields.Date(tracking=True)
     estimated_minutes = fields.Integer()
+    related_topic_ids = fields.Many2many(
+        "community.meeting.topic",
+        "community_meeting_topic_related_rel",
+        "topic_id",
+        "related_topic_id",
+        string="Related points",
+    )
     state = fields.Selection(
         [("proposed", "Proposed"), ("open", "Open"), ("closed", "Closed")],
         default="open",
