@@ -4,8 +4,8 @@ import { Component, markup, onMounted, onWillStart, onWillUnmount, useState } fr
 import { _t } from "@web/core/l10n/translation";
 import { deserializeDateTime, formatDateTime } from "@web/core/l10n/dates";
 import { registry } from "@web/core/registry";
+import { loadBundle } from "@web/core/assets";
 import { useService } from "@web/core/utils/hooks";
-import { Wysiwyg } from "@web_editor/js/wysiwyg/wysiwyg";
 
 const OUTCOMES = {
     information: [["open", _t("Pending")], ["discussed", _t("Discussed")], ["deferred", _t("Postponed")]],
@@ -21,7 +21,7 @@ const MEETING_STATES = {
 export class LiveMeeting extends Component {
     static template = "community_meetings.LiveMeeting";
     static props = ["action", "*", "close?"];
-    static components = { Wysiwyg };
+    static components = {};
 
     setup() {
         this.orm = useService("orm");
@@ -39,7 +39,12 @@ export class LiveMeeting extends Component {
                 ev.returnValue = "";
             }
         };
-        onWillStart(() => this.load());
+        onWillStart(async () => {
+            await loadBundle("web_editor.backend_assets_wysiwyg");
+            const { Wysiwyg } = await odoo.loader.modules.get("@web_editor/js/wysiwyg/wysiwyg");
+            this.constructor.components = { Wysiwyg };
+            await this.load();
+        });
         onMounted(() => window.addEventListener("beforeunload", this.beforeUnload));
         onWillUnmount(() => {
             window.removeEventListener("beforeunload", this.beforeUnload);
