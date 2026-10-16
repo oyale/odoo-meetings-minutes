@@ -7,4 +7,25 @@
         <field name="context">{'default_propose': True}</field>
     </record>
     <menuitem id="menu_propose_point" name="Propose a Point" parent="community_meetings.menu_community_meetings_root" action="action_propose_point" sequence="20" groups="base.group_user"/>
+    <record id="view_series_pending_proposals" model="ir.ui.view">
+        <field name="name">community.meeting.series.pending.proposals</field>
+        <field name="model">community.meeting.series</field>
+        <field name="inherit_id" ref="community_meetings.view_community_meeting_series_form"/>
+        <field name="arch" type="xml">
+            <field name="carryover_policy" position="after">
+                <div class="alert alert-info" invisible="not pending_proposal_ids">
+                    <strong>Proposals to review</strong>
+                    <field name="pending_proposal_ids" nolabel="1" readonly="1">
+                        <list create="0" delete="0">
+                            <field name="name"/>
+                            <field name="proposer_partner_id"/>
+                            <field name="priority"/>
+                            <button name="action_accept_proposal" type="object" string="Accept"/>
+                            <button name="action_reject_proposal" type="object" string="Reject"/>
+                        </list>
+                    </field>
+                </div>
+            </field>
+        </field>
+    </record>
 </odoo>

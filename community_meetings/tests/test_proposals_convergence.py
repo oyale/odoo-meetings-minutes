@@ -138,3 +138,12 @@ class TestProposalConvergence(TransactionCase):
         self.assertEqual(discarded.proposal_status, "rejected")
         self.assertTrue(meeting.agenda_item_ids.filtered(lambda i: i.topic_id == accepted))
         self.assertFalse(meeting.agenda_item_ids.filtered(lambda i: i.topic_id == postponed))
+
+    def test_pending_proposals_are_listed_on_the_series(self):
+        topic = self.env["community.meeting.topic"].with_user(self.editor).propose({
+            "name": "On the series", "series_id": self.series.id,
+            "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+        })
+        self.assertIn(topic, self.series.pending_proposal_ids)
+        topic.action_reject_proposal()
+        self.assertNotIn(topic, self.series.pending_proposal_ids)

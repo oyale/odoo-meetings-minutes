@@ -591,3 +591,22 @@ class AgendaParticipation(models.Model):
             ]
         )
         return actions.filtered(lambda action: action._has_execution_evidence())
+
+
+class MeetingSeries(models.Model):
+    _inherit = "community.meeting.series"
+
+    topic_ids = fields.One2many("community.meeting.topic", "series_id")
+    pending_proposal_ids = fields.One2many(
+        "community.meeting.topic", compute="_compute_pending_proposals",
+        groups="community_meetings.group_meeting_editor",
+    )
+
+    @api.depends("topic_ids.state", "topic_ids.proposal_status")
+    def _compute_pending_proposals(self):
+        for series in self:
+            series.pending_proposal_ids = self.env["community.meeting.topic"].search([
+                ("series_id", "=", series.id),
+                ("state", "=", "proposed"),
+                ("proposal_status", "=", "submitted"),
+            ])
