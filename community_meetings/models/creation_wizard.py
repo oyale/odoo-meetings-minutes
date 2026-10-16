@@ -118,7 +118,7 @@ class MeetingCreateWizard(models.TransientModel):
         ):
             raise ValidationError(_("Enter a title, start time and positive duration."))
         if self.step == "people":
-            choices = {line.candidate_key: line.accept for line in self.carry_line_ids}
+            choices = {line.candidate_key: line.decision for line in self.carry_line_ids}
             self.carry_line_ids.unlink()
             candidates = self.env["community.meeting"]._agenda_candidates(
                 self.series_id, self.start_datetime
@@ -126,7 +126,7 @@ class MeetingCreateWizard(models.TransientModel):
             self.carry_line_ids = [
                 (0, 0, {"candidate_key": candidate["key"],
                         **{k: v for k, v in candidate.items() if k != "key"},
-                        "accept": choices.get(candidate["key"], True)})
+                        "decision": choices.get(candidate["key"], "include")})
                 for candidate in candidates
             ]
         self.step = steps[min(steps.index(self.step) + 1, len(steps) - 1)]
@@ -180,8 +180,14 @@ class MeetingCreateWizard(models.TransientModel):
                     line._item_values(meeting)
                 )
                 line._write_related_points(item.topic_id)
-            for line in self.carry_line_ids.filtered("accept"):
+            for line in self.carry_line_ids.filtered(lambda l: l.decision == "include"):
                 meeting._include_agenda_candidate({"key": line.candidate_key})
+            for line in self.carry_line_ids.filtered(lambda l: l.decision == "discard"):
+                topic = self.env["community.meeting.topic"].browse(
+                    int(line.candidate_key.split(":")[1])
+                ) if line.candidate_key.startswith("proposal:") else None
+                if topic:
+                    topic.action_reject_proposal()
             self.created_meeting_id = meeting
         return {
             "type": "ir.actions.act_window",
@@ -207,7 +213,10 @@ class CarryReviewLine(models.TransientModel):
     name = fields.Char()
     origin_meeting_id = fields.Many2one("community.meeting")
     reason = fields.Text()
-    accept = fields.Boolean(string="Include")
+    decision = fields.Selection(
+        [("include", "Include"), ("postpone", "Postpone"), ("discard", "Discard")],
+        default="include", required=True,
+    )
 
 
 class PointWizard(models.TransientModel):

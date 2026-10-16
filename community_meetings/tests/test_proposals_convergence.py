@@ -107,3 +107,34 @@ class TestProposalConvergence(TransactionCase):
         self.assertEqual(topic.state, "open")
         self.assertEqual(topic.proposal_status, "accepted")
         self.assertTrue(meeting.agenda_item_ids.filtered(lambda i: i.topic_id == topic))
+
+    def test_finish_respects_the_review_decision(self):
+        accepted = self.env["community.meeting.topic"].with_user(self.editor).propose({
+            "name": "Accept me", "series_id": self.series.id,
+            "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+        })
+        postponed = self.env["community.meeting.topic"].with_user(self.editor).propose({
+            "name": "Postpone me", "series_id": self.series.id,
+            "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+        })
+        discarded = self.env["community.meeting.topic"].with_user(self.editor).propose({
+            "name": "Discard me", "series_id": self.series.id,
+            "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+        })
+        wizard = self.env["community.meeting.create.wizard"].with_user(self.editor).create({
+            "step": "carryover", "series_id": self.series.id, "name": "Review meeting",
+            "start_datetime": "2026-11-01 10:00:00", "duration_hours": 1,
+            "carry_line_ids": [
+                (0, 0, {"candidate_key": f"proposal:{accepted.id}", "decision": "include"}),
+                (0, 0, {"candidate_key": f"proposal:{postponed.id}", "decision": "postpone"}),
+                (0, 0, {"candidate_key": f"proposal:{discarded.id}", "decision": "discard"}),
+            ],
+        })
+        res = wizard.action_finish()
+        meeting = self.env["community.meeting"].browse(res["res_id"])
+        self.assertEqual(accepted.state, "open")
+        self.assertEqual(accepted.proposal_status, "accepted")
+        self.assertEqual(postponed.proposal_status, "submitted")
+        self.assertEqual(discarded.proposal_status, "rejected")
+        self.assertTrue(meeting.agenda_item_ids.filtered(lambda i: i.topic_id == accepted))
+        self.assertFalse(meeting.agenda_item_ids.filtered(lambda i: i.topic_id == postponed))
