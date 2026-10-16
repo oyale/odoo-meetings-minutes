@@ -136,8 +136,12 @@ class TestMeetingSecurity(TransactionCase):
         note = self.env["community.meeting.editor.note"].with_user(self.editor).create({
             "meeting_id": meeting.id, "content": "Private editorial text",
         })
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": meeting.id, "name": "Restricted point",
+        })
         dissent = self.env["community.meeting.dissent"].with_user(self.editor).create({
-            "meeting_id": meeting.id, "body": "Restricted until approved", "include_in_minutes": False,
+            "meeting_id": meeting.id, "agenda_item_id": item.id,
+            "body": "Restricted until approved", "include_in_minutes": False,
         })
         meeting.reader_user_ids = [(4, self.reader.id)]
         with self.assertRaises(AccessError):

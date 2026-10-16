@@ -143,6 +143,13 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(promoted.name, "Continue work")
         self.assertEqual(promoted.agenda_type_id.behavior, "followup")
 
+    def test_general_dissent_is_rejected(self):
+        meeting = self.env["community.meeting"].create({"name": "No general dissent"})
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            self.env["community.meeting.dissent"].create({
+                "meeting_id": meeting.id, "body": "General dissent",
+            })
+
     def test_series_defaults_are_copied(self):
         series = self.env["community.meeting.series"].create(
             {

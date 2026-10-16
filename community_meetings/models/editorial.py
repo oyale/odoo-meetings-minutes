@@ -70,6 +70,8 @@ class CommunityMeetingDissent(models.Model):
     @api.constrains("meeting_id", "agenda_item_id", "resolution_id")
     def _check_scope(self):
         for dissent in self:
+            if not dissent.agenda_item_id and not dissent.resolution_id:
+                raise ValidationError(_("A dissent must be linked to an agenda point or an agreement."))
             if dissent.agenda_item_id and dissent.agenda_item_id.meeting_id != dissent.meeting_id:
                 raise ValidationError(_("A dissent's agenda item must belong to the same meeting."))
             if dissent.resolution_id and dissent.resolution_id.meeting_id != dissent.meeting_id:
