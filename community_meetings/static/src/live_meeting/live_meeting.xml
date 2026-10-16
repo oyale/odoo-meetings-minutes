@@ -23,7 +23,7 @@
                 <header class="o_live_header">
                     <div>
                         <div class="text-muted"><t t-out="state.meeting.code"/></div>
-                        <h1><t t-out="state.meeting.name"/></h1>
+                        <h1><t t-if="locked" t-out="state.meeting.name"/><input t-else="" class="form-control fs-2" aria-label="Meeting name" t-att-value="state.headerDraft.name ?? (state.meeting.name || '')" t-on-input="(ev) => { state.headerDraft.name = ev.target.value; }" t-on-change="(ev) => this.saveHeaderField('name', ev.target.value)"/></h1>
                     </div>
                     <div class="o_live_header_details">
                         <div><strong>Estimated start</strong><span><t t-out="dateTime(state.meeting.start_datetime)"/></span></div>
@@ -33,10 +33,11 @@
                         <div><strong>Actual end</strong><span><t t-out="dateTime(state.meeting.actual_end_datetime)"/></span></div>
                         <div t-if="state.meeting.actual_end_datetime"><strong>Actual duration</strong><span t-out="durationLabel(state.meeting.actual_duration_minutes)"/></div>
                         <div><strong>Organizer</strong><span><t t-out="label(state.meeting.organizer_id)"/></span></div>
-                        <div><strong>Minutes secretary</strong><span><t t-out="label(state.meeting.secretary_id)"/></span></div>
-                        <div><strong>Location</strong><span><t t-out="state.meeting.location || 'Not set'"/></span></div>
+                        <div><strong>Minutes secretary</strong><span t-if="locked" t-out="label(state.meeting.secretary_id)"/><select t-else="" class="form-select" aria-label="Minutes secretary" t-on-change="(ev) => this.saveHeaderField('secretary_id', ev.target.value)"><option value="">Not set</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id" t-att-selected="state.meeting.secretary_id?.[0] === user.id"><t t-out="user.name"/></option></select></div>
+                        <div><strong>Location</strong><span t-if="locked" t-out="state.meeting.location || 'Not set'"/><input t-else="" class="form-control" aria-label="Location" t-att-value="state.headerDraft.location ?? (state.meeting.location || '')" t-on-input="(ev) => { state.headerDraft.location = ev.target.value; }" t-on-change="(ev) => this.saveHeaderField('location', ev.target.value)"/></div>
+                        <div><strong>Meeting link</strong><a t-if="locked" t-att-href="state.meeting.meeting_url" t-out="state.meeting.meeting_url"/><input t-else="" class="form-control" type="url" aria-label="Meeting link" t-att-value="state.headerDraft.meeting_url ?? (state.meeting.meeting_url || '')" t-on-input="(ev) => { state.headerDraft.meeting_url = ev.target.value; }" t-on-change="(ev) => this.saveHeaderField('meeting_url', ev.target.value)"/></div>
                         <div class="o_live_attendees"><strong>Attendees</strong><span><t t-out="attendees()"/></span>
-                            <button t-if="!readOnly and !state.attendeeEditorOpen" class="btn btn-link btn-sm" t-on-click="toggleAttendeeEditor">Edit attendees</button>
+                            <button t-if="!locked and !state.attendeeEditorOpen" class="btn btn-link btn-sm" t-on-click="toggleAttendeeEditor">Edit attendees</button>
                         </div>
                     </div>
                     <div t-if="state.attendeeEditorOpen" class="o_live_attendee_editor">
@@ -76,7 +77,7 @@
                 <section class="o_live_agenda">
                     <div class="o_live_section_title">
                         <div><h2>Agenda</h2><span class="text-muted"><t t-out="completedCount"/> of <t t-out="state.items.length"/> points completed</span></div>
-                        <div class="o_live_agenda_tools"><button t-if="!readOnly" class="btn btn-primary" t-on-click="addPoint">Add Point</button>
+                        <div class="o_live_agenda_tools"><button t-if="!locked" class="btn btn-primary" t-on-click="addPoint">Add Point</button>
                             <button class="btn btn-outline-secondary" t-att-disabled="!visibleItems.length" t-on-click="() => this.navigateItem(-1)" title="Previous point" aria-label="Previous agenda point"><i class="fa fa-arrow-up" aria-hidden="true"/></button>
                             <button class="btn btn-outline-secondary" t-att-disabled="!visibleItems.length" t-on-click="() => this.navigateItem(1)" title="Next point" aria-label="Next agenda point"><i class="fa fa-arrow-down" aria-hidden="true"/></button>
                             <button class="btn btn-outline-secondary" t-att-aria-pressed="state.showPendingOnly" t-on-click="togglePending">Pending only</button>
@@ -131,10 +132,9 @@
                             <details t-if="item.actual_started_at and !readOnly" class="o_live_advanced"><summary>Point options</summary><button class="btn btn-link" t-on-click="() => this.editPoint(item)">Edit point details</button></details>
                             <t t-if="item.has_started">
                               <t t-if="item.actual_started_at and !readOnly">
-                            <label t-if="!readOnly" class="form-check-label"><input class="form-check-input" type="checkbox" aria-label="Review at next meeting" t-att-checked="item.review_next_meeting" t-att-disabled="state.submitting['review:' + item.id]" t-on-change="(ev) => this.toggleReview(item, ev.target.checked)"/> Review at next meeting</label>
+
                             <div t-if="item.is_followup" class="alert alert-light">Follow-up of a closed point: <t t-out="item.topic_outcome"/></div>
                             <div t-if="!item.is_followup" class="o_live_point_actions" role="group" aria-label="Change agenda point result">
-                                <button t-if="!readOnly and pointOutcome(item) !== 'deferred'" class="btn btn-outline-secondary" t-on-click="() => this.applyPointAction(item, 'deferred')" aria-label="Postpone agenda point"><i class="fa fa-clock-o" aria-hidden="true"/> Postpone</button>
                                 <button t-if="!readOnly and !item.is_followup and item.disposition !== 'open' and !state.reopening[item.id]" class="btn btn-outline-secondary" t-on-click="() => { state.reopening[item.id] = ''; }" aria-label="Undo point result"><i class="fa fa-undo" aria-hidden="true"/> Undo result</button>
                             </div>
                             <div t-if="!readOnly and state.reopening[item.id] !== undefined" class="o_live_reopen_form">
@@ -144,19 +144,10 @@
                                 <button class="btn btn-link" t-on-click="() => delete state.reopening[item.id]">Cancel</button>
                             </div>
                             <div t-if="item.disposition === 'deferred'" class="mt-3"><strong>Postponed</strong><p t-if="item.deferral_reason" t-out="item.deferral_reason"/></div>
-                            <div t-if="state.deferrals[item.id]" class="o_live_subsection o_live_deferral">
-                                <label class="form-label" t-att-for="'deferral-' + item.id">Reason for postponing</label>
-                                <textarea t-att-id="'deferral-' + item.id" class="form-control" rows="2" t-att-value="state.deferrals[item.id].reason" t-on-input="(ev) => this.setDeferralReason(item, ev.target.value)"/>
-                                <div class="o_live_add_row mt-2">
-                                    <button class="btn btn-primary" t-on-click="() => this.saveDeferral(item)">Leave postponed</button>
-                                    <button class="btn btn-outline-primary" t-if="state.meeting.series_id" t-on-click="() => this.requestCarryover(item)">Request next meeting carryover</button>
-                                    <button class="btn btn-outline-primary" t-if="!state.meeting.series_id" t-on-click="() => this.requestCarryover(item)">Choose destination meeting</button>
-                                    <button class="btn btn-link" t-on-click="() => this.cancelDeferral(item)">Cancel</button>
-                                </div>
-                            </div>
+                            <h3>Agreements and resolutions</h3>
                             <div class="o_live_record_actions" role="group" aria-label="Add meeting records">
-                                <button t-if="!readOnly and !state.panels[item.id]?.dissent" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.togglePanel(item, 'dissent')"><i class="fa fa-comment-o" aria-hidden="true"/> Add dissent</button>
                                 <button t-if="!readOnly and !state.panels[item.id]?.agreement and (typeBehavior(item) !== 'decision' or !decisionAgreement(item))" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.togglePanel(item, 'agreement')"><i class="fa fa-handshake-o" aria-hidden="true"/> Add agreement</button>
+                                <button t-if="!readOnly and !state.panels[item.id]?.dissent" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.togglePanel(item, 'dissent')"><i class="fa fa-comment-o" aria-hidden="true"/> Add dissent</button>
                             </div>
                             <div class="o_live_subsection">
                                 <div class="o_live_record_list" t-if="pointDissents(item).length">
@@ -184,7 +175,6 @@
                                 </div>
                             </div>
                             <div class="o_live_subsection">
-                                <h3>Agreements and resolutions</h3>
                                 <div t-foreach="pointResolutions(item)" t-as="resolution" t-key="resolution.id" class="o_live_resolution_editor">
                                     <strong class="o_live_agreement_title"><t t-out="resolution.title"/></strong>
                                     <span t-if="resolution.decision_outcome and resolution.status === 'active'" class="badge" t-att-class="resolution.decision_outcome === 'approved' ? 'text-bg-success' : 'text-bg-danger'"><t t-if="resolution.decision_outcome === 'approved'">Approved</t><t t-else="">Rejected</t> decision</span>
@@ -258,8 +248,20 @@
                                     <button class="btn btn-outline-primary" t-att-disabled="state.submitting['action:' + item.id]" t-on-click="() => this.addAction(item)">Add follow-up</button>
                                     <button class="btn btn-link" t-on-click="() => this.togglePanel(item, 'followup')">Cancel</button>
                                 </div>
-                                <div class="o_live_point_footer" t-if="!readOnly and item.disposition !== 'closed' and item.disposition !== 'discussed'">
-                                    <button class="btn btn-primary" t-att-disabled="!canCompletePoint(item)" t-on-click="() => this.completePoint(item)"><i class="fa fa-check" aria-hidden="true"/> Done</button>
+                            <label t-if="!readOnly" class="form-check-label"><input class="form-check-input" type="checkbox" aria-label="Review at next meeting" t-att-checked="item.review_next_meeting" t-att-disabled="state.submitting['review:' + item.id]" t-on-change="(ev) => this.toggleReview(item, ev.target.checked)"/> Review at next meeting</label>
+                            <div t-if="state.deferrals[item.id]" class="o_live_subsection o_live_deferral">
+                                <label class="form-label" t-att-for="'deferral-' + item.id">Reason for postponing</label>
+                                <textarea t-att-id="'deferral-' + item.id" class="form-control" rows="2" t-att-value="state.deferrals[item.id].reason" t-on-input="(ev) => this.setDeferralReason(item, ev.target.value)"/>
+                                <div class="o_live_add_row mt-2">
+                                    <button class="btn btn-primary" t-on-click="() => this.saveDeferral(item)">Leave postponed</button>
+                                    <button class="btn btn-outline-primary" t-if="state.meeting.series_id" t-on-click="() => this.requestCarryover(item)">Request next meeting carryover</button>
+                                    <button class="btn btn-outline-primary" t-if="!state.meeting.series_id" t-on-click="() => this.requestCarryover(item)">Choose destination meeting</button>
+                                    <button class="btn btn-link" t-on-click="() => this.cancelDeferral(item)">Cancel</button>
+                                </div>
+                            </div>
+                                <div class="o_live_point_footer" t-if="!readOnly">
+                                    <button class="btn btn-primary" t-att-disabled="item.disposition === 'closed' or item.disposition === 'discussed' or !canCompletePoint(item)" t-on-click="() => this.completePoint(item)"><i class="fa fa-check" aria-hidden="true"/> Done</button>
+                                    <button t-if="pointOutcome(item) !== 'deferred'" class="btn btn-outline-secondary" t-on-click="() => this.applyPointAction(item, 'deferred')" aria-label="Postpone agenda point"><i class="fa fa-clock-o" aria-hidden="true"/> Postpone</button>
                                     <span t-if="typeBehavior(item) === 'decision' and !decisionAgreement(item)" class="text-muted">Add an agreement and select approved or rejected before completing this point.</span>
                                     <span t-elif="typeBehavior(item) === 'todo' and !hasTodoAction(item)" class="text-muted">Add an assigned follow-up before completing this point.</span>
                                 </div>

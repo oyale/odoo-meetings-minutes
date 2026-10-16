@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, markup, onMounted, onWillStart, onWillUnmount, useState } from "@odoo/owl";
+import { Component, markup, onMounted, onPatched, onWillStart, onWillUnmount, useState } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { deserializeDateTime, formatDateTime } from "@web/core/l10n/dates";
 import { registry } from "@web/core/registry";
@@ -25,10 +25,20 @@ export class LiveMeeting extends Component {
     static props = ["action", "*", "close?"];
 
     setup() {
+        onPatched(() => {
+            for (const item of this.state.items) {
+                const editor = this.editors.get(`discussion_notes:${item.id}`)?.$editable?.[0];
+                if (editor) {
+                    const editable = this.canEditDiscussion(item);
+                    editor.setAttribute("contenteditable", String(editable));
+                    editor.setAttribute("aria-readonly", String(!editable));
+                }
+            }
+        });
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
-        this.state = useState({ loading: true, saving: 0, saveError: false, unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "task", activity_type_id: false, todo_activity_type_id: false }, expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], pendingMinutes: [], defaultOwner: false });
+        this.state = useState({ loading: true, saving: 0, saveError: false, unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, headerDraft: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "task", activity_type_id: false, todo_activity_type_id: false }, expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], pendingMinutes: [], defaultOwner: false });
         this.pendingWrites = new Map();
         this.editors = new Map();
         this.editorTimers = new Map();
@@ -202,6 +212,21 @@ export class LiveMeeting extends Component {
     }
     attendees() {
         return this.state.attendees.map((partner) => partner.name).join(", ") || _t("No attendees listed");
+    }
+    canEditDiscussion(item) {
+        return !this.locked && (this.draftingMinutes || (!this.meetingPaused && Boolean(item.actual_started_at)));
+    }
+    async saveHeaderField(field, value) {
+        if (this.locked) return;
+        value = field === "secretary_id" ? (Number(value) || false) : value.trim();
+        if (field === "name" && !value) return;
+        await this.write(`meeting:${this.meetingId}`, "community.meeting", [this.meetingId], {
+            [field]: value || false,
+        }, async () => {
+            const [saved] = await this.orm.read("community.meeting", [this.meetingId], [field]);
+            Object.assign(this.state.meeting, saved);
+            if (this.state.headerDraft[field]?.trim() === value) delete this.state.headerDraft[field];
+        });
     }
     toggleAttendeeEditor() {
         this.state.attendeeEditorOpen = !this.state.attendeeEditorOpen;

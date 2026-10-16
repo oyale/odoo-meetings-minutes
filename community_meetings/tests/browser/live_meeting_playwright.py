@@ -161,6 +161,8 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
 
     def test_postponing_a_point_enables_next_meeting_review(self):
         card = self.card("discussion")
+        self.assertEqual(card.locator(".o_live_point_footer").get_by_role("button", name="Postpone agenda point").count(), 1)
+        self.assertEqual(card.locator(".o_live_point_actions").get_by_role("button", name="Postpone agenda point").count(), 0)
         card.get_by_role("button", name="Postpone agenda point").click()
         card.get_by_label("Reason for postponing").fill("Continue next time")
         card.get_by_role("button", name="Leave postponed").click()
@@ -275,6 +277,16 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             "Discussion notes should sit directly below the point description.",
         )
         record_actions = card.locator(".o_live_record_actions")
+        self.assertTrue(
+            card.get_by_role("heading", name="Agreements and resolutions").evaluate(
+                "el => el.nextElementSibling?.classList.contains('o_live_record_actions')"
+            ),
+            "The agreement/dissent actions should follow their heading.",
+        )
+        self.assertEqual(
+            [button.inner_text().strip() for button in record_actions.locator("button").all()],
+            ["Add agreement", "Add dissent"],
+        )
         expect(record_actions.get_by_role("button", name="Add dissent")).to_be_visible()
         expect(record_actions.get_by_role("button", name="Add agreement")).to_be_visible()
         card.get_by_role("button", name="Pause point").click()
@@ -367,6 +379,38 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(self.page.locator('[aria-label="Next meeting date"]')).to_be_visible()
         expect(self.page.locator(".o_live_minutes_approval")).to_be_visible()
         expect(self.page.locator(".o_live_minutes_approval")).to_contain_text("No pending minutes")
+
+    def test_header_details_and_add_point_remain_available_while_paused(self):
+        self.page.get_by_role("button", name="Start Meeting").click()
+        self.page.get_by_role("button", name="Pause Meeting").click()
+        expect(self.page.get_by_role("button", name="Add Point")).to_be_visible()
+        expect(self.page.get_by_role("button", name="Add Point")).to_be_enabled()
+        self.page.get_by_role("button", name="Edit attendees").click()
+        expect(self.page.get_by_role("button", name="Save attendees")).to_be_visible()
+        self.page.get_by_role("button", name="Cancel").click()
+
+        self.page.get_by_label("Meeting name").fill("Paused meeting header edited")
+        self.page.get_by_label("Meeting name").press("Tab")
+        self.page.get_by_label("Minutes secretary").select_option(label=LOGIN)
+        self.page.get_by_label("Location").fill("Board Room")
+        self.page.get_by_label("Location").press("Tab")
+        self.page.get_by_label("Meeting link").fill("https://meet.example.test/board")
+        self.page.get_by_label("Meeting link").press("Tab")
+        expect(self.page.get_by_role("status")).to_have_text("All changes saved")
+        self.page.wait_for_timeout(500)
+        saved = self.record(
+            "community.meeting", self.meeting_id,
+            ["name", "secretary_id", "location", "meeting_url"],
+        )
+        self.assertEqual(saved["name"], "Paused meeting header edited")
+        self.assertEqual(saved["secretary_id"][1], LOGIN)
+        self.assertEqual(saved["location"], "Board Room")
+        self.assertEqual(saved["meeting_url"], "https://meet.example.test/board")
+        self.page.reload(wait_until="domcontentloaded")
+        expect(self.page.get_by_label("Meeting name")).to_have_value("Paused meeting header edited")
+        expect(self.page.get_by_label("Location", exact=True)).to_have_value("Board Room")
+        expect(self.page.get_by_label("Minutes secretary").locator("option:checked")).to_have_text(LOGIN)
+
 
     def test_decision_can_be_undone_during_running_meeting(self):
         self.page.get_by_role("button", name="Start Meeting").click()
