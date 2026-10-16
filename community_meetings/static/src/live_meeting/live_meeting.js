@@ -63,6 +63,7 @@ export class LiveMeeting extends Component {
     get locked() { return ["approved", "cancelled"].includes(this.state.meeting.state); }
     get meetingPaused() { return Boolean(this.state.meeting.actual_paused_at); }
     get readOnly() { return this.locked || this.meetingPaused; }
+    get draftingMinutes() { return ["held", "minutes_draft"].includes(this.state.meeting.state); }
     get hasUnsavedEditors() { return Object.values(this.state.unsavedEditors).some(Boolean); }
 
     async load() {
@@ -142,8 +143,16 @@ export class LiveMeeting extends Component {
         await wysiwyg.startEdition();
         wysiwyg.$editable[0].classList.add("odoo-editor-qweb");
         if (model === "community.meeting.agenda.item" && field === "discussion_notes") {
+            // Discussion notes are the minutes content. During the live meeting
+            // (scheduled) they are editable only while the point timer is
+            // running. Once the meeting is held or in minutes_draft the timer is
+            // gone, but the minutes must stay editable until approval.
             const item = this.state.items.find((row) => row.id === recordId);
-            const editable = Boolean(item?.actual_started_at) && !this.locked && !this.meetingPaused;
+            const state = this.state.meeting.state;
+            const editable = !this.locked && (
+                state !== "scheduled"
+                || (Boolean(item?.actual_started_at) && !this.meetingPaused)
+            );
             wysiwyg.$editable[0].setAttribute("contenteditable", editable ? "true" : "false");
             wysiwyg.$editable[0].setAttribute("aria-readonly", editable ? "false" : "true");
         }

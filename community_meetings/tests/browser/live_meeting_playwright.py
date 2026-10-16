@@ -94,6 +94,11 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
     def cleanup_meeting(self):
         if not self.meeting_id:
             return
+        state = self.record("community.meeting", self.meeting_id, ["state"])["state"]
+        if state not in ("draft", "scheduled"):
+            # held/minutes_draft/approved cannot be cancelled via RPC; the
+            # disposable-user cleanup in run_development_suite removes them.
+            return
         self.rpc("community.meeting", "action_cancel", [[self.meeting_id]])
         resolutions = self.rpc("community.meeting.resolution", "search", [[("meeting_id", "=", self.meeting_id)]])
         if resolutions:
@@ -325,6 +330,22 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(self.page.get_by_role("button", name="Pause Meeting")).to_be_visible()
         expect(card.get_by_role("button", name="Resume point")).to_be_visible()
         self.assertFalse(self.record("community.meeting", self.meeting_id, ["actual_paused_at"])["actual_paused_at"])
+
+    def test_minutes_draft_allows_editing_discussion_notes(self):
+        self.rpc("community.meeting", "action_mark_held", [[self.meeting_id]])
+        self.rpc("community.meeting", "action_draft_minutes", [[self.meeting_id]])
+        self.assertEqual(
+            self.record("community.meeting", self.meeting_id, ["state"])["state"],
+            "minutes_draft",
+        )
+        self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
+        self.page.get_by_role("button", name="Open Live Meeting").click(timeout=30000)
+        self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
+        self.page.get_by_role("button", name="Expand / Collapse all").click()
+        card = self.card("discussion", begin=False)
+        expect(card.locator('[aria-label="Discussion notes"]')).to_have_attribute(
+            "contenteditable", "true",
+        )
 
     def test_decision_can_be_undone_during_running_meeting(self):
         self.page.get_by_role("button", name="Start Meeting").click()
