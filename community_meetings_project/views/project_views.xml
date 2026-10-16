@@ -86,6 +86,19 @@
         </field>
     </record>
 
+    <record id="view_series_wizard_project" model="ir.ui.view">
+        <field name="name">community.meeting.series.wizard.project</field>
+        <field name="model">community.meeting.series.wizard</field>
+        <field name="inherit_id" ref="community_meetings.view_series_wizard"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='has_next_meeting_point']" position="after">
+                <field name="link_project"/>
+                <field name="project_id" invisible="not link_project or new_project" options="{'no_create': True}" domain="['|', ('company_id', '=', company_id), ('company_id', '=', False)]"/>
+                <field name="new_project" invisible="not link_project"/>
+                <field name="new_project_name" invisible="not link_project or not new_project" placeholder="Project name"/>
+            </xpath>
+        </field>
+    </record>
 <record id="view_series_project_policy" model="ir.ui.view"><field name="name">community.meeting.series.project.policy</field><field name="model">community.meeting.series</field><field name="inherit_id" ref="community_meetings.view_community_meeting_series_form"/><field name="arch" type="xml"><xpath expr="//notebook" position="inside"><page string="Follow-up and Task Policy"><group><field name="meeting_project_mode"/><field name="meeting_project_id"/><field name="meeting_todo_requirement"/><field name="meeting_task_scope"/></group></page></xpath></field></record>
 <record id="view_meeting_settings" model="ir.ui.view"><field name="name">meeting.settings.project</field><field name="model">res.config.settings</field><field name="inherit_id" ref="community_meetings.view_meeting_settings_followups"/><field name="arch" type="xml"><xpath expr="//app[@name='community_meetings']" position="inside"><block title="Project task policy"><setting string="Task project"><field name="meeting_project_mode"/><field name="meeting_project_id"/></setting><setting string="Evidence required to close a TODO"><field name="meeting_todo_requirement"/></setting><setting string="Existing tasks"><field name="meeting_task_scope"/></setting></block></xpath></field></record>
 </odoo>
