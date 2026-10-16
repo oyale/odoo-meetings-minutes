@@ -7,10 +7,24 @@
                 <field name="code"/>
                 <field name="name"/>
                 <field name="start_datetime"/>
+                <field name="series_id" optional="show"/>
                 <field name="organizer_id"/>
                 <field name="company_id" groups="base.group_multi_company"/>
                 <field name="state" widget="badge"/>
+                <button name="action_open_live_meeting" type="object" icon="fa-play" title="Open Live Meeting" invisible="state not in ['scheduled', 'held', 'minutes_draft']" groups="community_meetings.group_meeting_editor"/>
             </list>
+        </field>
+    </record>
+    <record id="view_community_meeting_calendar" model="ir.ui.view">
+        <field name="name">community.meeting.calendar</field>
+        <field name="model">community.meeting</field>
+        <field name="arch" type="xml">
+            <calendar date_start="start_datetime" date_stop="end_datetime" color="organizer_id">
+                <field name="name"/>
+                <field name="organizer_id"/>
+                <field name="series_id"/>
+                <field name="state"/>
+            </calendar>
         </field>
     </record>
     <record id="view_community_meeting_form" model="ir.ui.view">
@@ -187,7 +201,7 @@
     <record id="action_community_meetings" model="ir.actions.act_window">
         <field name="name">Meetings</field>
         <field name="res_model">community.meeting</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">list,calendar,form</field>
     </record>
     <record id="view_community_meeting_search" model="ir.ui.view">
         <field name="name">community.meeting.search</field>
@@ -197,12 +211,19 @@
                 <field name="name"/>
                 <field name="code"/>
                 <field name="organizer_id"/>
+                <field name="series_id"/>
+                <filter name="my_meetings" string="My Meetings" domain="[('organizer_id', '=', uid)]"/>
                 <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
-                <filter name="upcoming" string="Upcoming" domain="[('state', '=', 'scheduled')]"/>
-                <filter name="minutes" string="Minutes to Prepare" domain="[('state', '=', 'minutes_draft')]"/>
+                <filter name="scheduled" string="Scheduled" domain="[('state', '=', 'scheduled')]"/>
+                <filter name="in_progress" string="In Progress" domain="[('state', '=', 'scheduled'), ('actual_start_datetime', '!=', False)]"/>
+                <filter name="minutes" string="Minutes to Prepare" domain="[('state', 'in', ['held', 'minutes_draft'])]"/>
+                <filter name="archive" string="Archive" domain="[('state', 'in', ['approved', 'cancelled'])]"/>
+                <filter name="without_date" string="Without Date" domain="[('start_datetime', '=', False)]"/>
+                <filter name="start_date" string="Start Date" date="start_datetime"/>
                 <group expand="0" string="Group By">
                     <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
                     <filter name="group_organizer" string="Organizer" context="{'group_by': 'organizer_id'}"/>
+                    <filter name="group_series" string="Series" context="{'group_by': 'series_id'}"/>
                 </group>
             </search>
         </field>

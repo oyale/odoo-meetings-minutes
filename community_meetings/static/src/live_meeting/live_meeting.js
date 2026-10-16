@@ -263,7 +263,10 @@ export class LiveMeeting extends Component {
         }
     }
     prepareMinutes() { return this.transition("action_draft_minutes", "minutes_draft"); }
-    async close() { await this.actionService.doAction({ type: "ir.actions.act_window", res_model: "community.meeting", views: [[false, "list"], [false, "form"]], target: "current" }); }
+    async close() {
+        if (this.props.close) return this.props.close();
+        return this.actionService.doAction({ type: "ir.actions.act_window", res_model: "community.meeting", views: [[false, "list"], [false, "form"]], target: "current" });
+    }
 }
 
 registry.category("actions").add("community_meetings.live_meeting", LiveMeeting);
