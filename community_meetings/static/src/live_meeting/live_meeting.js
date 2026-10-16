@@ -26,7 +26,7 @@ export class LiveMeeting extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
-        this.state = useState({ loading: true, saving: 0, saveError: false, submitting: {}, editingRecords: {}, deferrals: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], resolutions: [], users: [], expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, attendees: [] });
+        this.state = useState({ loading: true, saving: 0, saveError: false, submitting: {}, editingRecords: {}, deferrals: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, attendees: [] });
         this.pendingWrites = new Map();
         this.editors = new Map();
         this.beforeUnload = (ev) => {
@@ -44,13 +44,14 @@ export class LiveMeeting extends Component {
     get locked() { return ["approved", "cancelled"].includes(this.state.meeting.state); }
 
     async load() {
-        const [meetings, items, types, dissents, actions, resolutions, users] = await Promise.all([
+        const [meetings, items, types, dissents, actions, resolutions, privateNotes, users] = await Promise.all([
             this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "start_datetime", "end_datetime", "actual_start_datetime", "actual_end_datetime", "organizer_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id"]),
             this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "sequence", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "deferral_reason"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.agenda.type", [], ["name", "behavior", "active"], { order: "sequence, name", context: { active_test: false } }),
             this.orm.searchRead("community.meeting.dissent", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "body", "kind", "author_display_name", "author_partner_id"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.action", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "name", "description", "responsible_user_id", "deadline", "state"], { order: "deadline, id" }),
             this.orm.searchRead("community.meeting.resolution", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "title", "body", "status"], { order: "id" }),
+            this.orm.searchRead("community.meeting.editor.note", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "content"], { order: "id" }),
             this.orm.searchRead("res.users", [["active", "=", true], ["share", "=", false]], ["name"], { order: "name", limit: 200 }),
         ]);
         this.state.meeting = meetings[0];
@@ -62,6 +63,7 @@ export class LiveMeeting extends Component {
         this.state.dissents = dissents;
         this.state.actions = actions;
         this.state.resolutions = resolutions;
+        this.state.privateNotes = privateNotes;
         this.state.users = users;
         this.state.expanded = Object.fromEntries(items.map((item, index) => [item.id, index === 0]));
         this.state.activeItemId = items[0]?.id || false;
@@ -95,7 +97,8 @@ export class LiveMeeting extends Component {
         const record = field === "minutes_notes" ? this.state.meeting
             : model === "community.meeting.agenda.item" ? this.state.items.find((row) => row.id === recordId)
                 : model === "community.meeting.resolution" ? this.state.resolutions.find((row) => row.id === recordId)
-                    : this.state.dissents.find((row) => row.id === recordId);
+                    : model === "community.meeting.editor.note" ? this.state.privateNotes.find((row) => row.id === recordId)
+                        : this.state.dissents.find((row) => row.id === recordId);
         if (!record || value === (record[field] || "")) return;
         const queueKey = field === "minutes_notes" ? `meeting:${this.meetingId}` : `${model}:${recordId}`;
         await this.write(queueKey, model, [recordId], { [field]: value }, async () => {
@@ -116,6 +119,7 @@ export class LiveMeeting extends Component {
     outcomeOptions(item) { return OUTCOMES[this.typeBehavior(item)] || OUTCOMES.discussion; }
     pointDissents(item) { return this.state.dissents.filter((row) => row.agenda_item_id?.[0] === item.id); }
     pointResolutions(item) { return this.state.resolutions.filter((row) => row.agenda_item_id?.[0] === item.id); }
+    pointPrivateNotes(item) { return this.state.privateNotes.filter((row) => row.agenda_item_id?.[0] === item.id); }
     pointActions(item) {
         const resolutionIds = new Set(this.pointResolutions(item).map((row) => row.id));
         return this.state.actions.filter((row) => row.agenda_item_id?.[0] === item.id || resolutionIds.has(row.resolution_id?.[0]));
@@ -247,6 +251,8 @@ export class LiveMeeting extends Component {
             const [id] = await this.orm.create(model, [values]);
             const fields = model === "community.meeting.dissent"
                 ? ["agenda_item_id", "body", "kind", "author_display_name", "author_partner_id", "include_in_minutes"]
+                : model === "community.meeting.editor.note"
+                    ? ["agenda_item_id", "content"]
                 : model === "community.meeting.resolution"
                     ? ["agenda_item_id", "title", "body", "status"]
                     : ["agenda_item_id", "resolution_id", "name", "description", "responsible_user_id", "deadline", "state"];
@@ -313,6 +319,17 @@ export class LiveMeeting extends Component {
             this.state.newResolution[item.id] = {};
         });
     }
+    async addPrivateNote(item) {
+        const content = (this.state.newPrivateNote[item.id] || "").trim();
+        if (!content) return;
+        await this.createRecord(`private-note:${item.id}`, "community.meeting.editor.note", {
+            meeting_id: this.meetingId, agenda_item_id: item.id, content,
+        }, (record) => {
+            this.state.privateNotes.push(record);
+            this.state.newPrivateNote[item.id] = "";
+        });
+    }
+    setPrivateNote(item, value) { this.state.newPrivateNote[item.id] = value; }
     setResolution(item, key, value) {
         this.state.newResolution[item.id] ||= {};
         this.state.newResolution[item.id][key] = value;

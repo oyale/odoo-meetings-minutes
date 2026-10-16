@@ -116,6 +116,21 @@
                                 </div>
                             </div>
                             <div class="o_live_subsection">
+                                <h3>Private editorial notes</h3>
+                                <ul t-if="pointPrivateNotes(item).length" class="o_live_inline_records">
+                                    <li t-foreach="pointPrivateNotes(item)" t-as="note" t-key="note.id" class="o_live_record_editor">
+                                        <div t-if="!state.editingRecords['note-' + note.id]" class="o_live_rich_readonly" t-out="safeHtml(note.content)"/>
+                                        <t t-else=""><t t-component="Wysiwyg" t-props="{ options: richTextOptions(note.content, 'note:' + note.id, 'community.meeting.editor.note', note.id, 'content'), editingValue: note.content, startWysiwyg: (wysiwyg) => this.startRichText('note:' + note.id, wysiwyg) }"/></t>
+                                        <button class="btn btn-link" t-on-click="() => this.toggleRecordEditor('note-' + note.id)"><t t-if="state.editingRecords['note-' + note.id]">Done editing</t><t t-else="">Edit private note</t></button>
+                                    </li>
+                                </ul>
+                                <div t-if="!locked" class="o_live_add_row">
+                                    <textarea class="form-control" rows="2" aria-label="Private editorial note" placeholder="Add a private note for editors…" t-att-value="state.newPrivateNote[item.id] || ''" t-on-input="(ev) => this.setPrivateNote(item, ev.target.value)"/>
+                                    <button class="btn btn-outline-secondary" t-att-disabled="state.submitting['private-note:' + item.id]" t-on-click="() => this.addPrivateNote(item)">Add private note</button>
+                                </div>
+                                <p class="text-muted">Private notes are excluded from approved minutes.</p>
+                            </div>
+                            <div class="o_live_subsection">
                                 <h3>Follow-up tasks</h3>
                                 <ul t-if="pointActions(item).length" class="o_live_inline_records">
                                     <li t-foreach="pointActions(item)" t-as="task" t-key="task.id">
