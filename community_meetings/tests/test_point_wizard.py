@@ -53,3 +53,7 @@ class TestPointWizard(TransactionCase):
         })
         wizard.action_save()
         self.assertFalse(existing.topic_id.related_topic_ids)
+
+    def test_live_add_point_marks_the_context(self):
+        action = self.meeting.with_user(self.editor).action_add_point_live()
+        self.assertTrue(action["context"]["from_live"])

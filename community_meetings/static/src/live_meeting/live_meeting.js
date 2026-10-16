@@ -844,7 +844,7 @@ export class LiveMeeting extends Component {
     priorityLabel(item) { return { "0": _t("Low"), "1": _t("Normal"), "2": _t("High"), "3": _t("Critical") }[item.priority]; }
     async addPoint() {
         if (!await this.flushEditors()) return;
-        const action = await this.orm.call("community.meeting", "action_add_point", [[this.meetingId]]);
+        const action = await this.orm.call("community.meeting", "action_add_point_live", [[this.meetingId]]);
         await this.actionService.doAction(action, { onClose: () => this.load() });
     }
     async reviewCarryover(transfer, accept) {

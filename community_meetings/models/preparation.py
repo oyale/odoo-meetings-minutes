@@ -281,6 +281,12 @@ class Meeting(models.Model):
             {"default_meeting_id": self.id}
         )
 
+    def action_add_point_live(self):
+        self.ensure_one()
+        return self.env["community.meeting.point.wizard"]._open(
+            {"default_meeting_id": self.id, "from_live": True}
+        )
+
     @api.model
     def action_create_guided(self):
         return self.env["community.meeting.create.wizard"]._open({})
