@@ -560,6 +560,29 @@ class TestMeetingDomain(TransactionCase):
         with self.assertRaises(ValidationError):
             self.env["community.meeting.action"].create({"name": "Forbidden activity", "meeting_id": meeting.id, "agenda_item_id": item.id, "followup_kind": "activity"})
 
+    def test_activity_only_policy_uses_activity_type_with_stale_todo_default(self):
+        call_type = self.env["mail.activity.type"].search([
+            ("category", "=", "phonecall"),
+        ], limit=1)
+        self.assertTrue(call_type)
+        self.env.company.sudo().write({
+            "meeting_followup_policy": "activity",
+            "meeting_default_followup_kind": "todo",
+            "meeting_default_activity_type_id": call_type.id,
+        })
+        meeting = self.env["community.meeting"].create({"name": "Activity-only policy"})
+        item = self.env["community.meeting.agenda.item"].create({
+            "meeting_id": meeting.id, "name": "Follow-up",
+        })
+        defaults = item.get_followup_defaults()
+        self.assertEqual(defaults["kind"], "activity")
+        action = self.env["community.meeting.action"].create({
+            "meeting_id": meeting.id, "agenda_item_id": item.id,
+            "name": "Call attendee",
+        })
+        self.assertEqual(action.followup_kind, "activity")
+        self.assertEqual(action.followup_activity_id.activity_type_id, call_type)
+
     def test_activity_completion_is_durable_and_reopening_reschedules(self):
         meeting = self.env["community.meeting"].create({"name": "Activity meeting"})
         item = self.env["community.meeting.agenda.item"].create(
