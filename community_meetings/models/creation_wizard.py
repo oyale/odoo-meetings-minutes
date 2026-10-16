@@ -24,6 +24,7 @@ class MeetingCreateWizard(models.TransientModel):
         "res.company", default=lambda self: self.env.company, required=True
     )
     name = fields.Char(string="Meeting title")
+    suggested_name = fields.Char()
     start_datetime = fields.Datetime(string="Estimated Start Datetime", default=fields.Datetime.now)
     duration_hours = fields.Float(string="Approximate duration", default=1.0)
     attendee_partner_ids = fields.Many2many("res.partner", string="Attendees")
@@ -58,7 +59,7 @@ class MeetingCreateWizard(models.TransientModel):
     def _reload(self):
         return {**self._open({}), "res_id": self.id}
 
-    @api.onchange("series_id")
+    @api.onchange("series_id", "start_datetime")
     def _onchange_series(self):
         if self.series_id:
             if self.duration_hours == self.last_default_duration:
@@ -68,10 +69,19 @@ class MeetingCreateWizard(models.TransientModel):
             ):
                 self.attendee_partner_ids = self.series_id.attendee_partner_ids
             self.company_id = self.series_id.company_id
-            self.name = self.name or self.series_id.name
+            self._suggest_series_name()
             self.last_default_duration = self.series_id.duration_hours
             self.last_default_attendee_ids = self.series_id.attendee_partner_ids
             self.defaults_applied = True
+
+    def _suggest_series_name(self):
+        for wizard in self:
+            if not wizard.series_id:
+                continue
+            suggestion = wizard.series_id._format_meeting_name(wizard.start_datetime)
+            if not wizard.name or wizard.name == wizard.suggested_name:
+                wizard.name = suggestion
+            wizard.suggested_name = suggestion
 
     def action_use_series_defaults(self):
         self.ensure_one()
@@ -94,6 +104,8 @@ class MeetingCreateWizard(models.TransientModel):
 
     def action_next(self):
         self.ensure_one()
+        if self.step == "when":
+            self._suggest_series_name()
         steps = ["series", "when", "people", "carryover", "agenda"]
         if self.step == "when" and (
             not self.name or not self.start_datetime or self.duration_hours <= 0
@@ -127,6 +139,7 @@ class MeetingCreateWizard(models.TransientModel):
     def action_finish(self):
         self.ensure_one()
         self.check_access("write")
+        self._suggest_series_name()
         self.env.cr.execute(
             "SELECT id FROM community_meeting_create_wizard WHERE id=%s FOR UPDATE",
             [self.id],

@@ -1,3 +1,5 @@
+from string import Formatter
+
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
@@ -7,6 +9,50 @@ class MeetingSeries(models.Model):
 
     duration_hours = fields.Float(string="Default duration", default=1.0, required=True)
     attendee_partner_ids = fields.Many2many("res.partner", string="Default attendees")
+    meeting_name_pattern = fields.Char(
+        string="New meeting name pattern",
+        default="{date} {series}",
+        required=True,
+        help="Use {date} for the meeting date (YYYY-MM-DD) and {series} for this series name.",
+    )
+
+    @api.constrains("meeting_name_pattern")
+    def _check_meeting_name_pattern(self):
+        for series in self:
+            try:
+                fields_in_pattern = {
+                    field_name
+                    for _, field_name, format_spec, conversion in Formatter().parse(
+                        series.meeting_name_pattern or ""
+                    )
+                    if field_name is not None
+                    and (format_spec or conversion or field_name not in {"date", "series"})
+                }
+            except ValueError as error:
+                raise ValidationError(
+                    _("Invalid meeting name pattern: %(error)s", error=str(error))
+                ) from error
+            if fields_in_pattern:
+                raise ValidationError(
+                    _("Only the {date} and {series} placeholders are supported.")
+                )
+
+    def _format_meeting_name(self, start_datetime):
+        self.ensure_one()
+        start = fields.Datetime.to_datetime(start_datetime)
+        date_value = (
+            fields.Datetime.context_timestamp(self, start).strftime("%Y-%m-%d")
+            if start
+            else ""
+        )
+        try:
+            return (self.meeting_name_pattern or "{date} {series}").format(
+                date=date_value, series=self.name
+            ).strip()
+        except (KeyError, ValueError) as error:
+            raise ValidationError(
+                _("Invalid meeting name pattern: %(error)s", error=str(error))
+            ) from error
 
     @api.constrains("duration_hours")
     def _check_duration(self):

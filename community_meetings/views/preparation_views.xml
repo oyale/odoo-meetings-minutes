@@ -20,7 +20,7 @@
     </record>
     <record id="view_series_preparation" model="ir.ui.view">
         <field name="name">community.meeting.series.preparation</field><field name="model">community.meeting.series</field><field name="inherit_id" ref="view_community_meeting_series_form"/>
-        <field name="arch" type="xml"><field name="carryover_policy" position="after"><field name="duration_hours" widget="float_time"/><field name="attendee_partner_ids" widget="many2many_tags"/><field name="default_followup_kind"/><field name="default_activity_type_id" invisible="default_followup_kind != 'activity'"/></field></field>
+        <field name="arch" type="xml"><field name="carryover_policy" position="after"><field name="duration_hours" widget="float_time"/><field name="attendee_partner_ids" widget="many2many_tags"/><field name="meeting_name_pattern" placeholder="{date} {series}"/><field name="default_followup_kind"/><field name="default_activity_type_id" invisible="default_followup_kind != 'activity'"/></field></field>
     </record>
 
 <record id="view_meeting_create_wizard" model="ir.ui.view">
@@ -28,7 +28,7 @@
 <field name="arch" type="xml"><form string="Prepare a Meeting">
 <header><field name="step" widget="statusbar"/></header>
 <group invisible="step != 'series'"><field name="company_id" invisible="1"/><field name="defaults_applied" invisible="1"/><field name="last_default_duration" invisible="1"/><field name="last_default_attendee_ids" invisible="1"/><field name="series_id" domain="[('company_id','=',company_id)]"/><p>Choose a series, or leave it empty for a standalone meeting. Your edits are kept when changing series.</p><button name="action_use_series_defaults" type="object" string="Use series defaults" invisible="not series_id"/></group>
-<group invisible="step != 'when'"><field name="name"/><field name="start_datetime"/><field name="duration_hours" widget="float_time"/></group>
+<group invisible="step != 'when'"><field name="suggested_name" invisible="1"/><field name="start_datetime"/><field name="name" placeholder="2026-10-16 Weekly series"/><field name="duration_hours" widget="float_time"/></group>
 <group invisible="step != 'people'"><field name="attendee_partner_ids" widget="many2many_tags"/></group>
 <group invisible="step != 'carryover'"><p invisible="carry_line_ids" class="text-muted">There are no points to carry over into this meeting.</p><p invisible="not carry_line_ids">Review the points to continue. Uncheck a point to leave it out of this meeting.</p><field name="carry_line_ids" nolabel="1" invisible="not carry_line_ids"><list editable="bottom" create="0" delete="0"><field name="accept"/><field name="name"/><field name="origin_meeting_id"/><field name="reason"/></list></field></group>
 <group invisible="step != 'agenda'"><button name="action_add_point" type="object" string="Add Point" class="btn-primary"/><field name="line_ids" readonly="1" domain="[('included','=',True)]"><list create="0" delete="0"><field name="name"/><field name="topic_id"/><field name="agenda_type_id"/><field name="priority"/></list></field></group>

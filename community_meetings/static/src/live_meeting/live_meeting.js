@@ -405,9 +405,10 @@ export class LiveMeeting extends Component {
         if (agreement && !(await this.updateResolution(agreement, "status", "withdrawn"))) return;
         await this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], {
             disposition: "deferred", deferral_reason: reason,
+            review_next_meeting: true,
             ...(this.typeBehavior(item) === "decision" ? { decision_result: "pending" } : {}),
         }, async () => {
-            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "deferral_reason"]);
+            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "deferral_reason", "review_next_meeting"]);
             Object.assign(item, saved);
             delete this.state.deferrals[item.id];
         });

@@ -71,6 +71,32 @@ class TestMeetingDomain(TransactionCase):
         self.assertTrue(meeting.attendee_partner_ids)
         self.assertEqual(meeting.secretary_id, self.env.user)
 
+    def test_series_meeting_name_pattern_updates_until_manually_overridden(self):
+        series = self.env["community.meeting.series"].create({
+            "name": "Quarterly board",
+            "meeting_name_pattern": "{date} — {series}",
+        })
+        wizard = self.env["community.meeting.create.wizard"].create({
+            "series_id": series.id,
+            "start_datetime": "2026-12-01 12:00:00",
+        })
+        wizard._onchange_series()
+        self.assertEqual(wizard.name, "2026-12-01 — Quarterly board")
+        wizard.start_datetime = "2026-12-08 12:00:00"
+        wizard._onchange_series()
+        self.assertEqual(wizard.name, "2026-12-08 — Quarterly board")
+        wizard.name = "Planning session"
+        wizard.start_datetime = "2026-12-15 12:00:00"
+        wizard._onchange_series()
+        self.assertEqual(wizard.name, "Planning session")
+
+    def test_series_meeting_name_pattern_rejects_unknown_placeholders(self):
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            self.env["community.meeting.series"].create({
+                "name": "Invalid pattern",
+                "meeting_name_pattern": "{date} {unknown}",
+            })
+
     def test_point_actual_minutes_are_recorded_and_non_negative(self):
         meeting = self.env["community.meeting"].create({"name": "Timing"})
         item = self.env["community.meeting.agenda.item"].create(

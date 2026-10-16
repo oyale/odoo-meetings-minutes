@@ -21,6 +21,16 @@ ACTIONS = {
     ],
     "test_information_point_can_be_marked_done": ["finish information point"],
     "test_discussion_point_can_be_resolved": ["resolve discussion"],
+    "test_postponing_a_point_enables_next_meeting_review": [
+        "postpone point and enable next meeting review",
+    ],
+    "test_live_result_can_be_undone_and_actual_point_time_saved": [
+        "record actual point time",
+        "undo a point result",
+    ],
+    "test_decision_can_be_undone_during_running_meeting": [
+        "undo decision during live meeting",
+    ],
     "test_todo_requires_a_followup_task_before_resolution": [
         "guard TODO closure",
         "assign TODO task",
@@ -108,6 +118,8 @@ ACTIONS = {
         "optional time estimate",
         "priority in live",
         "hide empty carryover list",
+        "suggest series meeting name",
+        "allow meeting name override",
     ],
     "test_followup_points_are_offered_in_new_meeting_wizard": [
         "carry completed follow-up point into next meeting",
@@ -843,8 +855,10 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         ).to_be_visible()
         duration = wizard.locator('.o_field_widget[name="duration_hours"] input')
         expect(duration).to_have_value("01:30")
+        suggested = wizard.locator('.o_field_widget[name="name"] input')
+        expect(suggested).to_have_value(re.compile(r"\d{4}-\d{2}-\d{2} Guided series"))
         name = "Guided meeting " + uuid.uuid4().hex[:8]
-        wizard.locator('.o_field_widget[name="name"] input').fill(name)
+        suggested.fill(name)
         wizard.locator('button[name="action_back"]').click()
         wizard.locator('button[name="action_next"]').click()
         expect(wizard.locator('.o_field_widget[name="name"] input')).to_have_value(name)

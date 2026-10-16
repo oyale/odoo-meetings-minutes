@@ -129,6 +129,18 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(self.outcome("discussion")).to_have_text("Resolved")
         self.assertEqual(self.record("community.meeting.agenda.item", self.item_ids["discussion"], ["disposition"])["disposition"], "closed")
 
+    def test_postponing_a_point_enables_next_meeting_review(self):
+        card = self.card("discussion")
+        card.get_by_role("button", name="Postpone agenda point").click()
+        card.get_by_label("Reason for postponing").fill("Continue next time")
+        card.get_by_role("button", name="Leave postponed").click()
+        checkbox = card.get_by_role("checkbox", name="Review at next meeting")
+        expect(checkbox).to_be_checked()
+        self.assertTrue(self.record(
+            "community.meeting.agenda.item", self.item_ids["discussion"],
+            ["review_next_meeting"],
+        )["review_next_meeting"])
+
     def test_live_result_can_be_undone_and_actual_point_time_saved(self):
         self.page.get_by_text("Minutes secretary", exact=True).wait_for()
         expect(self.page.get_by_text("Estimated duration", exact=True)).to_be_visible()
