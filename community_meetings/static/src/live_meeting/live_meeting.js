@@ -27,7 +27,7 @@ export class LiveMeeting extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
-        this.state = useState({ loading: true, saving: 0, saveError: false, submitting: {}, editingRecords: {}, deferrals: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, attendees: [] });
+        this.state = useState({ loading: true, saving: 0, saveError: false, submitting: {}, editingRecords: {}, editingTypes: {}, deferrals: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, attendees: [] });
         this.pendingWrites = new Map();
         this.editors = new Map();
         this.beforeUnload = (ev) => {
@@ -136,6 +136,7 @@ export class LiveMeeting extends Component {
         this.state.activeItemId = item.id;
         this.state.expanded[item.id] = !this.state.expanded[item.id];
     }
+    toggleTypeEditor(item) { this.state.editingTypes[item.id] = !this.state.editingTypes[item.id]; }
     toggleAll() {
         const expand = this.visibleItems.some((item) => !this.state.expanded[item.id]);
         for (const item of this.visibleItems) this.state.expanded[item.id] = expand;
@@ -177,6 +178,7 @@ export class LiveMeeting extends Component {
         return this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], { [field]: normalized }, async () => {
             const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result"]);
             Object.assign(item, saved);
+            this.state.editingTypes[item.id] = false;
         });
     }
 
