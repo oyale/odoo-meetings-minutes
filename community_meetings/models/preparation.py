@@ -11,6 +11,26 @@ class Company(models.Model):
         string="Default point estimate (minutes)", default=0,
         help="Default estimated duration applied to new points; a series can override it.",
     )
+    meeting_coordinator_label = fields.Char(
+        string="Coordination role name", default="Organizer",
+    )
+    meeting_secretary_label = fields.Char(
+        string="Secretary role name", default="Minutes secretary",
+    )
+
+
+class Settings(models.TransientModel):
+    _inherit = "res.config.settings"
+
+    meeting_estimated_minutes = fields.Integer(
+        related="company_id.meeting_estimated_minutes", readonly=False
+    )
+    meeting_coordinator_label = fields.Char(
+        related="company_id.meeting_coordinator_label", readonly=False
+    )
+    meeting_secretary_label = fields.Char(
+        related="company_id.meeting_secretary_label", readonly=False
+    )
 
 
 class MeetingSeries(models.Model):
@@ -22,6 +42,12 @@ class MeetingSeries(models.Model):
         string="Default point estimate (minutes)",
         help="Overrides the company default for points of this series.",
     )
+    coordinator_label = fields.Char(
+        string="Coordination role name", help="Overrides the company role name for this series.",
+    )
+    secretary_label = fields.Char(
+        string="Secretary role name", help="Overrides the company role name for this series.",
+    )
     meeting_name_pattern = fields.Char(
         string="New meeting name pattern",
         default="{date} {series}",
@@ -32,6 +58,14 @@ class MeetingSeries(models.Model):
     def _point_estimated_minutes_default(self):
         self.ensure_one()
         return self.default_estimated_minutes or self.company_id.meeting_estimated_minutes or 0
+
+    def _coordinator_label(self):
+        self.ensure_one()
+        return self.coordinator_label or self.company_id.meeting_coordinator_label or _("Organizer")
+
+    def _secretary_label(self):
+        self.ensure_one()
+        return self.secretary_label or self.company_id.meeting_secretary_label or _("Minutes secretary")
 
     @api.constrains("meeting_name_pattern")
     def _check_meeting_name_pattern(self):
@@ -98,6 +132,22 @@ class Meeting(models.Model):
     duration_hours = fields.Float(
         string="Approximate duration", default=1.0, required=True
     )
+    coordinator_role_label = fields.Char(compute="_compute_role_labels")
+    secretary_role_label = fields.Char(compute="_compute_role_labels")
+
+    @api.depends("series_id", "company_id")
+    def _compute_role_labels(self):
+        for meeting in self:
+            if meeting.series_id:
+                meeting.coordinator_role_label = meeting.series_id._coordinator_label()
+                meeting.secretary_role_label = meeting.series_id._secretary_label()
+            else:
+                meeting.coordinator_role_label = (
+                    meeting.company_id.meeting_coordinator_label or _("Organizer")
+                )
+                meeting.secretary_role_label = (
+                    meeting.company_id.meeting_secretary_label or _("Minutes secretary")
+                )
     duration_minutes = fields.Integer(compute="_compute_duration_minutes", store=True)
     agenda_minutes = fields.Integer(compute="_compute_agenda_minutes")
     agenda_over_budget = fields.Boolean(compute="_compute_agenda_minutes")

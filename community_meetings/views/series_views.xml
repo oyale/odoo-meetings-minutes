@@ -38,6 +38,8 @@
                         </group>
                         <group>
                             <field name="coordinator_user_ids" widget="many2many_tags"/>
+                            <field name="coordinator_label"/>
+                            <field name="secretary_label"/>
                             <field name="carryover_policy"/>
                         </group>
                     </group>

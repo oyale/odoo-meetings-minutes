@@ -37,6 +37,14 @@ class TestPointConfiguration(TransactionCase):
         self.series.default_estimated_minutes = 40
         self.assertEqual(self._point_minutes(self._meeting("Series override")), 40)
 
+    def test_role_names_resolve_company_then_series(self):
+        self.env.company.meeting_coordinator_label = "Chair"
+        self.assertEqual(self.series._coordinator_label(), "Chair")
+        self.series.coordinator_label = "Board chair"
+        self.assertEqual(self.series._coordinator_label(), "Board chair")
+        meeting = self._meeting("Roles")
+        self.assertEqual(meeting.coordinator_role_label, "Board chair")
+
     def test_dissent_reasons_are_configurable(self):
         reason = self.env["community.meeting.dissent.reason"].create({"name": "Budget objection"})
         meeting = self._meeting("Dissent reasons")
