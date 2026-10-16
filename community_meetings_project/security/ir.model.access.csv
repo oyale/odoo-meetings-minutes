@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_meeting_project_task_wizard_editor,meeting project task wizard editor,model_community_meeting_project_task_wizard,community_meetings.group_meeting_editor,1,1,1,1
+access_meeting_project_task_wizard_manager,meeting project task wizard manager,model_community_meeting_project_task_wizard,community_meetings.group_meeting_manager,1,1,1,1
+access_meeting_project_task_links_editor,meeting project task links editor,model_community_meeting_project_task_links,community_meetings.group_meeting_editor,1,1,1,1
+access_meeting_project_task_links_manager,meeting project task links manager,model_community_meeting_project_task_links,community_meetings.group_meeting_manager,1,1,1,1

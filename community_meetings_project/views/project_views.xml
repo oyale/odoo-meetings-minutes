@@ -1,0 +1,81 @@
+<odoo>
+    <record id="view_community_meeting_form_project" model="ir.ui.view">
+        <field name="name">community.meeting.form.project.tasks</field>
+        <field name="model">community.meeting</field>
+        <field name="inherit_id" ref="community_meetings.view_community_meeting_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='agenda_item_ids']/list/field[@name='name']" position="after">
+                <field name="project_task_ids" widget="many2many_tags" options="{'no_create': True}"/>
+            </xpath>
+            <xpath expr="//field[@name='resolution_ids']/list/field[@name='title']" position="after">
+                <field name="project_task_ids" widget="many2many_tags" options="{'no_create': True}"/>
+            </xpath>
+            <xpath expr="//field[@name='action_ids']/list/field[@name='name']" position="after">
+                <field name="project_task_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                <button name="action_create_project_task" type="object" string="Create Task" icon="fa-plus" invisible="parent.state == 'cancelled'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_community_meeting_carryover_wizard_project" model="ir.ui.view">
+        <field name="name">community.meeting.carryover.wizard.project</field>
+        <field name="model">community.meeting.carryover.wizard</field>
+        <field name="inherit_id" ref="community_meetings.view_community_meeting_carryover_wizard"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='reason']" position="after">
+                <field name="selected_project_task_ids" widget="many2many_tags" options="{'no_create': True}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_community_meeting_carryover_project" model="ir.ui.view">
+        <field name="name">community.meeting.carryover.form.project</field>
+        <field name="model">community.meeting.carryover</field>
+        <field name="inherit_id" ref="community_meetings.view_community_meeting_carryover_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='origin_context']" position="after">
+                <field name="selected_project_task_ids" groups="community_meetings.group_meeting_editor"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_community_meeting_project_task_wizard" model="ir.ui.view">
+        <field name="name">community.meeting.project.task.wizard.form</field>
+        <field name="model">community.meeting.project.task.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Create Project Task">
+                <group><field name="action_id"/><field name="name"/><field name="project_id"/></group>
+                <footer>
+                    <button name="action_create" type="object" string="Create and Link" class="oe_highlight"/>
+                    <button string="Cancel" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_community_meeting_project_task_links" model="ir.ui.view">
+        <field name="name">community.meeting.project.task.links.form</field>
+        <field name="model">community.meeting.project.task.links</field>
+        <field name="arch" type="xml">
+            <form string="Accessible Meeting Links" create="0" edit="0">
+                <notebook>
+                    <page string="Agenda Items"><field name="agenda_item_ids"><list create="0" edit="0"><field name="meeting_id"/><field name="sequence"/><field name="name"/></list></field></page>
+                    <page string="Resolutions"><field name="resolution_ids"><list create="0" edit="0"><field name="meeting_id"/><field name="title"/><field name="status"/></list></field></page>
+                    <page string="Follow-up Actions"><field name="action_ids"><list create="0" edit="0"><field name="meeting_id"/><field name="name"/><field name="responsible_user_id"/><field name="state"/></list></field></page>
+                </notebook>
+                <footer><button string="Close" special="cancel"/></footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_task_form_community_meeting_links" model="ir.ui.view">
+        <field name="name">project.task.form.community.meeting.links</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_view_community_meeting_links" type="object" string="Meeting Agenda Links" icon="fa-users"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
