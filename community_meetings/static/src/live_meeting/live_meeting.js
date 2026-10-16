@@ -314,10 +314,25 @@ export class LiveMeeting extends Component {
         return operation;
     }
 
+    async toggleReview(item, checked) {
+        const key = `review:${item.id}`;
+        if (this.state.submitting[key]) return;
+        this.state.submitting[key] = true;
+        const previous = item.review_next_meeting;
+        item.review_next_meeting = checked;
+        try {
+            if (!await this.updateItem(item, "review_next_meeting", checked)) {
+                item.review_next_meeting = previous;
+            }
+        } finally {
+            this.state.submitting[key] = false;
+        }
+    }
+
     async updateItem(item, field, value) {
         const normalized = field === "agenda_type_id" ? Number(value) : value;
         return this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], { [field]: normalized }, async () => {
-            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result"]);
+            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "review_next_meeting"]);
             Object.assign(item, saved);
             this.state.editingTypes[item.id] = false;
         });

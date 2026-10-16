@@ -237,6 +237,88 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
         self.page.locator(".o_form_view").wait_for()
 
+    def test_review_next_meeting_failure_restores_checkbox(self):
+        target = "**/web/dataset/call_kw/community.meeting.agenda.item/write"
+
+        def reject(route):
+            route.fulfill(
+                status=200,
+                content_type="application/json",
+                body=json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "error": {
+                            "code": 200,
+                            "message": "Injected failure",
+                            "data": {
+                                "name": "odoo.exceptions.ValidationError",
+                                "message": "Injected failure",
+                                "arguments": ["Injected failure"],
+                                "debug": "",
+                            },
+                        },
+                    }
+                ),
+            )
+
+        self.page.route(target, reject, times=1)
+        checkbox = self.card("information").get_by_role(
+            "checkbox", name="Review at next meeting"
+        )
+        checkbox.check()
+        expect(
+            self.page.get_by_text("Could not save this change.", exact=False)
+        ).to_be_visible()
+        expect(checkbox).to_be_enabled()
+        expect(checkbox).not_to_be_checked()
+        self.assertFalse(
+            self.record(
+                "community.meeting.agenda.item",
+                self.item_ids["information"],
+                ["review_next_meeting"],
+            )["review_next_meeting"]
+        )
+        checkbox.check()
+        expect(checkbox).to_be_enabled()
+        expect(checkbox).to_be_checked()
+        self.assertTrue(
+            self.record(
+                "community.meeting.agenda.item",
+                self.item_ids["information"],
+                ["review_next_meeting"],
+            )["review_next_meeting"]
+        )
+
+    def test_review_next_meeting_toggle_persists(self):
+        checkbox = self.card("information").get_by_role(
+            "checkbox", name="Review at next meeting"
+        )
+        checkbox.check()
+        expect(checkbox).to_be_checked()
+        expect(checkbox).to_be_enabled()
+        expect(checkbox).to_be_checked()
+        self.assertTrue(
+            self.record(
+                "community.meeting.agenda.item",
+                self.item_ids["information"],
+                ["review_next_meeting"],
+            )["review_next_meeting"]
+        )
+        self.open_live(self.meeting_id)
+        self.page.get_by_role("button", name="Expand / Collapse all").click()
+        expect(checkbox).to_be_checked()
+        checkbox.uncheck()
+        expect(checkbox).to_be_enabled()
+        expect(checkbox).not_to_be_checked()
+        self.assertFalse(
+            self.record(
+                "community.meeting.agenda.item",
+                self.item_ids["information"],
+                ["review_next_meeting"],
+            )["review_next_meeting"]
+        )
+
     def test_empty_html_live_in_debug_mode(self):
         self.rpc(
             "community.meeting", "write", [[self.meeting_id], {"minutes_notes": False}]
