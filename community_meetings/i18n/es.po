@@ -338,3 +338,73 @@ msgstr "Cuándo y dónde"
 
 msgid "Purpose"
 msgstr "Propósito"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Result"
+msgstr "Resultado"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Decision result"
+msgstr "Resultado de la decisión"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Decision pending"
+msgstr "Decisión pendiente"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "New decision result"
+msgstr "Resultado de la nueva decisión"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Rejected"
+msgstr "Rechazada"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Record the agreement to confirm this decision."
+msgstr "Registra el acuerdo para confirmar esta decisión."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Record an active agreement approving or rejecting this decision before closing it. The point's result must match that agreement."
+msgstr "Registra un acuerdo activo que apruebe o rechace esta decisión antes de cerrarla. El resultado del punto debe coincidir con el del acuerdo."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Only one active agreement can determine a point's decision. Edit or withdraw the existing agreement first."
+msgstr "Solo un acuerdo activo puede determinar la decisión del punto. Edita o retira primero el acuerdo existente."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "A decision result requires a decision agenda point."
+msgstr "El resultado requiere un punto de tipo decisión."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Withdraw the decision agreement before changing the point type."
+msgstr "Retira el acuerdo de decisión antes de cambiar el tipo de punto."

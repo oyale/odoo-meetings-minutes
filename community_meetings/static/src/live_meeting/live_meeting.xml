@@ -83,9 +83,9 @@
                             <select t-if="state.editingTypes[item.id]" class="form-select o_live_type" t-att-value="item.agenda_type_id[0]" t-att-disabled="locked" t-on-change="(ev) => this.updateItem(item, 'agenda_type_id', ev.target.value)" aria-label="Point type">
                                 <option t-foreach="state.types" t-as="type" t-key="type.id" t-att-value="type.id" t-att-disabled="!type.active"><t t-out="type.name"/><t t-if="!type.active"> (archived)</t></option>
                             </select>
-                            <select class="form-select o_live_status" t-att-value="pointOutcome(item)" t-att-disabled="locked" t-on-change="(ev) => this.updateOutcome(item, ev.target.value)" aria-label="Point outcome">
+                            <div class="o_live_outcome"><label t-att-for="'outcome-' + item.id">Result</label><select t-att-id="'outcome-' + item.id" class="form-select o_live_status" t-att-value="pointOutcome(item)" t-att-disabled="locked" t-on-change="(ev) => this.updateOutcome(item, ev.target.value)" aria-label="Point outcome">
                                 <option t-foreach="outcomeOptions(item)" t-as="entry" t-key="entry[0]" t-att-value="entry[0]"><t t-out="entry[1]"/></option>
-                            </select>
+                            </select></div>
                         </div>
                         <div t-att-id="'agenda-panel-' + item.id" t-att-class="'o_live_card_body ' + (state.expanded[item.id] ? '' : 'd-none')">
                             <div t-if="item.description" class="o_live_planned"><strong>Planned topic</strong><div t-out="safeHtml(item.description)"/></div>
@@ -105,8 +105,8 @@
                                     <button class="btn btn-link" t-on-click="() => this.cancelDeferral(item)">Cancel</button>
                                 </div>
                             </div>
-                            <div class="o_live_subsection">
-                                <h3>Dissents and reservations</h3>
+                            <details class="o_live_subsection">
+                                <summary>Dissents and reservations</summary>
                                 <ul t-if="pointDissents(item).length" class="o_live_inline_records">
                                     <li t-foreach="pointDissents(item)" t-as="dissent" t-key="dissent.id" class="o_live_record_editor">
                                         <input class="form-control" aria-label="Author" placeholder="Author" t-att-value="dissent.author_display_name || ''" t-att-disabled="locked" t-on-change="(ev) => this.updateDissent(dissent, 'author_display_name', ev.target.value || false)"/>
@@ -127,11 +127,12 @@
                                     <label class="form-check-label"><input class="form-check-input" type="checkbox" t-att-checked="state.newDissent[item.id]?.include_in_minutes !== false" t-on-change="(ev) => this.setDissent(item, 'include_in_minutes', ev.target.checked)"/> Include in minutes</label>
                                     <button class="btn btn-outline-primary" t-att-disabled="state.submitting['dissent:' + item.id]" t-on-click="() => this.addDissent(item)">Add dissent</button>
                                 </div>
-                            </div>
+                            </details>
                             <div class="o_live_subsection">
                                 <h3>Agreements and resolutions</h3>
                                 <div t-foreach="pointResolutions(item)" t-as="resolution" t-key="resolution.id" class="o_live_resolution_editor">
                                     <input class="form-control" aria-label="Agreement title" t-att-value="resolution.title" t-att-disabled="locked" t-on-change="(ev) => this.updateResolution(resolution, 'title', ev.target.value)"/>
+                                    <select t-if="typeBehavior(item) === 'decision'" class="form-select" aria-label="Decision result" t-att-value="resolution.decision_outcome || ''" t-att-disabled="locked" t-on-change="(ev) => this.updateResolution(resolution, 'decision_outcome', ev.target.value || false)"><option value="">Decision pending</option><option value="approved">Approved</option><option value="denied">Rejected</option></select>
                                     <select class="form-select" aria-label="Agreement status" t-att-value="resolution.status" t-att-disabled="locked" t-on-change="(ev) => this.updateResolution(resolution, 'status', ev.target.value)"><option value="active">Active</option><option value="superseded">Superseded</option><option value="withdrawn">Withdrawn</option></select>
                                     <button t-if="!locked" class="btn btn-link" t-on-click="() => this.requestRecordCarryover('community.meeting.resolution', resolution)">Follow up at another meeting</button>
                                     <div t-if="locked or !state.editingRecords['resolution-' + resolution.id]" class="o_live_rich_readonly" t-out="safeHtml(resolution.body)"/>
@@ -139,13 +140,14 @@
                                     <button t-if="!locked" class="btn btn-link" t-on-click="() => this.toggleRecordEditor('resolution-' + resolution.id)"><t t-if="state.editingRecords['resolution-' + resolution.id]">Done editing</t><t t-else="">Edit agreement</t></button>
                                 </div>
                                 <div t-if="!locked" class="o_live_add_row o_live_resolution_form">
-                                    <input class="form-control" aria-label="Agreement title" placeholder="Agreement title" t-att-value="state.newResolution[item.id]?.title || ''" t-on-input="(ev) => this.setResolution(item, 'title', ev.target.value)"/>
+                                    <input t-att-id="'agreement-title-' + item.id" class="form-control" aria-label="Agreement title" placeholder="Agreement title" t-att-value="state.newResolution[item.id]?.title || ''" t-on-input="(ev) => this.setResolution(item, 'title', ev.target.value)"/>
+                                    <select t-if="typeBehavior(item) === 'decision'" class="form-select" aria-label="New decision result" t-att-value="newDecisionOutcome(item)" t-on-change="(ev) => this.setResolution(item, 'decision_outcome', ev.target.value)"><option value="">Decision pending</option><option value="approved">Approved</option><option value="denied">Rejected</option></select>
                                     <textarea class="form-control" rows="2" placeholder="What was agreed?" t-att-value="state.newResolution[item.id]?.body || ''" t-on-input="(ev) => this.setResolution(item, 'body', ev.target.value)"/>
                                     <button class="btn btn-outline-primary" t-att-disabled="state.submitting['resolution:' + item.id]" t-on-click="() => this.addResolution(item)">Add agreement</button>
                                 </div>
                             </div>
-                            <div class="o_live_subsection">
-                                <h3>Private editorial notes</h3>
+                            <details class="o_live_subsection">
+                                <summary>Private editorial notes</summary>
                                 <ul t-if="pointPrivateNotes(item).length" class="o_live_inline_records">
                                     <li t-foreach="pointPrivateNotes(item)" t-as="note" t-key="note.id" class="o_live_record_editor">
                                         <div t-if="!state.editingRecords['note-' + note.id]" class="o_live_rich_readonly" t-out="safeHtml(note.content)"/>
@@ -158,7 +160,7 @@
                                     <button class="btn btn-outline-secondary" t-att-disabled="state.submitting['private-note:' + item.id]" t-on-click="() => this.addPrivateNote(item)">Add private note</button>
                                 </div>
                                 <p class="text-muted">Private notes are excluded from approved minutes.</p>
-                            </div>
+                            </details>
                             <div class="o_live_subsection">
                                 <h3>Follow-up tasks</h3>
                                 <ul t-if="pointActions(item).length" class="o_live_inline_records">
@@ -219,8 +221,8 @@
                             <button class="btn btn-outline-primary" t-att-disabled="state.submitting['action:general']" t-on-click="addGeneralAction">Add task</button>
                         </div>
                     </div>
-                    <div class="o_live_subsection">
-                        <h3>General dissent and reservations</h3>
+                    <details class="o_live_subsection">
+                        <summary>General dissent and reservations</summary>
                         <div t-foreach="generalDissents" t-as="dissent" t-key="dissent.id" class="o_live_record_editor">
                             <input class="form-control" aria-label="Author" placeholder="Author" t-att-value="dissent.author_display_name || ''" t-on-change="(ev) => this.updateDissent(dissent, 'author_display_name', ev.target.value || false)"/>
                             <select class="form-select" aria-label="Statement type" t-att-value="dissent.kind" t-on-change="(ev) => this.updateDissent(dissent, 'kind', ev.target.value)"><option value="dissent">Dissent</option><option value="reservation">Reservation</option><option value="minority_opinion">Minority opinion</option></select>
@@ -236,7 +238,7 @@
                             <label class="form-check-label"><input class="form-check-input" type="checkbox" t-att-checked="state.newDissent.general?.include_in_minutes !== false" t-on-change="(ev) => this.setGeneralValue('newDissent', 'include_in_minutes', ev.target.checked)"/> Include in minutes</label>
                             <button class="btn btn-outline-primary" t-att-disabled="state.submitting['dissent:general']" t-on-click="addGeneralDissent">Add statement</button>
                         </div>
-                    </div>
+                    </details>
                 </section>
                 <section class="o_live_minutes">
                     <h2>Meeting notes</h2>
