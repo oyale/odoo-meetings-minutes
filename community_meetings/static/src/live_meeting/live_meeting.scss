@@ -112,10 +112,12 @@
     .modal-dialog:has(.o_meeting_point_wizard) { max-width: 100%; }
 }
 
-.o_live_reason_choices {
+.o_live_reason_choices,
+.o_meeting_type_choices {
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
-    .o_live_reason_choice { white-space: normal; }
+    .o_live_reason_choice,
+    .o_meeting_type_choice { white-space: normal; }
 }
 

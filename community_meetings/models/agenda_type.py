@@ -8,6 +8,9 @@ class CommunityMeetingAgendaType(models.Model):
     _order = "sequence, name, id"
 
     name = fields.Char(required=True, translate=True)
+    icon = fields.Char(
+        help="Font Awesome icon class shown for this type (e.g. fa-comments-o).",
+    )
     behavior = fields.Selection(
         [("information", "Informational"), ("discussion", "Discussion"), ("decision", "Decision"), ("todo", "TODO"),
          ("minutes_approval", "Minutes Approval"), ("next_meeting", "Next Meeting"), ("followup", "Follow-up")],

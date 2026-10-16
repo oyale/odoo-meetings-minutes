@@ -3,7 +3,7 @@
         <field name="name">community.meeting.topic.form</field><field name="model">community.meeting.topic</field>
         <field name="arch" type="xml"><form string="Point"><sheet>
             <h1><field name="name"/></h1>
-            <group><field name="agenda_type_id"/><field name="state" readonly="1"/><field name="outcome" readonly="1"/><field name="postponed" readonly="1"/><field name="priority"/><field name="deadline"/><field name="estimated_minutes"/><field name="series_id" readonly="1"/></group>
+            <group><field name="agenda_type_id" widget="meeting_agenda_type"/><field name="state" readonly="1"/><field name="outcome" readonly="1"/><field name="postponed" readonly="1"/><field name="priority"/><field name="deadline"/><field name="estimated_minutes"/><field name="series_id" readonly="1"/></group>
             <field name="description" widget="html"/>
             <group string="Advanced follow-up options"><field name="followup_policy"/><field name="default_followup_kind"/></group>
             <group string="Related"><field name="origin_topic_id" readonly="1" invisible="not origin_topic_id"/><field name="related_topic_ids" widget="many2many_tags" domain="[('company_id', '=', company_id), ('id', '!=', id)]"/></group>
@@ -41,7 +41,7 @@
 <field name="meeting_id" invisible="1"/><field name="creation_wizard_id" invisible="1"/><field name="series_id" invisible="1"/><field name="company_id" invisible="1"/>
 <div class="o_meeting_point_context text-muted" invisible="not meeting_id"><i class="fa fa-calendar-o" aria-hidden="true"/> Adding to <field name="meeting_id" readonly="1" nolabel="1" options="{'no_open': True}"/></div>
 <div class="oe_title" invisible="topic_id"><label for="name" string="What is this point about?"/><h1><field name="name" placeholder="A clear one-line title"/></h1></div>
-<group invisible="topic_id"><field name="agenda_type_id" widget="radio"/></group>
+<group invisible="topic_id"><field name="agenda_type_id" widget="meeting_agenda_type"/></group>
 <div class="o_meeting_point_help text-muted" invisible="topic_id">Explain the subject so any attendee can follow it. Add the links or documents needed to act on it.</div>
 <field name="description" widget="html" invisible="topic_id"/>
 <group invisible="topic_id"><group string="Planning"><field name="priority"/><field name="deadline"/><field name="estimated_minutes"/></group></group>

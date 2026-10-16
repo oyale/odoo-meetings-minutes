@@ -4,7 +4,7 @@
         <field name="model">community.meeting.agenda.type</field>
         <field name="arch" type="xml">
             <list editable="bottom" default_order="sequence, name">
-                <field name="sequence" widget="handle"/><field name="name"/><field name="behavior"/><field name="active" widget="boolean_toggle"/>
+                <field name="sequence" widget="handle"/><field name="name"/><field name="icon"/><field name="behavior"/><field name="active" widget="boolean_toggle"/>
             </list>
         </field>
     </record>
@@ -12,7 +12,7 @@
         <field name="name">community.meeting.agenda.type.form</field>
         <field name="model">community.meeting.agenda.type</field>
         <field name="arch" type="xml">
-            <form string="Agenda Point Type"><sheet><group><field name="name"/><field name="behavior"/><field name="sequence"/><field name="active"/></group>
+            <form string="Agenda Point Type"><sheet><group><field name="name"/><field name="icon" placeholder="fa-comments-o"/><field name="behavior"/><field name="sequence"/><field name="active"/></group>
                 <div class="text-muted">Types are shared across all meetings. Once a type is used, its workflow behavior is fixed.</div>
             </sheet></form>
         </field>

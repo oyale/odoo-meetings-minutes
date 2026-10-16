@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="community_meetings.AgendaTypeField">
+        <div class="o_meeting_type_choices" role="radiogroup">
+            <button t-foreach="items" t-as="item" t-key="item.id" type="button"
+                    t-att-class="'btn o_meeting_type_choice ' + (item.id === value ? 'btn-primary' : 'btn-outline-secondary')"
+                    t-att-aria-pressed="item.id === value"
+                    t-att-disabled="props.readonly"
+                    t-on-click="() => this.select(item)">
+                <i t-attf-class="fa #{item.icon} me-1" aria-hidden="true"/><t t-out="item.name"/>
+            </button>
+        </div>
+    </t>
+
+</templates>
