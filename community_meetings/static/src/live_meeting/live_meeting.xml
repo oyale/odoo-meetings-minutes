@@ -35,6 +35,13 @@
                         </div>
                     </div>
                     <div t-if="state.attendeeEditorOpen" class="o_live_attendee_editor">
+                        <fieldset t-if="state.attendees.length" class="o_live_selected_attendees">
+                            <legend>Selected attendees</legend>
+                            <label t-foreach="state.attendees" t-as="partner" t-key="partner.id" class="form-check">
+                                <input class="form-check-input" type="checkbox" t-att-checked="state.attendeeIds.includes(partner.id)" t-on-change="() => this.toggleAttendee(partner.id)"/>
+                                <span class="form-check-label"><t t-out="partner.name"/></span>
+                            </label>
+                        </fieldset>
                         <label class="form-label" for="attendee-search">Find contacts</label>
                         <input id="attendee-search" class="form-control" type="search" t-att-value="state.attendeeSearch" t-on-input="(ev) => this.searchPartners(ev.target.value)"/>
                         <div class="o_live_attendee_options">
