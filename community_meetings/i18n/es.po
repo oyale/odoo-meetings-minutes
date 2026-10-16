@@ -197,3 +197,141 @@ msgstr "Abierto"
 
 msgid "Treated / Discussed"
 msgstr "Tratado / Debatido"
+
+msgid "Saving…"
+msgstr "Guardando…"
+
+msgid "Some changes could not be saved. Retry by editing the affected field."
+msgstr "No se han podido guardar algunos cambios. Vuelve a editar el campo para reintentarlo."
+
+msgid "All changes saved"
+msgstr "Todos los cambios están guardados"
+
+msgid "Minutes to prepare"
+msgstr "Acta pendiente de preparar"
+
+msgid "In progress"
+msgstr "En curso"
+
+msgid "Planned start"
+msgstr "Inicio previsto"
+
+msgid "Planned end"
+msgstr "Fin previsto"
+
+msgid "Actual start"
+msgstr "Inicio real"
+
+msgid "Actual end"
+msgstr "Fin real"
+
+msgid "Start Meeting"
+msgstr "Iniciar reunión"
+
+msgid "Finish Meeting"
+msgstr "Finalizar reunión"
+
+msgid "Record as Already Held"
+msgstr "Registrar como celebrada"
+
+msgid "Discussed — decision pending"
+msgstr "Debatido: decisión pendiente"
+
+msgid "Current agenda point"
+msgstr "Punto actual del orden del día"
+
+msgid "Pending only"
+msgstr "Solo pendientes"
+
+msgid "Expand / Collapse all"
+msgstr "Desplegar / plegar todo"
+
+msgid "Previous agenda point"
+msgstr "Punto anterior del orden del día"
+
+msgid "Next agenda point"
+msgstr "Punto siguiente del orden del día"
+
+msgid "Meeting level records"
+msgstr "Registros generales de la reunión"
+
+msgid "General agreements"
+msgstr "Acuerdos generales"
+
+msgid "General follow-up tasks"
+msgstr "Tareas generales de seguimiento"
+
+msgid "General dissent and reservations"
+msgstr "Disensos y reservas generales"
+
+msgid "Private editorial notes"
+msgstr "Notas editoriales privadas"
+
+msgid "Private notes are excluded from approved minutes."
+msgstr "Las notas privadas no se incluyen en las actas aprobadas."
+
+msgid "Add private note"
+msgstr "Añadir nota privada"
+
+msgid "Include in minutes"
+msgstr "Incluir en el acta"
+
+msgid "Add agreement"
+msgstr "Añadir acuerdo"
+
+msgid "Edit agreement"
+msgstr "Editar acuerdo"
+
+msgid "Edit statement"
+msgstr "Editar declaración"
+
+msgid "Follow up at another meeting"
+msgstr "Dar seguimiento en otra reunión"
+
+msgid "Request next meeting carryover"
+msgstr "Proponer para la próxima reunión"
+
+msgid "Choose destination meeting"
+msgstr "Elegir reunión de destino"
+
+msgid "Reason for postponing"
+msgstr "Motivo del aplazamiento"
+
+msgid "Leave postponed"
+msgstr "Dejar pendiente"
+
+msgid "Change point type"
+msgstr "Cambiar tipo de punto"
+
+msgid "My Meetings"
+msgstr "Mis reuniones"
+
+msgid "Upcoming"
+msgstr "Próximas"
+
+msgid "Scheduled in the Past"
+msgstr "Programadas en el pasado"
+
+msgid "Archive"
+msgstr "Archivo"
+
+msgid "Without Date"
+msgstr "Sin fecha"
+
+msgid "Start Date"
+msgstr "Fecha de inicio"
+
+msgid "New Meeting in"
+msgstr "Nueva reunión en"
+
+msgid "New Meeting"
+msgstr "Nueva reunión"
+
+msgid "People and series"
+msgstr "Personas y serie"
+
+msgid "When and where"
+msgstr "Cuándo y dónde"
+
+msgid "Purpose"
+msgstr "Propósito"
