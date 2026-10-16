@@ -112,6 +112,11 @@ ACTIONS = {
         "add rich point from live",
         "cancel point wizard without side effects",
     ],
+    "test_meetings_root_opens_list_and_preserves_submenus": [
+        "open meeting list from root menu",
+        "open agenda proposals submenu",
+        "open new meeting wizard from its submenu",
+    ],
     "test_followup_kinds_keep_tasks_and_odoo_activities_distinct": [
         "create meeting task without implicit activity",
         "choose Odoo activity type",
@@ -955,6 +960,45 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
         card.locator(".o_live_expand").click()
         expect(card.locator(".o_live_planned")).to_contain_text("Detailed topic")
+
+    def test_meetings_root_opens_list_and_preserves_submenus(self):
+        self.page.goto(BASE_URL + "/web")
+        self.page.locator(".o_navbar_apps_menu").click()
+        root = self.page.locator(
+            'a[data-menu-xmlid="community_meetings.menu_community_meetings_root"]'
+        )
+        expect(root).to_be_visible()
+        root.click()
+        expect(self.page.locator(".o_list_view")).to_be_visible()
+        for menu_xmlid in (
+            "menu_prepare_meeting",
+            "menu_community_meeting_series",
+            "menu_community_meeting_proposals",
+        ):
+            expect(
+                self.page.locator(
+                    'a[data-menu-xmlid="community_meetings.%s"]' % menu_xmlid
+                )
+            ).to_be_visible()
+
+        self.page.locator(
+            'a[data-menu-xmlid="community_meetings.menu_community_meeting_proposals"]'
+        ).click()
+        expect(self.page.locator(".o_list_view")).to_be_visible()
+        expect(self.page.locator(".o_control_panel")).to_contain_text("Agenda Proposals")
+
+        self.page.locator(
+            'a[data-menu-xmlid="community_meetings.menu_community_meetings_root"]'
+        ).click()
+        expect(self.page.locator(".o_list_view")).to_be_visible()
+        self.page.locator(
+            'a[data-menu-xmlid="community_meetings.menu_prepare_meeting"]'
+        ).click()
+        dialog = self.page.get_by_role("dialog")
+        expect(dialog).to_be_visible()
+        expect(dialog).to_contain_text("New Meeting")
+        dialog.get_by_role("button", name="Cancel").click()
+        expect(dialog).not_to_be_visible()
 
     def test_followup_kinds_keep_tasks_and_odoo_activities_distinct(self):
         card = self.card("discussion")

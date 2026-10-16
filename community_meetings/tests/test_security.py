@@ -69,6 +69,15 @@ class TestMeetingSecurity(TransactionCase):
 
     def test_agenda_menus_are_nested_under_meetings_app(self):
         root = self.env.ref("community_meetings.menu_community_meetings_root")
+        self.assertEqual(
+            root.action,
+            self.env.ref("community_meetings.action_community_meetings"),
+            "Clicking Meetings should open the meeting list, not its first child action.",
+        )
+        self.assertFalse(
+            root.child_id.filtered(lambda menu: menu.name == "Meetings"),
+            "The root menu already opens the meeting list; do not duplicate it as a child.",
+        )
         self.assertIn(self.env.ref("base.group_user"), root.groups_id)
         for menu_xmlid in (
             "community_meetings.menu_community_meeting_proposals",
