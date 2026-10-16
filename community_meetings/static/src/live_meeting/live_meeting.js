@@ -61,7 +61,7 @@ export class LiveMeeting extends Component {
     async load() {
         const [meetings, items, types, dissents, actions, resolutions, privateNotes] = await Promise.all([
             this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "company_id", "start_datetime", "end_datetime", "actual_start_datetime", "actual_end_datetime", "actual_duration_minutes", "organizer_id", "secretary_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id", "duration_minutes"]),
-            this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "sequence", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "deferral_reason", "topic_id", "priority", "deadline", "estimated_minutes", "actual_minutes", "review_next_meeting", "is_followup", "topic_state", "topic_outcome"], { order: "sequence, id" }),
+            this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "sequence", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "deferral_reason", "topic_id", "priority", "deadline", "estimated_minutes", "actual_minutes", "actual_seconds", "actual_started_at", "review_next_meeting", "is_followup", "topic_state", "topic_outcome"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.agenda.type", [], ["name", "behavior", "active"], { order: "sequence, name", context: { active_test: false } }),
             this.orm.searchRead("community.meeting.dissent", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "body", "kind", "author_display_name", "author_partner_id"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.action", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "name", "description", "responsible_user_id", "deadline", "state"], { order: "deadline, id" }),
@@ -295,6 +295,10 @@ export class LiveMeeting extends Component {
             : this.state.items;
     }
     get completedCount() { return this.state.items.filter((item) => ["discussed", "closed"].includes(item.disposition)).length; }
+    canStartPoint(item) {
+        return item.disposition !== "closed"
+            && !(this.typeBehavior(item) === "information" && item.disposition === "discussed");
+    }
     toggle(item) {
         this.state.activeItemId = item.id;
         this.state.expanded[item.id] = !this.state.expanded[item.id];
@@ -305,14 +309,47 @@ export class LiveMeeting extends Component {
         for (const item of this.visibleItems) this.state.expanded[item.id] = expand;
     }
     togglePending() { this.state.showPendingOnly = !this.state.showPendingOnly; }
-    navigateItem(offset) {
+    async navigateItem(offset) {
         const items = this.visibleItems;
         const index = items.findIndex((item) => item.id === this.state.activeItemId);
         const next = items[Math.max(0, Math.min(items.length - 1, index + offset))];
-        if (!next) return;
+        if (!next || next.id === this.state.activeItemId) return;
+        const running = this.state.items.filter((item) => item.actual_started_at);
+        for (const item of running) {
+            await this.orm.call("community.meeting.agenda.item", "action_pause_timing", [[item.id]]);
+        }
+        if (running.length) await this.refreshPointTiming();
+        for (const item of this.state.items) this.state.expanded[item.id] = false;
         this.state.activeItemId = next.id;
         this.state.expanded[next.id] = true;
         document.getElementById(`agenda-card-${next.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    async refreshPointTiming() {
+        const records = await this.orm.read("community.meeting.agenda.item", this.state.items.map((item) => item.id), ["actual_minutes", "actual_seconds", "actual_started_at"]);
+        const byId = new Map(records.map((record) => [record.id, record]));
+        for (const item of this.state.items) Object.assign(item, byId.get(item.id) || {});
+    }
+
+    async startPoint(item) {
+        try {
+            await this.orm.call("community.meeting.agenda.item", "action_start_timing", [[item.id]]);
+            await this.refreshPointTiming();
+            for (const point of this.state.items) this.state.expanded[point.id] = false;
+            this.state.activeItemId = item.id;
+            this.state.expanded[item.id] = true;
+        } catch (error) {
+            this.notification.add(_t("The point timer could not be started."), { type: "danger" });
+        }
+    }
+
+    async pausePoint(item) {
+        try {
+            await this.orm.call("community.meeting.agenda.item", "action_pause_timing", [[item.id]]);
+            await this.refreshPointTiming();
+        } catch (error) {
+            this.notification.add(_t("The point timer could not be paused."), { type: "danger" });
+        }
     }
 
     async write(key, model, ids, values, apply) {
@@ -356,7 +393,7 @@ export class LiveMeeting extends Component {
     async updateItem(item, field, value) {
         const normalized = field === "agenda_type_id" ? Number(value) : value;
         return this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], { [field]: normalized }, async () => {
-            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "review_next_meeting", "actual_minutes"]);
+            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "review_next_meeting", "actual_minutes", "actual_seconds", "actual_started_at"]);
             Object.assign(item, saved);
             this.state.editingTypes[item.id] = false;
         });
@@ -673,15 +710,6 @@ export class LiveMeeting extends Component {
         }
     }
     setReopenReason(item, value) { this.state.reopening[item.id] = value; }
-    async updateActualMinutes(item, value) {
-        const minutes = value === "" ? 0 : Number(value);
-        if (!Number.isInteger(minutes) || minutes < 0) {
-            this.notification.add(_t("Actual minutes must be a whole number greater than or equal to zero."), { type: "warning" });
-            return;
-        }
-        return this.updateItem(item, "actual_minutes", minutes);
-    }
-
     async close() {
         if (!await this.flushEditors()) {
             this.notification.add("Save the pending edits before leaving this meeting.", { type: "warning" });

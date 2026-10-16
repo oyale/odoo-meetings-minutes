@@ -1,5 +1,8 @@
+from datetime import timedelta
+
+from odoo import fields
 from odoo.tests import TransactionCase, tagged
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 
 @tagged("post_install", "-at_install")
@@ -106,6 +109,59 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(item.actual_minutes, 27)
         with self.assertRaises(ValidationError), self.cr.savepoint():
             item.write({"actual_minutes": -1})
+
+    def test_point_timer_accumulates_when_reopened(self):
+        meeting = self.env["community.meeting"].create({
+            "name": "Point timing",
+            "start_datetime": fields.Datetime.now() + timedelta(days=1),
+        })
+        item = self.env["community.meeting.agenda.item"].create({
+            "meeting_id": meeting.id, "name": "Timed point",
+        })
+        meeting.action_schedule()
+        meeting.action_start_meeting()
+
+        item.action_start_timing()
+        item.write({"actual_started_at": fields.Datetime.now() - timedelta(minutes=4)})
+        item.write({"disposition": "closed"})
+        first_seconds = item.actual_seconds
+        self.assertGreaterEqual(first_seconds, 240)
+        self.assertFalse(item.actual_started_at)
+
+        with self.assertRaises(UserError):
+            item.action_start_timing()
+        item.write({"reopen_reason": "Continue after the next discussion."})
+        item.action_reopen()
+        item.action_start_timing()
+        item.write({"actual_started_at": fields.Datetime.now() - timedelta(minutes=3)})
+        item.action_pause_timing()
+        self.assertGreaterEqual(item.actual_seconds, first_seconds + 180)
+        self.assertGreaterEqual(item.actual_minutes, 7)
+
+    def test_navigating_timer_can_pause_and_resume_same_point(self):
+        # The browser tests cover focus/collapse; this verifies the server state
+        # used by those controls can stop and resume without losing elapsed time.
+        meeting = self.env["community.meeting"].create({
+            "name": "Timer resume",
+            "start_datetime": fields.Datetime.now() + timedelta(days=1),
+        })
+        first, second = self.env["community.meeting.agenda.item"].create([
+            {"meeting_id": meeting.id, "name": "First"},
+            {"meeting_id": meeting.id, "name": "Second"},
+        ])
+        meeting.action_schedule()
+        meeting.action_start_meeting()
+        first.action_start_timing()
+        first.write({"actual_started_at": fields.Datetime.now() - timedelta(minutes=2)})
+        second.action_start_timing()
+        self.assertFalse(first.actual_started_at)
+        self.assertGreaterEqual(first.actual_minutes, 2)
+        second.write({"actual_started_at": fields.Datetime.now() - timedelta(minutes=1)})
+        second.action_pause_timing()
+        first.action_start_timing()
+        first.write({"actual_started_at": fields.Datetime.now() - timedelta(minutes=1)})
+        first.action_pause_timing()
+        self.assertGreaterEqual(first.actual_minutes, 3)
 
     def test_live_decision_can_be_undone_and_agreement_edits_sync(self):
         meeting = self.env["community.meeting"].create({

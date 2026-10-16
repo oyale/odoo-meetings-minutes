@@ -24,9 +24,14 @@ ACTIONS = {
     "test_postponing_a_point_enables_next_meeting_review": [
         "postpone point and enable next meeting review",
     ],
-    "test_live_result_can_be_undone_and_actual_point_time_saved": [
-        "record actual point time",
+    "test_live_result_can_be_undone_and_manual_actual_time_is_hidden": [
+        "hide manual actual point time",
         "undo a point result",
+    ],
+    "test_point_timer_navigation_collapses_and_resume_accumulates": [
+        "start and pause point timing",
+        "collapse inactive points when navigating",
+        "accumulate time after resuming a point",
     ],
     "test_decision_can_be_undone_during_running_meeting": [
         "undo decision during live meeting",

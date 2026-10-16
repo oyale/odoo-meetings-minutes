@@ -141,21 +141,67 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             ["review_next_meeting"],
         )["review_next_meeting"])
 
-    def test_live_result_can_be_undone_and_actual_point_time_saved(self):
+    def test_live_result_can_be_undone_and_manual_actual_time_is_hidden(self):
         self.page.get_by_text("Minutes secretary", exact=True).wait_for()
         expect(self.page.get_by_text("Estimated duration", exact=True)).to_be_visible()
         card = self.card("discussion")
         card.get_by_role("button", name="Resolve discussion").click()
         expect(self.outcome("discussion")).to_have_text("Resolved")
-        card.get_by_label("Actual minutes for this point").fill("31")
-        card.get_by_label("Actual minutes for this point").press("Tab")
-        self.assertEqual(self.record("community.meeting.agenda.item", self.item_ids["discussion"], ["actual_minutes"])["actual_minutes"], 31)
+        self.assertEqual(card.get_by_label("Actual minutes for this point").count(), 0)
         card.get_by_role("button", name="Undo point result").click()
         reason = card.get_by_label("Why reopen this point?")
         reason.fill("We need to revise the conclusion.")
         card.get_by_role("button", name="Reopen point").click()
         expect(self.outcome("discussion")).to_have_text("Pending")
         self.assertEqual(self.record("community.meeting.agenda.item", self.item_ids["discussion"], ["disposition"])["disposition"], "open")
+
+    def test_point_timer_navigation_collapses_and_resume_accumulates(self):
+        self.page.get_by_role("button", name="Start Meeting").click()
+        first = self.card("information")
+        second = self.card("discussion")
+        first.get_by_role("button", name="Begin point").click()
+        expect(first.get_by_text("Point in progress", exact=True)).to_be_visible()
+        started = self.record(
+            "community.meeting.agenda.item", self.item_ids["information"],
+            ["actual_started_at"],
+        )["actual_started_at"]
+        self.assertTrue(
+            started,
+            "Point timer did not start. Meeting=%r; alerts=%r; browser errors=%r"
+            % (
+                self.record("community.meeting", self.meeting_id, ["state", "actual_start_datetime"]),
+                self.page.locator('[role="alert"]').all_text_contents(),
+                self.console_errors[self.errors_before:],
+            ),
+        )
+        self.rpc("community.meeting.agenda.item", "write", [
+            [self.item_ids["information"]],
+            {"actual_started_at": (datetime.utcnow() - timedelta(minutes=2)).strftime("%Y-%m-%d %H:%M:%S")},
+        ])
+        self.page.get_by_role("button", name="Next agenda point").click()
+        expect(first.locator(".o_live_card_body")).to_be_hidden()
+        expect(second.locator(".o_live_card_body")).to_be_visible()
+        first_seconds = self.record(
+            "community.meeting.agenda.item", self.item_ids["information"],
+            ["actual_seconds"],
+        )["actual_seconds"]
+        self.assertGreaterEqual(first_seconds, 120)
+
+        second.get_by_role("button", name="Begin point").click()
+        self.page.get_by_role("button", name="Previous agenda point").click()
+        first.get_by_role("button", name="Begin point").click()
+        self.rpc("community.meeting.agenda.item", "write", [
+            [self.item_ids["information"]],
+            {"actual_started_at": (datetime.utcnow() - timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:%S")},
+        ])
+        first.get_by_role("button", name="Pause point").click()
+        timing = self.record(
+            "community.meeting.agenda.item", self.item_ids["information"],
+            ["actual_seconds", "actual_minutes", "actual_started_at"],
+        )
+        self.assertGreaterEqual(timing["actual_seconds"], first_seconds + 60)
+        self.assertGreaterEqual(timing["actual_minutes"], 3)
+        self.assertFalse(timing["actual_started_at"])
 
     def test_decision_can_be_undone_during_running_meeting(self):
         self.page.get_by_role("button", name="Start Meeting").click()

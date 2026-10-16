@@ -101,8 +101,12 @@
                         <div t-att-id="'agenda-panel-' + item.id" t-att-class="'o_live_card_body ' + (state.expanded[item.id] ? '' : 'd-none')">
                             <details t-if="item.description" class="o_live_planned" open="open"><summary>Planned topic</summary><div t-out="safeHtml(item.description)"/></details>
                             <details t-if="!locked" class="o_live_advanced"><summary>Point options</summary><button class="btn btn-link" t-on-click="() => this.editPoint(item)">Edit point details</button></details>
-                            <div class="text-muted o_live_point_meta"><span t-if="item.deadline">Due <t t-out="item.deadline"/> · </span><span t-if="item.estimated_minutes">Estimated <t t-out="item.estimated_minutes"/> min</span><span t-if="item.actual_minutes"> · Actual <t t-out="item.actual_minutes"/> min</span></div>
-                            <label t-if="!locked" class="o_live_actual_minutes"><span>Actual minutes for this meeting</span><input class="form-control" type="number" min="0" step="1" aria-label="Actual minutes for this point" t-att-value="item.actual_minutes || 0" t-on-change="(ev) => this.updateActualMinutes(item, ev.target.value)"/></label>
+                            <div class="text-muted o_live_point_meta"><span t-if="item.deadline">Due <t t-out="item.deadline"/> · </span><span t-if="item.estimated_minutes">Estimated <t t-out="item.estimated_minutes"/> min</span></div>
+                            <div t-if="!locked and state.meeting.actual_start_datetime and !state.meeting.actual_end_datetime" class="o_live_point_timer">
+                                <span t-if="item.actual_started_at" class="badge text-bg-success">Point in progress</span>
+                                <button t-if="!item.actual_started_at and canStartPoint(item)" class="btn btn-outline-primary" t-on-click="() => this.startPoint(item)">Begin point</button>
+                                <button t-if="item.actual_started_at" class="btn btn-outline-secondary" t-on-click="() => this.pausePoint(item)">Pause point</button>
+                            </div>
                             <label t-if="!locked" class="form-check-label"><input class="form-check-input" type="checkbox" aria-label="Review at next meeting" t-att-checked="item.review_next_meeting" t-att-disabled="state.submitting['review:' + item.id]" t-on-change="(ev) => this.toggleReview(item, ev.target.checked)"/> Review at next meeting</label>
                             <div t-if="item.is_followup" class="alert alert-light">Follow-up of a closed point: <t t-out="item.topic_outcome"/><button t-if="!locked" class="btn btn-outline-success" t-on-click="() => this.applyPointAction(item, 'discussed')">Review complete</button></div>
                             <div t-if="!item.is_followup" class="o_live_point_actions" role="group" aria-label="Change agenda point result">

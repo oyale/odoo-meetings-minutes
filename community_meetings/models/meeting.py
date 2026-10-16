@@ -199,6 +199,7 @@ class CommunityMeeting(models.Model):
 
     def action_mark_held(self):
         result = self._transition(("scheduled",), "held")
+        self.mapped("agenda_item_ids").filtered("actual_started_at")._pause_timing()
         super(CommunityMeeting, self).write({"actual_end_datetime": fields.Datetime.now()})
         return result
 

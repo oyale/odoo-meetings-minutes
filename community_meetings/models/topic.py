@@ -218,6 +218,8 @@ class AgendaParticipation(models.Model):
     deadline = fields.Date()
     estimated_minutes = fields.Integer()
     actual_minutes = fields.Integer(string="Actual minutes", copy=False)
+    actual_seconds = fields.Integer(copy=False)
+    actual_started_at = fields.Datetime(copy=False)
     review_next_meeting = fields.Boolean(string="Review at next meeting", copy=False)
     is_followup = fields.Boolean(readonly=True, copy=False)
     topic_state = fields.Selection(related="topic_id.state")
@@ -232,9 +234,12 @@ class AgendaParticipation(models.Model):
         )
     ]
 
-    @api.constrains("estimated_minutes", "actual_minutes")
+    @api.constrains("estimated_minutes", "actual_minutes", "actual_seconds")
     def _check_estimated_minutes(self):
-        if any(i.estimated_minutes < 0 or i.actual_minutes < 0 for i in self):
+        if any(
+            i.estimated_minutes < 0 or i.actual_minutes < 0 or i.actual_seconds < 0
+            for i in self
+        ):
             raise ValidationError(_("Estimated and actual minutes cannot be negative."))
 
     @api.model_create_multi
@@ -319,6 +324,11 @@ class AgendaParticipation(models.Model):
                 topic._lock_workflow()
         result = super().write(vals)
         for item in self:
+            if (
+                item.actual_started_at
+                and vals.get("disposition") in ("discussed", "closed", "deferred")
+            ):
+                item._pause_timing()
             if vals.get("disposition") == "deferred":
                 super(AgendaParticipation, item).write({"review_next_meeting": True})
             if {"disposition", "decision_result"}.intersection(vals) and item.topic_id:
@@ -333,6 +343,55 @@ class AgendaParticipation(models.Model):
             if content and item.topic_id:
                 item.topic_id.write(content)
         return result
+
+    def _pause_timing(self):
+        now = fields.Datetime.now()
+        for item in self.filtered("actual_started_at"):
+            started = fields.Datetime.to_datetime(item.actual_started_at)
+            elapsed = max(0, int((now - started).total_seconds()))
+            total_seconds = (item.actual_seconds or item.actual_minutes * 60) + elapsed
+            super(AgendaParticipation, item).write(
+                {
+                    "actual_seconds": total_seconds,
+                    "actual_minutes": (total_seconds + 30) // 60,
+                    "actual_started_at": False,
+                }
+            )
+
+    def action_start_timing(self):
+        for item in self:
+            item.check_access("write")
+            meeting = item.meeting_id
+            meeting.check_access("write")
+            if not self.env.user.has_group("community_meetings.group_meeting_editor"):
+                raise UserError(_("Only meeting editors can start a point timer."))
+            if (
+                meeting.state != "scheduled"
+                or not meeting.actual_start_datetime
+                or meeting.actual_end_datetime
+            ):
+                raise UserError(_("Start the live meeting before timing an agenda point."))
+            if item.disposition == "closed" or (
+                item.kind == "information" and item.disposition == "discussed"
+            ):
+                raise UserError(_("Reopen a completed point before timing it again."))
+            meeting.agenda_item_ids.filtered("actual_started_at")._pause_timing()
+            if not item.actual_seconds and item.actual_minutes:
+                super(AgendaParticipation, item).write(
+                    {"actual_seconds": item.actual_minutes * 60}
+                )
+            super(AgendaParticipation, item).write(
+                {"actual_started_at": fields.Datetime.now()}
+            )
+        return True
+
+    def action_pause_timing(self):
+        for item in self:
+            item.check_access("write")
+            if not self.env.user.has_group("community_meetings.group_meeting_editor"):
+                raise UserError(_("Only meeting editors can pause a point timer."))
+        self._pause_timing()
+        return True
 
     def action_reopen(self):
         for item in self:
