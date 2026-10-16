@@ -89,7 +89,6 @@ if user:
         attachments = revisions.pdf_attachment_id
         env.cr.execute('DELETE FROM community_meeting_revision WHERE meeting_id IN %s', [tuple(meetings.ids)])
         attachments.unlink()
-        env.cr.execute('DELETE FROM community_meeting_agenda_proposal WHERE meeting_id IN %s', [tuple(meetings.ids)])
         meetings.invalidate_recordset(['state'])
         transfers = env['community.meeting.carryover'].search([('origin_meeting_id', 'in', meetings.ids)])
         env.cr.execute('UPDATE community_meeting_agenda_item SET carryover_id=NULL WHERE meeting_id IN %s', [tuple(meetings.ids)])
@@ -99,7 +98,6 @@ if user:
         meetings.unlink()
     proposer = env['res.users'].search([('login', '=', {proposer_login!r})])
     if proposer:
-        env.cr.execute('DELETE FROM community_meeting_agenda_proposal WHERE submitted_by_user_id=%s', [proposer.id])
         proposer_partner = proposer.partner_id
         proposer.unlink()
         proposer_partner.unlink()

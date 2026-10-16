@@ -75,9 +75,6 @@ class CommunityMeeting(models.Model):
     dissent_ids = fields.One2many(
         "community.meeting.dissent", "meeting_id", groups="community_meetings.group_meeting_editor",
     )
-    proposal_ids = fields.One2many(
-        "community.meeting.agenda.proposal", "meeting_id", groups="community_meetings.group_meeting_editor",
-    )
     carryover_ids = fields.One2many(
         "community.meeting.carryover", "origin_meeting_id",
         groups="community_meetings.group_meeting_editor",
@@ -383,7 +380,6 @@ class CommunityMeeting(models.Model):
             "action_ids": [],
             "private_note_ids": [],
             "dissent_ids": [],
-            "proposal_ids": [],
             "carryover_ids": [],
         })
         return super().copy(values)

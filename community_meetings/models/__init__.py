@@ -5,8 +5,7 @@ from . import agenda_type
 from . import resolution
 from . import action
 from . import editorial
-from . import proposal
-from . import proposal_wizard
+from . import proposal_eligibility
 from . import carryover
 from . import revision
 from . import res_users

@@ -606,12 +606,10 @@ msgstr "Baja"
 #: code:addons/community_meetings/models/creation_wizard.py:0
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__meeting_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__meeting_id
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_proposal__meeting_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carry_review_line__origin_meeting_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_dissent__meeting_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_editor_note__meeting_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__meeting_id
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_proposal_accept_wizard__meeting_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_resolution__meeting_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_revision__meeting_id
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
@@ -939,7 +937,6 @@ msgstr "Rechazar"
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-#: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_proposal__status__rejected
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_resolution__decision_outcome__denied
 msgid "Rejected"
 msgstr "Rechazada"
@@ -1045,11 +1042,6 @@ msgstr "Fecha de inicio"
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
 msgid "Start Meeting"
 msgstr "Iniciar reunión"
-
-#. module: community_meetings
-#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_proposal_form
-msgid "Submit Proposal"
-msgstr "Enviar propuesta"
 
 #. module: community_meetings
 #. odoo-javascript
