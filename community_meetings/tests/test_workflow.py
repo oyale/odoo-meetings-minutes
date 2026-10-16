@@ -117,6 +117,13 @@ class TestMeetingWorkflow(TransactionCase):
         with self.assertRaises(ValidationError):
             meeting.with_user(self.editor).action_schedule()
 
+    def test_series_can_open_a_new_meeting_with_series_defaults(self):
+        series = self.env["community.meeting.series"].with_user(self.editor).create({"name": "Weekly"})
+        action = series.with_user(self.editor).action_new_meeting()
+        self.assertEqual(action["res_model"], "community.meeting")
+        self.assertEqual(action["context"]["default_series_id"], series.id)
+        self.assertEqual(action["context"]["default_company_id"], series.company_id.id)
+
     def test_live_meeting_records_actual_start_and_end(self):
         meeting = self.env["community.meeting"].with_user(self.editor).create({
             "name": "Actual times", "start_datetime": "2026-11-01 10:00:00",

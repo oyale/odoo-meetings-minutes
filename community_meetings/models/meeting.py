@@ -43,6 +43,7 @@ class CommunityMeeting(models.Model):
     series_id = fields.Many2one(
         "community.meeting.series", check_company=True, ondelete="restrict",
     )
+    series_carryover_policy = fields.Selection(related="series_id.carryover_policy", readonly=True)
     state = fields.Selection(
         [
             ("draft", "Draft"),

@@ -66,6 +66,7 @@
                             <field name="attendee_partner_ids" widget="many2many_tags"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="series_id" domain="[('company_id', '=', company_id), ('meeting_kind', '=', meeting_kind)]"/>
+                            <field name="series_carryover_policy" invisible="not series_id" readonly="1"/>
                         </group>
                     </group>
                     <group string="Purpose"><field name="description" nolabel="1" placeholder="What is this meeting for?"/></group>

@@ -20,10 +20,30 @@ class CommunityMeetingSeries(models.Model):
         "res.users", "community_meeting_series_coordinator_rel",
         "series_id", "user_id", string="Coordinators", check_company=True,
     )
+    meeting_ids = fields.One2many("community.meeting", "series_id", string="Meetings")
     carryover_policy = fields.Selection(
         [("review", "Review"), ("automatic", "Automatic"), ("manual", "Manual")],
         default="review", required=True,
     )
+
+    def action_new_meeting(self):
+        self.ensure_one()
+        self.check_access_rights("read")
+        self.check_access_rule("read")
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("New Meeting in %(series)s", series=self.name),
+            "res_model": "community.meeting",
+            "view_mode": "form",
+            "views": [(self.env.ref("community_meetings.view_community_meeting_form").id, "form")],
+            "target": "current",
+            "context": {
+                **self.env.context,
+                "default_series_id": self.id,
+                "default_company_id": self.company_id.id,
+                "default_meeting_kind": self.meeting_kind,
+            },
+        }
 
     _sql_constraints = [
         ("name_company_unique", "unique(company_id, name)", "Series names must be unique per company."),

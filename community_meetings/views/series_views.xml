@@ -18,6 +18,11 @@
         <field name="arch" type="xml">
             <form string="Meeting Series">
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_new_meeting" type="object" class="oe_stat_button" icon="fa-plus">
+                            <span class="o_stat_text">New Meeting</span>
+                        </button>
+                    </div>
                     <div class="oe_title">
                         <label for="name"/>
                         <h1><field name="name" placeholder="Series name"/></h1>
@@ -33,6 +38,18 @@
                             <field name="carryover_policy"/>
                         </group>
                     </group>
+                    <notebook>
+                        <page string="Meetings">
+                            <field name="meeting_ids" readonly="1">
+                                <list create="0" edit="0" delete="0" default_order="start_datetime desc">
+                                    <field name="code"/>
+                                    <field name="name"/>
+                                    <field name="start_datetime"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
