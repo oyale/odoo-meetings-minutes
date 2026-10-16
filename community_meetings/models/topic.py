@@ -204,7 +204,7 @@ class MeetingTopic(models.Model):
             }
         )
         self.message_post(
-            body=_("Reopened: %s", reason),
+            body=_("Reopened: %s", reason) if reason else _("Reopened."),
             message_type="notification",
             email_from=self.env.user.email or "meetings@localhost",
         )
@@ -429,8 +429,6 @@ class AgendaParticipation(models.Model):
     def action_reopen(self):
         for item in self:
             item.check_access("write")
-            if not item.reopen_reason:
-                raise ValidationError(_("Enter a reason for reopening the point."))
             if item.meeting_id.state in ("approved", "cancelled"):
                 raise UserError(_("Reopen this point in an editable meeting."))
             item.topic_id._reopen(item.reopen_reason)

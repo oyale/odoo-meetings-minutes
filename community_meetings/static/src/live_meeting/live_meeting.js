@@ -392,6 +392,15 @@ export class LiveMeeting extends Component {
             editor.setAttribute("contenteditable", editable ? "true" : "false");
             editor.setAttribute("aria-readonly", editable ? "false" : "true");
         });
+        if (!editable) {
+            // Drop the editor of a point that is no longer editable once its
+            // content was flushed, so it cannot replay a write the server rejects.
+            const key = `discussion_notes:${item.id}`;
+            this.editors.delete(key);
+            this.editorMeta.delete(key);
+            this.editorTimers.delete(key);
+            delete this.state.unsavedEditors[key];
+        }
     }
     toggle(item) {
         this.state.activeItemId = item.id;
@@ -867,11 +876,7 @@ export class LiveMeeting extends Component {
         } catch (error) { this.notification.add(_t("Could not review this continuing point."), { type: "danger" }); }
     }
     async reopenPoint(item) {
-        const reason = this.state.reopening[item.id]?.trim();
-        if (!reason) {
-            this.notification.add(_t("Enter a reason for reopening the point."), { type: "warning" });
-            return;
-        }
+        const reason = (this.state.reopening[item.id] || "").trim();
         if (!await this.flushEditors()) return;
         const key = `reopen:${item.id}`;
         this.state.submitting[key] = true;
