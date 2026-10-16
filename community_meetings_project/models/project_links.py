@@ -354,22 +354,12 @@ class CommunityMeetingCarryoverWizard(models.TransientModel):
         "project.task", string="Project Tasks to Carry Forward",
     )
 
-    def action_request(self):
-        self.ensure_one()
-        model, _field = self.env["community.meeting.carryover"]._source_fields(self.origin_model)
-        source = self.env[model].browse(self.origin_record_id).exists()
-        if not source or source.meeting_id != self.origin_meeting_id:
-            raise ValidationError(_("The selected follow-up source is unavailable."))
+    def _prepare_carryover_values(self):
+        values = super()._prepare_carryover_values()
         tasks = self.selected_project_task_ids
         tasks.check_access_rights("read")
         tasks.check_access_rule("read")
         if any(task.company_id and task.company_id != self.company_id for task in tasks):
             raise ValidationError(_("Selected tasks must belong to the meeting company."))
-        self.env["community.meeting.carryover"].create({
-            "origin_model": self.origin_model,
-            "origin_record_id": source.id,
-            "destination_meeting_id": self.destination_meeting_id.id,
-            "reason": self.reason,
-            "selected_project_task_ids": [(6, 0, tasks.ids)],
-        })
-        return {"type": "ir.actions.act_window_close"}
+        values["selected_project_task_ids"] = [(6, 0, tasks.ids)]
+        return values

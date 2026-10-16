@@ -31,6 +31,7 @@ class CommunityMeetingCarryover(models.Model):
     origin_context = fields.Text(readonly=True)
     company_id = fields.Many2one(related="origin_meeting_id.company_id", store=True, index=True)
     series_id = fields.Many2one(related="origin_meeting_id.series_id", store=True, index=True)
+    destination_series_id = fields.Many2one("community.meeting.series", string="Destination series", check_company=True, ondelete="restrict")
     destination_meeting_id = fields.Many2one(
         "community.meeting", ondelete="restrict", check_company=True, index=True,
     )
@@ -90,7 +91,7 @@ class CommunityMeetingCarryover(models.Model):
         source_meeting = self.origin_meeting_id
         if meeting.company_id != source_meeting.company_id:
             raise ValidationError(_("A carryover destination must be in the same company."))
-        if source_meeting.series_id and meeting.series_id != source_meeting.series_id:
+        if (self.destination_series_id or source_meeting.series_id) and meeting.series_id != (self.destination_series_id or source_meeting.series_id):
             raise ValidationError(_("A carryover destination must be in the same meeting series."))
         if meeting.state not in ("draft", "scheduled"):
             raise ValidationError(_("Carryovers can only target a future draft or scheduled meeting."))
@@ -148,7 +149,12 @@ class CommunityMeetingCarryover(models.Model):
             else:
                 vals["origin_context"] = source.description or ""
             vals["origin_context"] = vals["origin_context"][:2000]
-            series = origin_meeting.series_id
+            series = self.env["community.meeting.series"].browse(vals.get("destination_series_id")).exists() or origin_meeting.series_id
+            if series:
+                series.check_access("read")
+                if series.company_id != origin_meeting.company_id or not series.active:
+                    raise ValidationError(_("Choose an active destination series in the same company."))
+            vals["destination_series_id"] = series.id
             if series:
                 vals["cycle_key"] = f"{model_name}:{source.id}:series:{series.id}"
             elif destination:
@@ -164,7 +170,7 @@ class CommunityMeetingCarryover(models.Model):
                 continue
             policy = ("review" if self.env.context.get("review_carryovers_in_wizard") else series.carryover_policy) if series else "manual"
             if not destination and series:
-                candidate = self._find_next_meeting(origin_meeting)
+                candidate = self._find_next_meeting(origin_meeting, series)
                 if candidate:
                     destination = candidate.with_env(self.env)
                     try:
@@ -173,7 +179,7 @@ class CommunityMeetingCarryover(models.Model):
                     except AccessError:
                         destination = self.env["community.meeting"]
             if destination:
-                self._validate_destination_for(origin_meeting, destination)
+                self._validate_destination_for(origin_meeting, destination, series)
                 vals["destination_meeting_id"] = destination.id
                 vals["status"] = "proposed" if policy == "review" else "pending"
             try:
@@ -198,10 +204,11 @@ class CommunityMeetingCarryover(models.Model):
         return results
 
     @api.model
-    def _validate_destination_for(self, source_meeting, destination):
+    def _validate_destination_for(self, source_meeting, destination, series=None):
         if destination.company_id != source_meeting.company_id:
             raise ValidationError(_("A carryover destination must be in the same company."))
-        if source_meeting.series_id and destination.series_id != source_meeting.series_id:
+        series = series or source_meeting.series_id
+        if series and destination.series_id != series:
             raise ValidationError(_("A carryover destination must be in the same meeting series."))
         if destination.state not in ("draft", "scheduled"):
             raise ValidationError(_("Carryovers can only target a future draft or scheduled meeting."))
@@ -209,12 +216,13 @@ class CommunityMeetingCarryover(models.Model):
             raise ValidationError(_("The destination meeting must have a later scheduled start."))
 
     @api.model
-    def _find_next_meeting(self, source_meeting):
-        if not source_meeting.series_id or not source_meeting.start_datetime:
+    def _find_next_meeting(self, source_meeting, series=None):
+        series = series or source_meeting.series_id
+        if not series or not source_meeting.start_datetime:
             return self.env["community.meeting"]
         return self.env["community.meeting"].sudo().search([
             ("company_id", "=", source_meeting.company_id.id),
-            ("series_id", "=", source_meeting.series_id.id),
+            ("series_id", "=", series.id),
             ("state", "in", ("draft", "scheduled")),
             ("start_datetime", ">", source_meeting.start_datetime),
         ], order="start_datetime, id", limit=1)
@@ -237,7 +245,7 @@ class CommunityMeetingCarryover(models.Model):
         labels = {"agenda_item": _("Continued topic"), "resolution": _("Resolution follow-up"), "action": _("Action follow-up")}
         source = self.origin_agenda_item_id or self.origin_action_id.agenda_item_id or self.origin_resolution_id.agenda_item_id
         item = self.env["community.meeting.agenda.item"].create({
-            "topic_id": source.topic_id.id if source else False,
+            "topic_id": source.topic_id.id if source and source.meeting_id.series_id == destination.series_id else False,
             "meeting_id": destination.id,
             "name": f"{labels[self.origin_model]}: {self.origin_name}",
             "description": _("Carried forward from %(meeting)s.", meeting=self.origin_meeting_id.code),
@@ -252,7 +260,7 @@ class CommunityMeetingCarryover(models.Model):
     def write(self, vals):
         if {"status", "origin_meeting_id", "origin_agenda_item_id", "origin_resolution_id", "origin_action_id",
             "origin_name", "origin_model", "origin_record_id", "origin_context", "initiator_id", "cycle_key",
-            "destination_item_id", "destination_meeting_id", "responded_by_id", "responded_at"}.intersection(vals):
+            "destination_item_id", "destination_meeting_id", "destination_series_id", "responded_by_id", "responded_at"}.intersection(vals):
             raise UserError(_("Use a carryover workflow action to review or change a transfer."))
         if "reason" in vals and any(transfer.status in ("accepted", "dismissed", "cancelled") for transfer in self):
             raise UserError(_("A closed carryover cannot be edited."))
@@ -276,8 +284,8 @@ class CommunityMeetingCarryover(models.Model):
         source.check_access_rights("write")
         source.check_access_rule("write")
         destination = self.env["community.meeting"].browse(destination_meeting_id or self.destination_meeting_id.id)
-        if not destination and self.series_id:
-            candidate = self._find_next_meeting(source)
+        if not destination and (self.destination_series_id or self.series_id):
+            candidate = self._find_next_meeting(source, self.destination_series_id or self.series_id)
             destination = candidate.with_env(self.env) if candidate else self.env["community.meeting"]
         if not destination:
             return False
@@ -340,21 +348,22 @@ class CommunityMeetingCarryover(models.Model):
     def _process_new_meetings(self, meetings):
         for meeting in meetings.filtered("series_id"):
             pending = self.search([
-                ("series_id", "=", meeting.series_id.id),
+                "|", ("destination_series_id", "=", meeting.series_id.id),
+                "&", ("destination_series_id", "=", False), ("series_id", "=", meeting.series_id.id),
                 ("company_id", "=", meeting.company_id.id),
                 ("status", "=", "pending"),
                 ("destination_meeting_id", "=", False),
                 ("origin_meeting_id.start_datetime", "<", meeting.start_datetime),
             ], order="create_date, id")
             for transfer in pending:
-                next_meeting = self._find_next_meeting(transfer.origin_meeting_id)
+                next_meeting = self._find_next_meeting(transfer.origin_meeting_id, transfer.destination_series_id or transfer.series_id)
                 if next_meeting != meeting:
                     continue
                 transfer._validate_destination(meeting)
                 meeting.check_access_rights("write")
                 meeting.check_access_rule("write")
                 super(CommunityMeetingCarryover, transfer).write({"destination_meeting_id": meeting.id})
-                policy = "review" if self.env.context.get("review_carryovers_in_wizard") else transfer.series_id.carryover_policy
+                policy = "review" if self.env.context.get("review_carryovers_in_wizard") else (transfer.destination_series_id or transfer.series_id).carryover_policy
                 if policy == "review":
                     super(CommunityMeetingCarryover, transfer).write({"status": "proposed"})
                 elif policy == "automatic":
@@ -373,6 +382,7 @@ class CommunityMeetingCarryoverWizard(models.TransientModel):
     origin_meeting_id = fields.Many2one("community.meeting", required=True, readonly=True)
     company_id = fields.Many2one(related="origin_meeting_id.company_id", readonly=True)
     series_id = fields.Many2one(related="origin_meeting_id.series_id", readonly=True)
+    destination_series_id = fields.Many2one("community.meeting.series", string="Destination series", domain="[('company_id', '=', company_id), ('active', '=', True)]")
     source_start_datetime = fields.Datetime(related="origin_meeting_id.start_datetime", readonly=True)
     destination_meeting_id = fields.Many2one(
         "community.meeting", domain="[('company_id', '=', company_id), ('state', 'in', ['draft', 'scheduled']), ('start_datetime', '>', source_start_datetime)]",
@@ -400,20 +410,28 @@ class CommunityMeetingCarryoverWizard(models.TransientModel):
                 "default_origin_record_id": record.id,
                 "default_origin_meeting_id": record.meeting_id.id,
                 "default_series_id": record.meeting_id.series_id.id,
+                "default_destination_series_id": record.meeting_id.series_id.id,
             },
         }
 
-    def action_request(self):
+    def _prepare_carryover_values(self):
         self.ensure_one()
         model, _field = self.env["community.meeting.carryover"]._source_fields(self.origin_model)
         source = self.env[model].browse(self.origin_record_id).exists()
         if not source or source.meeting_id != self.origin_meeting_id:
             raise ValidationError(_("The selected follow-up source is unavailable."))
+        destination_series = self.destination_series_id or self.series_id
+        if self.origin_model == "resolution" and not destination_series:
+            raise ValidationError(_("Choose a destination series."))
         values = {
             "origin_model": self.origin_model,
             "origin_record_id": source.id,
-            "destination_meeting_id": self.destination_meeting_id.id,
+            "destination_meeting_id": self.destination_meeting_id.id if self.origin_model != "resolution" else False,
+            "destination_series_id": destination_series.id,
             "reason": self.reason,
         }
-        transfer = self.env["community.meeting.carryover"].create(values)
+        return values
+
+    def action_request(self):
+        self.env["community.meeting.carryover"].create(self._prepare_carryover_values())
         return {"type": "ir.actions.act_window_close"}

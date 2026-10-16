@@ -403,6 +403,27 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(self.page.get_by_label("Meeting name")).to_have_count(0)
         self.assertEqual(self.record("community.meeting", self.meeting_id, ["state"])["state"], "approved")
 
+    def test_agreement_followup_asks_for_series(self):
+        self.retain_carryover = True
+        series_name = "Agreement followup series " + str(self.meeting_id)
+        series = self.rpc("community.meeting.series", "create", [{"name": series_name}])
+        self.rpc("community.meeting", "write", [[self.meeting_id], {"series_id": series}])
+        self.page.reload(wait_until="domcontentloaded")
+        card = self.card("discussion")
+        card.get_by_role("button", name="Add agreement", exact=True).click()
+        card.get_by_placeholder("Agreement title").fill("Follow this agreement")
+        card.get_by_placeholder("What was agreed?").fill("Review progress in the next assembly")
+        card.get_by_role("button", name="Add agreement", exact=True).click()
+        card.get_by_role("button", name="Follow up at another meeting").click()
+        dialog = self.page.get_by_role("dialog")
+        expect(dialog.locator('.o_field_widget[name="destination_meeting_id"]')).to_have_count(0)
+        expect(dialog.locator('.o_field_widget[name="destination_series_id"] input')).to_have_value(series_name)
+        dialog.get_by_role("button", name="Request Follow-up", exact=True).click()
+        expect(dialog).not_to_be_visible()
+        transfers = self.rpc("community.meeting.carryover", "search_read", [[("origin_meeting_id", "=", self.meeting_id), ("origin_model", "=", "resolution")]], {"fields": ["destination_series_id", "destination_meeting_id"]})
+        self.assertEqual(transfers[0]["destination_series_id"][0], series)
+        self.assertFalse(transfers[0]["destination_meeting_id"])
+
     def test_header_details_and_add_point_remain_available_while_paused(self):
         self.page.get_by_role("button", name="Start Meeting").click()
         self.page.get_by_role("button", name="Pause Meeting").click()

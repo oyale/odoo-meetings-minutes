@@ -54,7 +54,8 @@
                     <field name="company_id" invisible="1"/>
                     <field name="series_id" invisible="1"/>
                     <field name="source_start_datetime" invisible="1"/>
-                    <field name="destination_meeting_id"/>
+                    <field name="destination_series_id" required="origin_model == 'resolution'"/>
+                    <field name="destination_meeting_id" invisible="origin_model == 'resolution'"/>
                     <field name="reason"/>
                 </group>
                 <footer>

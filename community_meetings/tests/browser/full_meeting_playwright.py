@@ -1252,6 +1252,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         card.get_by_label("Reason for postponing").fill("Continue this point next time")
         card.get_by_role("button", name="Leave postponed", exact=True).click()
         expect(self.outcome("discussion")).to_have_text("Postponed")
+        self.wait_field("community.meeting.agenda.item", self.item_ids["discussion"], "review_next_meeting", True)
         self.assertTrue(
             self.record(
                 "community.meeting.agenda.item",

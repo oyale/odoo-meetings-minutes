@@ -1262,3 +1262,9 @@ msgstr "Tipo predeterminado de actividad de Odoo"
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__default_followup_kind__inherit
 msgid "Company default"
 msgstr "Valor predeterminado de la compañía"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover__destination_series_id
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover_wizard__destination_series_id
+msgid "Destination series"
+msgstr "Serie de destino"

@@ -147,3 +147,34 @@ class TestAgendaCarryover(TransactionCase):
         transfer = self._request(item)
         with self.assertRaises(UserError):
             transfer.write({"status": "accepted"})
+
+    def test_resolution_followup_waits_for_destination_series_meeting(self):
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": self.source.id, "name": "Agreement source",
+        })
+        resolution = self.env["community.meeting.resolution"].with_user(self.editor).create({
+            "meeting_id": self.source.id, "agenda_item_id": item.id, "title": "Review delivery",
+        })
+        series = self.env["community.meeting.series"].with_user(self.editor).create({
+            "name": "Destination assembly", "carryover_policy": "review",
+        })
+        action = resolution.action_request_followup()
+        self.assertEqual(action["context"]["default_destination_series_id"], self.series.id)
+        wizard = self.env["community.meeting.carryover.wizard"].with_user(self.editor).create({
+            "origin_model": "resolution", "origin_record_id": resolution.id,
+            "origin_meeting_id": self.source.id, "destination_series_id": series.id,
+        })
+        wizard.action_request()
+        transfer = self.env["community.meeting.carryover"].search([("origin_resolution_id", "=", resolution.id)])
+        self.assertEqual(transfer.destination_series_id, series)
+        self.assertFalse(transfer.destination_meeting_id)
+        destination = self.env["community.meeting"].with_user(self.editor).create({
+            "name": "Destination assembly meeting", "series_id": series.id,
+            "start_datetime": "2026-11-10 10:00:00",
+        })
+        self.assertEqual(transfer.destination_meeting_id, destination)
+        self.assertEqual(transfer.status, "proposed")
+        transfer.with_user(self.editor).action_accept()
+        self.assertEqual(transfer.destination_item_id.meeting_id, destination)
+        self.assertEqual(transfer.destination_item_id.carryover_id.origin_resolution_id, resolution)
+        self.assertEqual(transfer.destination_item_id.topic_id.series_id, series)
