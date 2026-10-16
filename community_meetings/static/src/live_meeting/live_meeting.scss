@@ -8,7 +8,7 @@
         align-items: center;
         gap: 12px;
     }
-    .o_live_topbar { justify-content: space-between; }
+    .o_live_topbar { justify-content: space-between; position: sticky; top: 0; z-index: 5; padding: 8px 0; background: var(--body-bg, #fff); }
     .o_live_header { padding: 28px 0 20px; border-bottom: 1px solid var(--border-color, #ddd); }
     .o_live_header h1 { margin: 4px 0 18px; }
     .o_live_header_details { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 24px; }
@@ -17,8 +17,10 @@
     .o_live_attendees { grid-column: span 2; }
     .o_live_agenda, .o_live_minutes { padding-top: 24px; }
     .o_live_section_title { justify-content: space-between; margin-bottom: 14px; }
+    .o_live_agenda_tools { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .o_live_section_title h2, .o_live_minutes h2 { font-size: 1.35rem; }
     .o_live_agenda_card { border: 1px solid var(--border-color, #ddd); border-radius: 8px; margin-bottom: 12px; background: var(--body-bg, #fff); }
+    .o_live_agenda_card.o_live_current { border-color: var(--o-brand-primary, #714B67); box-shadow: 0 0 0 1px var(--o-brand-primary, #714B67); }
     .o_live_card_header { padding: 12px; }
     .o_live_expand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; border: 0; background: none; text-align: left; }
     .o_live_item_title { font-weight: 600; overflow-wrap: anywhere; }
@@ -37,6 +39,7 @@
     @media (max-width: 800px) {
         padding: 14px;
         .o_live_header_details { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .o_live_section_title { align-items: flex-start; flex-direction: column; }
         .o_live_card_header { flex-wrap: wrap; }
         .o_live_type, .o_live_status { width: auto; flex: 1 1 145px; }
         .o_live_card_body { padding-left: 16px; }

@@ -26,7 +26,7 @@ export class LiveMeeting extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
-        this.state = useState({ loading: true, saving: 0, saveError: false, submitting: {}, deferrals: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], expanded: {}, newDissent: {}, newAction: {}, attendees: [] });
+        this.state = useState({ loading: true, saving: 0, saveError: false, submitting: {}, deferrals: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, attendees: [] });
         this.pendingWrites = new Map();
         this.editors = new Map();
         this.beforeUnload = (ev) => {
@@ -60,6 +60,7 @@ export class LiveMeeting extends Component {
         this.state.dissents = dissents;
         this.state.actions = actions;
         this.state.expanded = Object.fromEntries(items.map((item, index) => [item.id, index === 0]));
+        this.state.activeItemId = items[0]?.id || false;
         this.state.loading = false;
     }
 
@@ -115,7 +116,30 @@ export class LiveMeeting extends Component {
     outcomeOptions(item) { return OUTCOMES[this.typeBehavior(item)] || OUTCOMES.discussion; }
     pointDissents(item) { return this.state.dissents.filter((row) => row.agenda_item_id?.[0] === item.id); }
     pointActions(item) { return this.state.actions.filter((row) => row.agenda_item_id?.[0] === item.id); }
-    toggle(item) { this.state.expanded[item.id] = !this.state.expanded[item.id]; }
+    get visibleItems() {
+        return this.state.showPendingOnly
+            ? this.state.items.filter((item) => item.disposition === "open" || (this.typeBehavior(item) === "decision" && item.decision_result === "pending"))
+            : this.state.items;
+    }
+    get completedCount() { return this.state.items.filter((item) => ["discussed", "closed", "deferred"].includes(item.disposition)).length; }
+    toggle(item) {
+        this.state.activeItemId = item.id;
+        this.state.expanded[item.id] = !this.state.expanded[item.id];
+    }
+    toggleAll() {
+        const expand = this.visibleItems.some((item) => !this.state.expanded[item.id]);
+        for (const item of this.visibleItems) this.state.expanded[item.id] = expand;
+    }
+    togglePending() { this.state.showPendingOnly = !this.state.showPendingOnly; }
+    navigateItem(offset) {
+        const items = this.visibleItems;
+        const index = items.findIndex((item) => item.id === this.state.activeItemId);
+        const next = items[Math.max(0, Math.min(items.length - 1, index + offset))];
+        if (!next) return;
+        this.state.activeItemId = next.id;
+        this.state.expanded[next.id] = true;
+        document.getElementById(`agenda-card-${next.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
 
     async write(key, model, ids, values, apply) {
         const previous = this.pendingWrites.get(key) || Promise.resolve();
