@@ -1,0 +1,314 @@
+<odoo>
+    <record id="rule_meeting_company" model="ir.rule">
+        <field name="name">Meetings in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_meeting_reader_scope" model="ir.rule">
+        <field name="name">Read explicitly shared meetings</field>
+        <field name="model_id" ref="model_community_meeting"/>
+        <field name="groups" eval="[(4, ref('group_meeting_reader'))]"/>
+        <field name="domain_force">['|', '|', '|', ('organizer_id', '=', user.id), ('secretary_id', '=', user.id), ('reader_user_ids', 'in', user.id), ('editor_user_ids', 'in', user.id)]</field>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_meeting_editor_scope" model="ir.rule">
+        <field name="name">Edit assigned meetings</field>
+        <field name="model_id" ref="model_community_meeting"/>
+        <field name="groups" eval="[(4, ref('group_meeting_editor'))]"/>
+        <field name="domain_force">['|', '|', ('organizer_id', '=', user.id), ('secretary_id', '=', user.id), ('editor_user_ids', 'in', user.id)]</field>
+    </record>
+    <record id="rule_meeting_manager_scope" model="ir.rule">
+        <field name="name">Manage meetings in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting"/>
+        <field name="groups" eval="[(4, ref('group_meeting_manager'))]"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="rule_revision_reader" model="ir.rule">
+        <field name="name">Revisions follow meeting visibility</field>
+        <field name="model_id" ref="model_community_meeting_revision"/>
+        <field name="groups" eval="[(4, ref('group_meeting_reader'))]"/>
+        <field name="domain_force">['|', '|', '|', ('meeting_id.organizer_id', '=', user.id), ('meeting_id.secretary_id', '=', user.id), ('meeting_id.reader_user_ids', 'in', user.id), ('meeting_id.editor_user_ids', 'in', user.id)]</field>
+        <field name="perm_write" eval="False"/><field name="perm_create" eval="False"/><field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_revision_editor" model="ir.rule">
+        <field name="name">Revisions for assigned meetings</field>
+        <field name="model_id" ref="model_community_meeting_revision"/>
+        <field name="groups" eval="[(4, ref('group_meeting_editor'))]"/>
+        <field name="domain_force">['|', '|', ('meeting_id.organizer_id', '=', user.id), ('meeting_id.secretary_id', '=', user.id), ('meeting_id.editor_user_ids', 'in', user.id)]</field>
+    </record>
+    <record id="rule_revision_manager" model="ir.rule">
+        <field name="name">Revisions in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_revision"/>
+        <field name="groups" eval="[(4, ref('group_meeting_manager'))]"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="rule_series_company" model="ir.rule">
+        <field name="name">Series in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_series"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_series_reader" model="ir.rule">
+        <field name="name">Read series for accessible meetings</field>
+        <field name="model_id" ref="model_community_meeting_series"/>
+        <field name="groups" eval="[(4, ref('group_meeting_reader'))]"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_series_proposer_read" model="ir.rule">
+        <field name="name">Proposers see company meeting series</field>
+        <field name="model_id" ref="model_community_meeting_series"/>
+        <field name="groups" eval="[(4, ref('group_agenda_proposer'))]"/>
+        <field name="domain_force">[('company_id', 'in', company_ids), ('active', '=', True)]</field>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_series_editor" model="ir.rule">
+        <field name="name">Edit coordinated series</field>
+        <field name="model_id" ref="model_community_meeting_series"/>
+        <field name="groups" eval="[(4, ref('group_meeting_editor'))]"/>
+        <field name="domain_force">[('coordinator_user_ids', 'in', user.id)]</field>
+    </record>
+    <record id="rule_series_manager" model="ir.rule">
+        <field name="name">Manage series in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_series"/>
+        <field name="groups" eval="[(4, ref('group_meeting_manager'))]"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="rule_agenda_company" model="ir.rule">
+        <field name="name">Agenda items in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_agenda_item"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_agenda_reader" model="ir.rule">
+        <field name="name">Agenda follows meeting visibility</field>
+        <field name="model_id" ref="model_community_meeting_agenda_item"/>
+        <field name="groups" eval="[(4, ref('group_meeting_reader'))]"/>
+        <field name="domain_force">['|', '|', '|', ('meeting_id.organizer_id', '=', user.id), ('meeting_id.secretary_id', '=', user.id), ('meeting_id.reader_user_ids', 'in', user.id), ('meeting_id.editor_user_ids', 'in', user.id)]</field>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_agenda_editor" model="ir.rule">
+        <field name="name">Agenda editing follows meeting assignment</field>
+        <field name="model_id" ref="model_community_meeting_agenda_item"/>
+        <field name="groups" eval="[(4, ref('group_meeting_editor'))]"/>
+        <field name="domain_force">['|', '|', ('meeting_id.organizer_id', '=', user.id), ('meeting_id.secretary_id', '=', user.id), ('meeting_id.editor_user_ids', 'in', user.id)]</field>
+    </record>
+    <record id="rule_agenda_manager" model="ir.rule">
+        <field name="name">Manage agenda in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_agenda_item"/>
+        <field name="groups" eval="[(4, ref('group_meeting_manager'))]"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="rule_resolution_company" model="ir.rule">
+        <field name="name">Resolutions in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_resolution"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_resolution_reader" model="ir.rule">
+        <field name="name">Resolutions follow meeting visibility</field>
+        <field name="model_id" ref="model_community_meeting_resolution"/>
+        <field name="groups" eval="[(4, ref('group_meeting_reader'))]"/>
+        <field name="domain_force">['|', '|', '|', ('meeting_id.organizer_id', '=', user.id), ('meeting_id.secretary_id', '=', user.id), ('meeting_id.reader_user_ids', 'in', user.id), ('meeting_id.editor_user_ids', 'in', user.id)]</field>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_resolution_editor" model="ir.rule">
+        <field name="name">Resolution editing follows meeting assignment</field>
+        <field name="model_id" ref="model_community_meeting_resolution"/>
+        <field name="groups" eval="[(4, ref('group_meeting_editor'))]"/>
+        <field name="domain_force">['|', '|', ('meeting_id.organizer_id', '=', user.id), ('meeting_id.secretary_id', '=', user.id), ('meeting_id.editor_user_ids', 'in', user.id)]</field>
+    </record>
+    <record id="rule_resolution_manager" model="ir.rule">
+        <field name="name">Manage resolutions in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_resolution"/>
+        <field name="groups" eval="[(4, ref('group_meeting_manager'))]"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="rule_action_company" model="ir.rule">
+        <field name="name">Actions in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_action"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_action_reader" model="ir.rule">
+        <field name="name">Actions follow meeting visibility</field>
+        <field name="model_id" ref="model_community_meeting_action"/>
+        <field name="groups" eval="[(4, ref('group_meeting_reader'))]"/>
+        <field name="domain_force">['|', '|', '|', ('meeting_id.organizer_id', '=', user.id), ('meeting_id.secretary_id', '=', user.id), ('meeting_id.reader_user_ids', 'in', user.id), ('meeting_id.editor_user_ids', 'in', user.id)]</field>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_action_editor" model="ir.rule">
+        <field name="name">Action editing follows meeting assignment</field>
+        <field name="model_id" ref="model_community_meeting_action"/>
+        <field name="groups" eval="[(4, ref('group_meeting_editor'))]"/>
+        <field name="domain_force">['|', '|', ('meeting_id.organizer_id', '=', user.id), ('meeting_id.secretary_id', '=', user.id), ('meeting_id.editor_user_ids', 'in', user.id)]</field>
+    </record>
+    <record id="rule_action_manager" model="ir.rule">
+        <field name="name">Manage actions in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_action"/>
+        <field name="groups" eval="[(4, ref('group_meeting_manager'))]"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="rule_editor_note_company" model="ir.rule">
+        <field name="name">Editorial notes in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_editor_note"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_editor_note_editor" model="ir.rule">
+        <field name="name">Editorial notes follow meeting assignment</field>
+        <field name="model_id" ref="model_community_meeting_editor_note"/>
+        <field name="groups" eval="[(4, ref('group_meeting_editor'))]"/>
+        <field name="domain_force">['|', '|', ('meeting_id.organizer_id', '=', user.id), ('meeting_id.secretary_id', '=', user.id), ('meeting_id.editor_user_ids', 'in', user.id)]</field>
+    </record>
+    <record id="rule_editor_note_manager" model="ir.rule">
+        <field name="name">Manage editorial notes in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_editor_note"/>
+        <field name="groups" eval="[(4, ref('group_meeting_manager'))]"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_dissent_company" model="ir.rule">
+        <field name="name">Dissent in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_dissent"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_dissent_editor" model="ir.rule">
+        <field name="name">Dissent follows meeting assignment</field>
+        <field name="model_id" ref="model_community_meeting_dissent"/>
+        <field name="groups" eval="[(4, ref('group_meeting_editor'))]"/>
+        <field name="domain_force">['|', '|', ('meeting_id.organizer_id', '=', user.id), ('meeting_id.secretary_id', '=', user.id), ('meeting_id.editor_user_ids', 'in', user.id)]</field>
+    </record>
+    <record id="rule_dissent_manager" model="ir.rule">
+        <field name="name">Manage dissent in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_dissent"/>
+        <field name="groups" eval="[(4, ref('group_meeting_manager'))]"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="rule_proposal_company" model="ir.rule">
+        <field name="name">Proposals in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_agenda_proposal"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_proposal_owner_read" model="ir.rule">
+        <field name="name">Read own agenda proposals</field>
+        <field name="model_id" ref="model_community_meeting_agenda_proposal"/>
+        <field name="groups" eval="[(4, ref('group_agenda_proposer'))]"/>
+        <field name="domain_force">['|', ('submitted_by_user_id', '=', user.id), ('proposer_partner_id', '=', user.partner_id.id)]</field>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_proposal_owner_withdraw" model="ir.rule">
+        <field name="name">Withdraw own agenda proposals</field>
+        <field name="model_id" ref="model_community_meeting_agenda_proposal"/>
+        <field name="groups" eval="[(4, ref('group_agenda_proposer'))]"/>
+        <field name="domain_force">[('submitted_by_user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_proposal_portal_own" model="ir.rule">
+        <field name="name">Portal users see only their own agenda proposals</field>
+        <field name="model_id" ref="model_community_meeting_agenda_proposal"/>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="domain_force">['|', ('submitted_by_user_id', '=', user.id), ('proposer_partner_id', '=', user.partner_id.id)]</field>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_proposal_portal_withdraw" model="ir.rule">
+        <field name="name">Portal users withdraw only their own agenda proposals</field>
+        <field name="model_id" ref="model_community_meeting_agenda_proposal"/>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="domain_force">[('submitted_by_user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_proposal_editor_read" model="ir.rule">
+        <field name="name">Review proposals for coordinated meetings</field>
+        <field name="model_id" ref="model_community_meeting_agenda_proposal"/>
+        <field name="groups" eval="[(4, ref('group_meeting_editor'))]"/>
+        <field name="domain_force">['|', '|', ('series_id.coordinator_user_ids', 'in', user.id), ('meeting_id.organizer_id', '=', user.id), ('meeting_id.editor_user_ids', 'in', user.id)]</field>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_proposal_editor_update" model="ir.rule">
+        <field name="name">Update proposals for coordinated meetings</field>
+        <field name="model_id" ref="model_community_meeting_agenda_proposal"/>
+        <field name="groups" eval="[(4, ref('group_meeting_editor'))]"/>
+        <field name="domain_force">['|', '|', ('series_id.coordinator_user_ids', 'in', user.id), ('meeting_id.organizer_id', '=', user.id), ('meeting_id.editor_user_ids', 'in', user.id)]</field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_proposal_manager" model="ir.rule">
+        <field name="name">Manage proposals in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_agenda_proposal"/>
+        <field name="groups" eval="[(4, ref('group_meeting_manager'))]"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="rule_proposal_grant_company" model="ir.rule">
+        <field name="name">Proposal grants in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_proposal_grant"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_proposal_grant_coordinator" model="ir.rule">
+        <field name="name">Manage grants for coordinated series</field>
+        <field name="model_id" ref="model_community_meeting_proposal_grant"/>
+        <field name="groups" eval="[(4, ref('group_meeting_editor'))]"/>
+        <field name="domain_force">[('series_id.coordinator_user_ids', 'in', user.id)]</field>
+    </record>
+    <record id="rule_proposal_grant_manager" model="ir.rule">
+        <field name="name">Manage grants in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_proposal_grant"/>
+        <field name="groups" eval="[(4, ref('group_meeting_manager'))]"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="rule_carryover_company" model="ir.rule">
+        <field name="name">Carryovers in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_carryover"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_carryover_editor_read" model="ir.rule">
+        <field name="name">Read carryovers related to accessible meetings</field>
+        <field name="model_id" ref="model_community_meeting_carryover"/>
+        <field name="groups" eval="[(4, ref('group_meeting_editor'))]"/>
+        <field name="domain_force">['&amp;', '|', '|', '|', ('origin_meeting_id.organizer_id', '=', user.id), ('origin_meeting_id.secretary_id', '=', user.id), ('origin_meeting_id.reader_user_ids', 'in', user.id), ('origin_meeting_id.editor_user_ids', 'in', user.id), '|', ('destination_meeting_id', '=', False), '|', '|', '|', ('destination_meeting_id.organizer_id', '=', user.id), ('destination_meeting_id.secretary_id', '=', user.id), ('destination_meeting_id.reader_user_ids', 'in', user.id), ('destination_meeting_id.editor_user_ids', 'in', user.id)]</field>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_carryover_editor_write" model="ir.rule">
+        <field name="name">Change carryovers only with source and destination access</field>
+        <field name="model_id" ref="model_community_meeting_carryover"/>
+        <field name="groups" eval="[(4, ref('group_meeting_editor'))]"/>
+        <field name="domain_force">['&amp;', '|', '|', ('origin_meeting_id.organizer_id', '=', user.id), ('origin_meeting_id.secretary_id', '=', user.id), ('origin_meeting_id.editor_user_ids', 'in', user.id), '|', ('destination_meeting_id', '=', False), '|', '|', ('destination_meeting_id.organizer_id', '=', user.id), ('destination_meeting_id.secretary_id', '=', user.id), ('destination_meeting_id.editor_user_ids', 'in', user.id)]</field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_carryover_manager" model="ir.rule">
+        <field name="name">Manage carryovers in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_carryover"/>
+        <field name="groups" eval="[(4, ref('group_meeting_manager'))]"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>

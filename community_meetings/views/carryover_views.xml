@@ -1,0 +1,79 @@
+<odoo>
+    <record id="view_community_meeting_carryover_list" model="ir.ui.view">
+        <field name="name">community.meeting.carryover.list</field>
+        <field name="model">community.meeting.carryover</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0">
+                <field name="origin_meeting_id"/>
+                <field name="origin_model"/>
+                <field name="origin_name"/>
+                <field name="destination_meeting_id"/>
+                <field name="reason"/>
+                <field name="status" widget="badge"/>
+                <button name="action_accept" type="object" string="Accept" icon="fa-check" invisible="status not in ['pending', 'proposed']"/>
+                <button name="action_dismiss" type="object" string="Dismiss" icon="fa-times" invisible="status not in ['pending', 'proposed']"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_community_meeting_carryover_form" model="ir.ui.view">
+        <field name="name">community.meeting.carryover.form</field>
+        <field name="model">community.meeting.carryover</field>
+        <field name="arch" type="xml">
+            <form string="Agenda Carryover" create="0" edit="0" delete="0">
+                <header>
+                    <button name="action_accept" type="object" string="Accept" class="oe_highlight" invisible="status not in ['pending', 'proposed']"/>
+                    <button name="action_dismiss" type="object" string="Dismiss" invisible="status not in ['pending', 'proposed']"/>
+                    <field name="status" widget="statusbar" statusbar_visible="pending,proposed,accepted,dismissed,cancelled"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="origin_meeting_id"/>
+                        <field name="origin_model"/>
+                        <field name="origin_name"/>
+                        <field name="origin_context"/>
+                        <field name="destination_meeting_id"/>
+                        <field name="destination_item_id"/>
+                        <field name="initiator_id"/>
+                        <field name="reason"/>
+                        <field name="responded_by_id"/>
+                        <field name="responded_at"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_community_meeting_carryover_wizard" model="ir.ui.view">
+        <field name="name">community.meeting.carryover.wizard.form</field>
+        <field name="model">community.meeting.carryover.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Follow Up at Another Meeting">
+                <group>
+                    <field name="origin_model"/>
+                    <field name="origin_record_id"/>
+                    <field name="origin_meeting_id"/>
+                    <field name="company_id" invisible="1"/>
+                    <field name="series_id" invisible="1"/>
+                    <field name="destination_meeting_id"/>
+                    <field name="reason"/>
+                </group>
+                <footer>
+                    <button name="action_request" type="object" string="Request Follow-up" class="oe_highlight"/>
+                    <button string="Cancel" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_community_meeting_carryovers" model="ir.actions.act_window">
+        <field name="name">Agenda Carryovers</field>
+        <field name="res_model">community.meeting.carryover</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <record id="action_community_meeting_carryover_request" model="ir.actions.act_window">
+        <field name="name">Follow Up at Another Meeting</field>
+        <field name="res_model">community.meeting.carryover.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_community_meeting_carryover_wizard"/>
+        <field name="target">new</field>
+    </record>
+    <menuitem id="menu_community_meeting_carryovers" name="Agenda Carryovers" parent="community_meetings.menu_community_meetings_root" action="action_community_meeting_carryovers" sequence="30" groups="community_meetings.group_meeting_editor"/>
+</odoo>

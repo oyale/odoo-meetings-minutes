@@ -1,0 +1,203 @@
+<odoo>
+    <record id="view_community_meeting_list" model="ir.ui.view">
+        <field name="name">community.meeting.list</field>
+        <field name="model">community.meeting</field>
+        <field name="arch" type="xml">
+            <list default_order="start_datetime desc">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="start_datetime"/>
+                <field name="organizer_id"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_community_meeting_form" model="ir.ui.view">
+        <field name="name">community.meeting.form</field>
+        <field name="model">community.meeting</field>
+        <field name="arch" type="xml">
+            <form string="Meeting">
+                <header>
+                    <button name="action_open_live_meeting" type="object" string="Open Live Meeting" invisible="state not in ['scheduled', 'held', 'minutes_draft']" groups="community_meetings.group_meeting_editor"/>
+                    <button name="action_schedule" type="object" string="Schedule" class="oe_highlight" invisible="state != 'draft'" groups="community_meetings.group_meeting_editor"/>
+                    <button name="action_mark_held" type="object" string="Mark Held" class="oe_highlight" invisible="state != 'scheduled'" groups="community_meetings.group_meeting_editor"/>
+                    <button name="action_draft_minutes" type="object" string="Prepare Minutes" class="oe_highlight" invisible="state != 'held'" groups="community_meetings.group_meeting_editor"/>
+                    <button name="action_approve_minutes" type="object" string="Approve Minutes" class="oe_highlight" invisible="state != 'minutes_draft'" groups="community_meetings.group_meeting_approver"/>
+                    <button name="action_start_amendment" type="object" string="Start Amendment" invisible="state != 'approved'" groups="community_meetings.group_meeting_manager"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state not in ['draft', 'scheduled']" groups="community_meetings.group_meeting_editor"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,scheduled,held,minutes_draft,approved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Meeting title"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" readonly="1"/>
+                            <field name="organizer_id"/>
+                            <field name="secretary_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="series_id" domain="[('company_id', '=', company_id), ('meeting_kind', '=', meeting_kind)]"/>
+                        </group>
+                        <group>
+                            <field name="start_datetime"/>
+                            <field name="end_datetime"/>
+                            <field name="location"/>
+                            <field name="meeting_url" widget="url"/>
+                            <field name="attendee_partner_ids" widget="many2many_tags"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Agenda">
+                            <field name="agenda_item_ids" readonly="state in ['approved', 'cancelled']">
+                                <list editable="bottom" default_order="sequence, id">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="agenda_type_id" domain="[('active', '=', True)]"/>
+                                    <field name="kind" column_invisible="1"/>
+                                    <field name="presenter_partner_id"/>
+                                    <field name="disposition"/>
+                                    <field name="decision_result" invisible="kind != 'decision'"/>
+                                    <button name="action_request_followup" type="object" string="Follow Up" icon="fa-share" invisible="disposition == 'deferred'"/>
+                                </list>
+                                <form>
+                                    <sheet>
+                                        <group>
+                                            <field name="sequence"/>
+                                            <field name="name"/>
+                                            <field name="agenda_type_id" domain="[('active', '=', True)]"/>
+                                            <field name="kind" invisible="1"/>
+                                            <field name="presenter_partner_id"/>
+                                            <field name="disposition"/>
+                                            <field name="decision_result" invisible="kind != 'decision'"/>
+                                            <field name="deferral_reason" invisible="disposition != 'deferred'"/>
+                                        </group>
+                                        <notebook>
+                                            <page string="Planned Topic"><field name="description"/></page>
+                                            <page string="Discussion"><field name="discussion_notes"/></page>
+                                        </notebook>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Minutes" invisible="state in ['draft', 'scheduled'] and not minutes_notes"><field name="minutes_notes"/></page>
+                        <page string="Editorial Notes" groups="community_meetings.group_meeting_editor">
+                            <field name="private_note_ids">
+                                <list editable="bottom">
+                                    <field name="agenda_item_id"/>
+                                    <field name="content"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Dissents and Reservations" groups="community_meetings.group_meeting_editor">
+                            <field name="dissent_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="kind"/>
+                                    <field name="author_partner_id"/>
+                                    <field name="author_display_name"/>
+                                    <field name="agenda_item_id" domain="[('meeting_id', '=', parent.id)]"/>
+                                    <field name="resolution_id" domain="[('meeting_id', '=', parent.id)]"/>
+                                    <field name="include_in_minutes"/>
+                                </list>
+                                <form><sheet><group><field name="kind"/><field name="author_partner_id"/><field name="author_display_name"/><field name="agenda_item_id"/><field name="resolution_id"/><field name="include_in_minutes"/><field name="body"/></group></sheet></form>
+                            </field>
+                        </page>
+                        <page string="Incoming Carryovers" groups="community_meetings.group_meeting_editor" invisible="not incoming_carryover_ids">
+                            <field name="incoming_carryover_ids" readonly="1">
+                                <list create="0" edit="0" delete="0">
+                                    <field name="origin_meeting_id"/>
+                                    <field name="origin_model"/>
+                                    <field name="origin_name"/>
+                                    <field name="reason"/>
+                                    <field name="status" widget="badge"/>
+                                    <button name="action_accept" type="object" string="Accept" icon="fa-check" invisible="status not in ['pending', 'proposed']"/>
+                                    <button name="action_dismiss" type="object" string="Dismiss" icon="fa-times" invisible="status not in ['pending', 'proposed']"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Outgoing Carryovers" groups="community_meetings.group_meeting_editor" invisible="not carryover_ids">
+                            <field name="carryover_ids" readonly="1">
+                                <list create="0" edit="0" delete="0">
+                                    <field name="origin_name"/>
+                                    <field name="origin_model"/>
+                                    <field name="destination_meeting_id"/>
+                                    <field name="reason"/>
+                                    <field name="status" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Resolutions" invisible="state in ['draft', 'scheduled'] and not resolution_ids">
+                            <field name="resolution_ids" readonly="state in ['approved', 'cancelled']">
+                                <list editable="bottom">
+                                    <field name="title"/>
+                                    <field name="agenda_item_id" domain="[('meeting_id', '=', parent.id)]"/>
+                                    <field name="status"/>
+                                    <button name="action_request_followup" type="object" string="Follow Up" icon="fa-share"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Follow-up Actions" invisible="state in ['draft', 'scheduled'] and not action_ids">
+                            <field name="action_ids" readonly="state == 'cancelled'">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="resolution_id" domain="[('meeting_id', '=', parent.id)]"/>
+                                    <field name="responsible_user_id"/>
+                                    <field name="deadline"/>
+                                    <field name="state" widget="badge"/>
+                                    <button name="action_request_followup" type="object" string="Follow Up" icon="fa-share"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Approved Revisions" invisible="not revision_ids">
+                            <field name="revision_ids" readonly="1">
+                                <list create="0" edit="0" delete="0" default_order="revision_number desc">
+                                    <field name="revision_number"/>
+                                    <field name="approved_at"/>
+                                    <field name="approved_by_id"/>
+                                    <field name="status" widget="badge"/>
+                                    <field name="snapshot_sha256"/>
+                                    <field name="pdf_sha256"/>
+                                    <button name="%(community_meetings.action_report_meeting_revision)d" type="action" string="PDF" context="{'active_model': 'community.meeting.revision', 'active_id': id, 'active_ids': [id]}"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Access" groups="community_meetings.group_meeting_editor">
+                            <group>
+                                <field name="editor_user_ids" widget="many2many_tags"/>
+                                <field name="reader_user_ids" widget="many2many_tags"/>
+                            </group>
+                        </page>
+                        <page string="Description"><field name="description"/></page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_community_meetings" model="ir.actions.act_window">
+        <field name="name">Meetings</field>
+        <field name="res_model">community.meeting</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <record id="view_community_meeting_search" model="ir.ui.view">
+        <field name="name">community.meeting.search</field>
+        <field name="model">community.meeting</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="organizer_id"/>
+                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="upcoming" string="Upcoming" domain="[('state', '=', 'scheduled')]"/>
+                <filter name="minutes" string="Minutes to Prepare" domain="[('state', '=', 'minutes_draft')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_organizer" string="Organizer" context="{'group_by': 'organizer_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,23 @@
+<odoo>
+    <record id="view_community_meeting_agenda_type_list" model="ir.ui.view">
+        <field name="name">community.meeting.agenda.type.list</field>
+        <field name="model">community.meeting.agenda.type</field>
+        <field name="arch" type="xml">
+            <list editable="bottom" default_order="sequence, name">
+                <field name="sequence" widget="handle"/><field name="name"/><field name="behavior"/><field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_community_meeting_agenda_type_form" model="ir.ui.view">
+        <field name="name">community.meeting.agenda.type.form</field>
+        <field name="model">community.meeting.agenda.type</field>
+        <field name="arch" type="xml">
+            <form string="Agenda Point Type"><sheet><group><field name="name"/><field name="behavior"/><field name="sequence"/><field name="active"/></group>
+                <div class="text-muted">Types are shared across all meetings. Once a type is used, its workflow behavior is fixed.</div>
+            </sheet></form>
+        </field>
+    </record>
+    <record id="action_community_meeting_agenda_types" model="ir.actions.act_window">
+        <field name="name">Agenda Point Types</field><field name="res_model">community.meeting.agenda.type</field><field name="view_mode">list,form</field>
+    </record>
+</odoo>

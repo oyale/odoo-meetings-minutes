@@ -1,0 +1,49 @@
+<odoo>
+    <record id="view_community_meeting_series_list" model="ir.ui.view">
+        <field name="name">community.meeting.series.list</field>
+        <field name="model">community.meeting.series</field>
+        <field name="arch" type="xml">
+            <list default_order="name">
+                <field name="name"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="coordinator_user_ids" widget="many2many_tags"/>
+                <field name="carryover_policy"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_community_meeting_series_form" model="ir.ui.view">
+        <field name="name">community.meeting.series.form</field>
+        <field name="model">community.meeting.series</field>
+        <field name="arch" type="xml">
+            <form string="Meeting Series">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Series name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="meeting_kind"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="coordinator_user_ids" widget="many2many_tags"/>
+                            <field name="carryover_policy"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_community_meeting_series" model="ir.actions.act_window">
+        <field name="name">Meeting Series</field>
+        <field name="res_model">community.meeting.series</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_community_meeting_series" name="Meeting Series"
+        parent="community_meetings.menu_community_meetings_root"
+        action="action_community_meeting_series" sequence="15"
+        groups="community_meetings.group_meeting_editor"/>
+</odoo>

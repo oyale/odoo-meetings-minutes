@@ -1,0 +1,199 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Community Meetings 18.0\n"
+"PO-Revision-Date: 2026-10-16 00:00+0000\n"
+"Last-Translator: Community Meetings contributors\n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Meeting"
+msgstr "Reunión"
+
+msgid "Meetings"
+msgstr "Reuniones"
+
+msgid "Draft"
+msgstr "Borrador"
+
+msgid "Scheduled"
+msgstr "Programada"
+
+msgid "Held"
+msgstr "Celebrada"
+
+msgid "Minutes Draft"
+msgstr "Acta en preparación"
+
+msgid "Approved"
+msgstr "Aprobada"
+
+msgid "Cancelled"
+msgstr "Cancelada"
+
+msgid "Agenda"
+msgstr "Orden del día"
+
+msgid "Minutes"
+msgstr "Acta"
+
+msgid "Editorial Notes"
+msgstr "Notas de edición"
+
+msgid "Dissents and Reservations"
+msgstr "Disensos y reservas"
+
+msgid "Resolutions"
+msgstr "Acuerdos"
+
+msgid "Follow-up Actions"
+msgstr "Acciones de seguimiento"
+
+msgid "Approve Minutes"
+msgstr "Aprobar el acta"
+
+msgid "Start Amendment"
+msgstr "Iniciar una modificación"
+
+msgid "Approved Meeting Minutes"
+msgstr "Acta aprobada de la reunión"
+
+msgid "Configuration"
+msgstr "Configuración"
+
+msgid "Agenda Point Types"
+msgstr "Tipos de punto del orden del día"
+
+msgid "Point type"
+msgstr "Tipo de punto"
+
+msgid "Information"
+msgstr "Información"
+
+msgid "Discussion"
+msgstr "Debate"
+
+msgid "Decision"
+msgstr "Decisión"
+
+msgid "Informational"
+msgstr "Informativo"
+
+msgid "Only meeting managers can configure agenda point types."
+msgstr "Solo los responsables de reuniones pueden configurar los tipos de punto."
+
+msgid "The workflow behavior of a type already in use cannot be changed."
+msgstr "No se puede cambiar el comportamiento de un tipo que ya está en uso."
+
+msgid "Agenda point types are shared configuration and cannot be deleted. Archive unused types instead."
+msgstr "Los tipos de punto son una configuración compartida y no se pueden eliminar. Archive los tipos que ya no use."
+
+msgid "Only meeting editors can open the live meeting view."
+msgstr "Solo los editores de reuniones pueden abrir la reunión en curso."
+
+msgid "The live meeting view is available for scheduled or ongoing meetings."
+msgstr "La vista de reunión en curso está disponible para reuniones programadas o iniciadas."
+
+msgid "Back to Meetings"
+msgstr "Volver a reuniones"
+
+msgid "Mark Held"
+msgstr "Marcar como celebrada"
+
+msgid "Prepare Minutes"
+msgstr "Preparar el acta"
+
+msgid "Start"
+msgstr "Inicio"
+
+msgid "End"
+msgstr "Fin"
+
+msgid "Organizer"
+msgstr "Organizador"
+
+msgid "Location"
+msgstr "Ubicación"
+
+msgid "Attendees"
+msgstr "Asistentes"
+
+msgid "Not set"
+msgstr "Sin indicar"
+
+msgid "No attendees listed"
+msgstr "No hay asistentes indicados"
+
+msgid "Open meeting link"
+msgstr "Abrir enlace de la reunión"
+
+msgid "points"
+msgstr "puntos"
+
+msgid "There are no agenda points in this meeting."
+msgstr "Esta reunión no tiene puntos del orden del día."
+
+msgid "Point status"
+msgstr "Estado del punto"
+
+msgid "Decision outcome"
+msgstr "Resultado de la decisión"
+
+msgid "Planned topic"
+msgstr "Tema previsto"
+
+msgid "Discussion notes"
+msgstr "Notas del debate"
+
+msgid "Record what was discussed…"
+msgstr "Anota lo que se ha tratado…"
+
+msgid "Postponed"
+msgstr "Aplazado"
+
+msgid "No dissent recorded."
+msgstr "No hay disensos registrados."
+
+msgid "Record a dissent or reservation…"
+msgstr "Anota un disenso o una reserva…"
+
+msgid "Add dissent"
+msgstr "Añadir disenso"
+
+msgid "Follow-up tasks"
+msgstr "Tareas de seguimiento"
+
+msgid "No follow-up tasks."
+msgstr "No hay tareas de seguimiento."
+
+msgid "Task"
+msgstr "Tarea"
+
+msgid "Deadline"
+msgstr "Fecha límite"
+
+msgid "Add task"
+msgstr "Añadir tarea"
+
+msgid "Meeting notes"
+msgstr "Notas de la reunión"
+
+msgid "Notes for the minutes…"
+msgstr "Notas para el acta…"
+
+msgid "Pending"
+msgstr "Pendiente"
+
+msgid "Denied"
+msgstr "Rechazada"
+
+msgid "Resolved"
+msgstr "Resuelto"
+
+msgid "Open"
+msgstr "Abierto"
+
+msgid "Treated / Discussed"
+msgstr "Tratado / Debatido"

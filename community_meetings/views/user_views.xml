@@ -1,0 +1,17 @@
+<odoo>
+    <record id="view_users_form_meeting_roles" model="ir.ui.view">
+        <field name="name">res.users.form.community.meeting.roles</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='access_rights']" position="inside">
+                <group string="Meeting roles" name="community_meeting_roles" groups="base.group_system">
+                    <field name="community_meeting_role_ids" widget="many2many_checkboxes" options="{'no_create': True}"/>
+                    <div class="text-muted" colspan="2">
+                        Reader grants read access. Editor and Approver are independent and each includes Reader. Manager includes Editor and Approver. Internal users already receive the proposal capability.
+                    </div>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

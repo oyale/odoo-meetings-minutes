@@ -1,0 +1,45 @@
+.o_community_live_meeting {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 24px;
+
+    .o_live_topbar, .o_live_section_title, .o_live_card_header, .o_live_add_row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .o_live_topbar { justify-content: space-between; }
+    .o_live_header { padding: 28px 0 20px; border-bottom: 1px solid var(--border-color, #ddd); }
+    .o_live_header h1 { margin: 4px 0 18px; }
+    .o_live_header_details { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 24px; }
+    .o_live_header_details > div { display: flex; flex-direction: column; min-width: 0; }
+    .o_live_header_details span { overflow-wrap: anywhere; }
+    .o_live_attendees { grid-column: span 2; }
+    .o_live_agenda, .o_live_minutes { padding-top: 24px; }
+    .o_live_section_title { justify-content: space-between; margin-bottom: 14px; }
+    .o_live_section_title h2, .o_live_minutes h2 { font-size: 1.35rem; }
+    .o_live_agenda_card { border: 1px solid var(--border-color, #ddd); border-radius: 8px; margin-bottom: 12px; background: var(--body-bg, #fff); }
+    .o_live_card_header { padding: 12px; }
+    .o_live_expand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; border: 0; background: none; text-align: left; }
+    .o_live_item_title { font-weight: 600; overflow-wrap: anywhere; }
+    .o_live_type { width: 180px; }
+    .o_live_status { width: 185px; }
+    .o_live_outcome { width: 160px; }
+    .o_live_card_body { padding: 4px 18px 18px 42px; }
+    .o_live_planned { margin-bottom: 16px; }
+    .o_live_planned > div { margin-top: 6px; }
+    .o_live_subsection { margin-top: 20px; }
+    .o_live_subsection h3 { font-size: 1rem; }
+    .o_live_inline_records { list-style: none; padding: 0; margin: 0 0 8px; }
+    .o_live_inline_records li { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; padding: 7px 0; }
+    .o_live_add_row textarea, .o_live_add_row input:first-child { flex: 1; }
+    .o_live_task_form input[type="date"] { max-width: 180px; }
+    @media (max-width: 800px) {
+        padding: 14px;
+        .o_live_header_details { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .o_live_card_header { flex-wrap: wrap; }
+        .o_live_type, .o_live_status, .o_live_outcome { width: auto; flex: 1 1 145px; }
+        .o_live_card_body { padding-left: 16px; }
+        .o_live_add_row { align-items: stretch; flex-direction: column; }
+    }
+}

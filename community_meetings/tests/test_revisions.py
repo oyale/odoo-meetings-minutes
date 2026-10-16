@@ -1,0 +1,99 @@
+import json
+
+from odoo.exceptions import UserError
+from odoo.tests import TransactionCase, tagged
+
+
+@tagged("post_install", "-at_install")
+class TestMeetingRevisions(TransactionCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.editor = cls.env["res.users"].create({
+            "name": "Minutes Editor",
+            "login": "minutes-editor-revision-test",
+            "groups_id": [(6, 0, [cls.env.ref("base.group_user").id, cls.env.ref("community_meetings.group_meeting_editor").id])],
+        })
+        cls.approver = cls.env["res.users"].create({
+            "name": "Minutes Approver",
+            "login": "minutes-approver-revision-test",
+            "groups_id": [(6, 0, [cls.env.ref("base.group_user").id, cls.env.ref("community_meetings.group_meeting_approver").id])],
+        })
+        cls.manager = cls.env["res.users"].create({
+            "name": "Minutes Manager",
+            "login": "minutes-manager-revision-test",
+            "groups_id": [(6, 0, [cls.env.ref("base.group_user").id, cls.env.ref("community_meetings.group_meeting_manager").id])],
+        })
+
+    def _approved_meeting(self):
+        meeting = self.env["community.meeting"].with_user(self.editor).create({
+            "name": "Revision stability test",
+            "reader_user_ids": [(4, self.approver.id)],
+        })
+        self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": meeting.id,
+            "name": "Review open actions",
+            "discussion_notes": "Initial discussion",
+        })
+        self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": meeting.id,
+            "name": "Approve the budget",
+            "kind": "decision",
+            "decision_result": "approved",
+            "sequence": 20,
+        })
+        action = self.env["community.meeting.action"].with_user(self.editor).create({
+            "meeting_id": meeting.id,
+            "name": "Prepare follow-up",
+        })
+        meeting.with_user(self.editor).action_schedule()
+        meeting.with_user(self.editor).action_mark_held()
+        meeting.with_user(self.editor).action_draft_minutes()
+        revision = meeting.with_user(self.approver).action_approve_minutes()
+        return meeting, action, revision
+
+    def test_pdf_and_snapshot_are_stable_after_action_changes(self):
+        meeting, action, revision = self._approved_meeting()
+        before_json = revision.snapshot_json
+        before_pdf = revision.pdf_attachment_id.raw
+        snapshot = json.loads(before_json)
+        self.assertEqual(snapshot["agenda"][0]["discussion"], "Initial discussion")
+        self.assertEqual(snapshot["agenda"][1]["decision_result"], "approved")
+        self.assertEqual(snapshot["agenda"][1]["decision_result_label"], "Approved")
+        self.assertTrue(before_pdf.startswith(b"%PDF"))
+        self.assertEqual(len(revision.snapshot_sha256), 64)
+        self.assertEqual(len(revision.pdf_sha256), 64)
+
+        action.with_user(self.editor).write({"state": "done"})
+        self.assertEqual(revision.snapshot_json, before_json)
+        self.assertEqual(revision.pdf_attachment_id.raw, before_pdf)
+
+    def test_amendment_creates_a_new_revision_and_keeps_the_old_pdf(self):
+        meeting, _action, first = self._approved_meeting()
+        first_pdf = first.pdf_attachment_id.raw
+        manager_meeting = meeting.with_user(self.manager)
+        manager_meeting.action_start_amendment()
+        manager_meeting.write({"minutes_notes": "Corrected wording"})
+        second = manager_meeting.action_approve_minutes()
+
+        self.assertEqual(second.revision_number, 2)
+        self.assertEqual(second.previous_revision_id, first)
+        self.assertEqual(first.status, "superseded")
+        self.assertEqual(first.pdf_attachment_id.raw, first_pdf)
+        self.assertEqual(meeting.approved_revision_id, second)
+
+    def test_agenda_type_can_be_changed_only_through_an_immutable_revision_amendment(self):
+        meeting, _action, first = self._approved_meeting()
+        decision = meeting.agenda_item_ids.filtered(lambda item: item.kind == "decision")
+        with self.assertRaises(UserError):
+            decision.with_user(self.manager).write({"kind": "information"})
+
+        manager_meeting = meeting.with_user(self.manager)
+        manager_meeting.action_start_amendment()
+        decision.with_user(self.manager).write({"kind": "information"})
+        second = manager_meeting.action_approve_minutes()
+
+        self.assertEqual(first.status, "superseded")
+        self.assertEqual(second.revision_number, 2)
+        self.assertEqual(json.loads(first.snapshot_json)["agenda"][1]["decision_result"], "approved")
+        self.assertEqual(json.loads(second.snapshot_json)["agenda"][1]["kind"], "information")

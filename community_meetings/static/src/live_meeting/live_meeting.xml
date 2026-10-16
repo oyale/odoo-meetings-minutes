@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_meetings.LiveMeeting">
+        <main class="o_community_live_meeting">
+            <div class="o_live_topbar">
+                <button class="btn btn-secondary" t-on-click="close">Back to Meetings</button>
+                <div class="o_live_workflow_buttons">
+                    <button t-if="state.meeting.state === 'scheduled'" class="btn btn-primary" t-on-click="markHeld">Mark Held</button>
+                    <button t-if="state.meeting.state === 'held'" class="btn btn-primary" t-on-click="prepareMinutes">Prepare Minutes</button>
+                </div>
+                <span t-if="state.meeting.state" class="badge text-bg-primary"><t t-out="state.meeting.state.replace('_', ' ')"/></span>
+            </div>
+            <t t-if="state.loading"><div class="text-muted p-4">Loading meeting…</div></t>
+            <t t-else="">
+                <header class="o_live_header">
+                    <div>
+                        <div class="text-muted"><t t-out="state.meeting.code"/></div>
+                        <h1><t t-out="state.meeting.name"/></h1>
+                    </div>
+                    <div class="o_live_header_details">
+                        <div><strong>Start</strong><span><t t-out="state.meeting.start_datetime || 'Not set'"/></span></div>
+                        <div><strong>End</strong><span><t t-out="state.meeting.end_datetime || 'Not set'"/></span></div>
+                        <div><strong>Organizer</strong><span><t t-out="label(state.meeting.organizer_id)"/></span></div>
+                        <div><strong>Location</strong><span><t t-out="state.meeting.location || 'Not set'"/></span></div>
+                        <div class="o_live_attendees"><strong>Attendees</strong><span><t t-out="attendees()"/></span></div>
+                    </div>
+                    <a t-if="state.meeting.meeting_url" t-att-href="state.meeting.meeting_url" target="_blank" rel="noreferrer">Open meeting link</a>
+                </header>
+
+                <section class="o_live_agenda">
+                    <div class="o_live_section_title"><h2>Agenda</h2><span><t t-out="state.items.length"/> points</span></div>
+                    <t t-if="!state.items.length"><p class="text-muted">There are no agenda points in this meeting.</p></t>
+                    <article t-foreach="state.items" t-as="item" t-key="item.id" class="o_live_agenda_card">
+                        <div class="o_live_card_header">
+                            <button class="o_live_expand" t-on-click="() => this.toggle(item)" t-att-aria-expanded="state.expanded[item.id]">
+                                <i t-att-class="state.expanded[item.id] ? 'fa fa-chevron-down' : 'fa fa-chevron-right'" aria-hidden="true"/>
+                                <span class="o_live_item_title"><t t-out="item.name"/></span>
+                            </button>
+                            <select class="form-select o_live_type" t-att-value="item.agenda_type_id[0]" t-att-disabled="locked" t-on-change="(ev) => this.updateItem(item, 'agenda_type_id', ev.target.value)" aria-label="Point type">
+                                <option t-foreach="state.types" t-as="type" t-key="type.id" t-att-value="type.id" t-att-disabled="!type.active"><t t-out="type.name"/><t t-if="!type.active"> (archived)</t></option>
+                            </select>
+                            <select class="form-select o_live_status" t-att-value="item.disposition" t-att-disabled="locked" t-on-change="(ev) => this.updateItem(item, 'disposition', ev.target.value)" aria-label="Point status">
+                                <option t-foreach="dispositions" t-as="entry" t-key="entry[0]" t-att-value="entry[0]"><t t-out="entry[1]"/></option>
+                            </select>
+                            <select t-if="typeBehavior(item) === 'decision'" class="form-select o_live_outcome" t-att-value="item.decision_result || 'pending'" t-att-disabled="locked" t-on-change="(ev) => this.updateItem(item, 'decision_result', ev.target.value)" aria-label="Decision outcome">
+                                <option t-foreach="outcomes" t-as="entry" t-key="entry[0]" t-att-value="entry[0]"><t t-out="entry[1]"/></option>
+                            </select>
+                        </div>
+                        <div t-if="state.expanded[item.id]" class="o_live_card_body">
+                            <div t-if="item.description" class="o_live_planned"><strong>Planned topic</strong><div t-out="item.description"/></div>
+                            <label class="form-label" t-att-for="'discussion-' + item.id">Discussion notes</label>
+                            <textarea t-att-id="'discussion-' + item.id" class="form-control" rows="4" t-att-value="item.discussion_notes || ''" t-att-disabled="locked" t-on-change="(ev) => this.saveItemText(item, 'discussion_notes', ev)" placeholder="Record what was discussed…"/>
+                            <div t-if="item.disposition === 'deferred'" class="mt-3"><strong>Postponed</strong><p t-if="item.deferral_reason" t-out="item.deferral_reason"/></div>
+                            <div class="o_live_subsection">
+                                <h3>Dissents and reservations</h3>
+                                <ul t-if="pointDissents(item).length" class="o_live_inline_records">
+                                    <li t-foreach="pointDissents(item)" t-as="dissent" t-key="dissent.id"><strong t-if="dissent.author_display_name"><t t-out="dissent.author_display_name"/>: </strong><span t-out="dissent.body"/></li>
+                                </ul>
+                                <p t-else="" class="text-muted">No dissent recorded.</p>
+                                <div t-if="!locked" class="o_live_add_row">
+                                    <textarea class="form-control" rows="2" placeholder="Record a dissent or reservation…" t-att-value="state.newDissent[item.id] || ''" t-on-input="(ev) => this.setDissent(item, ev.target.value)"/>
+                                    <button class="btn btn-outline-primary" t-on-click="() => this.addDissent(item)">Add dissent</button>
+                                </div>
+                            </div>
+                            <div class="o_live_subsection">
+                                <h3>Follow-up tasks</h3>
+                                <ul t-if="pointActions(item).length" class="o_live_inline_records">
+                                    <li t-foreach="pointActions(item)" t-as="task" t-key="task.id">
+                                        <span t-out="task.name"/><span class="badge text-bg-light"><t t-out="task.state.replace('_', ' ')"/></span>
+                                        <span t-if="task.deadline" class="text-muted">Due <t t-out="task.deadline"/></span>
+                                    </li>
+                                </ul>
+                                <p t-else="" class="text-muted">No follow-up tasks.</p>
+                                <div t-if="!locked" class="o_live_add_row o_live_task_form">
+                                    <input class="form-control" placeholder="Task" t-att-value="state.newAction[item.id]?.name || ''" t-on-input="(ev) => this.setAction(item, 'name', ev.target.value)"/>
+                                    <input class="form-control" type="date" aria-label="Deadline" t-att-value="state.newAction[item.id]?.deadline || ''" t-on-change="(ev) => this.setAction(item, 'deadline', ev.target.value)"/>
+                                    <button class="btn btn-outline-primary" t-on-click="() => this.addAction(item)">Add task</button>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </section>
+
+                <section class="o_live_minutes">
+                    <h2>Meeting notes</h2>
+                    <textarea class="form-control" rows="5" t-att-value="state.meeting.minutes_notes || ''" t-att-disabled="locked" t-on-change="saveMinutes" placeholder="Notes for the minutes…"/>
+                </section>
+            </t>
+        </main>
+    </t>
+</templates>

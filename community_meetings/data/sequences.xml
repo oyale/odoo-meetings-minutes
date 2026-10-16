@@ -1,0 +1,9 @@
+<odoo>
+    <record id="sequence_community_meeting" model="ir.sequence">
+        <field name="name">Community Meeting</field>
+        <field name="code">community.meeting</field>
+        <field name="prefix">MTG/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>
