@@ -248,7 +248,7 @@ export class LiveMeeting extends Component {
             await this.actionService.doAction(action, { onClose: async () => {
                 const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "deferral_reason"]);
                 Object.assign(item, saved);
-                delete this.state.deferrals[item.id];
+                if (saved.disposition === "deferred") delete this.state.deferrals[item.id];
             } });
         } catch (error) {
             this.notification.add("Could not open the carryover request.", { type: "danger" });
