@@ -110,7 +110,7 @@
                             </field>
                         </page>
                         <page string="Minutes" invisible="state in ['draft', 'scheduled'] and not minutes_notes"><field name="minutes_notes"/></page>
-                        <page string="Editorial Notes" groups="community_meetings.group_meeting_editor">
+                        <page string="Editorial Notes" groups="community_meetings.group_meeting_editor" invisible="state in ['draft', 'scheduled'] and not private_note_ids">
                             <field name="private_note_ids">
                                 <list editable="bottom">
                                     <field name="agenda_item_id"/>
@@ -118,7 +118,7 @@
                                 </list>
                             </field>
                         </page>
-                        <page string="Dissents and Reservations" groups="community_meetings.group_meeting_editor">
+                        <page string="Dissents and Reservations" groups="community_meetings.group_meeting_editor" invisible="state in ['draft', 'scheduled'] and not dissent_ids">
                             <field name="dissent_ids">
                                 <list editable="bottom">
                                     <field name="sequence" widget="handle"/>
