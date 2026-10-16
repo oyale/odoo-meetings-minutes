@@ -471,6 +471,16 @@ export class LiveMeeting extends Component {
         });
     }
 
+    openMeeting(id) {
+        return this.actionService.doAction({
+            type: "ir.actions.act_window",
+            res_model: "community.meeting",
+            res_id: id,
+            views: [[false, "form"]],
+            target: "current",
+        });
+    }
+
     async updateOutcome(item, value) {
         if (this.typeBehavior(item) === "decision") {
             const agreement = this.decisionAgreement(item);

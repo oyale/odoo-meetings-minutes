@@ -120,7 +120,10 @@
                             <div t-if="typeBehavior(item) === 'minutes_approval'" class="o_live_subsection o_live_minutes_approval">
                                 <label class="form-label">Pending minutes to approve</label>
                                 <ul t-if="state.pendingMinutes.length" class="list-unstyled mb-0">
-                                    <li t-foreach="state.pendingMinutes" t-as="pm" t-key="pm.id"><t t-out="pm.code"/> — <t t-out="pm.name"/> (<t t-out="stateLabel(pm.state)"/>)</li>
+                                    <li t-foreach="state.pendingMinutes" t-as="pm" t-key="pm.id" class="d-flex align-items-center gap-2">
+                                        <span><t t-out="pm.code"/> — <t t-out="pm.name"/> (<t t-out="stateLabel(pm.state)"/>)</span>
+                                        <button t-if="!locked" class="btn btn-sm btn-link p-0" t-on-click="() => this.openMeeting(pm.id)" aria-label="Open minutes">Review</button>
+                                    </li>
                                 </ul>
                                 <p t-if="!state.pendingMinutes.length" class="text-muted mb-0">No pending minutes.</p>
                             </div>
