@@ -56,6 +56,31 @@ class TestMeetingRevisions(TransactionCase):
         revision = meeting.with_user(self.approver).action_approve_minutes()
         return meeting, action, revision
 
+    def _drafted_meeting(self, name):
+        meeting = self.env["community.meeting"].with_user(self.editor).create({
+            "name": name,
+            "start_datetime": "2026-11-01 10:00:00",
+            "reader_user_ids": [(4, self.approver.id)],
+        })
+        self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": meeting.id,
+            "name": "Review open actions",
+            "discussion_notes": "<p>Initial discussion</p>",
+        })
+        meeting.with_user(self.editor).action_schedule()
+        meeting.with_user(self.editor).action_mark_held()
+        meeting.with_user(self.editor).action_draft_minutes()
+        return meeting
+
+    def test_approve_minutes_recordset_approves_all(self):
+        first = self._drafted_meeting("First recordset approval")
+        second = self._drafted_meeting("Second recordset approval")
+        revisions = (first | second).with_user(self.approver).action_approve_minutes()
+        # F1: the loop must not return early; both meetings get approved.
+        self.assertEqual(len(revisions), 2)
+        self.assertEqual(first.state, "approved")
+        self.assertEqual(second.state, "approved")
+
     def test_pdf_and_snapshot_are_stable_after_action_changes(self):
         meeting, action, revision = self._approved_meeting()
         before_json = revision.snapshot_json

@@ -317,6 +317,7 @@ class CommunityMeeting(models.Model):
         return super().copy(values)
 
     def action_approve_minutes(self):
+        revisions = self.env["community.meeting.revision"]
         for meeting in self:
             if not self.env.user.has_group("community_meetings.group_meeting_approver"):
                 raise AccessError(_("Only an authorized meeting approver can approve minutes."))
@@ -329,8 +330,8 @@ class CommunityMeeting(models.Model):
             meeting._validate_before_approval()
             revision = self.env["community.meeting.revision"]._create_approved_revision(meeting)
             meeting._set_approved_revision(revision)
-            return revision
-        return True
+            revisions |= revision
+        return revisions
 
     def action_start_amendment(self):
         if not self.env.user.has_group("community_meetings.group_meeting_manager"):
