@@ -27,22 +27,28 @@ export class LiveMeeting extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
-        this.state = useState({ loading: true, saving: 0, saveError: false, submitting: {}, editingRecords: {}, editingTypes: {}, deferrals: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, attendees: [] });
+        this.state = useState({ loading: true, saving: 0, saveError: false, unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, deferrals: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, attendees: [] });
         this.pendingWrites = new Map();
         this.editors = new Map();
+        this.editorTimers = new Map();
+        this.editorMeta = new Map();
         this.beforeUnload = (ev) => {
-            if (this.pendingWrites.size || Object.values(this.state.submitting).some(Boolean)) {
+            if (this.pendingWrites.size || Object.values(this.state.submitting).some(Boolean) || Object.values(this.state.unsavedEditors).some(Boolean)) {
                 ev.preventDefault();
                 ev.returnValue = "";
             }
         };
         onWillStart(() => this.load());
         onMounted(() => window.addEventListener("beforeunload", this.beforeUnload));
-        onWillUnmount(() => window.removeEventListener("beforeunload", this.beforeUnload));
+        onWillUnmount(() => {
+            window.removeEventListener("beforeunload", this.beforeUnload);
+            void this.flushEditors();
+        });
     }
 
     get meetingId() { return this.props.action.params.meeting_id; }
     get locked() { return ["approved", "cancelled"].includes(this.state.meeting.state); }
+    get hasUnsavedEditors() { return Object.values(this.state.unsavedEditors).some(Boolean); }
 
     async load() {
         const [meetings, items, types, dissents, actions, resolutions, privateNotes] = await Promise.all([
@@ -89,8 +95,9 @@ export class LiveMeeting extends Component {
             onWysiwygBlur: () => this.saveRichText(key, recordId, model, field),
         };
     }
-    async startRichText(key, wysiwyg) {
+    async startRichText(key, wysiwyg, recordId, model, field) {
         this.editors.set(key, wysiwyg);
+        this.editorMeta.set(key, { recordId, model, field });
         await wysiwyg.startEdition();
         wysiwyg.$editable[0].classList.add("odoo-editor-qweb");
         const label = key === "minutes_notes" ? _t("Meeting minutes")
@@ -98,8 +105,15 @@ export class LiveMeeting extends Component {
                 : key.startsWith("dissent:") ? _t("Dissent or reservation")
                     : key.startsWith("resolution:") ? _t("Agreement") : _t("Private editorial note");
         wysiwyg.$editable[0].setAttribute("aria-label", label);
+        wysiwyg.odooEditor.addEventListener("historyStep", () => {
+            this.state.unsavedEditors[key] = true;
+            clearTimeout(this.editorTimers.get(key));
+            this.editorTimers.set(key, setTimeout(() => this.saveRichText(key, recordId, model, field), 700));
+        });
     }
     async saveRichText(key, recordId, model, field) {
+        clearTimeout(this.editorTimers.get(key));
+        this.editorTimers.delete(key);
         const editor = this.editors.get(key);
         if (!editor) return;
         const value = editor.getValue();
@@ -108,12 +122,26 @@ export class LiveMeeting extends Component {
                 : model === "community.meeting.resolution" ? this.state.resolutions.find((row) => row.id === recordId)
                     : model === "community.meeting.editor.note" ? this.state.privateNotes.find((row) => row.id === recordId)
                         : this.state.dissents.find((row) => row.id === recordId);
-        if (!record || value === (record[field] || "")) return;
+        if (!record) return false;
+        if (value === (record[field] || "")) {
+            delete this.state.unsavedEditors[key];
+            return true;
+        }
         const queueKey = field === "minutes_notes" ? `meeting:${this.meetingId}` : `${model}:${recordId}`;
-        await this.write(queueKey, model, [recordId], { [field]: value }, async () => {
+        const savedSuccessfully = await this.write(queueKey, model, [recordId], { [field]: value }, async () => {
             const [saved] = await this.orm.read(model, [recordId], [field]);
             record[field] = saved[field];
         });
+        if (savedSuccessfully) delete this.state.unsavedEditors[key];
+        return savedSuccessfully;
+    }
+    async flushEditors() {
+        const saves = [...this.editorMeta.entries()].map(([key, meta]) =>
+            this.saveRichText(key, meta.recordId, meta.model, meta.field)
+        );
+        const results = await Promise.all(saves);
+        await Promise.all([...this.pendingWrites.values()]);
+        return results.every((result) => result !== false) && !Object.values(this.state.unsavedEditors).some(Boolean);
     }
     attendees() {
         return this.state.attendees.map((partner) => partner.name).join(", ") || _t("No attendees listed");
@@ -178,9 +206,11 @@ export class LiveMeeting extends Component {
             try {
                 await this.orm.write(model, ids, values);
                 apply?.();
+                return true;
             } catch (error) {
                 this.state.saveError = true;
                 this.notification.add("Could not save this change. Your text is still available; retry by editing the field again.", { type: "danger" });
+                return false;
             } finally {
                 this.state.saving--;
                 if (this.pendingWrites.get(writeKey) === operation) this.pendingWrites.delete(writeKey);
@@ -440,6 +470,10 @@ export class LiveMeeting extends Component {
     }
     prepareMinutes() { return this.transition("action_draft_minutes", "minutes_draft"); }
     async close() {
+        if (!await this.flushEditors()) {
+            this.notification.add("Save the pending edits before leaving this meeting.", { type: "warning" });
+            return;
+        }
         if (this.props.close) return this.props.close();
         return this.actionService.doAction({ type: "ir.actions.act_window", res_model: "community.meeting", views: [[false, "list"], [false, "form"]], target: "current" });
     }
