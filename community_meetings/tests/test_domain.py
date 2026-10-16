@@ -141,6 +141,7 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(len(promoted), 1)
         self.assertEqual(promoted.origin_topic_id, item.topic_id)
         self.assertEqual(promoted.name, "Continue work")
+        self.assertEqual(promoted.agenda_type_id.behavior, "followup")
 
     def test_series_defaults_are_copied(self):
         series = self.env["community.meeting.series"].create(

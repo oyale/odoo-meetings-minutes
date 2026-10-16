@@ -10,7 +10,7 @@ class CommunityMeetingAgendaType(models.Model):
     name = fields.Char(required=True, translate=True)
     behavior = fields.Selection(
         [("information", "Informational"), ("discussion", "Discussion"), ("decision", "Decision"), ("todo", "TODO"),
-         ("minutes_approval", "Minutes Approval"), ("next_meeting", "Next Meeting")],
+         ("minutes_approval", "Minutes Approval"), ("next_meeting", "Next Meeting"), ("followup", "Follow-up")],
         required=True, default="discussion",
         help="Controls which meeting workflow fields apply to points using this type.",
     )

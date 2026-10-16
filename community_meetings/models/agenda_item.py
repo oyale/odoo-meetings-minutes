@@ -17,7 +17,7 @@ class CommunityMeetingAgendaItem(models.Model):
     name = fields.Char(required=True)
     kind = fields.Selection(
         [("information", "Information"), ("discussion", "Discussion"), ("decision", "Decision"), ("todo", "TODO"),
-         ("minutes_approval", "Minutes Approval"), ("next_meeting", "Next Meeting")],
+         ("minutes_approval", "Minutes Approval"), ("next_meeting", "Next Meeting"), ("followup", "Follow-up")],
         default="discussion", required=True,
     )
     agenda_type_id = fields.Many2one(

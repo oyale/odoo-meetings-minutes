@@ -234,7 +234,7 @@ class CommunityMeeting(models.Model):
                 ]):
                     continue
                 default_type = self.env["community.meeting.agenda.type"].search(
-                    [("behavior", "=", "discussion"), ("active", "=", True)], limit=1
+                    [("behavior", "=", "followup"), ("active", "=", True)], limit=1
                 )
                 self.env["community.meeting.topic"].create({
                     "name": action.name,

@@ -17,4 +17,7 @@
     <record id="agenda_type_next_meeting" model="community.meeting.agenda.type">
         <field name="name">Next Meeting</field><field name="behavior">next_meeting</field><field name="sequence">50</field>
     </record>
+    <record id="agenda_type_followup" model="community.meeting.agenda.type">
+        <field name="name">Follow-up</field><field name="behavior">followup</field><field name="sequence">60</field>
+    </record>
 </odoo>
