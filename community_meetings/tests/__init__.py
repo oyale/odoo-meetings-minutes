@@ -8,3 +8,4 @@ from . import test_series_wizard
 from . import test_postpone
 from . import test_carryover_discovery
 from . import test_point_wizard
+from . import test_proposals_convergence

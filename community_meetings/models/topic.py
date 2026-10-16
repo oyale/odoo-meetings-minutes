@@ -1,5 +1,5 @@
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 
 PRIORITIES = [("0", "Low"), ("1", "Normal"), ("2", "High"), ("3", "Critical")]
 CONTENT_FIELDS = (
@@ -48,6 +48,17 @@ class MeetingTopic(models.Model):
         string="Related points",
         check_company=True,
     )
+    proposer_partner_id = fields.Many2one("res.partner", ondelete="restrict", index=True)
+    submitted_by_user_id = fields.Many2one("res.users", readonly=True)
+    submitted_at = fields.Datetime(readonly=True)
+    proposal_status = fields.Selection(
+        [("submitted", "Submitted"), ("accepted", "Accepted"),
+         ("rejected", "Rejected"), ("withdrawn", "Withdrawn")],
+        copy=False,
+    )
+    proposal_response = fields.Text()
+    responded_by_id = fields.Many2one("res.users", readonly=True)
+    responded_at = fields.Datetime(readonly=True)
     state = fields.Selection(
         [("proposed", "Proposed"), ("open", "Open"), ("closed", "Closed")],
         default="open",
@@ -115,6 +126,11 @@ class MeetingTopic(models.Model):
         return super().create(vals_list)
 
     def write(self, vals):
+        if {
+            "proposal_status", "responded_by_id", "responded_at",
+            "submitted_by_user_id", "submitted_at",
+        }.intersection(vals):
+            raise UserError(_("Use a proposal workflow action to change its status."))
         if {
             "state",
             "outcome",
@@ -214,6 +230,39 @@ class MeetingTopic(models.Model):
         if any(t.state != "proposed" for t in self):
             raise UserError(_("Only proposed points can be admitted."))
         return super().write({"state": "open"})
+
+    def action_accept_proposal(self):
+        self.check_access("write")
+        if any(t.state != "proposed" or t.proposal_status != "submitted" for t in self):
+            raise UserError(_("Only submitted proposals can be accepted."))
+        for topic in self:
+            super(MeetingTopic, topic.sudo()).write({
+                "state": "open", "proposal_status": "accepted",
+                "responded_by_id": self.env.uid, "responded_at": fields.Datetime.now(),
+            })
+        return True
+
+    def action_reject_proposal(self, response=False):
+        self.check_access("write")
+        if any(t.proposal_status != "submitted" for t in self):
+            raise UserError(_("Only submitted proposals can be rejected."))
+        for topic in self:
+            super(MeetingTopic, topic.sudo()).write({
+                "proposal_status": "rejected", "proposal_response": response,
+                "responded_by_id": self.env.uid, "responded_at": fields.Datetime.now(),
+            })
+        return True
+
+    def action_withdraw_proposal(self):
+        self.check_access("write")
+        for topic in self:
+            if topic.proposal_status != "submitted" or topic.submitted_by_user_id != self.env.user:
+                raise AccessError(_("You can withdraw only your own submitted proposal."))
+            super(MeetingTopic, topic.sudo()).write({
+                "proposal_status": "withdrawn",
+                "responded_by_id": self.env.uid, "responded_at": fields.Datetime.now(),
+            })
+        return True
 
     def action_open(self):
         self.ensure_one()
