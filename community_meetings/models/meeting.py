@@ -161,9 +161,33 @@ class CommunityMeeting(models.Model):
         self.env["community.meeting.carryover"]._process_new_meetings(meetings)
         return meetings
 
+    def _can_change_series(self):
+        self.ensure_one()
+        return (
+            self.state in ("draft", "scheduled")
+            and not self.actual_start_datetime
+            and not self.approved_revision_id
+        )
+
     def write(self, vals):
-        if "series_id" in vals and any(meeting.series_id and meeting.series_id.id != vals["series_id"] for meeting in self):
-            raise UserError(_("A meeting cannot be moved to another series."))
+        if "series_id" in vals:
+            self._lock_live_workflow()
+            self.invalidate_recordset(["series_id", "approved_revision_id"])
+            destination = self.env["community.meeting.series"].browse(vals["series_id"]).exists()
+            for meeting in self:
+                if destination and (
+                    destination.company_id != meeting.company_id or not destination.active
+                ):
+                    raise ValidationError(
+                        _("Choose an active series in the meeting's company.")
+                    )
+                if (
+                    meeting.series_id.id != (destination.id if destination else False)
+                    and not meeting._can_change_series()
+                ):
+                    raise UserError(
+                        _("The series can only change before the meeting starts and before its minutes are approved.")
+                    )
         if "state" in vals:
             raise UserError(_("Use a meeting workflow action to change its state."))
         if "code" in vals:

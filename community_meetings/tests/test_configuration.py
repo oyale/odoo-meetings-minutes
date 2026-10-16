@@ -1,3 +1,4 @@
+from odoo.exceptions import UserError, ValidationError
 from odoo.tests import TransactionCase, tagged
 
 
@@ -65,6 +66,74 @@ class TestPointConfiguration(TransactionCase):
         self.assertEqual(copy.priority, "2")
         self.assertEqual(copy.estimated_minutes, 15)
         self.assertNotEqual(copy, topic)
+
+    def test_series_changes_only_before_the_meeting_starts(self):
+        other = self.env["community.meeting.series"].with_user(self.editor).create({
+            "name": "Other series",
+        })
+        meeting = self._meeting("Series change")
+        meeting.with_user(self.editor).write({"series_id": other.id})
+        self.assertEqual(meeting.series_id, other)
+        meeting.with_user(self.editor).write({"series_id": False})
+        self.assertFalse(meeting.series_id)
+
+        unassigned = self._meeting("Unassigned series")
+        unassigned.write({"series_id": False})
+        unassigned.action_schedule()
+        unassigned.action_start_meeting()
+        with self.assertRaises(UserError), self.cr.savepoint():
+            unassigned.write({"series_id": other.id})
+
+        started = self._meeting("Locked series")
+        started.with_user(self.editor).action_schedule()
+        started.with_user(self.editor).action_start_meeting()
+        with self.assertRaises(UserError), self.cr.savepoint():
+            started.with_user(self.editor).write({"series_id": other.id})
+
+    def test_series_assignment_is_locked_after_meeting_completion(self):
+        for state in ("held", "minutes_draft", "approved", "cancelled"):
+            meeting = self._meeting(f"Locked {state}")
+            meeting._transition(("draft",), state)
+            with self.assertRaises(UserError), self.cr.savepoint():
+                meeting.write({"series_id": False})
+
+    def test_series_changes_update_private_points_but_refuse_shared_points(self):
+        other = self.env["community.meeting.series"].with_user(self.editor).create({
+            "name": "New series",
+        })
+        meeting = self._meeting()
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": meeting.id, "name": "Private point", "kind": "discussion",
+        })
+        meeting.action_schedule()
+        meeting.write({"series_id": other.id})
+        self.assertEqual(item.topic_id.series_id, other)
+        meeting.write({"series_id": False})
+        self.assertFalse(item.topic_id.series_id)
+        meeting.write({"series_id": self.series.id})
+        sibling = self._meeting("Shared point meeting")
+        self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": sibling.id, "topic_id": item.topic_id.id,
+        })
+        with self.assertRaises(UserError), self.cr.savepoint():
+            meeting.write({"series_id": other.id})
+        self.assertEqual(meeting.series_id, self.series)
+        self.assertEqual(item.topic_id.series_id, self.series)
+
+    def test_series_must_be_active_and_match_meeting_company(self):
+        meeting = self._meeting()
+        inactive = self.env["community.meeting.series"].with_user(self.editor).create({
+            "name": "Archived series", "active": False,
+        })
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            meeting.write({"series_id": inactive.id})
+        company = self.env["res.company"].create({"name": "Other company"})
+        foreign = self.env["community.meeting.series"].with_user(self.editor).sudo().create({
+            "name": "Foreign series", "company_id": company.id,
+            "coordinator_user_ids": [(5, 0, 0)],
+        })
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            meeting.sudo().write({"series_id": foreign.id})
 
     def test_dissent_reasons_are_configurable(self):
         reason = self.env["community.meeting.dissent.reason"].create({"name": "Budget objection"})

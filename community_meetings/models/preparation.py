@@ -306,10 +306,6 @@ class Meeting(models.Model):
                         values.get("duration_hours", meeting.duration_hours) * 60
                     ),
                 )
-            if "series_id" in values and meeting.actual_start_datetime:
-                raise ValidationError(
-                    _("The series cannot change after the meeting starts.")
-                )
             super(Meeting, meeting).write(values)
             if "series_id" in values:
                 meeting.agenda_item_ids.topic_id._set_series(meeting.series_id)

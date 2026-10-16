@@ -215,7 +215,7 @@ class MeetingTopic(models.Model):
                 raise UserError(
                     _("A shared point cannot be moved to a different series.")
                 )
-        return super().write({"series_id": series.id})
+        return super().write({"series_id": series.id if series else False})
 
     def _reopen(self, reason):
         self.check_access("write")

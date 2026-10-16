@@ -79,3 +79,12 @@ Task owners need access to the originating meeting.
 minutes keep their snapshot and original PDF when a shared point changes.
 Attachments in point bodies are reserved for a later delivery; rich text and
 links are supported now.
+
+### Changing the meeting series
+
+The meeting form allows assigning, changing or removing its series while it is
+in draft or scheduled and live execution has not started. A series change is
+blocked after execution starts or when an approved revision exists. The target
+series must be active and match the meeting company and kind. Points used only
+by this meeting follow the new series; points shared with another meeting cannot
+be moved to a different series.
