@@ -144,13 +144,13 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
 
     def test_information_point_can_be_marked_done(self):
         card = self.card("information")
-        card.get_by_role("button", name="Mark as done").click()
+        card.get_by_role("button", name="Done").click()
         expect(self.outcome("information")).to_have_text("Done")
         self.assertEqual(self.record("community.meeting.agenda.item", self.item_ids["information"], ["disposition"])["disposition"], "discussed")
 
     def test_discussion_point_can_be_resolved(self):
         card = self.card("discussion")
-        card.get_by_role("button", name="Resolve discussion").click()
+        card.get_by_role("button", name="Done").click()
         expect(self.outcome("discussion")).to_have_text("Resolved")
         self.assertEqual(self.record("community.meeting.agenda.item", self.item_ids["discussion"], ["disposition"])["disposition"], "closed")
 
@@ -159,8 +159,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         card.get_by_role("button", name="Postpone agenda point").click()
         card.get_by_label("Reason for postponing").fill("Continue next time")
         card.get_by_role("button", name="Leave postponed").click()
-        checkbox = card.get_by_role("checkbox", name="Review at next meeting")
-        expect(checkbox).to_be_checked()
+        expect(card.get_by_text("Will be reviewed at the next meeting", exact=True)).to_be_visible()
         self.assertTrue(self.record(
             "community.meeting.agenda.item", self.item_ids["discussion"],
             ["review_next_meeting"],
@@ -170,7 +169,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.page.get_by_text("Minutes secretary", exact=True).wait_for()
         expect(self.page.get_by_text("Estimated duration", exact=True)).to_be_visible()
         card = self.card("discussion")
-        card.get_by_role("button", name="Resolve discussion").click()
+        card.get_by_role("button", name="Done").click()
         expect(self.outcome("discussion")).to_have_text("Resolved")
         self.assertEqual(card.get_by_label("Actual minutes for this point").count(), 0)
         card.get_by_role("button", name="Undo point result").click()
@@ -259,7 +258,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         card.get_by_role("button", name="Begin point").click()
         expect(card.locator('[contenteditable="true"][aria-label="Discussion notes"]')).to_be_visible()
         card.get_by_role("button", name="Pause point").click()
-        expect(card.get_by_text("Point paused. Its live record is read-only until you resume it.")).to_be_visible()
+        expect(card.get_by_text("Point paused", exact=True)).to_be_visible()
         self.assertEqual(
             card.locator('[contenteditable="true"][aria-label="Discussion notes"]').count(),
             0,
@@ -276,7 +275,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.page.get_by_role("button", name="Start Meeting").click()
         expect(self.page.get_by_role("button", name="Finish Meeting")).to_be_visible()
         card = self.card("decision")
-        card.get_by_role("button", name="Approve decision").click()
+        card.get_by_role("button", name="Add agreement", exact=True).click()
         card.get_by_placeholder("Agreement title").fill("Approve during live session")
         card.get_by_placeholder("What was agreed?").fill("Approved pending verification")
         card.get_by_role("button", name="Add agreement", exact=True).click()
@@ -290,9 +289,10 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
 
     def test_todo_requires_a_followup_task_before_resolution(self):
         card = self.card("todo")
-        button = card.get_by_role("button", name="Resolve TODO")
+        button = card.get_by_role("button", name="Done")
         expect(self.outcome("todo")).to_have_text("Task required")
         expect(button).to_be_disabled()
+        card.get_by_role("button", name="Add follow-up", exact=True).click()
         card.get_by_label("Task name").fill("Prepare the requested draft")
         card.get_by_role("button", name="Add follow-up").click()
         fields = self.rpc("community.meeting.action", "fields_get", [], {"attributes": ["type"]})
@@ -320,10 +320,9 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
 
     def test_decision_requires_and_uses_agreement_without_direct_edit(self):
         card = self.card("decision")
-        card.get_by_role("button", name="Approve decision").click()
+        card.get_by_role("button", name="Add agreement", exact=True).click()
         expect(self.outcome("decision")).to_have_text("Pending")
         title = card.get_by_placeholder("Agreement title")
-        expect(title).to_be_focused()
         title.fill("Approve the decision")
         card.get_by_placeholder("What was agreed?").fill("Approved after discussion")
         card.get_by_role("button", name="Add agreement", exact=True).click()
@@ -333,8 +332,9 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.assertEqual(card.get_by_label("Decision result", exact=True).count(), 0)
         card.get_by_role("button", name="Withdraw decision agreement").click()
         expect(self.outcome("decision")).to_have_text("Discussed — decision pending")
-        card.get_by_role("button", name="Reject decision").click()
+        card.get_by_role("button", name="Add agreement", exact=True).click()
         title.fill("Reject the decision")
+        card.get_by_label("New decision result").select_option("denied")
         card.get_by_placeholder("What was agreed?").fill("Rejected after reconsideration")
         card.get_by_role("button", name="Add agreement", exact=True).click()
         expect(self.outcome("decision")).to_have_text("Rejected")
@@ -342,7 +342,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
 
     def test_postponing_an_approved_decision_withdraws_its_agreement(self):
         card = self.card("decision")
-        card.get_by_role("button", name="Approve decision").click()
+        card.get_by_role("button", name="Add agreement", exact=True).click()
         card.get_by_placeholder("Agreement title").fill("Approve before postponing")
         card.get_by_placeholder("What was agreed?").fill("Approval must be revisited.")
         card.get_by_role("button", name="Add agreement", exact=True).click()
@@ -363,17 +363,16 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
 
     def test_dissent_author_kind_and_statement_are_usable(self):
         card = self.card("discussion")
-        details = card.locator("details").filter(has_text="Dissents and reservations")
-        details.locator("summary").click()
+        card.get_by_role("button", name="Add dissent").click()
         author = card.get_by_label("Dissent author")
-        kind = details.get_by_label("Statement type")
-        statement = details.get_by_label("Dissent statement")
+        kind = card.get_by_label("Dissent reason")
+        statement = card.get_by_label("Dissent statement")
         expect(author).to_be_visible()
         expect(statement).to_be_visible()
         author.fill("Ada Lovelace")
         kind.select_option("reservation")
         statement.fill("I disagree with the proposed deadline.")
-        details.get_by_role("button", name="Add dissent").click()
+        card.get_by_role("button", name="Add dissent").click()
         deadline = time.time() + 8
         dissent = []
         while time.time() < deadline and not dissent:
@@ -402,10 +401,11 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
                 self.assertEqual(saved["disposition"], "deferred")
 
     def test_private_note_form_stays_collapsed_until_requested(self):
-        details = self.card("discussion").locator("details").filter(has_text="Private editorial notes")
-        expect(details.get_by_label("Private editorial note")).not_to_be_visible()
-        details.locator("summary").click()
-        expect(details.get_by_label("Private editorial note")).to_be_visible()
+        card = self.card("discussion")
+        expect(card.get_by_label("Private editorial note")).not_to_be_visible()
+        card.locator("details").filter(has_text="Private editorial notes").locator("summary").click()
+        card.get_by_role("button", name="Add private note").click()
+        expect(card.get_by_label("Private editorial note")).to_be_visible()
 
 
 if __name__ == "__main__":

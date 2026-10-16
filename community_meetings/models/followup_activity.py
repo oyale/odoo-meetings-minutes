@@ -183,6 +183,12 @@ class FollowupActivity(models.Model):
             self._sync_followup_activity()
         return result
 
+    def unlink(self):
+        # mail.activity uses a polymorphic model/res_id pair, so deleting the
+        # follow-up record does not cascade to its Odoo activity automatically.
+        self.mapped("followup_activity_id").sudo().unlink()
+        return super().unlink()
+
 
 class MailActivity(models.Model):
     _inherit = "mail.activity"

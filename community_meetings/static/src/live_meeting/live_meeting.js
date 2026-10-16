@@ -28,7 +28,7 @@ export class LiveMeeting extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
-        this.state = useState({ loading: true, saving: 0, saveError: false, unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "task", activity_type_id: false, todo_activity_type_id: false }, expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, attendees: [], incoming: [], defaultOwner: false });
+        this.state = useState({ loading: true, saving: 0, saveError: false, unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "task", activity_type_id: false, todo_activity_type_id: false }, expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], defaultOwner: false });
         this.pendingWrites = new Map();
         this.editors = new Map();
         this.editorTimers = new Map();
@@ -298,6 +298,36 @@ export class LiveMeeting extends Component {
     canStartPoint(item) {
         return item.disposition !== "closed"
             && !(this.typeBehavior(item) === "information" && item.disposition === "discussed");
+    }
+    canCompletePoint(item) {
+        if (item.is_followup) return true;
+        const behavior = this.typeBehavior(item);
+        if (behavior === "information") return item.disposition !== "discussed";
+        if (behavior === "decision") return Boolean(this.decisionAgreement(item));
+        if (behavior === "todo") return item.disposition !== "closed" && this.hasTodoAction(item);
+        return item.disposition !== "closed";
+    }
+    async completePoint(item) {
+        if (!this.canCompletePoint(item)) return;
+        if (item.is_followup) return this.applyPointAction(item, "discussed");
+        const behavior = this.typeBehavior(item);
+        const outcome = behavior === "information" ? "discussed"
+            : behavior === "decision" ? this.decisionAgreement(item).decision_outcome
+                : behavior === "todo" ? "closed" : "closed";
+        return this.applyPointAction(item, outcome);
+    }
+    togglePanel(item, name) {
+        this.state.panels[item.id] ||= {};
+        this.state.panels[item.id][name] = !this.state.panels[item.id][name];
+    }
+    async deleteFollowup(item, action) {
+        if (item.topic_state !== "open" || action.agenda_item_id?.[0] !== item.id) return;
+        try {
+            await this.orm.unlink("community.meeting.action", [action.id]);
+            this.state.actions = this.state.actions.filter((row) => row.id !== action.id);
+        } catch (error) {
+            this.notification.add(_t("This follow-up could not be deleted."), { type: "danger" });
+        }
     }
     setPointEditorsEditable(item, editable) {
         document.querySelectorAll(`#agenda-card-${item.id} [contenteditable]`).forEach((editor) => {

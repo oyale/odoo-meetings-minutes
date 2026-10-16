@@ -407,7 +407,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         expect(self.page.get_by_role("button", name="Finish Meeting")).to_be_visible()
         information = self.card("information", begin=False)
         information.get_by_role("button", name="Begin point").click()
-        information.get_by_role("button", name="Mark as done").click()
+        information.get_by_role("button", name="Done").click()
         expect(self.outcome("information")).to_have_text("Done")
         self.page.get_by_role("button", name="Pending only").click()
         expect(self.card("information")).to_have_count(0)
@@ -457,6 +457,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             .filter(has_text="Private editorial notes")
         )
         details.locator("summary").click()
+        details.get_by_role("button", name="Add private note", exact=True).click()
         details.get_by_label("Private editorial note", exact=True).fill("Private draft")
         details.get_by_role("button", name="Add private note", exact=True).click()
         expect(details.locator(".o_live_rich_readonly")).to_contain_text(
@@ -473,6 +474,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
 
     def test_task_editing(self):
         card = self.card("discussion")
+        card.get_by_role("button", name="Add follow-up", exact=True).click()
         form = card.locator(".o_live_task_form")
         form.get_by_label("Task name", exact=True).fill("Browser follow-up")
         owners = (
@@ -506,14 +508,22 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             row.get_by_label("Task status").select_option(state)
             self.wait_field("community.meeting.action", task, "state", state)
 
+    def test_followup_can_be_deleted_while_point_is_open(self):
+        card = self.card("discussion")
+        card.get_by_role("button", name="Add follow-up", exact=True).click()
+        form = card.locator(".o_live_task_form")
+        form.get_by_label("Task name").fill("Remove this follow-up")
+        form.get_by_role("button", name="Add follow-up", exact=True).click()
+        row = card.locator('li:has(select[aria-label="Task status"])').last
+        expect(row.get_by_role("button", name="Delete follow-up")).to_be_visible()
+        action_id = self.related("community.meeting.action", "discussion")
+        row.get_by_role("button", name="Delete follow-up").click()
+        expect(row).not_to_be_visible()
+        self.assertFalse(self.rpc("community.meeting.action", "search", [[("id", "=", action_id)]]))
+
     def test_dissent_editing(self):
         self.test_dissent_author_kind_and_statement_are_usable()
-        details = (
-            self.card("discussion")
-            .locator("details")
-            .filter(has_text="Dissents and reservations")
-        )
-        row = details.locator("li")
+        row = self.card("discussion").locator(".o_live_record_list li").first
         row.get_by_label("Author", exact=True).fill("Grace Hopper")
         row.get_by_label("Author", exact=True).press("Tab")
         record_id = self.related("community.meeting.dissent", "discussion")
@@ -523,9 +533,9 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "author_display_name",
             "Grace Hopper",
         )
-        row.get_by_label("Statement type").select_option("minority_opinion")
+        row.get_by_label("Statement type").select_option("reservation")
         self.wait_field(
-            "community.meeting.dissent", record_id, "kind", "minority_opinion"
+            "community.meeting.dissent", record_id, "kind", "reservation"
         )
         row.get_by_label("Include in minutes").click()
         expect(row.get_by_label("Include in minutes")).not_to_be_checked()
@@ -639,7 +649,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             ["agenda_type_id"],
         )["agenda_type_id"][0]
         card.get_by_label("Point type", exact=True).select_option(str(type_id))
-        expect(card.get_by_role("button", name="Resolve discussion")).to_be_visible()
+        expect(card.get_by_role("button", name="Done")).to_be_visible()
         self.wait_field(
             "community.meeting.agenda.item",
             self.item_ids["information"],
@@ -653,7 +663,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             main = self.page.locator("main.o_community_live_meeting")
             overflow = main.evaluate("el => ({width: el.clientWidth, scrollWidth: el.scrollWidth, offenders: [...el.querySelectorAll('*')].filter(x => x.scrollWidth > x.clientWidth + 2).map(x => ({tag: x.tagName, className: x.className, text: (x.innerText || '').slice(0, 80), width: x.clientWidth, scrollWidth: x.scrollWidth})).slice(0, 12)})")
             self.assertLessEqual(overflow["scrollWidth"] - overflow["width"], 1, overflow)
-            self.card("information").get_by_role("button", name="Mark as done").click()
+            self.card("information").get_by_role("button", name="Done").click()
             expect(self.outcome("information")).to_have_text("Done")
         finally:
             self.page.set_viewport_size({"width": 1440, "height": 1000})
@@ -1134,6 +1144,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
 
     def test_followup_kinds_keep_tasks_and_odoo_activities_distinct(self):
         card = self.card("discussion")
+        card.get_by_role("button", name="Add follow-up", exact=True).click()
         form = card.locator(".o_live_task_form")
         form.get_by_label("Task name").fill("Standalone meeting task")
         form.get_by_role("button", name="Add follow-up").click()
@@ -1175,6 +1186,8 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         form.get_by_label("Activity type").select_option(str(activity_type))
         form.get_by_role("button", name="Add follow-up").click()
         record = self.wait_action_record("Odoo call activity")
+        activity_row = card.locator("li").filter(has_text="Odoo call activity")
+        expect(activity_row.get_by_role("button", name="Create Project task")).to_have_count(0)
         self.assertEqual(record["agenda_item_id"][0], self.item_ids["discussion"])
         self.assertEqual(record["followup_kind"], "activity")
         self.assertTrue(record["followup_activity_id"])
@@ -1384,14 +1397,14 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "community.meeting", "write", [[self.meeting_id], {"series_id": series}]
         )
         self.open_live(self.meeting_id)
-        self.card("todo").locator(".o_live_expand").click()
         card = self.card("todo")
+        card.get_by_role("button", name="Add follow-up", exact=True).click()
         card.get_by_label("Task name", exact=True).fill(
             "Assigned follow-up with Project"
         )
         card.get_by_role("button", name="Add follow-up", exact=True).click()
         expect(self.outcome("todo")).to_have_text("Project task required")
-        expect(card.get_by_role("button", name="Resolve TODO")).to_be_disabled()
+        expect(card.get_by_role("button", name="Done")).to_be_disabled()
         card.get_by_role("button", name="Create Project task").click()
         dialog = self.page.get_by_role("dialog").last
         expect(dialog.get_by_label("Choose a different project")).to_be_visible()
@@ -1423,13 +1436,13 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             for task_id in action["project_task_ids"]
         }
         self.assertTrue(set(task["id"] for task in created_tasks) & linked_task_ids)
-        expect(card.get_by_role("button", name="Resolve TODO")).to_be_enabled()
-        card.get_by_role("button", name="Resolve TODO").click()
+        expect(card.get_by_role("button", name="Done")).to_be_enabled()
+        card.get_by_role("button", name="Done").click()
         expect(self.outcome("todo")).to_have_text("Resolved")
 
     def test_approve_and_download_minutes(self):
         card = self.card("decision")
-        card.get_by_role("button", name="Approve decision").click()
+        card.get_by_role("button", name="Add agreement", exact=True).click()
         card.get_by_placeholder("Agreement title").fill(
             "Approval for published minutes"
         )
@@ -1444,6 +1457,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             .filter(has_text="Private editorial notes")
         )
         private.locator("summary").click()
+        private.get_by_role("button", name="Add private note", exact=True).click()
         private.get_by_label("Private editorial note", exact=True).fill(
             "PRIVATE_NOT_FOR_PUBLICATION"
         )

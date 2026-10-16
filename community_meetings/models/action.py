@@ -71,8 +71,14 @@ class CommunityMeetingAction(models.Model):
         return result
 
     def unlink(self):
-        if any(record.meeting_id.state not in ("draft", "cancelled") for record in self):
-            raise UserError(_("Actions can only be deleted from draft meetings."))
+        if any(record.meeting_id.state == "approved" for record in self):
+            raise UserError(_("Actions in approved meetings cannot be deleted."))
+        for record in self:
+            item = record.agenda_item_id
+            if record.meeting_id.state not in ("draft", "cancelled") and (
+                not item or item.topic_id.state != "open"
+            ):
+                raise UserError(_("Follow-ups can only be deleted while their agenda point is open."))
         topics = self.mapped('topic_id')
         for topic in topics.sorted('id'):
             topic._lock_workflow()

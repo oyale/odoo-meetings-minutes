@@ -85,6 +85,25 @@ class TestMeetingWorkflow(TransactionCase):
         item.write({"disposition": "deferred", "deferral_reason": "Waiting for input"})
         self.assertEqual(item.disposition, "deferred")
 
+    def test_followup_can_be_deleted_while_its_point_is_open(self):
+        meeting = self.env["community.meeting"].with_user(self.editor).create({
+            "name": "Open follow-up cleanup",
+            "start_datetime": "2026-11-01 10:00:00",
+            "end_datetime": "2026-11-01 11:00:00",
+        })
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": meeting.id, "name": "Prepare the proposal", "kind": "todo",
+        })
+        action = self.env["community.meeting.action"].with_user(self.editor).create({
+            "meeting_id": meeting.id, "agenda_item_id": item.id, "name": "Draft it",
+        })
+        meeting.with_user(self.editor).action_schedule()
+
+        action.with_user(self.editor).unlink()
+
+        self.assertFalse(action.exists())
+        self.assertEqual(item.disposition, "open")
+
     def test_informational_agenda_and_workflow(self):
         meeting = self.env["community.meeting"].with_user(self.editor).create({
             "name": "Operations check-in",
