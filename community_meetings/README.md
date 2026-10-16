@@ -35,6 +35,22 @@ Core tests are under `tests/`; optional addon tests are beside their addons.
 the existing database and service for development; do not create another
 database or bind another HTTP port.
 
+### Test coverage
+
+`tests/coverage.sh` measures line coverage by running the module's Odoo test
+suite under `coverage` (install once with
+`/home/odoo/pyenv/versions/odoo/bin/pip install coverage`). It runs inside the
+Odoo container, rewrites the `.coverage` data to `/tmp`, and prints a per-file
+report excluding tests and migrations:
+
+```sh
+bash tests/coverage.sh
+```
+
+The revision/PDF tests are excluded by default (they need live HTTP assets), so
+`revision.py`/`report_revision.py` show low coverage in the default run; pass a
+different `--test-tags` value as the first argument to focus elsewhere.
+
 ## License
 
 Original addon code is licensed AGPL-3.0-or-later.
