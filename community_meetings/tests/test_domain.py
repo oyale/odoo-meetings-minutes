@@ -156,8 +156,15 @@ class TestMeetingDomain(TransactionCase):
             "has_minutes_approval_point": True,
             "has_next_meeting_point": True,
         })
+        previous = self.env["community.meeting"].create({
+            "name": "Previous meeting", "series_id": series.id,
+            "start_datetime": "2026-10-01 10:00:00",
+        })
+        previous.action_schedule()
+        previous.action_mark_held()
         meeting = self.env["community.meeting"].create({
             "name": "Structural meeting", "series_id": series.id,
+            "start_datetime": "2026-10-08 10:00:00",
         })
         self.env["community.meeting.agenda.item"].create({
             "meeting_id": meeting.id, "name": "Regular point", "kind": "discussion",
@@ -165,6 +172,18 @@ class TestMeetingDomain(TransactionCase):
         items = meeting.agenda_item_ids.sorted("sequence")
         self.assertEqual(items[0].agenda_type_id.behavior, "minutes_approval")
         self.assertEqual(items[-1].agenda_type_id.behavior, "next_meeting")
+
+    def test_no_minutes_approval_point_without_pending_minutes(self):
+        series = self.env["community.meeting.series"].create({
+            "name": "No pending minutes", "has_minutes_approval_point": True,
+        })
+        meeting = self.env["community.meeting"].create({
+            "name": "Fresh meeting", "series_id": series.id,
+            "start_datetime": "2026-10-08 10:00:00",
+        })
+        self.assertFalse(meeting.agenda_item_ids.filtered(
+            lambda item: item.agenda_type_id.behavior == "minutes_approval"
+        ))
 
     def test_series_next_meeting_rule_proposes_date(self):
         series = self.env["community.meeting.series"].create({"name": "Recurrence"})

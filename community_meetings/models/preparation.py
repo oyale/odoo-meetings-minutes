@@ -176,8 +176,12 @@ class Meeting(models.Model):
             series = meeting.series_id
             if not series:
                 continue
-            if series.has_minutes_approval_point and not meeting.agenda_item_ids.filtered(
-                lambda item: item.agenda_type_id.behavior == "minutes_approval"
+            if (
+                series.has_minutes_approval_point
+                and meeting.get_pending_minutes_for_approval()
+                and not meeting.agenda_item_ids.filtered(
+                    lambda item: item.agenda_type_id.behavior == "minutes_approval"
+                )
             ):
                 meeting.agenda_item_ids.create({
                     "meeting_id": meeting.id,
