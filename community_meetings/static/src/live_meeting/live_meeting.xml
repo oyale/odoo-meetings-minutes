@@ -114,8 +114,8 @@
                             <details t-if="item.description" class="o_live_planned" open="open"><summary>Planned topic</summary><div t-out="safeHtml(item.description)"/></details>
                             <div t-if="item.has_started or draftingMinutes" class="o_live_subsection o_live_discussion_notes">
                                 <label class="form-label" t-att-for="'discussion-' + item.id">Discussion notes</label>
-                                <t t-if="canEditDiscussion(item)"><t t-component="Wysiwyg" t-props="{ options: richTextOptions(item.discussion_notes, 'discussion_notes:' + item.id, 'community.meeting.agenda.item', item.id, 'discussion_notes'), editingValue: item.discussion_notes || '', startWysiwyg: richTextStarter('discussion_notes:' + item.id, item.id, 'community.meeting.agenda.item', 'discussion_notes') }"/></t>
-                                <t t-else=""><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></t>
+                                <t t-if="locked"><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></t>
+                                <t t-else=""><t t-component="Wysiwyg" t-props="{ options: richTextOptions(item.discussion_notes, 'discussion_notes:' + item.id, 'community.meeting.agenda.item', item.id, 'discussion_notes'), editingValue: item.discussion_notes || '', startWysiwyg: richTextStarter('discussion_notes:' + item.id, item.id, 'community.meeting.agenda.item', 'discussion_notes') }"/></t>
                             </div>
                             <div t-if="typeBehavior(item) === 'next_meeting'" class="o_live_subsection o_live_next_meeting">
                                 <label class="form-label" t-att-for="'next-date-' + item.id">Next meeting date</label>

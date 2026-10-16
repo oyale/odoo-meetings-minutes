@@ -199,6 +199,11 @@ export class LiveMeeting extends Component {
                     : model === "community.meeting.editor.note" ? this.state.privateNotes.find((row) => row.id === recordId)
                         : this.state.dissents.find((row) => row.id === recordId);
         if (!record) return false;
+        // Notes are readonly outside a treated point; never save them then.
+        if (model === "community.meeting.agenda.item" && field === "discussion_notes" && !this.canEditDiscussion(record)) {
+            delete this.state.unsavedEditors[key];
+            return true;
+        }
         if (value === (record[field] || "")) {
             delete this.state.unsavedEditors[key];
             return true;
@@ -392,15 +397,6 @@ export class LiveMeeting extends Component {
             editor.setAttribute("contenteditable", editable ? "true" : "false");
             editor.setAttribute("aria-readonly", editable ? "false" : "true");
         });
-        if (!editable) {
-            // Drop the editor of a point that is no longer editable once its
-            // content was flushed, so it cannot replay a write the server rejects.
-            const key = `discussion_notes:${item.id}`;
-            this.editors.delete(key);
-            this.editorMeta.delete(key);
-            this.editorTimers.delete(key);
-            delete this.state.unsavedEditors[key];
-        }
     }
     toggle(item) {
         this.state.activeItemId = item.id;
@@ -883,6 +879,7 @@ export class LiveMeeting extends Component {
         try {
             await this.orm.write("community.meeting.agenda.item", [item.id], { reopen_reason: reason });
             await this.orm.call("community.meeting.agenda.item", "action_reopen", [[item.id]]);
+            delete this.state.reopening[item.id];
             await this.load();
         } catch (error) {
             this.notification.add(_t("The point could not be reopened. Retry after checking its current status."), { type: "danger" });
