@@ -124,6 +124,10 @@ ACTIONS = {
     "test_followup_points_are_offered_in_new_meeting_wizard": [
         "carry completed follow-up point into next meeting",
     ],
+    "test_selected_carryover_is_materialized_in_new_meeting": [
+        "select carried point",
+        "show carried point in created meeting",
+    ],
     "test_add_point_from_live_and_cancel": [
         "add rich point from live",
         "cancel point wizard without side effects",
@@ -970,6 +974,68 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "Completed follow-up to review"
         )
         self.retained.append({"model": "community.meeting", "id": source})
+
+    def test_selected_carryover_is_materialized_in_new_meeting(self):
+        series_name = "Selected carryover " + uuid.uuid4().hex[:8]
+        series = self.rpc("community.meeting.series", "create", [{
+            "name": series_name, "carryover_policy": "review",
+        }])
+        self.retained.append({"model": "community.meeting.series", "id": series})
+        origin_id = self.rpc("community.meeting", "create", [{
+            "name": series_name + " previous", "series_id": series,
+            "start_datetime": "2026-10-01 10:00:00",
+        }])
+        self.retained.append({"model": "community.meeting", "id": origin_id})
+        source_name = "Selected point " + uuid.uuid4().hex[:8]
+        self.rpc("community.meeting.agenda.item", "create", [{
+            "meeting_id": origin_id, "name": source_name,
+            "review_next_meeting": True,
+        }])
+        self.page.goto(
+            "%s/web#model=community.meeting.series&id=%s&view_type=form"
+            % (BASE_URL, series)
+        )
+        self.page.locator('button[name="action_new_meeting"]').click()
+        wizard = self.page.get_by_role("dialog").last
+        wizard.locator('button[name="action_next"]').click()
+        wizard.locator('.o_field_widget[name="start_datetime"] input').fill(
+            "10/08/2026 10:00:00"
+        )
+        wizard.locator('button[name="action_next"]').click()
+        wizard.locator('button[name="action_next"]').click()
+        row = wizard.locator(
+            '.o_field_widget[name="carry_line_ids"] tr.o_data_row'
+        ).filter(has_text=source_name)
+        expect(row).to_be_visible()
+        expect(row.locator('input[type="checkbox"]')).to_be_checked()
+        wizard.locator('button[name="action_next"]').click()
+        wizard.locator('button[name="action_finish"]').click()
+        expect(wizard).not_to_be_visible(timeout=30000)
+        created_meetings = self.rpc(
+            "community.meeting", "search_read",
+            [[("series_id", "=", series), ("id", "!=", origin_id)]],
+            {"fields": ["name", "state", "start_datetime"]},
+        )
+        self.assertTrue(
+            created_meetings,
+            "Wizard did not create a meeting. URL=%s; dialog=%r; notifications=%r"
+            % (
+                self.page.url,
+                self.page.get_by_role("dialog").all_text_contents(),
+                self.page.locator('[role="alert"]').all_text_contents(),
+            ),
+        )
+        meeting_id = created_meetings[0]["id"]
+        self.retained.append({"model": "community.meeting", "id": meeting_id})
+        items = self.rpc(
+            "community.meeting.agenda.item", "search_read",
+            [[("meeting_id", "=", meeting_id)]],
+            {"fields": ["name", "carryover_id", "topic_id"]},
+        )
+        self.assertEqual(len(items), 1)
+        self.assertIn(source_name, items[0]["name"])
+        self.assertTrue(items[0]["carryover_id"])
+        expect(self.page.locator(".o_form_view")).to_contain_text(source_name)
 
     def test_add_point_from_live_and_cancel(self):
         before = self.rpc(

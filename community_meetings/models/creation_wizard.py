@@ -172,6 +172,28 @@ class MeetingCreateWizard(models.TransientModel):
                     line._item_values(meeting)
                 )
             choices = {line.source_id.id: line.accept for line in self.carry_line_ids}
+            # Wizard candidates come from agenda state (review flag/follow-ups),
+            # and may not have a carryover request yet. Create that request for
+            # each selected candidate before accepting it below.
+            for line in self.carry_line_ids.filtered("accept"):
+                source = line.source_id
+                transfer = self.env["community.meeting.carryover"].search(
+                    [
+                        ("origin_model", "=", "agenda_item"),
+                        ("origin_record_id", "=", source.id),
+                        ("destination_meeting_id", "=", meeting.id),
+                        ("status", "in", ("pending", "proposed")),
+                    ],
+                    limit=1,
+                )
+                if not transfer:
+                    self.env["community.meeting.carryover"].create(
+                        {
+                            "origin_model": "agenda_item",
+                            "origin_record_id": source.id,
+                            "destination_meeting_id": meeting.id,
+                        }
+                    )
             for transfer in meeting.incoming_carryover_ids.filtered(
                 lambda t: t.status in ("pending", "proposed")
             ):
