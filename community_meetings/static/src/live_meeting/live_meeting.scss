@@ -100,3 +100,14 @@
 .o_live_priority_2 { color: #9a6500; }
 .o_live_priority_3 { color: #b42318; }
 .o_live_advanced { margin-bottom: .75rem; }
+
+.o_meeting_point_wizard {
+    .o_meeting_point_context { margin-bottom: 0.75rem; }
+    .oe_title { margin-bottom: 0.5rem; }
+    .o_meeting_point_help { margin: 0.5rem 0 0.25rem; font-size: 0.875rem; }
+    .o_field_html .note-editable, .o_field_html .odoo-editor-editable { min-height: 12rem; }
+}
+.modal-dialog:has(.o_meeting_point_wizard) { max-width: 720px; }
+@media (max-width: 480px) {
+    .o_meeting_point_wizard .modal-dialog { max-width: 100%; }
+}

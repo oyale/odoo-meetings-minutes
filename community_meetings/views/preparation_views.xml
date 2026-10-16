@@ -36,11 +36,28 @@
 <footer><button name="action_back" type="object" string="Back" invisible="step == 'series'"/><button name="action_next" type="object" string="Next" class="btn-primary" invisible="step == 'agenda'"/><button name="action_finish" type="object" string="Create Meeting" class="btn-primary" invisible="step != 'agenda'"/><button string="Cancel" special="cancel"/></footer>
 </form></field></record>
 <record id="view_point_wizard" model="ir.ui.view"><field name="name">community.meeting.point.wizard</field><field name="model">community.meeting.point.wizard</field>
-<field name="arch" type="xml"><form string="Add Point"><field name="meeting_id" invisible="1"/><field name="creation_wizard_id" invisible="1"/><field name="series_id" invisible="1"/><field name="company_id" invisible="1"/>
-<group><field name="topic_id" domain="[('company_id','=',company_id),('series_id','=',series_id)]" options="{'no_create':True}"/><field name="agenda_type_id" invisible="topic_id"/><field name="name" invisible="topic_id"/><field name="priority" invisible="topic_id"/></group>
-<field name="description" widget="html" invisible="topic_id" placeholder="Develop this point and add any useful links…"/>
-<group invisible="topic_id"><field name="more_options"/><field name="deadline" invisible="not more_options"/><field name="estimated_minutes" invisible="not more_options"/><field name="followup_policy" invisible="not more_options"/><field name="default_followup_kind" invisible="not more_options or followup_policy in ['activity', 'todo']"/></group>
-<footer><button name="action_save" type="object" string="Add Point" class="btn-primary"/><button name="action_save_another" type="object" string="Add and continue"/><button name="action_cancel" type="object" string="Cancel"/></footer></form></field></record>
+<field name="arch" type="xml"><form string="Add a point" class="o_meeting_point_wizard">
+<field name="meeting_id" invisible="1"/><field name="creation_wizard_id" invisible="1"/><field name="series_id" invisible="1"/><field name="company_id" invisible="1"/>
+<div class="o_meeting_point_context text-muted" invisible="not meeting_id"><i class="fa fa-calendar-o" aria-hidden="true"/> Adding to <field name="meeting_id" readonly="1" nolabel="1" options="{'no_open': True}"/></div>
+<div class="oe_title" invisible="topic_id"><label for="name" string="What is this point about?"/><h1><field name="name" placeholder="A clear one-line title"/></h1></div>
+<group invisible="topic_id"><field name="agenda_type_id"/></group>
+<div class="o_meeting_point_help text-muted" invisible="topic_id">Explain the subject so any attendee can follow it. Add the links or documents needed to act on it.</div>
+<field name="description" widget="html" invisible="topic_id"/>
+<group invisible="topic_id"><group string="Planning"><field name="priority"/><field name="deadline"/><field name="estimated_minutes"/></group></group>
+<group invisible="topic_id"><field name="more_options"/></group>
+<group string="More options" invisible="not more_options and not topic_id">
+    <field name="topic_id" options="{'no_create': True}" domain="[('company_id', '=', company_id)]"/>
+    <field name="origin_topic_id" readonly="1" invisible="not origin_topic_id"/>
+    <field name="related_topic_ids" widget="many2many_tags" domain="[('company_id', '=', company_id)]"/>
+    <field name="followup_policy"/>
+    <field name="default_followup_kind" invisible="followup_policy in ['activity', 'todo']"/>
+</group>
+<footer>
+    <button name="action_save" type="object" string="Add point" class="btn-primary"/>
+    <button name="action_save_another" type="object" string="Add and continue" invisible="context.get('from_live')"/>
+    <button name="action_cancel" type="object" string="Cancel"/>
+</footer>
+</form></field></record>
 <record id="action_prepare_meeting" model="ir.actions.act_window"><field name="name">New Meeting</field><field name="res_model">community.meeting.create.wizard</field><field name="view_mode">form</field><field name="target">new</field></record>
 <menuitem id="menu_prepare_meeting" name="New Meeting" parent="menu_community_meetings_root" action="action_prepare_meeting" sequence="5" groups="group_meeting_editor"/>
 <record id="menu_community_meeting_carryovers" model="ir.ui.menu"><field name="active" eval="False"/></record>
