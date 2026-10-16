@@ -609,11 +609,6 @@ export class LiveMeeting extends Component {
             await this.load();
         } catch (error) { this.notification.add(_t("Could not review this continuing point."), { type: "danger" }); }
     }
-    async completeActivity(action) {
-        if (!action.followup_activity_id) return;
-        await this.orm.call("mail.activity", "action_feedback", [[action.followup_activity_id[0]]]);
-        await this.load();
-    }
     async reopenPoint(item) {
         if (!item.reopen_reason?.trim()) {
             this.notification.add(_t("Enter a reason for reopening the point."), { type: "warning" });

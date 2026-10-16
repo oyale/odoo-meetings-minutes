@@ -209,12 +209,6 @@ msgid "Choose destination meeting"
 msgstr "Elegir reunión de destino"
 
 #. module: community_meetings
-#. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-msgid "Complete activity"
-msgstr "Completar actividad"
-
-#. module: community_meetings
 #: model:ir.ui.menu,name:community_meetings.menu_community_meeting_configuration
 msgid "Configuration"
 msgstr "Configuración"
@@ -1126,3 +1120,21 @@ msgstr "Fecha y hora de fin estimadas"
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "There are no points to carry over into this meeting."
 msgstr "No hay puntos para arrastrar a esta reunión."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Assigned to"
+msgstr "Asignada a"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Due date"
+msgstr "Fecha límite"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Status"
+msgstr "Estado"

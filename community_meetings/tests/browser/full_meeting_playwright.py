@@ -112,8 +112,8 @@ ACTIONS = {
         "add rich point from live",
         "cancel point wizard without side effects",
     ],
-    "test_activity_from_live_completes_durable_task": [
-        "complete core activity from live"
+    "test_live_task_activity_completion_is_not_in_meeting_controls": [
+        "keep activity completion out of live task editor"
     ],
     "test_automatic_continuation_reuses_identity_and_links": [
         "postponement schedules review",
@@ -939,29 +939,37 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         card.locator(".o_live_expand").click()
         expect(card.locator(".o_live_planned")).to_contain_text("Detailed topic")
 
-    def test_activity_from_live_completes_durable_task(self):
+    def test_live_task_activity_completion_is_not_in_meeting_controls(self):
         card = self.card("discussion")
         card.locator(".o_live_task_form").get_by_label("Task name").fill(
-            "Activity to complete"
+            "Assigned follow-up"
         )
         card.get_by_role("button", name="Add task", exact=True).click()
-        button = card.get_by_role("button", name="Complete activity", exact=True)
-        expect(button).to_be_visible()
+        row = card.locator('li:has(select[aria-label="Task status"])')
+        expect(row).to_be_visible()
+        expect(row.locator(".o_live_followup_task_title")).to_be_visible()
+        expect(row.get_by_label("Task name")).to_be_visible()
+        expect(row.get_by_label("Task owner")).to_be_visible()
+        expect(row.get_by_label("Task deadline")).to_be_visible()
+        expect(row.get_by_label("Task status")).to_be_visible()
+        expect(
+            card.get_by_role("button", name="Complete activity", exact=True)
+        ).to_have_count(0)
         task_id = self.related("community.meeting.action", "discussion")
         activity = self.record(
             "community.meeting.action", task_id, ["followup_activity_id"]
         )["followup_activity_id"]
-        self.assertTrue(activity)
-        button.click()
-        self.wait_field("community.meeting.action", task_id, "state", "done")
-        self.assertFalse(
-            self.record("community.meeting.action", task_id, ["followup_activity_id"])[
-                "followup_activity_id"
-            ]
-        )
+        self.assertTrue(activity, "Assigned follow-up should schedule an activity.")
         self.assertEqual(
-            self.rpc("mail.activity", "search_count", [[("id", "=", activity[0])]]), 0
+            self.record("community.meeting.action", task_id, ["state"])["state"], "open"
         )
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        for label in ("Task name", "Task owner", "Task deadline", "Task status"):
+            expect(row.get_by_label(label)).to_be_visible()
+            bounds = row.get_by_label(label).bounding_box()
+            self.assertGreater(bounds["width"], 80, label)
+            self.assertGreaterEqual(bounds["x"], 0, label)
+            self.assertLessEqual(bounds["x"] + bounds["width"], 390, label)
 
     def test_automatic_continuation_reuses_identity_and_links(self):
         series = self.rpc(

@@ -191,16 +191,25 @@
                                 <h3>Follow-up tasks</h3>
                                 <p t-if="typeBehavior(item) === 'todo' and item.disposition !== 'closed'" class="text-muted">A follow-up task must be recorded before this TODO can be resolved.</p>
                                 <ul t-if="pointActions(item).length" class="o_live_inline_records">
-                                    <li t-foreach="pointActions(item)" t-as="task" t-key="task.id">
-                                        <input class="form-control" aria-label="Task name" t-att-value="task.name" t-on-change="(ev) => this.updateAction(task, 'name', ev.target.value)"/>
-                                        <span class="badge text-bg-light"><t t-out="actionStateLabel(task.state)"/></span>
-                                        <button t-if="task.followup_activity_id and !locked" class="btn btn-link" t-on-click="() => this.completeActivity(task)">Complete activity</button>
-                                        <span t-if="task.deadline" class="text-muted">Due <t t-out="task.deadline"/></span>
-                                        <select class="form-select o_live_task_owner" aria-label="Task owner" t-att-value="task.responsible_user_id?.[0] || ''" t-on-change="(ev) => this.updateAction(task, 'responsible_user_id', ev.target.value)">
-                                            <option value="">Unassigned</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id"><t t-out="user.name"/></option>
-                                        </select>
-                                        <input class="form-control o_live_task_deadline" type="date" aria-label="Task deadline" t-att-value="task.deadline || ''" t-on-change="(ev) => this.updateAction(task, 'deadline', ev.target.value)"/>
-                                        <select class="form-select o_live_task_state" aria-label="Task status" t-att-value="task.state" t-on-change="(ev) => this.updateAction(task, 'state', ev.target.value)"><option value="open">Open</option><option value="in_progress">In progress</option><option value="done">Done</option><option value="cancelled">Cancelled</option></select>
+                                    <li t-foreach="pointActions(item)" t-as="task" t-key="task.id" class="o_live_followup_task">
+                                        <div class="o_live_followup_task_title">
+                                            <label class="form-label" t-att-for="'live-task-name-' + task.id">Task</label>
+                                            <input class="form-control" t-att-id="'live-task-name-' + task.id" aria-label="Task name" t-att-value="task.name" t-on-change="(ev) => this.updateAction(task, 'name', ev.target.value)"/>
+                                            <span class="badge text-bg-light"><t t-out="actionStateLabel(task.state)"/></span>
+                                        </div>
+                                        <div class="o_live_followup_task_fields">
+                                            <label class="o_live_task_field"><span>Assigned to</span>
+                                                <select class="form-select o_live_task_owner" aria-label="Task owner" t-att-value="task.responsible_user_id?.[0] || ''" t-on-change="(ev) => this.updateAction(task, 'responsible_user_id', ev.target.value)">
+                                                    <option value="">Unassigned</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id"><t t-out="user.name"/></option>
+                                                </select>
+                                            </label>
+                                            <label class="o_live_task_field"><span>Due date</span>
+                                                <input class="form-control o_live_task_deadline" type="date" aria-label="Task deadline" t-att-value="task.deadline || ''" t-on-change="(ev) => this.updateAction(task, 'deadline', ev.target.value)"/>
+                                            </label>
+                                            <label class="o_live_task_field"><span>Status</span>
+                                                <select class="form-select o_live_task_state" aria-label="Task status" t-att-value="task.state" t-on-change="(ev) => this.updateAction(task, 'state', ev.target.value)"><option value="open">Open</option><option value="in_progress">In progress</option><option value="done">Done</option><option value="cancelled">Cancelled</option></select>
+                                            </label>
+                                        </div>
                                     </li>
                                 </ul>
                                 <p t-else="" class="text-muted">No follow-up tasks.</p>

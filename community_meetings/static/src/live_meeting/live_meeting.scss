@@ -43,6 +43,15 @@
     .o_live_subsection h3 { font-size: 1rem; }
     .o_live_inline_records { list-style: none; padding: 0; margin: 0 0 8px; }
     .o_live_inline_records li { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; padding: 7px 0; }
+    .o_live_inline_records li.o_live_followup_task { display: block; padding: 14px 16px; margin: 10px 0; border: 1px solid var(--border-color, #ddd); border-radius: 8px; background: var(--body-bg, #fff); }
+    .o_live_followup_task_title { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; margin-bottom: 12px; }
+    .o_live_followup_task_title .form-label { grid-column: 1 / -1; margin: 0; color: var(--body-color, #495057); font-size: .875rem; }
+    .o_live_followup_task_title input { min-width: 0; width: 100%; font-size: 1rem; }
+    .o_live_followup_task_title .badge { white-space: nowrap; }
+    .o_live_followup_task_title .o_live_project_task, .o_live_followup_task_title .o_live_create_project_task { grid-column: 1 / -1; justify-self: start; }
+    .o_live_followup_task_fields { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(150px, .8fr) minmax(140px, .7fr); gap: 12px; }
+    .o_live_task_field { display: flex; flex-direction: column; gap: 4px; min-width: 0; color: var(--body-color, #495057); font-size: .875rem; }
+    .o_live_task_field .form-select, .o_live_task_field .form-control { width: 100%; max-width: none; min-width: 0; }
     .o_live_inline_records li.o_live_record_editor { display: grid; grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr); align-items: start; }
     .o_live_inline_records li.o_live_record_editor > :nth-child(n + 3) { grid-column: 1 / -1; }
     .o_live_record_editor, .o_live_resolution_editor { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(120px, 1fr) auto; align-items: center; gap: 8px; }
@@ -70,6 +79,10 @@
         .o_live_add_row { align-items: stretch; flex-direction: column; }
         .o_live_record_editor, .o_live_resolution_editor, .o_live_resolution_form, .o_live_dissent_form { grid-template-columns: minmax(0, 1fr); }
         .o_live_general_task { align-items: stretch; flex-direction: column; }
+        .o_live_followup_task_fields { grid-template-columns: minmax(0, 1fr); }
+        .o_live_followup_task_title { grid-template-columns: minmax(0, 1fr); }
+        .o_live_followup_task_title .form-label { grid-column: auto; }
+        .o_live_followup_task_title .badge { justify-self: start; }
     }
 }
 
