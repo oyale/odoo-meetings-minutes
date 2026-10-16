@@ -117,6 +117,22 @@ class TestMeetingWorkflow(TransactionCase):
         with self.assertRaises(ValidationError):
             meeting.with_user(self.editor).action_schedule()
 
+    def test_live_meeting_records_actual_start_and_end(self):
+        meeting = self.env["community.meeting"].with_user(self.editor).create({
+            "name": "Actual times", "start_datetime": "2026-11-01 10:00:00",
+        })
+        meeting.with_user(self.editor).action_schedule()
+        meeting.with_user(self.editor).action_start_meeting()
+        actual_start = meeting.actual_start_datetime
+        self.assertTrue(actual_start)
+        meeting.with_user(self.editor).action_start_meeting()
+        self.assertEqual(meeting.actual_start_datetime, actual_start)
+        meeting.with_user(self.editor).action_mark_held()
+        self.assertEqual(meeting.state, "held")
+        self.assertTrue(meeting.actual_end_datetime)
+        with self.assertRaises(UserError):
+            meeting.with_user(self.editor).write({"actual_start_datetime": False})
+
     def test_informational_agenda_does_not_need_resolution_or_action(self):
         meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "Information only"})
         self.env["community.meeting.agenda.item"].with_user(self.editor).create({

@@ -21,7 +21,9 @@
                 <header>
                     <button name="action_open_live_meeting" type="object" string="Open Live Meeting" invisible="state not in ['scheduled', 'held', 'minutes_draft']" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_schedule" type="object" string="Schedule" class="oe_highlight" invisible="state != 'draft'" groups="community_meetings.group_meeting_editor"/>
-                    <button name="action_mark_held" type="object" string="Mark Held" class="oe_highlight" invisible="state != 'scheduled'" groups="community_meetings.group_meeting_editor"/>
+                    <button name="action_start_meeting" type="object" string="Start Meeting" class="oe_highlight" invisible="state != 'scheduled' or actual_start_datetime" groups="community_meetings.group_meeting_editor"/>
+                    <button name="action_mark_held" type="object" string="Finish Meeting" class="oe_highlight" invisible="state != 'scheduled' or not actual_start_datetime" groups="community_meetings.group_meeting_editor"/>
+                    <button name="action_mark_held" type="object" string="Record as Already Held" invisible="state != 'scheduled' or actual_start_datetime" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_draft_minutes" type="object" string="Prepare Minutes" class="oe_highlight" invisible="state != 'held'" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_approve_minutes" type="object" string="Approve Minutes" class="oe_highlight" invisible="state != 'minutes_draft'" groups="community_meetings.group_meeting_approver"/>
                     <button name="action_start_amendment" type="object" string="Start Amendment" invisible="state != 'approved'" groups="community_meetings.group_meeting_manager"/>
@@ -37,6 +39,8 @@
                         <group string="When and where" col="4">
                             <field name="start_datetime"/>
                             <field name="end_datetime"/>
+                            <field name="actual_start_datetime" readonly="1" invisible="not actual_start_datetime"/>
+                            <field name="actual_end_datetime" readonly="1" invisible="not actual_end_datetime"/>
                             <field name="location"/>
                             <field name="meeting_url" widget="url"/>
                         </group>

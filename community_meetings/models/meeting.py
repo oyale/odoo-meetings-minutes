@@ -31,6 +31,8 @@ class CommunityMeeting(models.Model):
     attendee_partner_ids = fields.Many2many("res.partner", string="Attendees")
     start_datetime = fields.Datetime(tracking=True)
     end_datetime = fields.Datetime(tracking=True)
+    actual_start_datetime = fields.Datetime(readonly=True, copy=False, tracking=True)
+    actual_end_datetime = fields.Datetime(readonly=True, copy=False, tracking=True)
     location = fields.Char()
     meeting_url = fields.Char()
     description = fields.Html()
@@ -143,6 +145,8 @@ class CommunityMeeting(models.Model):
             raise UserError(_("Use a meeting workflow action to change its state."))
         if "code" in vals:
             raise UserError(_("A meeting reference cannot be changed."))
+        if {"actual_start_datetime", "actual_end_datetime"}.intersection(vals):
+            raise UserError(_("Actual meeting times are recorded through the meeting workflow."))
         if {"approved_revision_id", "revision_ids"}.intersection(vals):
             raise UserError(_("Use the approval workflow to manage meeting revisions."))
         if "company_id" in vals and any(meeting.company_id.id != vals["company_id"] for meeting in self):
@@ -176,7 +180,25 @@ class CommunityMeeting(models.Model):
         return result
 
     def action_mark_held(self):
-        return self._transition(("scheduled",), "held")
+        result = self._transition(("scheduled",), "held")
+        super(CommunityMeeting, self).write({"actual_end_datetime": fields.Datetime.now()})
+        return result
+
+    def action_start_meeting(self):
+        for meeting in self:
+            meeting.check_access_rights("write")
+            meeting.check_access_rule("write")
+            if not self.env.user.has_group("community_meetings.group_meeting_editor"):
+                raise AccessError(_("Only meeting editors can start a meeting."))
+            self.env.cr.execute(
+                "SELECT id FROM community_meeting WHERE id = %s FOR UPDATE", [meeting.id],
+            )
+            meeting.invalidate_recordset(["state", "actual_start_datetime"])
+            if meeting.state != "scheduled":
+                raise UserError(_("Only a scheduled meeting can be started."))
+            if not meeting.actual_start_datetime:
+                super(CommunityMeeting, meeting).write({"actual_start_datetime": fields.Datetime.now()})
+        return True
 
     def action_draft_minutes(self):
         return self._transition(("held",), "minutes_draft")

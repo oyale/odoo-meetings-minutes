@@ -1,6 +1,8 @@
 /** @odoo-module **/
 
 import { Component, onMounted, onWillStart, onWillUnmount, useState } from "@odoo/owl";
+import { _t } from "@web/core/l10n/translation";
+import { deserializeDateTime, formatDateTime } from "@web/core/l10n/dates";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
@@ -8,6 +10,10 @@ const OUTCOMES = {
     information: [["open", "Pending"], ["discussed", "Discussed"], ["deferred", "Postponed"]],
     discussion: [["open", "Pending"], ["discussed", "Discussed"], ["closed", "Resolved"], ["deferred", "Postponed"]],
     decision: [["pending", "Pending"], ["discussed", "Discussed — decision pending"], ["approved", "Approved"], ["denied", "Denied"], ["deferred", "Postponed"]],
+};
+const MEETING_STATES = {
+    draft: _t("Draft"), scheduled: _t("Scheduled"), held: _t("Held"),
+    minutes_draft: _t("Minutes to prepare"), approved: _t("Approved"), cancelled: _t("Cancelled"),
 };
 
 export class LiveMeeting extends Component {
@@ -36,7 +42,7 @@ export class LiveMeeting extends Component {
 
     async load() {
         const [meetings, items, types, dissents, actions] = await Promise.all([
-            this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "start_datetime", "end_datetime", "organizer_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id"]),
+            this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "start_datetime", "end_datetime", "actual_start_datetime", "actual_end_datetime", "organizer_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id"]),
             this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "sequence", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "deferral_reason"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.agenda.type", [], ["name", "behavior", "active"], { order: "sequence, name", context: { active_test: false } }),
             this.orm.searchRead("community.meeting.dissent", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "body", "kind", "author_display_name", "author_partner_id"], { order: "sequence, id" }),
@@ -55,6 +61,8 @@ export class LiveMeeting extends Component {
     }
 
     label(value) { return Array.isArray(value) ? value[1] : (value || ""); }
+    dateTime(value) { return value ? formatDateTime(deserializeDateTime(value)) : _t("Not set"); }
+    stateLabel(value) { return MEETING_STATES[value] || value || ""; }
     attendees() {
         return this.state.attendees.map((partner) => partner.name).join(", ") || "No attendees listed";
     }
@@ -231,6 +239,8 @@ export class LiveMeeting extends Component {
         try {
             await this.orm.call("community.meeting", method, [[this.meetingId]]);
             this.state.meeting.state = state;
+            const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["actual_start_datetime", "actual_end_datetime"]);
+            Object.assign(this.state.meeting, saved);
         } catch (error) {
             this.notification.add("The meeting status could not be changed. Please retry.", { type: "danger" });
         } finally {
@@ -238,6 +248,20 @@ export class LiveMeeting extends Component {
         }
     }
     markHeld() { return this.transition("action_mark_held", "held"); }
+    async startMeeting() {
+        const key = `meeting:${this.meetingId}`;
+        if (this.state.submitting[key]) return;
+        this.state.submitting[key] = true;
+        try {
+            await this.orm.call("community.meeting", "action_start_meeting", [[this.meetingId]]);
+            const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["actual_start_datetime"]);
+            Object.assign(this.state.meeting, saved);
+        } catch (error) {
+            this.notification.add("The meeting could not be started. Please retry.", { type: "danger" });
+        } finally {
+            this.state.submitting[key] = false;
+        }
+    }
     prepareMinutes() { return this.transition("action_draft_minutes", "minutes_draft"); }
     async close() { await this.actionService.doAction({ type: "ir.actions.act_window", res_model: "community.meeting", views: [[false, "list"], [false, "form"]], target: "current" }); }
 }

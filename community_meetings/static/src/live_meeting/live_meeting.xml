@@ -5,13 +5,15 @@
             <div class="o_live_topbar">
                 <button class="btn btn-secondary" t-att-disabled="state.saving > 0" t-on-click="close">Back to Meetings</button>
                 <div class="o_live_workflow_buttons">
-                    <button t-if="state.meeting.state === 'scheduled'" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="markHeld">Mark Held</button>
+                    <button t-if="state.meeting.state === 'scheduled' and !state.meeting.actual_start_datetime" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="startMeeting">Start Meeting</button>
+                    <button t-if="state.meeting.state === 'scheduled' and state.meeting.actual_start_datetime" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="markHeld">Finish Meeting</button>
+                    <button t-if="state.meeting.state === 'scheduled' and !state.meeting.actual_start_datetime" class="btn btn-outline-secondary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="markHeld">Record as Already Held</button>
                     <button t-if="state.meeting.state === 'held'" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="prepareMinutes">Prepare Minutes</button>
                 </div>
                 <span t-if="state.saving" class="text-muted" role="status" aria-live="polite">Saving…</span>
                 <span t-elif="state.saveError" class="text-danger" role="alert">Some changes could not be saved. Retry by editing the affected field.</span>
                 <span t-else="" class="text-success" role="status" aria-live="polite">All changes saved</span>
-                <span t-if="state.meeting.state" class="badge text-bg-primary"><t t-out="state.meeting.state.replace('_', ' ')"/></span>
+                <span t-if="state.meeting.state" class="badge text-bg-primary"><t t-out="stateLabel(state.meeting.state)"/></span>
             </div>
             <t t-if="state.loading"><div class="text-muted p-4">Loading meeting…</div></t>
             <t t-else="">
@@ -21,8 +23,10 @@
                         <h1><t t-out="state.meeting.name"/></h1>
                     </div>
                     <div class="o_live_header_details">
-                        <div><strong>Start</strong><span><t t-out="state.meeting.start_datetime || 'Not set'"/></span></div>
-                        <div><strong>End</strong><span><t t-out="state.meeting.end_datetime || 'Not set'"/></span></div>
+                        <div><strong>Planned start</strong><span><t t-out="dateTime(state.meeting.start_datetime)"/></span></div>
+                        <div><strong>Planned end</strong><span><t t-out="dateTime(state.meeting.end_datetime)"/></span></div>
+                        <div><strong>Actual start</strong><span><t t-out="dateTime(state.meeting.actual_start_datetime)"/></span></div>
+                        <div><strong>Actual end</strong><span><t t-out="dateTime(state.meeting.actual_end_datetime)"/></span></div>
                         <div><strong>Organizer</strong><span><t t-out="label(state.meeting.organizer_id)"/></span></div>
                         <div><strong>Location</strong><span><t t-out="state.meeting.location || 'Not set'"/></span></div>
                         <div class="o_live_attendees"><strong>Attendees</strong><span><t t-out="attendees()"/></span></div>
