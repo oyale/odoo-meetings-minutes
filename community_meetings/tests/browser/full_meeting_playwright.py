@@ -33,6 +33,10 @@ ACTIONS = {
         "collapse inactive points when navigating",
         "accumulate time after resuming a point",
     ],
+    "test_point_live_editing_requires_begin_and_pause_is_read_only": [
+        "hide live editors until Begin point",
+        "lock live editors after Pause point",
+    ],
     "test_decision_can_be_undone_during_running_meeting": [
         "undo decision during live meeting",
     ],
@@ -388,18 +392,22 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
 
     def test_navigation_and_filter(self):
         self.page.get_by_role("button", name="Expand / Collapse all").click()
-        expect(self.card("information").locator(".o_live_expand")).to_have_attribute(
+        expect(self.card("information", begin=False).locator(".o_live_expand")).to_have_attribute(
             "aria-expanded", "false"
         )
-        self.card("information").locator(".o_live_expand").click()
-        expect(self.card("information").locator(".o_live_expand")).to_have_attribute(
+        self.card("information", begin=False).locator(".o_live_expand").click()
+        expect(self.card("information", begin=False).locator(".o_live_expand")).to_have_attribute(
             "aria-expanded", "true"
         )
         self.page.get_by_role("button", name="Next agenda point").click()
-        expect(self.card("discussion")).to_have_class(re.compile("o_live_current"))
+        expect(self.card("discussion", begin=False)).to_have_class(re.compile("o_live_current"))
         self.page.get_by_role("button", name="Previous agenda point").click()
-        expect(self.card("information")).to_have_class(re.compile("o_live_current"))
-        self.card("information").get_by_role("button", name="Mark as done").click()
+        expect(self.card("information", begin=False)).to_have_class(re.compile("o_live_current"))
+        self.page.get_by_role("button", name="Start Meeting").click()
+        expect(self.page.get_by_role("button", name="Finish Meeting")).to_be_visible()
+        information = self.card("information", begin=False)
+        information.get_by_role("button", name="Begin point").click()
+        information.get_by_role("button", name="Mark as done").click()
         expect(self.outcome("information")).to_have_text("Done")
         self.page.get_by_role("button", name="Pending only").click()
         expect(self.card("information")).to_have_count(0)
@@ -1225,7 +1233,6 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
         self.open_live(self.meeting_id)
         card = self.card("discussion")
-        card.locator(".o_live_expand").click()
         card.get_by_role("button", name="Postpone agenda point").click()
         card.get_by_label("Reason for postponing").fill("Continue this point next time")
         card.get_by_role("button", name="Leave postponed", exact=True).click()
@@ -1444,9 +1451,8 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         expect(private.locator(".o_live_rich_readonly")).to_contain_text(
             "PRIVATE_NOT_FOR_PUBLICATION"
         )
-        self.page.get_by_role(
-            "button", name="Record as Already Held", exact=True
-        ).click()
+        self.page.get_by_role("button", name="Finish Meeting", exact=True).click()
+        expect(self.page.get_by_role("button", name="Prepare Minutes", exact=True)).to_be_visible()
         self.page.get_by_role("button", name="Prepare Minutes", exact=True).click()
         self.wait_field("community.meeting", self.meeting_id, "state", "minutes_draft")
         self.open_form()

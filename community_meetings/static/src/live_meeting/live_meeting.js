@@ -61,7 +61,7 @@ export class LiveMeeting extends Component {
     async load() {
         const [meetings, items, types, dissents, actions, resolutions, privateNotes] = await Promise.all([
             this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "company_id", "start_datetime", "end_datetime", "actual_start_datetime", "actual_end_datetime", "actual_duration_minutes", "organizer_id", "secretary_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id", "duration_minutes"]),
-            this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "sequence", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "deferral_reason", "topic_id", "priority", "deadline", "estimated_minutes", "actual_minutes", "actual_seconds", "actual_started_at", "review_next_meeting", "is_followup", "topic_state", "topic_outcome"], { order: "sequence, id" }),
+            this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "sequence", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "deferral_reason", "presenter_partner_id", "priority", "deadline", "estimated_minutes", "actual_minutes", "actual_seconds", "actual_started_at", "has_started", "review_next_meeting", "is_followup", "topic_state", "topic_outcome"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.agenda.type", [], ["name", "behavior", "active"], { order: "sequence, name", context: { active_test: false } }),
             this.orm.searchRead("community.meeting.dissent", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "body", "kind", "author_display_name", "author_partner_id"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.action", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "name", "description", "responsible_user_id", "deadline", "state"], { order: "deadline, id" }),
@@ -82,7 +82,7 @@ export class LiveMeeting extends Component {
         this.state.types = types;
         this.state.dissents = dissents;
         this.state.defaultOwner = (await this.orm.call("community.meeting.action", "default_get", [["responsible_user_id"]])).responsible_user_id;
-        const topicIds = items.map((i) => i.topic_id[0]);
+        const topicIds = items.map((i) => i.topic_id?.[0]).filter(Boolean);
         this.state.actions = await this.orm.searchRead("community.meeting.action", [["topic_id", "in", topicIds]], ["agenda_item_id", "topic_id", "name", "description", "responsible_user_id", "deadline", "state", "followup_kind", "followup_activity_type_id", "followup_activity_id", "followup_activity_completed_on"], { order: "deadline, id" });
         this.state.incoming = await this.orm.searchRead("community.meeting.carryover", [["destination_meeting_id", "=", this.meetingId], ["status", "in", ["pending", "proposed"]]], ["origin_name", "origin_meeting_id", "reason"]);
         this.state.resolutions = resolutions;
@@ -299,6 +299,12 @@ export class LiveMeeting extends Component {
         return item.disposition !== "closed"
             && !(this.typeBehavior(item) === "information" && item.disposition === "discussed");
     }
+    setPointEditorsEditable(item, editable) {
+        document.querySelectorAll(`#agenda-card-${item.id} [contenteditable]`).forEach((editor) => {
+            editor.setAttribute("contenteditable", editable ? "true" : "false");
+            editor.setAttribute("aria-readonly", editable ? "false" : "true");
+        });
+    }
     toggle(item) {
         this.state.activeItemId = item.id;
         this.state.expanded[item.id] = !this.state.expanded[item.id];
@@ -318,7 +324,10 @@ export class LiveMeeting extends Component {
         for (const item of running) {
             await this.orm.call("community.meeting.agenda.item", "action_pause_timing", [[item.id]]);
         }
-        if (running.length) await this.refreshPointTiming();
+        if (running.length) {
+            await this.refreshPointTiming();
+            for (const item of running) this.setPointEditorsEditable(item, false);
+        }
         for (const item of this.state.items) this.state.expanded[item.id] = false;
         this.state.activeItemId = next.id;
         this.state.expanded[next.id] = true;
@@ -326,7 +335,7 @@ export class LiveMeeting extends Component {
     }
 
     async refreshPointTiming() {
-        const records = await this.orm.read("community.meeting.agenda.item", this.state.items.map((item) => item.id), ["actual_minutes", "actual_seconds", "actual_started_at"]);
+        const records = await this.orm.read("community.meeting.agenda.item", this.state.items.map((item) => item.id), ["actual_minutes", "actual_seconds", "actual_started_at", "has_started", "review_next_meeting"]);
         const byId = new Map(records.map((record) => [record.id, record]));
         for (const item of this.state.items) Object.assign(item, byId.get(item.id) || {});
     }
@@ -335,6 +344,7 @@ export class LiveMeeting extends Component {
         try {
             await this.orm.call("community.meeting.agenda.item", "action_start_timing", [[item.id]]);
             await this.refreshPointTiming();
+            this.setPointEditorsEditable(item, true);
             for (const point of this.state.items) this.state.expanded[point.id] = false;
             this.state.activeItemId = item.id;
             this.state.expanded[item.id] = true;
@@ -345,8 +355,10 @@ export class LiveMeeting extends Component {
 
     async pausePoint(item) {
         try {
+            if (!await this.flushEditors()) return;
             await this.orm.call("community.meeting.agenda.item", "action_pause_timing", [[item.id]]);
             await this.refreshPointTiming();
+            this.setPointEditorsEditable(item, false);
         } catch (error) {
             this.notification.add(_t("The point timer could not be paused."), { type: "danger" });
         }
@@ -393,8 +405,9 @@ export class LiveMeeting extends Component {
     async updateItem(item, field, value) {
         const normalized = field === "agenda_type_id" ? Number(value) : value;
         return this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], { [field]: normalized }, async () => {
-            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "review_next_meeting", "actual_minutes", "actual_seconds", "actual_started_at"]);
+            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "review_next_meeting", "actual_minutes", "actual_seconds", "actual_started_at", "has_started"]);
             Object.assign(item, saved);
+            if (!item.actual_started_at) this.setPointEditorsEditable(item, false);
             this.state.editingTypes[item.id] = false;
         });
     }
@@ -420,8 +433,9 @@ export class LiveMeeting extends Component {
             values = { disposition: value };
         }
         return this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], values, async () => {
-            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result"]);
+            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "actual_started_at", "actual_minutes", "actual_seconds"]);
             Object.assign(item, saved);
+            if (!item.actual_started_at) this.setPointEditorsEditable(item, false);
         });
     }
 
@@ -445,8 +459,9 @@ export class LiveMeeting extends Component {
             review_next_meeting: true,
             ...(this.typeBehavior(item) === "decision" ? { decision_result: "pending" } : {}),
         }, async () => {
-            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "deferral_reason", "review_next_meeting"]);
+            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "deferral_reason", "review_next_meeting", "actual_started_at", "actual_minutes", "actual_seconds"]);
             Object.assign(item, saved);
+            if (!item.actual_started_at) this.setPointEditorsEditable(item, false);
             delete this.state.deferrals[item.id];
         });
     }
@@ -649,6 +664,10 @@ export class LiveMeeting extends Component {
             this.state.meeting.state = state;
             const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["actual_start_datetime", "actual_end_datetime", "actual_duration_minutes"]);
             Object.assign(this.state.meeting, saved);
+            if (state === "held") {
+                await this.refreshPointTiming();
+                for (const item of this.state.items) this.setPointEditorsEditable(item, false);
+            }
         } catch (error) {
             this.notification.add("The meeting status could not be changed. Please retry.", { type: "danger" });
         } finally {

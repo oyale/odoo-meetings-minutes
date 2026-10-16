@@ -100,16 +100,41 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             self.rpc("community.meeting.resolution", "unlink", [resolutions])
         self.rpc("community.meeting", "unlink", [[self.meeting_id]])
 
-    def card(self, kind):
-        return self.page.locator(".o_live_agenda_card").filter(has_text="Browser %s case" % kind.title())
+    def card(self, kind, begin=True):
+        card = self.page.locator(".o_live_agenda_card").filter(has_text="Browser %s case" % kind.title())
+        if begin:
+            expand = card.locator(".o_live_expand")
+            if expand.get_attribute("aria-expanded") == "false":
+                expand.click()
+            start_button = self.page.get_by_role("button", name="Start Meeting")
+            if start_button.count():
+                if start_button.is_enabled():
+                    start_button.click()
+                expect(self.page.get_by_role("button", name="Finish Meeting")).to_be_visible()
+            item = self.record("community.meeting.agenda.item", self.item_ids[kind], ["has_started", "disposition", "actual_started_at"])
+            if not item["actual_started_at"] and item["disposition"] not in ("closed", "discussed"):
+                button_name = "Resume point" if item["has_started"] else "Begin point"
+                card.get_by_role("button", name=button_name).click()
+                expect(card.get_by_role("button", name="Pause point")).to_be_visible()
+        return card
 
     def outcome(self, kind):
-        return self.card(kind).locator(".o_live_outcome_badge")
+        return self.card(kind, begin=False).locator(".o_live_outcome_badge")
 
     def record(self, model, record_id, fields):
         return self.rpc(model, "read", [[record_id], fields])[0]
 
+    def wait_timer(self, item_id, running):
+        deadline = time.monotonic() + 8
+        while time.monotonic() < deadline:
+            value = self.record("community.meeting.agenda.item", item_id, ["actual_started_at"])["actual_started_at"]
+            if bool(value) == running:
+                return
+            time.sleep(0.1)
+        self.fail("Point timer did not reach running=%r" % running)
+
     def test_scroll_and_meeting_wide_records_visibility(self):
+        self.card("discussion")
         main = self.page.locator("main.o_community_live_meeting")
         self.assertEqual(main.evaluate("el => getComputedStyle(el).overflowY"), "auto")
         self.assertGreater(main.evaluate("el => el.scrollHeight - el.clientHeight"), 0)
@@ -157,10 +182,12 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
 
     def test_point_timer_navigation_collapses_and_resume_accumulates(self):
         self.page.get_by_role("button", name="Start Meeting").click()
-        first = self.card("information")
-        second = self.card("discussion")
+        expect(self.page.get_by_role("button", name="Finish Meeting")).to_be_visible()
+        first = self.card("information", begin=False)
+        second = self.card("discussion", begin=False)
         first.get_by_role("button", name="Begin point").click()
         expect(first.get_by_text("Point in progress", exact=True)).to_be_visible()
+        self.wait_timer(self.item_ids["information"], True)
         started = self.record(
             "community.meeting.agenda.item", self.item_ids["information"],
             ["actual_started_at"],
@@ -188,23 +215,66 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.assertGreaterEqual(first_seconds, 120)
 
         second.get_by_role("button", name="Begin point").click()
+        expect(second.get_by_text("Point in progress", exact=True)).to_be_visible()
         self.page.get_by_role("button", name="Previous agenda point").click()
-        first.get_by_role("button", name="Begin point").click()
+        first.get_by_role("button", name="Resume point").click()
+        expect(first.get_by_role("button", name="Pause point")).to_be_visible()
+        self.assertTrue(
+            self.record("community.meeting.agenda.item", self.item_ids["information"], ["actual_started_at"])["actual_started_at"]
+        )
         self.rpc("community.meeting.agenda.item", "write", [
             [self.item_ids["information"]],
             {"actual_started_at": (datetime.utcnow() - timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:%S")},
         ])
+        self.assertTrue(self.record(
+            "community.meeting.agenda.item", self.item_ids["information"], ["actual_started_at"]
+        )["actual_started_at"])
         first.get_by_role("button", name="Pause point").click()
+        self.wait_timer(self.item_ids["information"], False)
         timing = self.record(
             "community.meeting.agenda.item", self.item_ids["information"],
             ["actual_seconds", "actual_minutes", "actual_started_at"],
         )
-        self.assertGreaterEqual(timing["actual_seconds"], first_seconds + 60)
+        self.assertGreaterEqual(
+            timing["actual_seconds"], first_seconds + 60,
+            "Timer did not accumulate after resume: first=%r final=%r"
+            % (first_seconds, timing),
+        )
         self.assertGreaterEqual(timing["actual_minutes"], 3)
         self.assertFalse(timing["actual_started_at"])
 
+    def test_point_live_editing_requires_begin_and_pause_is_read_only(self):
+        card = self.card("discussion", begin=False)
+        self.assertEqual(
+            card.locator('[contenteditable="true"][aria-label="Discussion notes"]').count(),
+            0,
+            "Unexpected editor before Begin: item=%r; editors=%r"
+            % (
+                self.record("community.meeting.agenda.item", self.item_ids["discussion"], ["has_started", "actual_started_at"]),
+                card.locator('[contenteditable="true"]').evaluate_all("els => els.map(el => el.outerHTML)"),
+            ),
+        )
+        self.assertEqual(card.get_by_role("button", name="Add agreement").count(), 0)
+        self.page.get_by_role("button", name="Start Meeting").click()
+        card.get_by_role("button", name="Begin point").click()
+        expect(card.locator('[contenteditable="true"][aria-label="Discussion notes"]')).to_be_visible()
+        card.get_by_role("button", name="Pause point").click()
+        expect(card.get_by_text("Point paused. Its live record is read-only until you resume it.")).to_be_visible()
+        self.assertEqual(
+            card.locator('[contenteditable="true"][aria-label="Discussion notes"]').count(),
+            0,
+            "Editor remained after pause: item=%r; editor=%r; card=%r"
+            % (
+                self.record("community.meeting.agenda.item", self.item_ids["discussion"], ["has_started", "actual_started_at"]),
+                card.locator('[contenteditable="true"][aria-label="Discussion notes"]').evaluate_all("els => els.map(el => el.outerHTML)"),
+                card.locator(".o_live_card_body").inner_text(),
+            ),
+        )
+        self.assertEqual(card.get_by_role("button", name="Add agreement").count(), 0)
+
     def test_decision_can_be_undone_during_running_meeting(self):
         self.page.get_by_role("button", name="Start Meeting").click()
+        expect(self.page.get_by_role("button", name="Finish Meeting")).to_be_visible()
         card = self.card("decision")
         card.get_by_role("button", name="Approve decision").click()
         card.get_by_placeholder("Agreement title").fill("Approve during live session")

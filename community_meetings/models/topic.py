@@ -220,6 +220,7 @@ class AgendaParticipation(models.Model):
     actual_minutes = fields.Integer(string="Actual minutes", copy=False)
     actual_seconds = fields.Integer(copy=False)
     actual_started_at = fields.Datetime(copy=False)
+    has_started = fields.Boolean(readonly=True, copy=False)
     review_next_meeting = fields.Boolean(string="Review at next meeting", copy=False)
     is_followup = fields.Boolean(readonly=True, copy=False)
     topic_state = fields.Selection(related="topic_id.state")
@@ -247,6 +248,8 @@ class AgendaParticipation(models.Model):
         prepared = []
         for original in vals_list:
             vals = dict(original)
+            if vals.get("has_started"):
+                raise UserError(_("A point can only be started from the live meeting."))
             meeting = self.env["community.meeting"].browse(vals.get("meeting_id"))
             meeting.check_access("write")
             topic = self.env["community.meeting.topic"].browse(vals.get("topic_id"))
@@ -303,6 +306,8 @@ class AgendaParticipation(models.Model):
         return True
 
     def write(self, vals):
+        if "has_started" in vals:
+            raise UserError(_("Point start status is managed by the live meeting."))
         if "topic_id" in vals or "is_followup" in vals:
             raise UserError(_("A participation cannot be moved to another point."))
         if vals.get("disposition") in ("open", "discussed", "deferred"):
@@ -381,7 +386,7 @@ class AgendaParticipation(models.Model):
                     {"actual_seconds": item.actual_minutes * 60}
                 )
             super(AgendaParticipation, item).write(
-                {"actual_started_at": fields.Datetime.now()}
+                {"actual_started_at": fields.Datetime.now(), "has_started": True}
             )
         return True
 

@@ -163,6 +163,23 @@ class TestMeetingDomain(TransactionCase):
         first.action_pause_timing()
         self.assertGreaterEqual(first.actual_minutes, 3)
 
+    def test_paused_unresolved_live_point_is_offered_at_next_meeting(self):
+        meeting = self.env["community.meeting"].create({
+            "name": "Carry paused point",
+            "start_datetime": fields.Datetime.now() + timedelta(days=1),
+        })
+        item = self.env["community.meeting.agenda.item"].create({
+            "meeting_id": meeting.id, "name": "Unfinished discussion",
+        })
+        meeting.action_schedule()
+        meeting.action_start_meeting()
+        item.action_start_timing()
+        item.action_pause_timing()
+        self.assertTrue(item.has_started)
+        self.assertFalse(item.review_next_meeting)
+        meeting.action_mark_held()
+        self.assertTrue(item.review_next_meeting)
+
     def test_live_decision_can_be_undone_and_agreement_edits_sync(self):
         meeting = self.env["community.meeting"].create({
             "name": "Live decision", "start_datetime": "2026-11-01 10:00:00",
