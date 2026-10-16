@@ -18,7 +18,7 @@ export class LiveMeeting extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
-        this.state = useState({ loading: true, saving: 0, saveError: false, submitting: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], expanded: {}, newDissent: {}, newAction: {}, attendees: [] });
+        this.state = useState({ loading: true, saving: 0, saveError: false, submitting: {}, deferrals: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], expanded: {}, newDissent: {}, newAction: {}, attendees: [] });
         this.pendingWrites = new Map();
         this.beforeUnload = (ev) => {
             if (this.pendingWrites.size || Object.values(this.state.submitting).some(Boolean)) {
@@ -36,7 +36,7 @@ export class LiveMeeting extends Component {
 
     async load() {
         const [meetings, items, types, dissents, actions] = await Promise.all([
-            this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "start_datetime", "end_datetime", "organizer_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes"]),
+            this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "start_datetime", "end_datetime", "organizer_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id"]),
             this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "sequence", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "deferral_reason"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.agenda.type", [], ["name", "behavior", "active"], { order: "sequence, name", context: { active_test: false } }),
             this.orm.searchRead("community.meeting.dissent", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "body", "kind", "author_display_name", "author_partner_id"], { order: "sequence, id" }),
@@ -99,6 +99,11 @@ export class LiveMeeting extends Component {
     }
 
     async updateOutcome(item, value) {
+        if (value === "deferred") {
+            this.state.deferrals[item.id] = { reason: item.deferral_reason || "" };
+            this.state.expanded[item.id] = true;
+            return;
+        }
         let values;
         if (this.typeBehavior(item) === "decision") {
             values = value === "deferred"
@@ -113,6 +118,48 @@ export class LiveMeeting extends Component {
             const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result"]);
             Object.assign(item, saved);
         });
+    }
+
+    setDeferralReason(item, value) {
+        this.state.deferrals[item.id] ||= { reason: item.deferral_reason || "" };
+        this.state.deferrals[item.id].reason = value;
+    }
+
+    cancelDeferral(item) { delete this.state.deferrals[item.id]; }
+
+    async saveDeferral(item) {
+        const reason = (this.state.deferrals[item.id]?.reason || "").trim();
+        if (!reason) {
+            this.notification.add("Add a reason before postponing this point.", { type: "warning" });
+            return;
+        }
+        await this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], {
+            disposition: "deferred", deferral_reason: reason,
+            ...(this.typeBehavior(item) === "decision" ? { decision_result: "pending" } : {}),
+        }, async () => {
+            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "deferral_reason"]);
+            Object.assign(item, saved);
+            delete this.state.deferrals[item.id];
+        });
+    }
+
+    async requestCarryover(item) {
+        const reason = (this.state.deferrals[item.id]?.reason || "").trim();
+        if (!reason) {
+            this.notification.add("Add a reason before requesting a carryover.", { type: "warning" });
+            return;
+        }
+        try {
+            const action = await this.orm.call("community.meeting.agenda.item", "action_request_followup", [[item.id]]);
+            action.context = { ...action.context, default_reason: reason };
+            await this.actionService.doAction(action, { onClose: async () => {
+                const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "deferral_reason"]);
+                Object.assign(item, saved);
+                delete this.state.deferrals[item.id];
+            } });
+        } catch (error) {
+            this.notification.add("Could not open the carryover request.", { type: "danger" });
+        }
     }
 
     async saveItemText(item, field, ev) {

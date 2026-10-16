@@ -355,8 +355,9 @@ class CommunityMeetingCarryoverWizard(models.TransientModel):
     origin_meeting_id = fields.Many2one("community.meeting", required=True, readonly=True)
     company_id = fields.Many2one(related="origin_meeting_id.company_id", readonly=True)
     series_id = fields.Many2one(related="origin_meeting_id.series_id", readonly=True)
+    source_start_datetime = fields.Datetime(related="origin_meeting_id.start_datetime", readonly=True)
     destination_meeting_id = fields.Many2one(
-        "community.meeting", domain="[('company_id', '=', company_id), ('state', 'in', ['draft', 'scheduled'])]",
+        "community.meeting", domain="[('company_id', '=', company_id), ('state', 'in', ['draft', 'scheduled']), ('start_datetime', '>', source_start_datetime)]",
     )
     reason = fields.Text()
 

@@ -53,6 +53,7 @@
                     <field name="origin_meeting_id"/>
                     <field name="company_id" invisible="1"/>
                     <field name="series_id" invisible="1"/>
+                    <field name="source_start_datetime" invisible="1"/>
                     <field name="destination_meeting_id"/>
                     <field name="reason"/>
                 </group>

@@ -51,6 +51,16 @@
                             <label class="form-label" t-att-for="'discussion-' + item.id">Discussion notes</label>
                             <textarea t-att-id="'discussion-' + item.id" class="form-control" rows="4" t-att-value="item.discussion_notes || ''" t-att-disabled="locked" t-on-change="(ev) => this.saveItemText(item, 'discussion_notes', ev)" placeholder="Record what was discussed…"/>
                             <div t-if="item.disposition === 'deferred'" class="mt-3"><strong>Postponed</strong><p t-if="item.deferral_reason" t-out="item.deferral_reason"/></div>
+                            <div t-if="state.deferrals[item.id]" class="o_live_subsection o_live_deferral">
+                                <label class="form-label" t-att-for="'deferral-' + item.id">Reason for postponing</label>
+                                <textarea t-att-id="'deferral-' + item.id" class="form-control" rows="2" t-att-value="state.deferrals[item.id].reason" t-on-input="(ev) => this.setDeferralReason(item, ev.target.value)"/>
+                                <div class="o_live_add_row mt-2">
+                                    <button class="btn btn-primary" t-on-click="() => this.saveDeferral(item)">Leave postponed</button>
+                                    <button class="btn btn-outline-primary" t-if="state.meeting.series_id" t-on-click="() => this.requestCarryover(item)">Request next meeting carryover</button>
+                                    <button class="btn btn-outline-primary" t-if="!state.meeting.series_id" t-on-click="() => this.requestCarryover(item)">Choose destination meeting</button>
+                                    <button class="btn btn-link" t-on-click="() => this.cancelDeferral(item)">Cancel</button>
+                                </div>
+                            </div>
                             <div class="o_live_subsection">
                                 <h3>Dissents and reservations</h3>
                                 <ul t-if="pointDissents(item).length" class="o_live_inline_records">
