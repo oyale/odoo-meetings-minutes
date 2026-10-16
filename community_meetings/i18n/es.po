@@ -82,6 +82,42 @@ msgstr "Añadir disenso"
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Add meeting records"
+msgstr "Añadir registros de la reunión"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Pause Meeting"
+msgstr "Pausar reunión"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Resume Meeting"
+msgstr "Reanudar reunión"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Could not identify the meeting to open. Return to the Meetings list and open it again."
+msgstr "No se pudo identificar la reunión. Vuelve a la lista de reuniones y ábrela de nuevo."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "The meeting could not be paused."
+msgstr "No se pudo pausar la reunión."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "The meeting could not be resumed."
+msgstr "No se pudo reanudar la reunión."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Add private note"
 msgstr "Añadir nota privada"
 

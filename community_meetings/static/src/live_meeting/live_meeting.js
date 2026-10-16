@@ -54,13 +54,25 @@ export class LiveMeeting extends Component {
         });
     }
 
-    get meetingId() { return this.props.action.params.meeting_id; }
+    get meetingId() {
+        const action = this.props.action || {};
+        const routeIds = [...window.location.pathname.matchAll(/(?:^|\/)community\.meeting\/(\d+)(?=\/|$)/g)];
+        return action.params?.meeting_id || action.context?.active_id || action.context?.params?.id
+            || Number(routeIds.at(-1)?.[1]) || false;
+    }
     get locked() { return ["approved", "cancelled"].includes(this.state.meeting.state); }
+    get meetingPaused() { return Boolean(this.state.meeting.actual_paused_at); }
+    get readOnly() { return this.locked || this.meetingPaused; }
     get hasUnsavedEditors() { return Object.values(this.state.unsavedEditors).some(Boolean); }
 
     async load() {
+        if (!this.meetingId) {
+            this.state.loading = false;
+            this.notification.add(_t("Could not identify the meeting to open. Return to the Meetings list and open it again."), { type: "danger" });
+            return;
+        }
         const [meetings, items, types, dissents, actions, resolutions, privateNotes] = await Promise.all([
-            this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "company_id", "start_datetime", "end_datetime", "actual_start_datetime", "actual_end_datetime", "actual_duration_minutes", "organizer_id", "secretary_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id", "duration_minutes"]),
+            this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "company_id", "start_datetime", "end_datetime", "actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_end_datetime", "actual_duration_minutes", "organizer_id", "secretary_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id", "duration_minutes"]),
             this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "sequence", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "deferral_reason", "presenter_partner_id", "priority", "deadline", "estimated_minutes", "actual_minutes", "actual_seconds", "actual_started_at", "has_started", "review_next_meeting", "is_followup", "topic_state", "topic_outcome"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.agenda.type", [], ["name", "behavior", "active"], { order: "sequence, name", context: { active_test: false } }),
             this.orm.searchRead("community.meeting.dissent", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "body", "kind", "author_display_name", "author_partner_id"], { order: "sequence, id" }),
@@ -129,6 +141,12 @@ export class LiveMeeting extends Component {
         this.editorMeta.set(key, { recordId, model, field });
         await wysiwyg.startEdition();
         wysiwyg.$editable[0].classList.add("odoo-editor-qweb");
+        if (model === "community.meeting.agenda.item" && field === "discussion_notes") {
+            const item = this.state.items.find((row) => row.id === recordId);
+            const editable = Boolean(item?.actual_started_at) && !this.locked && !this.meetingPaused;
+            wysiwyg.$editable[0].setAttribute("contenteditable", editable ? "true" : "false");
+            wysiwyg.$editable[0].setAttribute("aria-readonly", editable ? "false" : "true");
+        }
         const label = key === "minutes_notes" ? _t("Meeting minutes")
             : key.startsWith("discussion_notes:") ? _t("Discussion notes")
                 : key.startsWith("dissent:") ? _t("Dissent or reservation")
@@ -711,7 +729,7 @@ export class LiveMeeting extends Component {
         this.state.submitting[key] = true;
         try {
             await this.orm.call("community.meeting", "action_start_meeting", [[this.meetingId]]);
-            const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["actual_start_datetime", "actual_duration_minutes"]);
+            const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_duration_minutes"]);
             Object.assign(this.state.meeting, saved);
         } catch (error) {
             this.notification.add("The meeting could not be started. Please retry.", { type: "danger" });
@@ -719,6 +737,24 @@ export class LiveMeeting extends Component {
             this.state.submitting[key] = false;
         }
     }
+    async setMeetingPaused(paused) {
+        const key = `meeting:${this.meetingId}`;
+        if (this.state.submitting[key] || !await this.flushEditors()) return;
+        this.state.submitting[key] = true;
+        try {
+            await this.orm.call("community.meeting", paused ? "action_pause_meeting" : "action_resume_meeting", [[this.meetingId]]);
+            const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["actual_paused_at", "actual_paused_seconds", "actual_duration_minutes"]);
+            Object.assign(this.state.meeting, saved);
+            await this.refreshPointTiming();
+            if (paused) for (const item of this.state.items) this.setPointEditorsEditable(item, false);
+        } catch (error) {
+            this.notification.add(paused ? _t("The meeting could not be paused.") : _t("The meeting could not be resumed."), { type: "danger" });
+        } finally {
+            this.state.submitting[key] = false;
+        }
+    }
+    pauseMeeting() { return this.setMeetingPaused(true); }
+    resumeMeeting() { return this.setMeetingPaused(false); }
     prepareMinutes() { return this.transition("action_draft_minutes", "minutes_draft"); }
     durationLabel(minutes) { return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`; }
     async editPoint(item) {

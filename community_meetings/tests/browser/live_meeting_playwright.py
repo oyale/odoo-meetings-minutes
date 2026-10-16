@@ -243,6 +243,12 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.assertFalse(timing["actual_started_at"])
 
     def test_point_live_editing_requires_begin_and_pause_is_read_only(self):
+        self.rpc("community.meeting.agenda.item", "write", [
+            [self.item_ids["discussion"]],
+            {"description": "Context that belongs immediately before the live notes."},
+        ])
+        self.page.reload(wait_until="domcontentloaded")
+        expect(self.page.locator(".o_community_live_meeting")).to_be_visible()
         card = self.card("discussion", begin=False)
         self.assertEqual(
             card.locator('[contenteditable="true"][aria-label="Discussion notes"]').count(),
@@ -257,6 +263,15 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.page.get_by_role("button", name="Start Meeting").click()
         card.get_by_role("button", name="Begin point").click()
         expect(card.locator('[contenteditable="true"][aria-label="Discussion notes"]')).to_be_visible()
+        self.assertTrue(
+            card.locator(".o_live_discussion_notes").evaluate(
+                "el => el.previousElementSibling?.classList.contains('o_live_planned')"
+            ),
+            "Discussion notes should sit directly below the point description.",
+        )
+        record_actions = card.locator(".o_live_record_actions")
+        expect(record_actions.get_by_role("button", name="Add dissent")).to_be_visible()
+        expect(record_actions.get_by_role("button", name="Add agreement")).to_be_visible()
         card.get_by_role("button", name="Pause point").click()
         expect(card.get_by_text("Point paused", exact=True)).to_be_visible()
         self.assertEqual(
@@ -270,6 +285,46 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             ),
         )
         self.assertEqual(card.get_by_role("button", name="Add agreement").count(), 0)
+
+        editor = card.locator('[aria-label="Discussion notes"]')
+        for _ in range(3):
+            card.get_by_role("button", name="Resume point").click()
+            expect(card.get_by_role("button", name="Pause point")).to_be_visible()
+            self.assertEqual(editor.count(), 1, "Discussion editor was duplicated after resuming a point")
+            card.get_by_role("button", name="Pause point").click()
+            expect(card.get_by_text("Point paused", exact=True)).to_be_visible()
+            self.assertEqual(editor.count(), 1, "Discussion editor was recreated after pausing a point")
+
+    def test_live_meeting_survives_browser_refresh(self):
+        self.assertLessEqual(
+            self.page.url.count("/community.meeting/"),
+            1,
+            "Opening the live meeting retained a deeply nested record route: %s" % self.page.url,
+        )
+        self.page.reload(wait_until="domcontentloaded")
+        expect(self.page.locator(".o_community_live_meeting")).to_be_visible(timeout=30000)
+        expect(self.page.locator(".o_live_agenda_card")).to_have_count(4)
+        self.assertFalse(
+            any("Invalid ids list" in error for error in self.console_errors[self.errors_before:]),
+            "Refreshing the live meeting lost its meeting id: %r" % self.console_errors[self.errors_before:],
+        )
+
+    def test_meeting_pause_and_resume_locks_points_without_finishing(self):
+        self.page.get_by_role("button", name="Start Meeting").click()
+        card = self.card("discussion", begin=False)
+        card.get_by_role("button", name="Begin point").click()
+        editor = card.locator('[aria-label="Discussion notes"]')
+        expect(editor).to_have_attribute("contenteditable", "true")
+        self.page.get_by_role("button", name="Pause Meeting").click()
+        expect(self.page.get_by_role("button", name="Resume Meeting")).to_be_visible()
+        expect(editor).to_have_attribute("contenteditable", "false")
+        meeting = self.record("community.meeting", self.meeting_id, ["actual_paused_at", "actual_end_datetime"])
+        self.assertTrue(meeting["actual_paused_at"])
+        self.assertFalse(meeting["actual_end_datetime"])
+        self.page.get_by_role("button", name="Resume Meeting").click()
+        expect(self.page.get_by_role("button", name="Pause Meeting")).to_be_visible()
+        expect(card.get_by_role("button", name="Resume point")).to_be_visible()
+        self.assertFalse(self.record("community.meeting", self.meeting_id, ["actual_paused_at"])["actual_paused_at"])
 
     def test_decision_can_be_undone_during_running_meeting(self):
         self.page.get_by_role("button", name="Start Meeting").click()

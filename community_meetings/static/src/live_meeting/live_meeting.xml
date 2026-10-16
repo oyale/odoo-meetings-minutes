@@ -6,6 +6,8 @@
                 <button class="btn btn-secondary" t-att-disabled="state.saving > 0" t-on-click="close">Back to Meetings</button>
                 <div class="o_live_workflow_buttons">
                     <button t-if="state.meeting.state === 'scheduled' and !state.meeting.actual_start_datetime" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="startMeeting">Start Meeting</button>
+                    <button t-if="state.meeting.state === 'scheduled' and state.meeting.actual_start_datetime and !meetingPaused" class="btn btn-outline-secondary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="pauseMeeting">Pause Meeting</button>
+                    <button t-if="state.meeting.state === 'scheduled' and meetingPaused" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="resumeMeeting">Resume Meeting</button>
                     <button t-if="state.meeting.state === 'scheduled' and state.meeting.actual_start_datetime" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="markHeld">Finish Meeting</button>
                     <button t-if="state.meeting.state === 'scheduled' and !state.meeting.actual_start_datetime" class="btn btn-outline-secondary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="markHeld">Record as Already Held</button>
                     <button t-if="state.meeting.state === 'held'" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="prepareMinutes">Prepare Minutes</button>
@@ -34,7 +36,7 @@
                         <div><strong>Minutes secretary</strong><span><t t-out="label(state.meeting.secretary_id)"/></span></div>
                         <div><strong>Location</strong><span><t t-out="state.meeting.location || 'Not set'"/></span></div>
                         <div class="o_live_attendees"><strong>Attendees</strong><span><t t-out="attendees()"/></span>
-                            <button t-if="!locked and !state.attendeeEditorOpen" class="btn btn-link btn-sm" t-on-click="toggleAttendeeEditor">Edit attendees</button>
+                            <button t-if="!readOnly and !state.attendeeEditorOpen" class="btn btn-link btn-sm" t-on-click="toggleAttendeeEditor">Edit attendees</button>
                         </div>
                     </div>
                     <div t-if="state.attendeeEditorOpen" class="o_live_attendee_editor">
@@ -74,7 +76,7 @@
                 <section class="o_live_agenda">
                     <div class="o_live_section_title">
                         <div><h2>Agenda</h2><span class="text-muted"><t t-out="completedCount"/> of <t t-out="state.items.length"/> points completed</span></div>
-                        <div class="o_live_agenda_tools"><button t-if="!locked" class="btn btn-primary" t-on-click="addPoint">Add Point</button>
+                        <div class="o_live_agenda_tools"><button t-if="!readOnly" class="btn btn-primary" t-on-click="addPoint">Add Point</button>
                             <button class="btn btn-outline-secondary" t-att-disabled="!visibleItems.length" t-on-click="() => this.navigateItem(-1)" title="Previous point" aria-label="Previous agenda point"><i class="fa fa-arrow-up" aria-hidden="true"/></button>
                             <button class="btn btn-outline-secondary" t-att-disabled="!visibleItems.length" t-on-click="() => this.navigateItem(1)" title="Next point" aria-label="Next agenda point"><i class="fa fa-arrow-down" aria-hidden="true"/></button>
                             <button class="btn btn-outline-secondary" t-att-aria-pressed="state.showPendingOnly" t-on-click="togglePending">Pending only</button>
@@ -91,13 +93,13 @@
                                 <span t-if="state.activeItemId === item.id" class="visually-hidden">Current agenda point</span>
                             </button>
                             <span t-if="!state.editingTypes[item.id] or !item.actual_started_at" class="badge text-bg-light o_live_type_badge"><t t-out="label(item.agenda_type_id)"/></span>
-                            <button t-if="item.actual_started_at and !locked and !state.editingTypes[item.id]" class="btn btn-link o_live_type_edit" t-on-click="() => this.toggleTypeEditor(item)" title="Change point type" aria-label="Change point type"><i class="fa fa-pencil" aria-hidden="true"/></button>
-                            <select t-if="state.editingTypes[item.id] and item.actual_started_at" class="form-select o_live_type" t-att-value="item.agenda_type_id[0]" t-att-disabled="locked" t-on-change="(ev) => this.updateItem(item, 'agenda_type_id', ev.target.value)" aria-label="Point type">
+                            <button t-if="item.actual_started_at and !readOnly and !state.editingTypes[item.id]" class="btn btn-link o_live_type_edit" t-on-click="() => this.toggleTypeEditor(item)" title="Change point type" aria-label="Change point type"><i class="fa fa-pencil" aria-hidden="true"/></button>
+                            <select t-if="state.editingTypes[item.id] and item.actual_started_at" class="form-select o_live_type" t-att-value="item.agenda_type_id[0]" t-att-disabled="readOnly" t-on-change="(ev) => this.updateItem(item, 'agenda_type_id', ev.target.value)" aria-label="Point type">
                                 <option t-foreach="state.types" t-as="type" t-key="type.id" t-att-value="type.id" t-att-disabled="!type.active"><t t-out="type.name"/><t t-if="!type.active"> (archived)</t></option>
                             </select>
                             <span t-if="item.priority !== '1'" t-att-class="'o_live_priority o_live_priority_' + item.priority" t-att-title="priorityLabel(item)" t-att-aria-label="priorityLabel(item)"><i class="fa fa-flag" aria-hidden="true"/><span class="visually-hidden" t-out="priorityLabel(item)"/></span>
                             <span class="badge o_live_outcome_badge" t-att-class="outcomeBadgeClass(item)"><t t-out="pointOutcomeLabel(item)"/></span>
-                            <div t-if="!locked and state.meeting.actual_start_datetime and !state.meeting.actual_end_datetime and canStartPoint(item)" class="o_live_point_timer">
+                            <div t-if="!readOnly and state.meeting.actual_start_datetime and !state.meeting.actual_end_datetime and canStartPoint(item)" class="o_live_point_timer">
                                 <span t-if="item.actual_started_at" class="badge text-bg-success">Point in progress</span>
                                 <span t-elif="item.has_started" class="badge text-bg-secondary">Point paused</span>
                                 <button t-if="!item.actual_started_at" class="btn btn-sm btn-outline-primary" t-on-click="(ev) => { ev.stopPropagation(); this.startPoint(item); }"><t t-if="item.has_started">Resume point</t><t t-else="">Begin point</t></button>
@@ -106,27 +108,27 @@
                         </div>
                         <div t-att-id="'agenda-panel-' + item.id" t-att-class="'o_live_card_body ' + (state.expanded[item.id] ? '' : 'd-none')">
                             <details t-if="item.description" class="o_live_planned" open="open"><summary>Planned topic</summary><div t-out="safeHtml(item.description)"/></details>
+                            <div t-if="item.has_started" class="o_live_subsection o_live_discussion_notes">
+                                <label class="form-label" t-att-for="'discussion-' + item.id">Discussion notes</label>
+                                <t t-if="locked"><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></t>
+                                <t t-else=""><t t-component="Wysiwyg" t-props="{ options: richTextOptions(item.discussion_notes, 'discussion_notes:' + item.id, 'community.meeting.agenda.item', item.id, 'discussion_notes'), editingValue: item.discussion_notes || '', startWysiwyg: richTextStarter('discussion_notes:' + item.id, item.id, 'community.meeting.agenda.item', 'discussion_notes') }"/></t>
+                            </div>
                             <div class="text-muted o_live_point_meta"><span t-if="item.presenter_partner_id">Proposed by <t t-out="label(item.presenter_partner_id)"/> · </span><span t-if="item.deadline">Due <t t-out="item.deadline"/> · </span><span t-if="item.estimated_minutes">Estimated <t t-out="item.estimated_minutes"/> min</span></div>
-                            <details t-if="item.actual_started_at and !locked" class="o_live_advanced"><summary>Point options</summary><button class="btn btn-link" t-on-click="() => this.editPoint(item)">Edit point details</button></details>
+                            <details t-if="item.actual_started_at and !readOnly" class="o_live_advanced"><summary>Point options</summary><button class="btn btn-link" t-on-click="() => this.editPoint(item)">Edit point details</button></details>
                             <t t-if="item.has_started">
-                              <t t-if="item.actual_started_at and !locked">
-                            <label t-if="!locked" class="form-check-label"><input class="form-check-input" type="checkbox" aria-label="Review at next meeting" t-att-checked="item.review_next_meeting" t-att-disabled="state.submitting['review:' + item.id]" t-on-change="(ev) => this.toggleReview(item, ev.target.checked)"/> Review at next meeting</label>
+                              <t t-if="item.actual_started_at and !readOnly">
+                            <label t-if="!readOnly" class="form-check-label"><input class="form-check-input" type="checkbox" aria-label="Review at next meeting" t-att-checked="item.review_next_meeting" t-att-disabled="state.submitting['review:' + item.id]" t-on-change="(ev) => this.toggleReview(item, ev.target.checked)"/> Review at next meeting</label>
                             <div t-if="item.is_followup" class="alert alert-light">Follow-up of a closed point: <t t-out="item.topic_outcome"/></div>
                             <div t-if="!item.is_followup" class="o_live_point_actions" role="group" aria-label="Change agenda point result">
-                                <button t-if="!locked and pointOutcome(item) !== 'deferred'" class="btn btn-outline-secondary" t-on-click="() => this.applyPointAction(item, 'deferred')" aria-label="Postpone agenda point"><i class="fa fa-clock-o" aria-hidden="true"/> Postpone</button>
-                                <button t-if="!locked and !item.is_followup and item.disposition !== 'open' and !state.reopening[item.id]" class="btn btn-outline-secondary" t-on-click="() => { state.reopening[item.id] = ''; }" aria-label="Undo point result"><i class="fa fa-undo" aria-hidden="true"/> Undo result</button>
+                                <button t-if="!readOnly and pointOutcome(item) !== 'deferred'" class="btn btn-outline-secondary" t-on-click="() => this.applyPointAction(item, 'deferred')" aria-label="Postpone agenda point"><i class="fa fa-clock-o" aria-hidden="true"/> Postpone</button>
+                                <button t-if="!readOnly and !item.is_followup and item.disposition !== 'open' and !state.reopening[item.id]" class="btn btn-outline-secondary" t-on-click="() => { state.reopening[item.id] = ''; }" aria-label="Undo point result"><i class="fa fa-undo" aria-hidden="true"/> Undo result</button>
                             </div>
-                            <div t-if="!locked and state.reopening[item.id] !== undefined" class="o_live_reopen_form">
+                            <div t-if="!readOnly and state.reopening[item.id] !== undefined" class="o_live_reopen_form">
                                 <label class="form-label" t-att-for="'reopen-reason-' + item.id">Why reopen this point?</label>
                                 <input t-att-id="'reopen-reason-' + item.id" class="form-control" t-att-value="state.reopening[item.id]" t-on-input="(ev) => this.setReopenReason(item, ev.target.value)"/>
                                 <button class="btn btn-primary" t-att-disabled="state.submitting['reopen:' + item.id]" t-on-click="() => this.reopenPoint(item)">Reopen point</button>
                                 <button class="btn btn-link" t-on-click="() => delete state.reopening[item.id]">Cancel</button>
                             </div>
-                            <label class="form-label" t-att-for="'discussion-' + item.id">Discussion notes</label>
-                            <t t-if="locked"><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></t>
-                            <t t-else="">
-                                <t t-component="Wysiwyg" t-props="{ options: richTextOptions(item.discussion_notes, 'discussion_notes:' + item.id, 'community.meeting.agenda.item', item.id, 'discussion_notes'), editingValue: item.discussion_notes || '', startWysiwyg: richTextStarter('discussion_notes:' + item.id, item.id, 'community.meeting.agenda.item', 'discussion_notes') }"/>
-                            </t>
                             <div t-if="item.disposition === 'deferred'" class="mt-3"><strong>Postponed</strong><p t-if="item.deferral_reason" t-out="item.deferral_reason"/></div>
                             <div t-if="state.deferrals[item.id]" class="o_live_subsection o_live_deferral">
                                 <label class="form-label" t-att-for="'deferral-' + item.id">Reason for postponing</label>
@@ -138,24 +140,27 @@
                                     <button class="btn btn-link" t-on-click="() => this.cancelDeferral(item)">Cancel</button>
                                 </div>
                             </div>
+                            <div class="o_live_record_actions" role="group" aria-label="Add meeting records">
+                                <button t-if="!readOnly and !state.panels[item.id]?.dissent" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.togglePanel(item, 'dissent')"><i class="fa fa-comment-o" aria-hidden="true"/> Add dissent</button>
+                                <button t-if="!readOnly and !state.panels[item.id]?.agreement and (typeBehavior(item) !== 'decision' or !decisionAgreement(item))" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.togglePanel(item, 'agreement')"><i class="fa fa-handshake-o" aria-hidden="true"/> Add agreement</button>
+                            </div>
                             <div class="o_live_subsection">
                                 <div class="o_live_record_list" t-if="pointDissents(item).length">
                                 <ul t-if="pointDissents(item).length" class="o_live_inline_records">
                                     <li t-foreach="pointDissents(item)" t-as="dissent" t-key="dissent.id" class="o_live_record_editor">
-                                        <input class="form-control" aria-label="Author" placeholder="Author" t-att-value="dissent.author_display_name || ''" t-att-disabled="locked" t-on-change="(ev) => this.updateDissent(dissent, 'author_display_name', ev.target.value || false)"/>
-                                        <select class="form-select" aria-label="Statement type" t-att-value="dissent.kind" t-att-disabled="locked" t-on-change="(ev) => this.updateDissent(dissent, 'kind', ev.target.value)">
+                                        <input class="form-control" aria-label="Author" placeholder="Author" t-att-value="dissent.author_display_name || ''" t-att-disabled="readOnly" t-on-change="(ev) => this.updateDissent(dissent, 'author_display_name', ev.target.value || false)"/>
+                                        <select class="form-select" aria-label="Statement type" t-att-value="dissent.kind" t-att-disabled="readOnly" t-on-change="(ev) => this.updateDissent(dissent, 'kind', ev.target.value)">
                                             <option value="dissent">Dissent</option><option value="reservation">Reservation</option>
                                         </select>
-                                        <label class="form-check-label"><input class="form-check-input" type="checkbox" t-att-checked="dissent.include_in_minutes" t-att-disabled="locked" t-on-change="(ev) => this.updateDissent(dissent, 'include_in_minutes', ev.target.checked)"/> Include in minutes</label>
+                                        <label class="form-check-label"><input class="form-check-input" type="checkbox" t-att-checked="dissent.include_in_minutes" t-att-disabled="readOnly" t-on-change="(ev) => this.updateDissent(dissent, 'include_in_minutes', ev.target.checked)"/> Include in minutes</label>
                                         <div t-if="locked or !state.editingRecords['dissent-' + dissent.id]" class="o_live_rich_readonly" t-out="safeHtml(dissent.body)"/>
                                         <t t-else=""><t t-component="Wysiwyg" t-props="{ options: richTextOptions(dissent.body, 'dissent:' + dissent.id, 'community.meeting.dissent', dissent.id, 'body'), editingValue: dissent.body || '', startWysiwyg: richTextStarter('dissent:' + dissent.id, dissent.id, 'community.meeting.dissent', 'body') }"/></t>
-                                        <button t-if="!locked" class="btn btn-link" t-on-click="() => this.toggleRecordEditor('dissent-' + dissent.id)"><t t-if="state.editingRecords['dissent-' + dissent.id]">Done editing</t><t t-else="">Edit statement</t></button>
+                                        <button t-if="!readOnly" class="btn btn-link" t-on-click="() => this.toggleRecordEditor('dissent-' + dissent.id)"><t t-if="state.editingRecords['dissent-' + dissent.id]">Done editing</t><t t-else="">Edit statement</t></button>
                                     </li>
                                 </ul>
                                 <p t-else="" class="text-muted">No dissent recorded.</p>
                                 </div>
-                                <button t-if="!locked and !state.panels[item.id]?.dissent" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.togglePanel(item, 'dissent')"><i class="fa fa-comment-o" aria-hidden="true"/> Add dissent</button>
-                                <div t-if="!locked and state.panels[item.id]?.dissent" class="o_live_add_row o_live_dissent_form">
+                                <div t-if="!readOnly and state.panels[item.id]?.dissent" class="o_live_add_row o_live_dissent_form">
                                     <input class="form-control" aria-label="Dissent author" placeholder="Name of the person expressing the dissent (optional)" t-att-value="state.newDissent[item.id]?.author_display_name || ''" t-on-input="(ev) => this.setDissent(item, 'author_display_name', ev.target.value)"/>
                                     <select class="form-select" aria-label="Dissent reason" t-att-value="state.newDissent[item.id]?.kind || 'dissent'" t-on-change="(ev) => this.setDissent(item, 'kind', ev.target.value)"><option value="dissent">Dissent</option><option value="reservation">Reservation</option></select>
                                     <textarea class="form-control" aria-label="Dissent statement" rows="2" placeholder="Record a dissent or reservation…" t-att-value="state.newDissent[item.id]?.body || ''" t-on-input="(ev) => this.setDissent(item, 'body', ev.target.value)"/>
@@ -171,14 +176,13 @@
                                     <span t-if="resolution.decision_outcome and resolution.status === 'active'" class="badge" t-att-class="resolution.decision_outcome === 'approved' ? 'text-bg-success' : 'text-bg-danger'"><t t-if="resolution.decision_outcome === 'approved'">Approved</t><t t-else="">Rejected</t> decision</span>
                                     <span t-elif="resolution.decision_outcome" class="badge text-bg-light">Withdrawn — <t t-if="resolution.decision_outcome === 'approved'">previously approved</t><t t-else="">previously rejected</t></span>
                                     <span t-else="" class="badge text-bg-light"><t t-out="resolution.status"/></span>
-                                    <button t-if="!locked and resolution.decision_outcome and resolution.status === 'active'" class="btn btn-outline-secondary" t-on-click="() => this.withdrawDecisionAgreement(item, resolution)">Withdraw decision agreement</button>
-                                    <button t-if="!locked and !resolution.decision_outcome" class="btn btn-link" t-on-click="() => this.requestRecordCarryover('community.meeting.resolution', resolution)">Follow up at another meeting</button>
+                                    <button t-if="!readOnly and resolution.decision_outcome and resolution.status === 'active'" class="btn btn-outline-secondary" t-on-click="() => this.withdrawDecisionAgreement(item, resolution)">Withdraw decision agreement</button>
+                                    <button t-if="!readOnly and !resolution.decision_outcome" class="btn btn-link" t-on-click="() => this.requestRecordCarryover('community.meeting.resolution', resolution)">Follow up at another meeting</button>
                                     <div t-if="locked or !state.editingRecords['resolution-' + resolution.id]" class="o_live_rich_readonly" t-out="safeHtml(resolution.body)"/>
                                     <t t-else=""><t t-component="Wysiwyg" t-props="{ options: richTextOptions(resolution.body, 'resolution:' + resolution.id, 'community.meeting.resolution', resolution.id, 'body'), editingValue: resolution.body || '', startWysiwyg: richTextStarter('resolution:' + resolution.id, resolution.id, 'community.meeting.resolution', 'body') }"/></t>
-                                    <button t-if="!locked and !resolution.decision_outcome" class="btn btn-link" t-on-click="() => this.toggleRecordEditor('resolution-' + resolution.id)"><t t-if="state.editingRecords['resolution-' + resolution.id]">Done editing</t><t t-else="">Edit agreement</t></button>
+                                    <button t-if="!readOnly and !resolution.decision_outcome" class="btn btn-link" t-on-click="() => this.toggleRecordEditor('resolution-' + resolution.id)"><t t-if="state.editingRecords['resolution-' + resolution.id]">Done editing</t><t t-else="">Edit agreement</t></button>
                                 </div>
-                                <button t-if="!locked and !state.panels[item.id]?.agreement and (typeBehavior(item) !== 'decision' or !decisionAgreement(item))" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.togglePanel(item, 'agreement')"><i class="fa fa-handshake-o" aria-hidden="true"/> Add agreement</button>
-                                <div t-if="!locked and state.panels[item.id]?.agreement" class="o_live_add_row o_live_resolution_form">
+                                <div t-if="!readOnly and state.panels[item.id]?.agreement" class="o_live_add_row o_live_resolution_form">
                                     <input t-att-id="'agreement-title-' + item.id" class="form-control" aria-label="Agreement title" placeholder="Agreement title" t-att-value="state.newResolution[item.id]?.title || ''" t-on-input="(ev) => this.setResolution(item, 'title', ev.target.value)"/>
                                     <select t-if="typeBehavior(item) === 'decision'" class="form-select" aria-label="New decision result" t-att-value="newDecisionOutcome(item)" t-on-change="(ev) => this.setResolution(item, 'decision_outcome', ev.target.value)"><option value="">Decision pending</option><option value="approved">Approved</option><option value="denied">Rejected</option></select>
                                     <textarea class="form-control" rows="2" placeholder="What was agreed?" t-att-value="state.newResolution[item.id]?.body || ''" t-on-input="(ev) => this.setResolution(item, 'body', ev.target.value)"/>
@@ -195,8 +199,8 @@
                                         <button class="btn btn-link" t-on-click="() => this.toggleRecordEditor('note-' + note.id)"><t t-if="state.editingRecords['note-' + note.id]">Done editing</t><t t-else="">Edit private note</t></button>
                                     </li>
                                 </ul>
-                                <button t-if="!locked and !state.panels[item.id]?.privateNote" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.togglePanel(item, 'privateNote')">Add private note</button>
-                                <div t-if="!locked and state.panels[item.id]?.privateNote" class="o_live_add_row">
+                                <button t-if="!readOnly and !state.panels[item.id]?.privateNote" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.togglePanel(item, 'privateNote')">Add private note</button>
+                                <div t-if="!readOnly and state.panels[item.id]?.privateNote" class="o_live_add_row">
                                     <textarea class="form-control" rows="2" aria-label="Private editorial note" placeholder="Add a private note for editors…" t-att-value="state.newPrivateNote[item.id] || ''" t-on-input="(ev) => this.setPrivateNote(item, ev.target.value)"/>
                                     <button class="btn btn-outline-secondary" t-att-disabled="state.submitting['private-note:' + item.id]" t-on-click="() => this.addPrivateNote(item)">Add private note</button>
                                     <button class="btn btn-link" t-on-click="() => this.togglePanel(item, 'privateNote')">Cancel</button>
@@ -226,12 +230,12 @@
                                                 <select class="form-select o_live_task_state" aria-label="Task status" t-att-value="task.state" t-on-change="(ev) => this.updateAction(task, 'state', ev.target.value)"><option value="open">Open</option><option value="in_progress">In progress</option><option value="done">Done</option><option value="cancelled">Cancelled</option></select>
                                             </label>
                                         </div>
-                                        <button t-if="!locked and item.topic_state === 'open' and task.agenda_item_id?.[0] === item.id" class="btn btn-sm btn-outline-danger mt-2" t-on-click="() => this.deleteFollowup(item, task)" aria-label="Delete follow-up"><i class="fa fa-trash" aria-hidden="true"/> Delete follow-up</button>
+                                        <button t-if="!readOnly and item.topic_state === 'open' and task.agenda_item_id?.[0] === item.id" class="btn btn-sm btn-outline-danger mt-2" t-on-click="() => this.deleteFollowup(item, task)" aria-label="Delete follow-up"><i class="fa fa-trash" aria-hidden="true"/> Delete follow-up</button>
                                     </li>
                                 </ul>
                                 <p t-else="" class="text-muted">No follow-up tasks.</p>
-                                <button t-if="!locked and !state.panels[item.id]?.followup" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.togglePanel(item, 'followup')"><i class="fa fa-tasks" aria-hidden="true"/> Add follow-up</button>
-                                <div t-if="!locked and state.panels[item.id]?.followup" class="o_live_add_row o_live_task_form">
+                                <button t-if="!readOnly and !state.panels[item.id]?.followup" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.togglePanel(item, 'followup')"><i class="fa fa-tasks" aria-hidden="true"/> Add follow-up</button>
+                                <div t-if="!readOnly and state.panels[item.id]?.followup" class="o_live_add_row o_live_task_form">
                                     <label class="o_live_task_field"><span>Follow-up title</span><input class="form-control" aria-label="Task name" placeholder="Follow-up" t-att-value="state.newAction[item.id]?.name || ''" t-on-input="(ev) => this.setAction(item, 'name', ev.target.value)"/></label>
                                     <label class="o_live_task_field"><span>Follow-up type</span><select class="form-select" aria-label="Follow-up type" t-att-value="state.newAction[item.id]?.followup_kind || state.followupDefaults.kind" t-on-change="(ev) => this.setAction(item, 'followup_kind', ev.target.value)"><option value="task">Meeting task</option><option value="activity">Odoo activity</option><option value="todo">Odoo To-do</option></select></label>
                                     <label t-if="(state.newAction[item.id]?.followup_kind || state.followupDefaults.kind) === 'activity'" class="o_live_task_field"><span>Activity type</span><select class="form-select" aria-label="Activity type" t-att-value="state.newAction[item.id]?.followup_activity_type_id || state.followupDefaults.activity_type_id || ''" t-on-change="(ev) => this.setAction(item, 'followup_activity_type_id', ev.target.value)"><option value="">Choose activity type</option><option t-foreach="state.activityTypes" t-as="activityType" t-key="activityType.id" t-att-value="activityType.id"><t t-out="activityType.name"/></option></select></label>
@@ -240,19 +244,18 @@
                                     <button class="btn btn-outline-primary" t-att-disabled="state.submitting['action:' + item.id]" t-on-click="() => this.addAction(item)">Add follow-up</button>
                                     <button class="btn btn-link" t-on-click="() => this.togglePanel(item, 'followup')">Cancel</button>
                                 </div>
-                                <div class="o_live_point_footer" t-if="!locked and item.disposition !== 'closed' and item.disposition !== 'discussed'">
+                                <div class="o_live_point_footer" t-if="!readOnly and item.disposition !== 'closed' and item.disposition !== 'discussed'">
                                     <button class="btn btn-primary" t-att-disabled="!canCompletePoint(item)" t-on-click="() => this.completePoint(item)"><i class="fa fa-check" aria-hidden="true"/> Done</button>
                                     <span t-if="typeBehavior(item) === 'decision' and !decisionAgreement(item)" class="text-muted">Add an agreement and select approved or rejected before completing this point.</span>
                                     <span t-elif="typeBehavior(item) === 'todo' and !hasTodoAction(item)" class="text-muted">Add an assigned follow-up before completing this point.</span>
                                 </div>
                             </div>
                               </t>
-                              <div t-else="" class="o_live_paused_readonly" aria-label="Point details read only">
+                              <div t-if="!item.actual_started_at or locked" class="o_live_paused_readonly" aria-label="Point details read only">
                                 <span t-if="item.review_next_meeting" class="badge text-bg-info">Will be reviewed at the next meeting</span>
                                 <p t-if="item.discussion_notes or pointDissents(item).length or pointResolutions(item).length or pointActions(item).length" class="text-muted">Live notes are saved. Resume this point to continue editing.</p>
-                                <button t-if="!locked and state.meeting.actual_start_datetime and !state.meeting.actual_end_datetime and item.disposition !== 'open'" class="btn btn-outline-secondary" t-on-click="() => { state.reopening[item.id] = ''; }" aria-label="Undo point result"><i class="fa fa-undo" aria-hidden="true"/> Undo result</button>
-                                <div t-if="!locked and state.reopening[item.id] !== undefined" class="o_live_reopen_form"><label class="form-label" t-att-for="'reopen-reason-paused-' + item.id">Why reopen this point?</label><input t-att-id="'reopen-reason-paused-' + item.id" class="form-control" t-att-value="state.reopening[item.id]" t-on-input="(ev) => this.setReopenReason(item, ev.target.value)"/><button class="btn btn-primary" t-att-disabled="state.submitting['reopen:' + item.id]" t-on-click="() => this.reopenPoint(item)">Reopen point</button></div>
-                                <div t-if="item.discussion_notes"><strong>Discussion notes</strong><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></div>
+                                <button t-if="!readOnly and state.meeting.actual_start_datetime and !state.meeting.actual_end_datetime and item.disposition !== 'open'" class="btn btn-outline-secondary" t-on-click="() => { state.reopening[item.id] = ''; }" aria-label="Undo point result"><i class="fa fa-undo" aria-hidden="true"/> Undo result</button>
+                                <div t-if="!readOnly and state.reopening[item.id] !== undefined" class="o_live_reopen_form"><label class="form-label" t-att-for="'reopen-reason-paused-' + item.id">Why reopen this point?</label><input t-att-id="'reopen-reason-paused-' + item.id" class="form-control" t-att-value="state.reopening[item.id]" t-on-input="(ev) => this.setReopenReason(item, ev.target.value)"/><button class="btn btn-primary" t-att-disabled="state.submitting['reopen:' + item.id]" t-on-click="() => this.reopenPoint(item)">Reopen point</button></div>
                                 <ul t-if="pointDissents(item).length" class="o_live_inline_records"><li t-foreach="pointDissents(item)" t-as="dissent" t-key="dissent.id"><strong><t t-out="dissent.author_display_name or 'Dissent'"/></strong><div class="o_live_rich_readonly" t-out="safeHtml(dissent.body)"/></li></ul>
                                 <ul t-if="pointResolutions(item).length" class="o_live_inline_records"><li t-foreach="pointResolutions(item)" t-as="resolution" t-key="resolution.id"><strong t-out="resolution.title"/><div class="o_live_rich_readonly" t-out="safeHtml(resolution.body)"/></li></ul>
                                 <ul t-if="pointActions(item).length" class="o_live_inline_records"><li t-foreach="pointActions(item)" t-as="task" t-key="task.id"><strong t-out="task.name"/> · <t t-out="actionStateLabel(task.state)"/></li></ul>
@@ -275,7 +278,7 @@
                             <t t-else=""><t t-component="Wysiwyg" t-props="{ options: richTextOptions(resolution.body, 'resolution:' + resolution.id, 'community.meeting.resolution', resolution.id, 'body'), editingValue: resolution.body || '', startWysiwyg: richTextStarter('resolution:' + resolution.id, resolution.id, 'community.meeting.resolution', 'body') }"/></t>
                             <button class="btn btn-link" t-on-click="() => this.toggleRecordEditor('resolution-' + resolution.id)">Edit agreement</button>
                         </div>
-                        <div t-if="!locked" class="o_live_add_row o_live_resolution_form">
+                        <div t-if="!readOnly" class="o_live_add_row o_live_resolution_form">
                             <input class="form-control" aria-label="General agreement title" placeholder="Agreement title" t-att-value="state.newResolution.general?.title || ''" t-on-input="(ev) => this.setGeneralValue('newResolution', 'title', ev.target.value)"/>
                             <textarea class="form-control" rows="2" aria-label="General agreement" placeholder="What was agreed?" t-att-value="state.newResolution.general?.body || ''" t-on-input="(ev) => this.setGeneralValue('newResolution', 'body', ev.target.value)"/>
                             <button class="btn btn-outline-primary" t-att-disabled="state.submitting['resolution:general']" t-on-click="addGeneralResolution">Add agreement</button>
@@ -289,9 +292,9 @@
                             <select class="form-select o_live_task_owner" aria-label="Task owner" t-att-value="task.responsible_user_id?.[0] || ''" t-on-change="(ev) => this.updateAction(task, 'responsible_user_id', ev.target.value)"><option value="">Unassigned</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id"><t t-out="user.name"/></option></select>
                             <input class="form-control o_live_task_deadline" type="date" aria-label="Task deadline" t-att-value="task.deadline || ''" t-on-change="(ev) => this.updateAction(task, 'deadline', ev.target.value)"/>
                             <select class="form-select o_live_task_state" aria-label="Task status" t-att-value="task.state" t-on-change="(ev) => this.updateAction(task, 'state', ev.target.value)"><option value="open">Open</option><option value="in_progress">In progress</option><option value="done">Done</option><option value="cancelled">Cancelled</option></select>
-                            <button t-if="!locked" class="btn btn-link" t-on-click="() => this.requestRecordCarryover('community.meeting.action', task)">Follow up at another meeting</button>
+                            <button t-if="!readOnly" class="btn btn-link" t-on-click="() => this.requestRecordCarryover('community.meeting.action', task)">Follow up at another meeting</button>
                         </div>
-                        <div t-if="!locked" class="o_live_add_row">
+                        <div t-if="!readOnly" class="o_live_add_row">
                             <input class="form-control" aria-label="General task name" placeholder="Follow-up" t-att-value="state.newAction.general?.name || ''" t-on-input="(ev) => this.setGeneralValue('newAction', 'name', ev.target.value)"/>
                             <select class="form-select" aria-label="General follow-up type" t-att-value="state.newAction.general?.followup_kind || state.followupDefaults.kind" t-on-change="(ev) => this.setGeneralValue('newAction', 'followup_kind', ev.target.value)"><option value="task">Meeting task</option><option value="activity">Odoo activity</option><option value="todo">Odoo To-do</option></select>
                             <select t-if="(state.newAction.general?.followup_kind || state.followupDefaults.kind) === 'activity'" class="form-select" aria-label="General activity type" t-att-value="state.newAction.general?.followup_activity_type_id || state.followupDefaults.activity_type_id || ''" t-on-change="(ev) => this.setGeneralValue('newAction', 'followup_activity_type_id', ev.target.value)"><option value="">Choose activity type</option><option t-foreach="state.activityTypes" t-as="activityType" t-key="activityType.id" t-att-value="activityType.id"><t t-out="activityType.name"/></option></select>
@@ -310,7 +313,7 @@
                             <t t-else=""><t t-component="Wysiwyg" t-props="{ options: richTextOptions(dissent.body, 'dissent:' + dissent.id, 'community.meeting.dissent', dissent.id, 'body'), editingValue: dissent.body || '', startWysiwyg: richTextStarter('dissent:' + dissent.id, dissent.id, 'community.meeting.dissent', 'body') }"/></t>
                             <button class="btn btn-link" t-on-click="() => this.toggleRecordEditor('dissent-' + dissent.id)">Edit statement</button>
                         </div>
-                        <div t-if="!locked" class="o_live_add_row">
+                        <div t-if="!readOnly" class="o_live_add_row">
                             <input class="form-control" aria-label="Dissent author" placeholder="Author" t-att-value="state.newDissent.general?.author_display_name || ''" t-on-input="(ev) => this.setGeneralValue('newDissent', 'author_display_name', ev.target.value)"/>
                             <select class="form-select" aria-label="Statement type" t-att-value="state.newDissent.general?.kind || 'dissent'" t-on-change="(ev) => this.setGeneralValue('newDissent', 'kind', ev.target.value)"><option value="dissent">Dissent</option><option value="reservation">Reservation</option></select>
                             <textarea class="form-control" aria-label="General dissent" rows="2" placeholder="Record a dissent or reservation…" t-att-value="state.newDissent.general?.body || ''" t-on-input="(ev) => this.setGeneralValue('newDissent', 'body', ev.target.value)"/>

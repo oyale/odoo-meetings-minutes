@@ -36,6 +36,7 @@
     .o_live_type_badge { white-space: normal; }
     .o_live_outcome_badge { font-size: .875rem; white-space: nowrap; }
     .o_live_point_actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 18px; }
+    .o_live_record_actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0 8px; }
     .o_live_point_footer { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color, #ddd); }
     details.o_live_subsection > summary { cursor: pointer; font-weight: 600; padding: 8px 0; }
     .o_live_card_body { padding: 4px 18px 18px 42px; }

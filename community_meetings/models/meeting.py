@@ -35,6 +35,8 @@ class CommunityMeeting(models.Model):
     start_datetime = fields.Datetime(string="Estimated Start Datetime", tracking=True)
     end_datetime = fields.Datetime(string="Estimated End Datetime", tracking=True)
     actual_start_datetime = fields.Datetime(readonly=True, copy=False, tracking=True)
+    actual_paused_at = fields.Datetime(readonly=True, copy=False, tracking=True)
+    actual_paused_seconds = fields.Integer(readonly=True, copy=False, default=0)
     actual_end_datetime = fields.Datetime(readonly=True, copy=False, tracking=True)
     actual_duration_minutes = fields.Integer(
         string="Actual duration (minutes)", compute="_compute_actual_duration_minutes", store=True
@@ -89,13 +91,12 @@ class CommunityMeeting(models.Model):
         ("code_company_unique", "unique(company_id, code)", "Meeting references must be unique per company."),
     ]
 
-    @api.depends("actual_start_datetime", "actual_end_datetime")
+    @api.depends("actual_start_datetime", "actual_end_datetime", "actual_paused_seconds")
     def _compute_actual_duration_minutes(self):
         for meeting in self:
             if meeting.actual_start_datetime and meeting.actual_end_datetime:
-                seconds = (
-                    meeting.actual_end_datetime - meeting.actual_start_datetime
-                ).total_seconds()
+                seconds = (meeting.actual_end_datetime - meeting.actual_start_datetime).total_seconds()
+                seconds -= meeting.actual_paused_seconds
                 meeting.actual_duration_minutes = max(0, round(seconds / 60))
             else:
                 meeting.actual_duration_minutes = 0
@@ -163,7 +164,7 @@ class CommunityMeeting(models.Model):
             raise UserError(_("Use a meeting workflow action to change its state."))
         if "code" in vals:
             raise UserError(_("A meeting reference cannot be changed."))
-        if {"actual_start_datetime", "actual_end_datetime"}.intersection(vals):
+        if {"actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_end_datetime"}.intersection(vals):
             raise UserError(_("Actual meeting times are recorded through the meeting workflow."))
         if {"approved_revision_id", "revision_ids"}.intersection(vals):
             raise UserError(_("Use the approval workflow to manage meeting revisions."))
@@ -206,7 +207,15 @@ class CommunityMeeting(models.Model):
         )
         if unfinished:
             unfinished.write({"review_next_meeting": True})
-        super(CommunityMeeting, self).write({"actual_end_datetime": fields.Datetime.now()})
+        now = fields.Datetime.now()
+        for meeting in self:
+            vals = {"actual_end_datetime": now}
+            if meeting.actual_paused_at:
+                vals["actual_paused_seconds"] = meeting.actual_paused_seconds + max(
+                    0, int((now - meeting.actual_paused_at).total_seconds())
+                )
+                vals["actual_paused_at"] = False
+            super(CommunityMeeting, meeting).write(vals)
         return result
 
     def action_start_meeting(self):
@@ -218,11 +227,43 @@ class CommunityMeeting(models.Model):
             self.env.cr.execute(
                 "SELECT id FROM community_meeting WHERE id = %s FOR UPDATE", [meeting.id],
             )
-            meeting.invalidate_recordset(["state", "actual_start_datetime"])
+            meeting.invalidate_recordset(["state", "actual_start_datetime", "actual_paused_at"])
             if meeting.state != "scheduled":
                 raise UserError(_("Only a scheduled meeting can be started."))
             if not meeting.actual_start_datetime:
                 super(CommunityMeeting, meeting).write({"actual_start_datetime": fields.Datetime.now()})
+        return True
+
+    def action_pause_meeting(self):
+        for meeting in self:
+            meeting.check_access_rights("write")
+            meeting.check_access_rule("write")
+            if not self.env.user.has_group("community_meetings.group_meeting_editor"):
+                raise AccessError(_("Only meeting editors can pause a meeting."))
+            self.env.cr.execute("SELECT id FROM community_meeting WHERE id = %s FOR UPDATE", [meeting.id])
+            meeting.invalidate_recordset(["state", "actual_start_datetime", "actual_end_datetime", "actual_paused_at"])
+            if meeting.state != "scheduled" or not meeting.actual_start_datetime or meeting.actual_end_datetime:
+                raise UserError(_("Only a running meeting can be paused."))
+            if meeting.actual_paused_at:
+                raise UserError(_("This meeting is already paused."))
+            meeting.agenda_item_ids.filtered("actual_started_at")._pause_timing()
+            super(CommunityMeeting, meeting).write({"actual_paused_at": fields.Datetime.now()})
+        return True
+
+    def action_resume_meeting(self):
+        for meeting in self:
+            meeting.check_access_rights("write")
+            meeting.check_access_rule("write")
+            if not self.env.user.has_group("community_meetings.group_meeting_editor"):
+                raise AccessError(_("Only meeting editors can resume a meeting."))
+            self.env.cr.execute("SELECT id FROM community_meeting WHERE id = %s FOR UPDATE", [meeting.id])
+            meeting.invalidate_recordset(["state", "actual_start_datetime", "actual_end_datetime", "actual_paused_at", "actual_paused_seconds"])
+            if meeting.state != "scheduled" or not meeting.actual_paused_at or meeting.actual_end_datetime:
+                raise UserError(_("Only a paused meeting can be resumed."))
+            paused_seconds = meeting.actual_paused_seconds + max(
+                0, int((fields.Datetime.now() - meeting.actual_paused_at).total_seconds())
+            )
+            super(CommunityMeeting, meeting).write({"actual_paused_at": False, "actual_paused_seconds": paused_seconds})
         return True
 
     def action_draft_minutes(self):
@@ -240,7 +281,9 @@ class CommunityMeeting(models.Model):
         if self.state not in ("scheduled", "held", "minutes_draft"):
             raise UserError(_("The live meeting view is available for scheduled or ongoing meetings."))
         return {"type": "ir.actions.client", "tag": "community_meetings.live_meeting",
-                "name": _("Live Meeting"), "params": {"meeting_id": self.id}}
+                "name": _("Live Meeting"), "target": "main",
+                "context": {"active_model": self._name, "active_id": self.id, "active_ids": self.ids},
+                "params": {"meeting_id": self.id}}
 
     def unlink(self):
         if any(meeting.state not in ("draft", "cancelled") for meeting in self):

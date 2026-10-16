@@ -410,7 +410,9 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         information.get_by_role("button", name="Done").click()
         expect(self.outcome("information")).to_have_text("Done")
         self.page.get_by_role("button", name="Pending only").click()
-        expect(self.card("information")).to_have_count(0)
+        expect(
+            self.page.locator(".o_live_agenda_card").filter(has_text="Browser Information case")
+        ).to_have_count(0)
         expect(self.page.locator(".o_live_agenda_card")).to_have_count(3)
         self.page.get_by_role("button", name="Pending only").click()
         expect(self.card("information")).to_be_visible()

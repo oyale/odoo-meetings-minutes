@@ -36,6 +36,8 @@
                     <button name="action_open_live_meeting" type="object" string="Open Live Meeting" invisible="state not in ['scheduled', 'held', 'minutes_draft']" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_schedule" type="object" string="Schedule" class="oe_highlight" invisible="state != 'draft'" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_start_meeting" type="object" string="Start Meeting" class="oe_highlight" invisible="state != 'scheduled' or actual_start_datetime" groups="community_meetings.group_meeting_editor"/>
+                    <button name="action_pause_meeting" type="object" string="Pause Meeting" invisible="state != 'scheduled' or not actual_start_datetime or actual_paused_at" groups="community_meetings.group_meeting_editor"/>
+                    <button name="action_resume_meeting" type="object" string="Resume Meeting" class="oe_highlight" invisible="state != 'scheduled' or not actual_paused_at" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_mark_held" type="object" string="Finish Meeting" class="oe_highlight" invisible="state != 'scheduled' or not actual_start_datetime" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_mark_held" type="object" string="Record as Already Held" invisible="state != 'scheduled' or actual_start_datetime" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_draft_minutes" type="object" string="Prepare Minutes" class="oe_highlight" invisible="state != 'held'" groups="community_meetings.group_meeting_editor"/>
@@ -54,6 +56,7 @@
                             <field name="start_datetime"/>
                             <field name="end_datetime"/>
                             <field name="actual_start_datetime" readonly="1" invisible="not actual_start_datetime"/>
+                            <field name="actual_paused_at" invisible="1"/>
                             <field name="actual_end_datetime" readonly="1" invisible="not actual_end_datetime"/>
                             <field name="actual_duration_minutes" readonly="1" invisible="not actual_end_datetime"/>
                             <field name="location"/>

@@ -220,6 +220,29 @@ class TestMeetingWorkflow(TransactionCase):
         with self.assertRaises(UserError):
             meeting.with_user(self.editor).write({"actual_start_datetime": False})
 
+    def test_live_meeting_pause_resume_excludes_paused_time_and_pauses_points(self):
+        meeting = self.env["community.meeting"].with_user(self.editor).create({
+            "name": "Paused meeting", "start_datetime": "2026-11-01 10:00:00",
+        })
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": meeting.id, "name": "Timed discussion", "kind": "discussion",
+        })
+        meeting.with_user(self.editor).action_schedule()
+        meeting.with_user(self.editor).action_start_meeting()
+        item.with_user(self.editor).action_start_timing()
+        meeting.with_user(self.editor).action_pause_meeting()
+        self.assertTrue(meeting.actual_paused_at)
+        self.assertFalse(item.actual_started_at)
+        with self.assertRaises(UserError):
+            item.with_user(self.editor).action_start_timing()
+        meeting.with_user(self.editor).action_resume_meeting()
+        self.assertFalse(meeting.actual_paused_at)
+        meeting.with_user(self.editor).action_mark_held()
+        self.assertTrue(meeting.actual_end_datetime)
+        self.assertGreaterEqual(meeting.actual_duration_minutes, 0)
+        with self.assertRaises(UserError):
+            meeting.with_user(self.editor).action_pause_meeting()
+
     def test_informational_agenda_does_not_need_resolution_or_action(self):
         meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "Information only"})
         self.env["community.meeting.agenda.item"].with_user(self.editor).create({

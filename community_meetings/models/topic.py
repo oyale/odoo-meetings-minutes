@@ -373,6 +373,7 @@ class AgendaParticipation(models.Model):
             if (
                 meeting.state != "scheduled"
                 or not meeting.actual_start_datetime
+                or meeting.actual_paused_at
                 or meeting.actual_end_datetime
             ):
                 raise UserError(_("Start the live meeting before timing an agenda point."))
