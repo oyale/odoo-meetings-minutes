@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, onWillStart, useState } from "@odoo/owl";
+import { Component, onMounted, onWillStart, onWillUnmount, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
@@ -20,8 +20,17 @@ export class LiveMeeting extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
-        this.state = useState({ loading: true, meeting: {}, items: [], types: [], dissents: [], actions: [], expanded: {}, newDissent: {}, newAction: {}, attendees: [] });
+        this.state = useState({ loading: true, saving: 0, saveError: false, meeting: {}, items: [], types: [], dissents: [], actions: [], expanded: {}, newDissent: {}, newAction: {}, attendees: [] });
+        this.pendingWrites = new Map();
+        this.beforeUnload = (ev) => {
+            if (this.pendingWrites.size) {
+                ev.preventDefault();
+                ev.returnValue = "";
+            }
+        };
         onWillStart(() => this.load());
+        onMounted(() => window.addEventListener("beforeunload", this.beforeUnload));
+        onWillUnmount(() => window.removeEventListener("beforeunload", this.beforeUnload));
     }
 
     get meetingId() { return this.props.action.params.meeting_id; }
@@ -33,7 +42,7 @@ export class LiveMeeting extends Component {
         const [meetings, items, types, dissents, actions] = await Promise.all([
             this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "start_datetime", "end_datetime", "organizer_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes"]),
             this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "sequence", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "deferral_reason"], { order: "sequence, id" }),
-            this.orm.searchRead("community.meeting.agenda.type", [], ["name", "behavior", "active"], { order: "sequence, name" }),
+            this.orm.searchRead("community.meeting.agenda.type", [], ["name", "behavior", "active"], { order: "sequence, name", context: { active_test: false } }),
             this.orm.searchRead("community.meeting.dissent", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "body", "kind", "author_display_name", "author_partner_id"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.action", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "name", "description", "responsible_user_id", "deadline", "state"], { order: "deadline, id" }),
         ]);
@@ -58,30 +67,44 @@ export class LiveMeeting extends Component {
     pointActions(item) { return this.state.actions.filter((row) => row.agenda_item_id?.[0] === item.id); }
     toggle(item) { this.state.expanded[item.id] = !this.state.expanded[item.id]; }
 
+    async write(key, model, ids, values, apply) {
+        const previous = this.pendingWrites.get(key) || Promise.resolve();
+        const operation = previous.catch(() => {}).then(async () => {
+            this.state.saving++;
+            this.state.saveError = false;
+            try {
+                await this.orm.write(model, ids, values);
+                apply?.();
+            } catch (error) {
+                this.state.saveError = true;
+                this.notification.add("Could not save this change. Your text is still available; retry by editing the field again.", { type: "danger" });
+            } finally {
+                this.state.saving--;
+                if (this.pendingWrites.get(key) === operation) this.pendingWrites.delete(key);
+            }
+        });
+        this.pendingWrites.set(key, operation);
+        return operation;
+    }
+
     async updateItem(item, field, value) {
-        const previousKind = item.kind;
-        const vals = { [field]: field === "agenda_type_id" ? Number(value) : value };
-        await this.orm.write("community.meeting.agenda.item", [item.id], vals);
-        if (field === "agenda_type_id") item.kind = this.state.types.find((row) => row.id === Number(value))?.behavior;
-        if (field === "decision_result" && ["approved", "denied"].includes(value)) item.disposition = "closed";
-        if (field === "disposition" && value === "deferred" && item.kind === "decision") item.decision_result = "pending";
-        if (field === "agenda_type_id" && previousKind !== item.kind) {
-            item.decision_result = item.kind === "decision" ? "pending" : false;
-        }
+        const normalized = field === "agenda_type_id" ? Number(value) : value;
+        return this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], { [field]: normalized }, async () => {
+            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result"]);
+            Object.assign(item, saved);
+        });
     }
 
     async saveItemText(item, field, ev) {
         const value = ev.target.value;
         if (value === (item[field] || "")) return;
-        await this.orm.write("community.meeting.agenda.item", [item.id], { [field]: value });
-        item[field] = value;
+        await this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], { [field]: value }, () => { item[field] = value; });
     }
 
     async saveMinutes(ev) {
         const value = ev.target.value;
         if (value !== (this.state.meeting.minutes_notes || "")) {
-            await this.orm.write("community.meeting", [this.meetingId], { minutes_notes: value });
-            this.state.meeting.minutes_notes = value;
+            await this.write(`meeting:${this.meetingId}`, "community.meeting", [this.meetingId], { minutes_notes: value }, () => { this.state.meeting.minutes_notes = value; });
         }
     }
 

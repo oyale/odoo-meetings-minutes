@@ -8,6 +8,9 @@
                     <button t-if="state.meeting.state === 'scheduled'" class="btn btn-primary" t-on-click="markHeld">Mark Held</button>
                     <button t-if="state.meeting.state === 'held'" class="btn btn-primary" t-on-click="prepareMinutes">Prepare Minutes</button>
                 </div>
+                <span t-if="state.saving" class="text-muted" role="status" aria-live="polite">Saving…</span>
+                <span t-elif="state.saveError" class="text-danger" role="alert">Some changes could not be saved. Retry by editing the affected field.</span>
+                <span t-else="" class="text-success" role="status" aria-live="polite">All changes saved</span>
                 <span t-if="state.meeting.state" class="badge text-bg-primary"><t t-out="state.meeting.state.replace('_', ' ')"/></span>
             </div>
             <t t-if="state.loading"><div class="text-muted p-4">Loading meeting…</div></t>
@@ -32,7 +35,7 @@
                     <t t-if="!state.items.length"><p class="text-muted">There are no agenda points in this meeting.</p></t>
                     <article t-foreach="state.items" t-as="item" t-key="item.id" class="o_live_agenda_card">
                         <div class="o_live_card_header">
-                            <button class="o_live_expand" t-on-click="() => this.toggle(item)" t-att-aria-expanded="state.expanded[item.id]">
+                            <button class="o_live_expand" t-on-click="() => this.toggle(item)" t-att-aria-expanded="state.expanded[item.id]" t-att-aria-controls="'agenda-panel-' + item.id">
                                 <i t-att-class="state.expanded[item.id] ? 'fa fa-chevron-down' : 'fa fa-chevron-right'" aria-hidden="true"/>
                                 <span class="o_live_item_title"><t t-out="item.name"/></span>
                             </button>
@@ -46,7 +49,7 @@
                                 <option t-foreach="outcomes" t-as="entry" t-key="entry[0]" t-att-value="entry[0]"><t t-out="entry[1]"/></option>
                             </select>
                         </div>
-                        <div t-if="state.expanded[item.id]" class="o_live_card_body">
+                        <div t-if="state.expanded[item.id]" t-att-id="'agenda-panel-' + item.id" class="o_live_card_body">
                             <div t-if="item.description" class="o_live_planned"><strong>Planned topic</strong><div t-out="item.description"/></div>
                             <label class="form-label" t-att-for="'discussion-' + item.id">Discussion notes</label>
                             <textarea t-att-id="'discussion-' + item.id" class="form-control" rows="4" t-att-value="item.discussion_notes || ''" t-att-disabled="locked" t-on-change="(ev) => this.saveItemText(item, 'discussion_notes', ev)" placeholder="Record what was discussed…"/>
