@@ -46,6 +46,7 @@ class MeetingTopic(models.Model):
         "topic_id",
         "related_topic_id",
         string="Related points",
+        check_company=True,
     )
     state = fields.Selection(
         [("proposed", "Proposed"), ("open", "Open"), ("closed", "Closed")],
@@ -95,6 +96,12 @@ class MeetingTopic(models.Model):
     def _check_minutes(self):
         if any(t.estimated_minutes < 0 for t in self):
             raise ValidationError(_("Estimated minutes cannot be negative."))
+
+    @api.constrains("related_topic_ids")
+    def _check_related_points(self):
+        for topic in self:
+            if topic in topic.related_topic_ids:
+                raise ValidationError(_("A point cannot be related to itself."))
 
     @api.model_create_multi
     def create(self, vals_list):

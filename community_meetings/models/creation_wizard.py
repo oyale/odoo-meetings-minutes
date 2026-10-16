@@ -171,9 +171,10 @@ class MeetingCreateWizard(models.TransientModel):
                 )
             )
             for line in self.line_ids.filtered("included"):
-                self.env["community.meeting.agenda.item"].create(
+                item = self.env["community.meeting.agenda.item"].create(
                     line._item_values(meeting)
                 )
+                line._write_related_points(item.topic_id)
             for line in self.carry_line_ids.filtered("accept"):
                 meeting._include_agenda_candidate({"key": line.candidate_key})
             self.created_meeting_id = meeting
@@ -222,7 +223,7 @@ class PointWizard(models.TransientModel):
         "topic_id",
         string="Related points",
     )
-    origin_topic_id = fields.Many2one(related="topic_id.origin_topic_id", readonly=True)
+    origin_topic_id = fields.Many2one(related="topic_id.origin_topic_id")
     followup_policy = fields.Selection([("inherit", "Series/company default")] + FOLLOWUP_POLICIES, default="inherit", required=True)
     default_followup_kind = fields.Selection([("inherit", "Series/company default")] + FOLLOWUP_KINDS, default="inherit", required=True)
     name = fields.Char(string="Title")
@@ -247,6 +248,11 @@ class PointWizard(models.TransientModel):
             parent = w.meeting_id or w.creation_wizard_id
             w.series_id = parent.series_id
             w.company_id = parent.company_id
+
+    @api.onchange("topic_id")
+    def _onchange_topic_id(self):
+        if self.topic_id:
+            self.related_topic_ids = self.topic_id.related_topic_ids
 
     @api.model
     def _open(self, context):
@@ -283,7 +289,8 @@ class PointWizard(models.TransientModel):
         if not topic:
             return
         related = self.related_topic_ids - topic
-        topic.write({"related_topic_ids": [(6, 0, related.ids)]})
+        if set(related.ids) != set(topic.related_topic_ids.ids):
+            topic.write({"related_topic_ids": [(6, 0, related.ids)]})
 
     def action_save(self):
         self.ensure_one()

@@ -46,9 +46,9 @@
 <group invisible="topic_id"><group string="Planning"><field name="priority"/><field name="deadline"/><field name="estimated_minutes"/></group></group>
 <group invisible="topic_id"><field name="more_options"/></group>
 <group string="More options" invisible="not more_options and not topic_id">
-    <field name="topic_id" options="{'no_create': True}" domain="[('company_id', '=', company_id)]"/>
-    <field name="origin_topic_id" readonly="1" invisible="not origin_topic_id"/>
-    <field name="related_topic_ids" widget="many2many_tags" domain="[('company_id', '=', company_id)]"/>
+    <field name="topic_id" options="{'no_create': True}" domain="[('company_id', '=', company_id), ('series_id', '=', series_id)]"/>
+    <field name="origin_topic_id" invisible="not origin_topic_id"/>
+    <field name="related_topic_ids" widget="many2many_tags" domain="[('company_id', '=', company_id), ('id', '!=', topic_id)]"/>
     <field name="followup_policy"/>
     <field name="default_followup_kind" invisible="followup_policy in ['activity', 'todo']"/>
 </group>
