@@ -45,6 +45,18 @@ class CommunityMeetingEditorNote(models.Model):
         return super().unlink()
 
 
+class CommunityMeetingDissentReason(models.Model):
+    _name = "community.meeting.dissent.reason"
+    _description = "Dissent Reason"
+    _order = "sequence, name, id"
+
+    name = fields.Char(required=True, translate=True)
+    sequence = fields.Integer(default=10)
+    active = fields.Boolean(default=True)
+
+    _sql_constraints = [("name_unique", "unique(name)", "Dissent reason names must be unique.")]
+
+
 class CommunityMeetingDissent(models.Model):
     _name = "community.meeting.dissent"
     _description = "Meeting Dissent or Reservation"
@@ -60,9 +72,12 @@ class CommunityMeetingDissent(models.Model):
     author_display_name = fields.Char()
     recorded_by_id = fields.Many2one("res.users", required=True, default=lambda self: self.env.user, readonly=True)
     recorded_at = fields.Datetime(required=True, default=fields.Datetime.now, readonly=True)
-    kind = fields.Selection(
-        [("dissent", "Dissent"), ("reservation", "Reservation"), ("minority_opinion", "Minority Opinion")],
-        default="dissent", required=True,
+    reason_id = fields.Many2one(
+        "community.meeting.dissent.reason", string="Statement type", required=True,
+        ondelete="restrict",
+        default=lambda self: self.env.ref(
+            "community_meetings.dissent_reason_dissent", raise_if_not_found=False
+        ),
     )
     sequence = fields.Integer(default=10)
     include_in_minutes = fields.Boolean(default=True)

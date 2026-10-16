@@ -307,7 +307,9 @@ class PointWizard(models.TransientModel):
             "description": self.description,
             "priority": self.priority,
             "deadline": self.deadline,
-            "estimated_minutes": self.estimated_minutes,
+            "estimated_minutes": self.estimated_minutes or (
+                self.series_id._point_estimated_minutes_default() if self.series_id else 0
+            ),
             "followup_policy": self.followup_policy,
             "default_followup_kind": self.default_followup_kind,
         }
@@ -365,7 +367,7 @@ class PointWizard(models.TransientModel):
             "agenda_type_id": self.agenda_type_id.id,
             "priority": self.priority,
             "deadline": self.deadline,
-            "estimated_minutes": self.estimated_minutes,
+            "estimated_minutes": self.estimated_minutes or self.proposal_series_id._point_estimated_minutes_default(),
             "followup_policy": self.followup_policy,
             "default_followup_kind": self.default_followup_kind,
             "series_id": self.proposal_series_id.id,

@@ -73,7 +73,7 @@ class CommunityMeetingRevision(models.Model):
             ("meeting_id", "=", meeting.id), ("include_in_minutes", "=", True),
         ], order="sequence, id")
         dissents = [{
-            "kind": dissent.kind,
+            "kind": dissent.reason_id.name or "",
             "body": self._clean_html(dissent.body),
             "author": dissent.author_display_name or (dissent.author_partner_id.name if dissent.author_partner_id else ""),
             "scope": dissent.resolution_id.title if dissent.resolution_id else (

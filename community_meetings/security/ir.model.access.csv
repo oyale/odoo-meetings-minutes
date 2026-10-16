@@ -41,3 +41,5 @@ access_carry_review_line,Carry review line,model_community_meeting_carry_review_
 access_topic_proposer,community.meeting.topic proposer,model_community_meeting_topic,group_agenda_proposer,1,1,0,0
 access_agenda_type_proposer,community.meeting.agenda.type proposer,model_community_meeting_agenda_type,group_agenda_proposer,1,0,0,0
 access_point_wizard_proposer,community.meeting.point.wizard proposer,model_community_meeting_point_wizard,group_agenda_proposer,1,1,1,1
+access_dissent_reason_reader,Dissent reason reader,model_community_meeting_dissent_reason,group_meeting_reader,1,0,0,0
+access_dissent_reason_editor,Dissent reason editor,model_community_meeting_dissent_reason,group_meeting_editor,1,1,1,1

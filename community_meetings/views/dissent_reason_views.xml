@@ -1,0 +1,25 @@
+<odoo>
+    <record id="view_dissent_reason_list" model="ir.ui.view">
+        <field name="name">community.meeting.dissent.reason.list</field>
+        <field name="model">community.meeting.dissent.reason</field>
+        <field name="arch" type="xml">
+            <list editable="bottom" default_order="sequence, name">
+                <field name="sequence" widget="handle"/><field name="name"/><field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_dissent_reason_form" model="ir.ui.view">
+        <field name="name">community.meeting.dissent.reason.form</field>
+        <field name="model">community.meeting.dissent.reason</field>
+        <field name="arch" type="xml">
+            <form string="Dissent Reason"><sheet><group><field name="name"/><field name="sequence"/><field name="active"/></group>
+                <div class="text-muted">Archiving a reason keeps existing dissent records readable.</div>
+            </sheet></form>
+        </field>
+    </record>
+    <record id="action_dissent_reason" model="ir.actions.act_window">
+        <field name="name">Dissent Reasons</field><field name="res_model">community.meeting.dissent.reason</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_dissent_reason" name="Dissent Reasons" parent="community_meetings.menu_community_meeting_configuration" action="action_dissent_reason" sequence="20" groups="community_meetings.group_meeting_manager"/>
+</odoo>

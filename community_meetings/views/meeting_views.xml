@@ -122,14 +122,14 @@
                             <field name="dissent_ids">
                                 <list editable="bottom">
                                     <field name="sequence" widget="handle"/>
-                                    <field name="kind"/>
+                                    <field name="reason_id"/>
                                     <field name="author_partner_id"/>
                                     <field name="author_display_name"/>
                                     <field name="agenda_item_id" domain="[('meeting_id', '=', parent.id)]"/>
                                     <field name="resolution_id" domain="[('meeting_id', '=', parent.id)]"/>
                                     <field name="include_in_minutes"/>
                                 </list>
-                                <form><sheet><group><field name="kind"/><field name="author_partner_id"/><field name="author_display_name"/><field name="agenda_item_id"/><field name="resolution_id"/><field name="include_in_minutes"/><field name="body"/></group></sheet></form>
+                                <form><sheet><group><field name="reason_id"/><field name="author_partner_id"/><field name="author_display_name"/><field name="agenda_item_id"/><field name="resolution_id"/><field name="include_in_minutes"/><field name="body"/></group></sheet></form>
                             </field>
                         </page>
                         <page string="Incoming Carryovers" groups="community_meetings.group_meeting_editor" invisible="not incoming_carryover_ids">

@@ -351,7 +351,7 @@ class CommunityMeeting(models.Model):
         )
         return [{"id": record.id, "agenda_item_id": [record.agenda_item_id.id, record.agenda_item_id.name] if record.agenda_item_id else False,
                  "resolution_id": [record.resolution_id.id, record.resolution_id.title] if record.resolution_id else False,
-                 "body": record.body, "kind": record.kind,
+                 "body": record.body, "kind": record.reason_id.name or "",
                  "author_display_name": record.author_display_name or record.author_partner_id.name or ""} for record in records]
 
     def unlink(self):

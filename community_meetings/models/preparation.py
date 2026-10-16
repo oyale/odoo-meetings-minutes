@@ -4,17 +4,34 @@ from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 
+class Company(models.Model):
+    _inherit = "res.company"
+
+    meeting_estimated_minutes = fields.Integer(
+        string="Default point estimate (minutes)", default=0,
+        help="Default estimated duration applied to new points; a series can override it.",
+    )
+
+
 class MeetingSeries(models.Model):
     _inherit = "community.meeting.series"
 
     duration_hours = fields.Float(string="Default duration", default=1.0, required=True)
     attendee_partner_ids = fields.Many2many("res.partner", string="Default attendees")
+    default_estimated_minutes = fields.Integer(
+        string="Default point estimate (minutes)",
+        help="Overrides the company default for points of this series.",
+    )
     meeting_name_pattern = fields.Char(
         string="New meeting name pattern",
         default="{date} {series}",
         required=True,
         help="Use {date} for the meeting date (YYYY-MM-DD) and {series} for this series name.",
     )
+
+    def _point_estimated_minutes_default(self):
+        self.ensure_one()
+        return self.default_estimated_minutes or self.company_id.meeting_estimated_minutes or 0
 
     @api.constrains("meeting_name_pattern")
     def _check_meeting_name_pattern(self):
