@@ -78,6 +78,22 @@ class TestProposalConvergence(TransactionCase):
                 "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
             })
 
+    def test_authorized_groups_restrict_proposing(self):
+        allowed_group = self.env["res.groups"].create({"name": "Allowed proposers (test)"})
+        self.env["community.meeting.proposal.group.policy"].create({"group_id": allowed_group.id})
+        values = {
+            "name": "Restricted proposal", "series_id": self.series.id,
+            "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+        }
+        with self.assertRaises(AccessError), self.cr.savepoint():
+            self.env["community.meeting.topic"].with_user(self.editor).propose(values)
+        allowed = self.env["res.users"].create({
+            "name": "Allowed proposer", "login": "proposal-allowed-conv-test",
+            "groups_id": [(6, 0, [self.env.ref("base.group_user").id, allowed_group.id])],
+        })
+        topic = self.env["community.meeting.topic"].with_user(allowed).propose(values)
+        self.assertEqual(topic.proposal_status, "submitted")
+
     def test_proposed_series_point_is_a_candidate(self):
         self.env["community.meeting.topic"].with_user(self.editor).propose({
             "name": "Candidate proposal", "series_id": self.series.id,

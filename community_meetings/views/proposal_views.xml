@@ -28,4 +28,26 @@
             </field>
         </field>
     </record>
+    <record id="view_proposal_group_policy_list" model="ir.ui.view">
+        <field name="name">community.meeting.proposal.group.policy.list</field>
+        <field name="model">community.meeting.proposal.group.policy</field>
+        <field name="arch" type="xml">
+            <list><field name="group_id"/><field name="active" widget="boolean_toggle"/></list>
+        </field>
+    </record>
+    <record id="view_proposal_group_policy_form" model="ir.ui.view">
+        <field name="name">community.meeting.proposal.group.policy.form</field>
+        <field name="model">community.meeting.proposal.group.policy</field>
+        <field name="arch" type="xml">
+            <form><sheet><group><field name="group_id"/><field name="active"/></group>
+                <div class="text-muted">When any authorized group is listed, only members of these groups (and meeting managers) may propose points. Leave empty so every internal user can propose.</div>
+            </sheet></form>
+        </field>
+    </record>
+    <record id="action_proposal_group_policy" model="ir.actions.act_window">
+        <field name="name">Authorized Proposer Groups</field>
+        <field name="res_model">community.meeting.proposal.group.policy</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_proposal_group_policy" name="Authorized Proposer Groups" parent="community_meetings.menu_community_meeting_configuration" action="action_proposal_group_policy" sequence="20" groups="community_meetings.group_meeting_manager"/>
 </odoo>

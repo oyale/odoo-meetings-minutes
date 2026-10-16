@@ -153,3 +153,14 @@ include behaviour is preserved for `include`.
       postponable too.
 - [ ] Eligibility and audit (who proposed, who responded, when) are preserved.
 - [ ] The old proposal UI is gone; a "Propose a point" entry exists.
+
+## Proposer capability (2026-10-16)
+
+By default **every internal user may propose a point**: `base.group_user`
+implies `group_agenda_proposer`. To restrict who may propose **without changing
+code**, a meeting manager lists **Authorized Proposer Groups**
+(`community.meeting.proposal.group.policy`, Configuration › Authorized Proposer
+Groups). Once any group is listed, only members of those groups (and meeting
+managers) may propose. Leaving the list empty keeps the default (every internal
+user). `community.meeting.topic._has_proposal_capability` implements this; 
+`submit_on_behalf` keeps using per-contact grants.

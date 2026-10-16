@@ -274,13 +274,20 @@ class MeetingTopic(models.Model):
 
     @api.model
     def _has_proposal_capability(self):
+        # Default: every internal user may propose (base.group_user implies
+        # group_agenda_proposer). To restrict who may propose without code,
+        # list authorized proposer groups; when any exist, only their members
+        # (and meeting managers) may propose.
         user = self.env.user
-        if user.has_group("community_meetings.group_agenda_proposer"):
-            return True
         policy_groups = self.env["community.meeting.proposal.group.policy"].sudo().search(
             [("active", "=", True)]
         ).group_id
-        return bool(user.groups_id & policy_groups)
+        if not policy_groups:
+            return user.has_group("community_meetings.group_agenda_proposer")
+        return (
+            user.has_group("community_meetings.group_meeting_manager")
+            or bool(user.groups_id & policy_groups)
+        )
 
     @api.model
     def _validate_proposal_target(self, company_id, series_id):
