@@ -86,6 +86,12 @@ class CommunityMeeting(models.Model):
             if meeting.start_datetime and meeting.end_datetime and meeting.end_datetime < meeting.start_datetime:
                 raise ValidationError(_("The meeting end must be after its start."))
 
+    @api.onchange("start_datetime")
+    def _onchange_start_datetime(self):
+        for meeting in self:
+            if meeting.start_datetime and not meeting.end_datetime:
+                meeting.end_datetime = fields.Datetime.add(meeting.start_datetime, hours=1)
+
     @api.constrains("series_id", "company_id", "meeting_kind")
     def _check_series_scope(self):
         for meeting in self:
@@ -163,6 +169,8 @@ class CommunityMeeting(models.Model):
         return super(CommunityMeeting, self).write({"state": target})
 
     def action_schedule(self):
+        if any(not meeting.start_datetime for meeting in self):
+            raise ValidationError(_("Set a meeting date and time before scheduling it."))
         result = self._transition(("draft",), "scheduled")
         self.env["community.meeting.carryover"]._process_new_meetings(self)
         return result

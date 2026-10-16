@@ -112,6 +112,11 @@ class TestMeetingWorkflow(TransactionCase):
                 "end_datetime": "2026-11-01 10:00:00",
             })
 
+    def test_meeting_must_have_a_start_time_before_scheduling(self):
+        meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "Date required"})
+        with self.assertRaises(ValidationError):
+            meeting.with_user(self.editor).action_schedule()
+
     def test_informational_agenda_does_not_need_resolution_or_action(self):
         meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "Information only"})
         self.env["community.meeting.agenda.item"].with_user(self.editor).create({
