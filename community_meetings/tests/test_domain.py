@@ -69,6 +69,39 @@ class TestMeetingDomain(TransactionCase):
         series.write({"duration_hours": 2, "attendee_partner_ids": [(5, 0, 0)]})
         self.assertEqual(meeting.duration_minutes, 90)
         self.assertTrue(meeting.attendee_partner_ids)
+        self.assertEqual(meeting.secretary_id, self.env.user)
+
+    def test_point_actual_minutes_are_recorded_and_non_negative(self):
+        meeting = self.env["community.meeting"].create({"name": "Timing"})
+        item = self.env["community.meeting.agenda.item"].create(
+            {"meeting_id": meeting.id, "name": "Timed point", "estimated_minutes": 20}
+        )
+        item.write({"actual_minutes": 27})
+        self.assertEqual(item.actual_minutes, 27)
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            item.write({"actual_minutes": -1})
+
+    def test_live_decision_can_be_undone_and_agreement_edits_sync(self):
+        meeting = self.env["community.meeting"].create({
+            "name": "Live decision", "start_datetime": "2026-11-01 10:00:00",
+        })
+        item = self.env["community.meeting.agenda.item"].create(
+            {"meeting_id": meeting.id, "name": "Decision", "kind": "decision"}
+        )
+        agreement = self.env["community.meeting.resolution"].create({
+            "meeting_id": meeting.id, "agenda_item_id": item.id,
+            "title": "Decision agreement", "decision_outcome": "approved",
+        })
+        agreement.write({"decision_outcome": "denied"})
+        self.assertEqual(item.decision_result, "denied")
+        meeting.action_schedule()
+        meeting.action_start_meeting()
+        item.write({"reopen_reason": "The vote needs to be checked."})
+        item.action_reopen()
+        self.assertEqual(item.disposition, "open")
+        self.assertEqual(item.decision_result, "pending")
+        self.assertEqual(agreement.status, "withdrawn")
+        self.assertEqual(item.topic_id.state, "open")
 
     def test_automatic_carryover_keeps_point_and_does_not_duplicate(self):
         series = self.env["community.meeting.series"].create(

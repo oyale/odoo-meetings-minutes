@@ -197,6 +197,7 @@ class TestMeetingWorkflow(TransactionCase):
         meeting.with_user(self.editor).action_mark_held()
         self.assertEqual(meeting.state, "held")
         self.assertTrue(meeting.actual_end_datetime)
+        self.assertGreaterEqual(meeting.actual_duration_minutes, 0)
         with self.assertRaises(UserError):
             meeting.with_user(self.editor).write({"actual_start_datetime": False})
 

@@ -83,6 +83,7 @@
         .o_live_add_row { align-items: stretch; flex-direction: column; }
         .o_live_record_editor, .o_live_resolution_editor, .o_live_resolution_form, .o_live_dissent_form { grid-template-columns: minmax(0, 1fr); }
         .o_live_general_task { align-items: stretch; flex-direction: column; }
+        .o_live_task_form { grid-template-columns: minmax(0, 1fr); }
         .o_live_followup_task_fields { grid-template-columns: minmax(0, 1fr); }
         .o_live_followup_task_title { grid-template-columns: minmax(0, 1fr); }
         .o_live_followup_task_title .form-label { grid-column: auto; }

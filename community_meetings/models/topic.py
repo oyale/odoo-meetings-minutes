@@ -217,6 +217,7 @@ class AgendaParticipation(models.Model):
     priority = fields.Selection(PRIORITIES, default="1", required=True)
     deadline = fields.Date()
     estimated_minutes = fields.Integer()
+    actual_minutes = fields.Integer(string="Actual minutes", copy=False)
     review_next_meeting = fields.Boolean(string="Review at next meeting", copy=False)
     is_followup = fields.Boolean(readonly=True, copy=False)
     topic_state = fields.Selection(related="topic_id.state")
@@ -231,10 +232,10 @@ class AgendaParticipation(models.Model):
         )
     ]
 
-    @api.constrains("estimated_minutes")
+    @api.constrains("estimated_minutes", "actual_minutes")
     def _check_estimated_minutes(self):
-        if any(i.estimated_minutes < 0 for i in self):
-            raise ValidationError(_("Estimated minutes cannot be negative."))
+        if any(i.estimated_minutes < 0 or i.actual_minutes < 0 for i in self):
+            raise ValidationError(_("Estimated and actual minutes cannot be negative."))
 
     @api.model_create_multi
     def create(self, vals_list):

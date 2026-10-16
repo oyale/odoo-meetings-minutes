@@ -129,13 +129,44 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(self.outcome("discussion")).to_have_text("Resolved")
         self.assertEqual(self.record("community.meeting.agenda.item", self.item_ids["discussion"], ["disposition"])["disposition"], "closed")
 
+    def test_live_result_can_be_undone_and_actual_point_time_saved(self):
+        self.page.get_by_text("Minutes secretary", exact=True).wait_for()
+        expect(self.page.get_by_text("Estimated duration", exact=True)).to_be_visible()
+        card = self.card("discussion")
+        card.get_by_role("button", name="Resolve discussion").click()
+        expect(self.outcome("discussion")).to_have_text("Resolved")
+        card.get_by_label("Actual minutes for this point").fill("31")
+        card.get_by_label("Actual minutes for this point").press("Tab")
+        self.assertEqual(self.record("community.meeting.agenda.item", self.item_ids["discussion"], ["actual_minutes"])["actual_minutes"], 31)
+        card.get_by_role("button", name="Undo point result").click()
+        reason = card.get_by_label("Why reopen this point?")
+        reason.fill("We need to revise the conclusion.")
+        card.get_by_role("button", name="Reopen point").click()
+        expect(self.outcome("discussion")).to_have_text("Pending")
+        self.assertEqual(self.record("community.meeting.agenda.item", self.item_ids["discussion"], ["disposition"])["disposition"], "open")
+
+    def test_decision_can_be_undone_during_running_meeting(self):
+        self.page.get_by_role("button", name="Start Meeting").click()
+        card = self.card("decision")
+        card.get_by_role("button", name="Approve decision").click()
+        card.get_by_placeholder("Agreement title").fill("Approve during live session")
+        card.get_by_placeholder("What was agreed?").fill("Approved pending verification")
+        card.get_by_role("button", name="Add agreement", exact=True).click()
+        expect(self.outcome("decision")).to_have_text("Approved")
+        card.get_by_role("button", name="Undo point result").click()
+        card.get_by_label("Why reopen this point?").fill("The vote needs checking.")
+        card.get_by_role("button", name="Reopen point").click()
+        expect(self.outcome("decision")).to_have_text("Pending")
+        agreement = self.rpc("community.meeting.resolution", "search_read", [[("agenda_item_id", "=", self.item_ids["decision"])]], {"fields": ["status"], "limit": 1})[0]
+        self.assertEqual(agreement["status"], "withdrawn")
+
     def test_todo_requires_a_followup_task_before_resolution(self):
         card = self.card("todo")
         button = card.get_by_role("button", name="Resolve TODO")
         expect(self.outcome("todo")).to_have_text("Task required")
         expect(button).to_be_disabled()
         card.get_by_label("Task name").fill("Prepare the requested draft")
-        card.get_by_role("button", name="Add task").click()
+        card.get_by_role("button", name="Add follow-up").click()
         fields = self.rpc("community.meeting.action", "fields_get", [], {"attributes": ["type"]})
         requires_project = "project_task_ids" in fields and self.record("community.meeting.agenda.item", self.item_ids["todo"], ["requires_project_task"])["requires_project_task"]
         if requires_project:

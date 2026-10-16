@@ -457,7 +457,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )[0]
         form.get_by_label("Task owner").select_option(str(editor_id))
         form.get_by_label("Deadline", exact=True).fill("2027-02-01")
-        form.get_by_role("button", name="Add task").click()
+        form.get_by_role("button", name="Add follow-up").click()
         row = card.locator('li:has(select[aria-label="Task status"])')
         expect(row).to_be_visible()
         task = self.related("community.meeting.action", "discussion")
@@ -622,9 +622,8 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         self.page.set_viewport_size({"width": 390, "height": 844})
         try:
             main = self.page.locator("main.o_community_live_meeting")
-            self.assertLessEqual(
-                main.evaluate("el => el.scrollWidth - el.clientWidth"), 1
-            )
+            overflow = main.evaluate("el => ({width: el.clientWidth, scrollWidth: el.scrollWidth, offenders: [...el.querySelectorAll('*')].filter(x => x.scrollWidth > x.clientWidth + 2).map(x => ({tag: x.tagName, className: x.className, text: (x.innerText || '').slice(0, 80), width: x.clientWidth, scrollWidth: x.scrollWidth})).slice(0, 12)})")
+            self.assertLessEqual(overflow["scrollWidth"] - overflow["width"], 1, overflow)
             self.card("information").get_by_role("button", name="Mark as done").click()
             expect(self.outcome("information")).to_have_text("Done")
         finally:

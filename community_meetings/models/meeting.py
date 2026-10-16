@@ -19,7 +19,10 @@ class CommunityMeeting(models.Model):
         "res.users", required=True, default=lambda self: self.env.user,
         check_company=True, tracking=True,
     )
-    secretary_id = fields.Many2one("res.users", check_company=True, tracking=True)
+    secretary_id = fields.Many2one(
+        "res.users", string="Minutes secretary", check_company=True, tracking=True,
+        default=lambda self: self.env.user,
+    )
     editor_user_ids = fields.Many2many(
         "res.users", "community_meeting_editor_rel", "meeting_id", "user_id",
         string="Editors", check_company=True,
@@ -33,6 +36,9 @@ class CommunityMeeting(models.Model):
     end_datetime = fields.Datetime(string="Estimated End Datetime", tracking=True)
     actual_start_datetime = fields.Datetime(readonly=True, copy=False, tracking=True)
     actual_end_datetime = fields.Datetime(readonly=True, copy=False, tracking=True)
+    actual_duration_minutes = fields.Integer(
+        string="Actual duration (minutes)", compute="_compute_actual_duration_minutes", store=True
+    )
     location = fields.Char()
     meeting_url = fields.Char()
     description = fields.Html()
@@ -82,6 +88,17 @@ class CommunityMeeting(models.Model):
     _sql_constraints = [
         ("code_company_unique", "unique(company_id, code)", "Meeting references must be unique per company."),
     ]
+
+    @api.depends("actual_start_datetime", "actual_end_datetime")
+    def _compute_actual_duration_minutes(self):
+        for meeting in self:
+            if meeting.actual_start_datetime and meeting.actual_end_datetime:
+                seconds = (
+                    meeting.actual_end_datetime - meeting.actual_start_datetime
+                ).total_seconds()
+                meeting.actual_duration_minutes = max(0, round(seconds / 60))
+            else:
+                meeting.actual_duration_minutes = 0
 
     @api.constrains("start_datetime", "end_datetime")
     def _check_end_after_start(self):

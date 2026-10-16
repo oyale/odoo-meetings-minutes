@@ -55,6 +55,7 @@
                             <field name="end_datetime"/>
                             <field name="actual_start_datetime" readonly="1" invisible="not actual_start_datetime"/>
                             <field name="actual_end_datetime" readonly="1" invisible="not actual_end_datetime"/>
+                            <field name="actual_duration_minutes" readonly="1" invisible="not actual_end_datetime"/>
                             <field name="location"/>
                             <field name="meeting_url" widget="url"/>
                         </group>
@@ -79,6 +80,8 @@
                                     <field name="agenda_type_id" domain="[('active', '=', True)]"/>
                                     <field name="kind" column_invisible="1"/>
                                     <field name="presenter_partner_id"/>
+                                    <field name="estimated_minutes" optional="hide"/>
+                                    <field name="actual_minutes" optional="show" readonly="parent.state in ['approved', 'cancelled']"/>
                                     <field name="disposition" invisible="parent.state in ['draft', 'scheduled']"/>
                                     <field name="decision_result" invisible="kind != 'decision' or parent.state in ['draft', 'scheduled']"/>
                                     <button name="action_request_followup" type="object" string="Follow Up" icon="fa-share" invisible="disposition == 'deferred'"/>
@@ -91,6 +94,8 @@
                                             <field name="agenda_type_id" domain="[('active', '=', True)]"/>
                                             <field name="kind" invisible="1"/>
                                             <field name="presenter_partner_id"/>
+                                            <field name="estimated_minutes"/>
+                                            <field name="actual_minutes" readonly="parent.state in ['approved', 'cancelled']"/>
                                             <field name="disposition" invisible="parent.state in ['draft', 'scheduled']"/>
                                             <field name="decision_result" invisible="kind != 'decision' or parent.state in ['draft', 'scheduled']"/>
                                             <field name="deferral_reason" invisible="disposition != 'deferred'"/>

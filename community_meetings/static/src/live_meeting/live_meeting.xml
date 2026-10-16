@@ -26,10 +26,12 @@
                     <div class="o_live_header_details">
                         <div><strong>Estimated start</strong><span><t t-out="dateTime(state.meeting.start_datetime)"/></span></div>
                         <div><strong>Estimated end</strong><span><t t-out="dateTime(state.meeting.end_datetime)"/></span></div>
-                        <div><strong>Duration</strong><span t-out="durationLabel(state.meeting.duration_minutes)"/></div>
+                        <div><strong>Estimated duration</strong><span t-out="durationLabel(state.meeting.duration_minutes)"/></div>
                         <div><strong>Actual start</strong><span><t t-out="dateTime(state.meeting.actual_start_datetime)"/></span></div>
                         <div><strong>Actual end</strong><span><t t-out="dateTime(state.meeting.actual_end_datetime)"/></span></div>
+                        <div t-if="state.meeting.actual_end_datetime"><strong>Actual duration</strong><span t-out="durationLabel(state.meeting.actual_duration_minutes)"/></div>
                         <div><strong>Organizer</strong><span><t t-out="label(state.meeting.organizer_id)"/></span></div>
+                        <div><strong>Minutes secretary</strong><span><t t-out="label(state.meeting.secretary_id)"/></span></div>
                         <div><strong>Location</strong><span><t t-out="state.meeting.location || 'Not set'"/></span></div>
                         <div class="o_live_attendees"><strong>Attendees</strong><span><t t-out="attendees()"/></span>
                             <button t-if="!locked and !state.attendeeEditorOpen" class="btn btn-link btn-sm" t-on-click="toggleAttendeeEditor">Edit attendees</button>
@@ -98,11 +100,9 @@
                         </div>
                         <div t-att-id="'agenda-panel-' + item.id" t-att-class="'o_live_card_body ' + (state.expanded[item.id] ? '' : 'd-none')">
                             <details t-if="item.description" class="o_live_planned" open="open"><summary>Planned topic</summary><div t-out="safeHtml(item.description)"/></details>
-                            <details t-if="!locked" class="o_live_advanced"><summary>Point options</summary><button class="btn btn-link" t-on-click="() => this.editPoint(item)">Edit point details</button>
-                                <input class="form-control" aria-label="Reason for reopening" placeholder="Reason for reopening" t-on-input="(ev) => { item.reopen_reason = ev.target.value; }"/>
-                                <button class="btn btn-link" t-on-click="() => this.reopenPoint(item)">Reopen point</button>
-                            </details>
-                            <div class="text-muted o_live_point_meta"><span t-if="item.deadline">Due <t t-out="item.deadline"/> · </span><span t-if="item.estimated_minutes"><t t-out="item.estimated_minutes"/> min</span></div>
+                            <details t-if="!locked" class="o_live_advanced"><summary>Point options</summary><button class="btn btn-link" t-on-click="() => this.editPoint(item)">Edit point details</button></details>
+                            <div class="text-muted o_live_point_meta"><span t-if="item.deadline">Due <t t-out="item.deadline"/> · </span><span t-if="item.estimated_minutes">Estimated <t t-out="item.estimated_minutes"/> min</span><span t-if="item.actual_minutes"> · Actual <t t-out="item.actual_minutes"/> min</span></div>
+                            <label t-if="!locked" class="o_live_actual_minutes"><span>Actual minutes for this meeting</span><input class="form-control" type="number" min="0" step="1" aria-label="Actual minutes for this point" t-att-value="item.actual_minutes || 0" t-on-change="(ev) => this.updateActualMinutes(item, ev.target.value)"/></label>
                             <label t-if="!locked" class="form-check-label"><input class="form-check-input" type="checkbox" aria-label="Review at next meeting" t-att-checked="item.review_next_meeting" t-att-disabled="state.submitting['review:' + item.id]" t-on-change="(ev) => this.toggleReview(item, ev.target.checked)"/> Review at next meeting</label>
                             <div t-if="item.is_followup" class="alert alert-light">Follow-up of a closed point: <t t-out="item.topic_outcome"/><button t-if="!locked" class="btn btn-outline-success" t-on-click="() => this.applyPointAction(item, 'discussed')">Review complete</button></div>
                             <div t-if="!item.is_followup" class="o_live_point_actions" role="group" aria-label="Change agenda point result">
@@ -112,6 +112,13 @@
                                 <button t-if="!locked and typeBehavior(item) === 'decision' and !decisionAgreement(item)" class="btn btn-outline-success" t-on-click="() => this.applyPointAction(item, 'approved')" aria-label="Approve decision"><i class="fa fa-thumbs-up" aria-hidden="true"/> Approve</button>
                                 <button t-if="!locked and typeBehavior(item) === 'decision' and !decisionAgreement(item)" class="btn btn-outline-danger" t-on-click="() => this.applyPointAction(item, 'denied')" aria-label="Reject decision"><i class="fa fa-thumbs-down" aria-hidden="true"/> Reject</button>
                                 <button t-if="!locked and pointOutcome(item) !== 'deferred'" class="btn btn-outline-secondary" t-on-click="() => this.applyPointAction(item, 'deferred')" aria-label="Postpone agenda point"><i class="fa fa-clock-o" aria-hidden="true"/> Postpone</button>
+                                <button t-if="!locked and !item.is_followup and item.disposition !== 'open' and !state.reopening[item.id]" class="btn btn-outline-secondary" t-on-click="() => { state.reopening[item.id] = ''; }" aria-label="Undo point result"><i class="fa fa-undo" aria-hidden="true"/> Undo result</button>
+                            </div>
+                            <div t-if="!locked and state.reopening[item.id] !== undefined" class="o_live_reopen_form">
+                                <label class="form-label" t-att-for="'reopen-reason-' + item.id">Why reopen this point?</label>
+                                <input t-att-id="'reopen-reason-' + item.id" class="form-control" t-att-value="state.reopening[item.id]" t-on-input="(ev) => this.setReopenReason(item, ev.target.value)"/>
+                                <button class="btn btn-primary" t-att-disabled="state.submitting['reopen:' + item.id]" t-on-click="() => this.reopenPoint(item)">Reopen point</button>
+                                <button class="btn btn-link" t-on-click="() => delete state.reopening[item.id]">Cancel</button>
                             </div>
                             <label class="form-label" t-att-for="'discussion-' + item.id">Discussion notes</label>
                             <t t-if="locked"><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></t>
