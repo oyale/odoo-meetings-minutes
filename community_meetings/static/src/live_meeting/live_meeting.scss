@@ -109,5 +109,5 @@
 }
 .modal-dialog:has(.o_meeting_point_wizard) { max-width: 720px; }
 @media (max-width: 480px) {
-    .o_meeting_point_wizard .modal-dialog { max-width: 100%; }
+    .modal-dialog:has(.o_meeting_point_wizard) { max-width: 100%; }
 }
