@@ -636,3 +636,59 @@ class MeetingSeries(models.Model):
                 ("state", "=", "proposed"),
                 ("proposal_status", "=", "submitted"),
             ])
+
+
+class MeetingTopicCopy(models.Model):
+    _inherit = "community.meeting.topic"
+
+    def action_copy_to_series(self):
+        self.ensure_one()
+        self.check_access("read")
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Copy Point to Another Series"),
+            "res_model": "community.meeting.topic.copy.wizard",
+            "view_mode": "form",
+            "views": [(self.env.ref("community_meetings.view_topic_copy_wizard").id, "form")],
+            "target": "new",
+            "context": {"default_topic_id": self.id},
+        }
+
+
+class TopicCopyWizard(models.TransientModel):
+    _name = "community.meeting.topic.copy.wizard"
+    _description = "Copy a Point to Another Series"
+
+    topic_id = fields.Many2one("community.meeting.topic", required=True, readonly=True)
+    company_id = fields.Many2one(related="topic_id.company_id", readonly=True)
+    destination_series_id = fields.Many2one(
+        "community.meeting.series", required=True,
+        domain="[('company_id', '=', company_id), ('active', '=', True)]",
+    )
+
+    def action_copy(self):
+        self.ensure_one()
+        source = self.topic_id
+        self.env["community.meeting.topic"].check_access_rights("create")
+        self.destination_series_id.check_access("read")
+        if self.destination_series_id.company_id != source.company_id:
+            raise ValidationError(_("Choose a series in the same company."))
+        new = self.env["community.meeting.topic"].create({
+            "name": source.name,
+            "description": source.description,
+            "agenda_type_id": source.agenda_type_id.id,
+            "priority": source.priority,
+            "deadline": source.deadline,
+            "estimated_minutes": source.estimated_minutes,
+            "followup_policy": source.followup_policy,
+            "default_followup_kind": source.default_followup_kind,
+            "company_id": source.company_id.id,
+            "series_id": self.destination_series_id.id,
+            "state": "open",
+            "origin_topic_id": source.id,
+        })
+        return {
+            "type": "ir.actions.act_window", "name": _("Point"),
+            "res_model": "community.meeting.topic", "res_id": new.id,
+            "views": [(False, "form")], "target": "current",
+        }

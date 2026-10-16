@@ -45,6 +45,27 @@ class TestPointConfiguration(TransactionCase):
         meeting = self._meeting("Roles")
         self.assertEqual(meeting.coordinator_role_label, "Board chair")
 
+    def test_copy_point_to_another_series(self):
+        topic = self.env["community.meeting.topic"].with_user(self.editor).create({
+            "name": "Original point", "description": "<p>Body</p>",
+            "series_id": self.series.id, "priority": "2", "estimated_minutes": 15,
+            "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+        })
+        destination = self.env["community.meeting.series"].with_user(self.editor).create({
+            "name": "Destination series",
+        })
+        wizard = self.env["community.meeting.topic.copy.wizard"].with_user(self.editor).create({
+            "topic_id": topic.id, "destination_series_id": destination.id,
+        })
+        res = wizard.action_copy()
+        copy = self.env["community.meeting.topic"].browse(res["res_id"])
+        self.assertEqual(copy.origin_topic_id, topic)
+        self.assertEqual(copy.series_id, destination)
+        self.assertEqual(copy.name, "Original point")
+        self.assertEqual(copy.priority, "2")
+        self.assertEqual(copy.estimated_minutes, 15)
+        self.assertNotEqual(copy, topic)
+
     def test_dissent_reasons_are_configurable(self):
         reason = self.env["community.meeting.dissent.reason"].create({"name": "Budget objection"})
         meeting = self._meeting("Dissent reasons")

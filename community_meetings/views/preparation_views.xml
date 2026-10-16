@@ -1,7 +1,7 @@
 <odoo>
     <record id="view_topic_form" model="ir.ui.view">
         <field name="name">community.meeting.topic.form</field><field name="model">community.meeting.topic</field>
-        <field name="arch" type="xml"><form string="Point"><sheet>
+        <field name="arch" type="xml"><form string="Point"><header><button name="action_copy_to_series" type="object" string="Copy to another series" groups="community_meetings.group_meeting_editor"/></header><sheet>
             <h1><field name="name"/></h1>
             <group><field name="agenda_type_id" widget="meeting_agenda_type"/><field name="state" readonly="1"/><field name="outcome" readonly="1"/><field name="postponed" readonly="1"/><field name="priority"/><field name="deadline"/><field name="estimated_minutes"/><field name="series_id" readonly="1"/></group>
             <field name="description" widget="html"/>
@@ -9,6 +9,11 @@
             <group string="Related"><field name="origin_topic_id" readonly="1" invisible="not origin_topic_id"/><field name="related_topic_ids" widget="many2many_tags" domain="[('company_id', '=', company_id), ('id', '!=', id)]"/></group>
             <field name="participation_ids" readonly="1"><list><field name="meeting_id"/><field name="disposition"/></list></field>
         </sheet><chatter/></form></field>
+    </record>
+    <record id="view_topic_copy_wizard" model="ir.ui.view">
+        <field name="name">community.meeting.topic.copy.wizard</field><field name="model">community.meeting.topic.copy.wizard</field>
+        <field name="arch" type="xml"><form string="Copy Point to Another Series"><group><field name="topic_id"/><field name="destination_series_id"/></group>
+        <footer><button name="action_copy" type="object" string="Copy" class="btn-primary"/><button string="Cancel" special="cancel"/></footer></form></field>
     </record>
     <record id="view_meeting_preparation" model="ir.ui.view">
         <field name="name">community.meeting.preparation</field><field name="model">community.meeting</field><field name="inherit_id" ref="view_community_meeting_form"/>

@@ -43,3 +43,4 @@ access_agenda_type_proposer,community.meeting.agenda.type proposer,model_communi
 access_point_wizard_proposer,community.meeting.point.wizard proposer,model_community_meeting_point_wizard,group_agenda_proposer,1,1,1,1
 access_dissent_reason_reader,Dissent reason reader,model_community_meeting_dissent_reason,group_meeting_reader,1,0,0,0
 access_dissent_reason_editor,Dissent reason editor,model_community_meeting_dissent_reason,group_meeting_editor,1,1,1,1
+access_topic_copy_wizard,Topic copy wizard,model_community_meeting_topic_copy_wizard,group_meeting_editor,1,1,1,1
