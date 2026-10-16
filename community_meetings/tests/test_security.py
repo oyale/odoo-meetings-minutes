@@ -105,7 +105,7 @@ class TestMeetingSecurity(TransactionCase):
         )
         self.assertIn(self.env.ref("base.group_user"), root.groups_id)
         for menu_xmlid in (
-            "community_meetings.menu_community_meeting_proposals",
+            "community_meetings.menu_propose_point",
             "community_meetings.menu_community_meeting_carryovers",
         ):
             with self.subTest(menu=menu_xmlid):

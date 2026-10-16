@@ -143,7 +143,6 @@ ACTIONS = {
     ],
     "test_meetings_root_opens_list_and_preserves_submenus": [
         "open meeting list from root menu",
-        "open agenda proposals submenu",
         "open new meeting wizard from its submenu",
     ],
     "test_followup_kinds_keep_tasks_and_odoo_activities_distinct": [
@@ -178,10 +177,6 @@ ACTIONS = {
     "test_approve_and_download_minutes": [
         "approve minutes",
         "download approved minutes",
-    ],
-    "test_submit_and_review_agenda_proposal": [
-        "submit agenda proposal",
-        "review agenda proposal",
     ],
 }
 ARTIFACTS = (
@@ -1117,19 +1112,12 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         for menu_xmlid in (
             "menu_prepare_meeting",
             "menu_community_meeting_series",
-            "menu_community_meeting_proposals",
         ):
             expect(
                 self.page.locator(
                     'a[data-menu-xmlid="community_meetings.%s"]' % menu_xmlid
                 )
             ).to_be_visible()
-
-        self.page.locator(
-            'a[data-menu-xmlid="community_meetings.menu_community_meeting_proposals"]'
-        ).click()
-        expect(self.page.locator(".o_list_view")).to_be_visible()
-        expect(self.page.locator(".o_control_panel")).to_contain_text("Agenda Proposals")
 
         self.page.locator(
             'a[data-menu-xmlid="community_meetings.menu_community_meetings_root"]'
@@ -1509,82 +1497,6 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
                 "snapshot_json"
             ],
             snapshot["snapshot_json"],
-        )
-
-    def test_submit_and_review_agenda_proposal(self):
-        login = os.environ.get("ODOO_PROPOSER_LOGIN")
-        password = os.environ.get("ODOO_PROPOSER_PASSWORD")
-        if not login or not password:
-            self.skipTest("Provide the separate proposer fixture credentials")
-        series_name = "Proposal series " + uuid.uuid4().hex[:8]
-        series = self.rpc("community.meeting.series", "create", [{"name": series_name}])
-        destination = self.rpc(
-            "community.meeting",
-            "create",
-            [{"name": "Proposal destination", "series_id": series}],
-        )
-        self.retained.extend(
-            [
-                {"model": "community.meeting", "id": destination},
-                {"model": "community.meeting.series", "id": series},
-            ]
-        )
-        context = self.browser.new_context(viewport={"width": 1440, "height": 1000})
-        self.addCleanup(context.close)
-        page = context.new_page()
-        page.on("pageerror", lambda error: self.console_errors.append(str(error)))
-        page.goto(BASE_URL + "/web/login")
-        page.locator('input[name="login"]').fill(login)
-        page.locator('input[name="password"]').fill(password)
-        page.locator('button[type="submit"]').click()
-        page.wait_for_url("**/odoo**")
-        page.goto(
-            BASE_URL
-            + "/odoo/action-community_meetings.action_community_meeting_proposals"
-        )
-        page.locator(".o_list_button_add").click()
-        title = "Browser proposal " + uuid.uuid4().hex[:8]
-        page.locator('.o_field_widget[name="name"] input').fill(title)
-        page.locator('.o_field_widget[name="series_id"] input').fill(series_name)
-        page.get_by_role("option", name=series_name, exact=True).click()
-        page.locator(
-            '.o_field_widget[name="description"] [contenteditable="true"]'
-        ).fill("Public context for the proposed point.")
-        with page.expect_response(
-            lambda response: "/web_save" in response.url
-        ) as saved:
-            page.locator('button[name="action_submit"]').click()
-        self.assertNotIn("error", saved.value.json())
-        proposal = self.rpc(
-            "community.meeting.agenda.proposal",
-            "search_read",
-            [[("name", "=", title)]],
-            {"fields": ["id", "status"]},
-        )
-        self.assertEqual(len(proposal), 1)
-        self.assertEqual(proposal[0]["status"], "submitted")
-        self.page.goto(
-            "%s/web#model=community.meeting.agenda.proposal&id=%s&view_type=form"
-            % (BASE_URL, proposal[0]["id"])
-        )
-        self.page.locator('button[name="action_open_accept_wizard"]').click()
-        dialog = self.page.get_by_role("dialog").last
-        dialog.locator('.o_field_widget[name="meeting_id"] input').fill(
-            "Proposal destination"
-        )
-        self.page.get_by_role("option", name="Proposal destination", exact=True).click()
-        dialog.locator('button[name="action_accept"]').click()
-        expect(dialog).not_to_be_visible()
-        self.wait_field(
-            "community.meeting.agenda.proposal", proposal[0]["id"], "status", "accepted"
-        )
-        self.assertEqual(
-            self.rpc(
-                "community.meeting.agenda.item",
-                "search_count",
-                [[("meeting_id", "=", destination), ("name", "=", title)]],
-            ),
-            1,
         )
 
     def test_save_failure_keeps_text_and_retry_persists(self):
