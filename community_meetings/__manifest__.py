@@ -27,6 +27,7 @@
         "web.assets_backend": [
             "community_meetings/static/src/live_meeting/live_meeting.js",
             "community_meetings/static/src/live_meeting/meeting_list.js",
+            "community_meetings/static/src/live_meeting/series_list.js",
             "community_meetings/static/src/live_meeting/live_meeting.xml",
             "community_meetings/static/src/live_meeting/live_meeting.scss",
         ],

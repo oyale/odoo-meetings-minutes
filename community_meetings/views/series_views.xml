@@ -1,18 +1,9 @@
 <odoo>
-    <record id="action_series_wizard" model="ir.actions.act_window">
-        <field name="name">New Meeting Series</field>
-        <field name="res_model">community.meeting.series.wizard</field>
-        <field name="view_mode">form</field>
-        <field name="target">new</field>
-    </record>
     <record id="view_community_meeting_series_list" model="ir.ui.view">
         <field name="name">community.meeting.series.list</field>
         <field name="model">community.meeting.series</field>
         <field name="arch" type="xml">
-            <list default_order="name">
-                <header>
-                    <button name="%(action_series_wizard)d" type="action" string="New Series" class="btn-primary"/>
-                </header>
+            <list default_order="name" js_class="community_meeting_series_list">
                 <field name="name"/>
                 <field name="company_id" groups="base.group_multi_company"/>
                 <field name="coordinator_user_ids" widget="many2many_tags"/>

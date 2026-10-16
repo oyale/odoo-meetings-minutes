@@ -3,6 +3,14 @@ from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 
+class MeetingSeries(models.Model):
+    _inherit = "community.meeting.series"
+
+    @api.model
+    def action_create_series(self):
+        return self.env["community.meeting.series.wizard"]._open({})
+
+
 class MeetingSeriesWizard(models.TransientModel):
     _name = "community.meeting.series.wizard"
     _description = "Create a Meeting Series"
