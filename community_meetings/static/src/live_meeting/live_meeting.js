@@ -41,7 +41,7 @@ export class LiveMeeting extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
-        this.state = useState({ loading: true, saving: 0, saveError: false, unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, headerDraft: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "task", activity_type_id: false, todo_activity_type_id: false }, expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], pendingMinutes: [], defaultOwner: false });
+        this.state = useState({ loading: true, saving: 0, saveError: false, saveErrorDetail: "", unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, headerDraft: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "task", activity_type_id: false, todo_activity_type_id: false }, expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], pendingMinutes: [], defaultOwner: false });
         this.pendingWrites = new Map();
         this.editors = new Map();
         this.editorTimers = new Map();
@@ -408,6 +408,7 @@ export class LiveMeeting extends Component {
         const index = items.findIndex((item) => item.id === this.state.activeItemId);
         const next = items[Math.max(0, Math.min(items.length - 1, index + offset))];
         if (!next || next.id === this.state.activeItemId) return;
+        if (!await this.flushEditors()) return;
         const running = this.state.items.filter((item) => item.actual_started_at);
         for (const item of running) {
             await this.orm.call("community.meeting.agenda.item", "action_pause_timing", [[item.id]]);
@@ -429,6 +430,7 @@ export class LiveMeeting extends Component {
     }
 
     async startPoint(item) {
+        if (!await this.flushEditors()) return;
         try {
             await this.orm.call("community.meeting.agenda.item", "action_start_timing", [[item.id]]);
             await this.refreshPointTiming();
@@ -458,13 +460,22 @@ export class LiveMeeting extends Component {
         this.state.saving++;
         const operation = previous.catch(() => {}).then(async () => {
             this.state.saveError = false;
+            this.state.saveErrorDetail = "";
             try {
                 await this.orm.write(model, ids, values);
                 await apply?.();
                 return true;
             } catch (error) {
                 this.state.saveError = true;
-                this.notification.add("Could not save this change. Your text is still available; retry by editing the field again.", { type: "danger" });
+                const serverMessage = error?.data?.message || error?.message || "";
+                this.state.saveErrorDetail = serverMessage || `#${ids.join(", ")}`;
+                console.error("Live meeting write failed", { model, ids, values, error });
+                this.notification.add(
+                    serverMessage
+                        ? _t("Could not save this change: %(message)s", { message: serverMessage })
+                        : _t("Could not save this change. Your text is still available; retry by editing the field again."),
+                    { type: "danger" },
+                );
                 return false;
             } finally {
                 this.state.saving--;
@@ -536,6 +547,7 @@ export class LiveMeeting extends Component {
             this.state.expanded[item.id] = true;
             return;
         }
+        if (!await this.flushEditors()) return;
         let values;
         if (this.typeBehavior(item) === "decision") {
             values = value === "deferred"

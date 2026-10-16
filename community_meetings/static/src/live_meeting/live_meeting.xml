@@ -16,7 +16,7 @@
                     <button t-if="state.meeting.state === 'minutes_draft' and canApproveMinutes" class="btn btn-primary" t-att-disabled="state.saving > 0 or state.submitting['meeting:' + meetingId]" t-on-click="approveMinutes">Approve Minutes</button>
                 </div>
                 <span t-if="state.saving" class="text-muted" role="status" aria-live="polite">Saving…</span>
-                <span t-elif="state.saveError" class="text-danger" role="alert">Some changes could not be saved. Retry by editing the affected field.</span>
+                <span t-elif="state.saveError" class="text-danger" role="alert">Some changes could not be saved.<t t-if="state.saveErrorDetail"> <t t-out="state.saveErrorDetail"/></t> Retry by editing the affected field.</span>
                 <span t-elif="hasUnsavedEditors" class="text-warning" role="status" aria-live="polite">Changes pending</span>
                 <span t-else="" class="text-success" role="status" aria-live="polite">All changes saved</span>
                 <span t-if="state.meeting.state" class="badge text-bg-primary"><t t-out="stateLabel(state.meeting.state)"/></span>
