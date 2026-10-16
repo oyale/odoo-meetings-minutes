@@ -44,7 +44,14 @@
         <field name="model">community.meeting.project.task.wizard</field>
         <field name="arch" type="xml">
             <form string="Create Project Task">
-                <group><field name="action_id"/><field name="existing_task_id" options="{'no_create':True}"/><field name="name" invisible="existing_task_id"/><field name="project_id" invisible="existing_task_id"/></group>
+                <group>
+                    <field name="action_id"/>
+                    <field name="existing_task_id" options="{'no_create':True}"/>
+                    <field name="name" invisible="existing_task_id"/>
+                    <field name="has_default_project" invisible="1"/>
+                    <field name="choose_another_project" invisible="existing_task_id or not has_default_project"/>
+                    <field name="project_id" invisible="existing_task_id or (has_default_project and not choose_another_project)"/>
+                </group>
                 <footer>
                     <button name="action_create" type="object" string="Create and Link" class="oe_highlight"/>
                     <button string="Cancel" special="cancel"/>

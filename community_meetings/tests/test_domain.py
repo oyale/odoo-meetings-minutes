@@ -134,6 +134,55 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(item.topic_id.state, "open")
         self.assertFalse(item.review_next_meeting)
 
+    def test_followup_actions_are_offered_for_carryover_even_when_done(self):
+        series = self.env["community.meeting.series"].create(
+            {"name": "Follow-up carryover", "carryover_policy": "review"}
+        )
+        previous = self.env["community.meeting"].create({
+            "name": "Previous follow-up meeting", "series_id": series.id,
+            "start_datetime": "2026-10-01 10:00:00",
+        })
+        point = self.env["community.meeting.agenda.item"].create({
+            "meeting_id": previous.id, "name": "Completed follow-up point",
+        })
+        self.env["community.meeting.action"].create({
+            "meeting_id": previous.id, "agenda_item_id": point.id,
+            "name": "Already completed follow-up", "state": "done",
+        })
+        next_meeting = self.env["community.meeting"].create({
+            "name": "Next follow-up meeting", "series_id": series.id,
+            "start_datetime": "2026-10-08 10:00:00",
+        })
+
+        candidates = self.env["community.meeting"]._carryover_candidates(
+            series, next_meeting.start_datetime
+        )
+
+        self.assertEqual(candidates, point)
+        self.assertFalse(point.review_next_meeting)
+
+    def test_points_without_review_or_followup_are_not_carryover_candidates(self):
+        series = self.env["community.meeting.series"].create(
+            {"name": "No follow-up carryover", "carryover_policy": "review"}
+        )
+        previous = self.env["community.meeting"].create({
+            "name": "Previous empty meeting", "series_id": series.id,
+            "start_datetime": "2026-10-01 10:00:00",
+        })
+        point = self.env["community.meeting.agenda.item"].create({
+            "meeting_id": previous.id, "name": "No follow-up point",
+        })
+        next_meeting = self.env["community.meeting"].create({
+            "name": "Next empty meeting", "series_id": series.id,
+            "start_datetime": "2026-10-08 10:00:00",
+        })
+
+        candidates = self.env["community.meeting"]._carryover_candidates(
+            series, next_meeting.start_datetime
+        )
+
+        self.assertNotIn(point, candidates)
+
     def test_followup_defaults_inherit_company_and_allow_series_override(self):
         company = self.env.company
         call_type = self.env["mail.activity.type"].search(

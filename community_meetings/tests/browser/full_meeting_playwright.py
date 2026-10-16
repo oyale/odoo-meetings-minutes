@@ -107,6 +107,10 @@ ACTIONS = {
         "optional deadline",
         "optional time estimate",
         "priority in live",
+        "hide empty carryover list",
+    ],
+    "test_followup_points_are_offered_in_new_meeting_wizard": [
+        "carry completed follow-up point into next meeting",
     ],
     "test_add_point_from_live_and_cancel": [
         "add rich point from live",
@@ -133,9 +137,9 @@ ACTIONS = {
         "accept continuing point in live",
         "dismiss continuing point in live",
     ],
-    "test_project_policy_and_existing_external_task": [
+    "test_project_task_can_use_alternate_project": [
         "configure Project requirement",
-        "link existing task from another project",
+        "choose a different project for a new task",
     ],
     "test_save_failure_keeps_text_and_retry_persists": ["recover after save failure"],
     "test_mobile_point_wizard_and_keyboard_cancel": [
@@ -855,6 +859,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
                 "There are no points to carry over into this meeting.", exact=True
             )
         ).to_be_visible()
+        expect(wizard.locator('.o_field_widget[name="carry_line_ids"]')).not_to_be_visible()
         wizard.locator('button[name="action_next"]').click()
         wizard.locator('button[name="action_add_point"]').click()
         point = self.page.get_by_role("dialog").last
@@ -917,6 +922,41 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
         expect(self.page.locator(".o_live_point_meta")).to_contain_text("20 min")
         expect(self.page.locator(".o_live_planned")).to_contain_text("Background")
+
+    def test_followup_points_are_offered_in_new_meeting_wizard(self):
+        name = "Follow-up carryover " + uuid.uuid4().hex[:8]
+        series = self.rpc("community.meeting.series", "create", [{
+            "name": name, "carryover_policy": "review",
+        }])
+        self.retained.append({"model": "community.meeting.series", "id": series})
+        source = self.rpc("community.meeting", "create", [{
+            "name": name + " previous",
+            "series_id": series,
+            "start_datetime": "2026-10-01 10:00:00",
+        }])
+        point = self.rpc("community.meeting.agenda.item", "create", [{
+            "meeting_id": source, "name": "Completed follow-up to review",
+        }])
+        self.rpc("community.meeting.action", "create", [{
+            "meeting_id": source, "agenda_item_id": point,
+            "name": "Completed action", "state": "done",
+        }])
+        self.page.goto(
+            "%s/web#model=community.meeting.series&id=%s&view_type=form"
+            % (BASE_URL, series)
+        )
+        self.page.locator('button[name="action_new_meeting"]').click()
+        wizard = self.page.get_by_role("dialog").last
+        wizard.locator('button[name="action_next"]').click()
+        wizard.locator('.o_field_widget[name="start_datetime"] input').fill(
+            "10/08/2026 10:00:00"
+        )
+        wizard.locator('button[name="action_next"]').click()
+        wizard.locator('button[name="action_next"]').click()
+        expect(wizard.locator('.o_field_widget[name="carry_line_ids"]')).to_contain_text(
+            "Completed follow-up to review"
+        )
+        self.retained.append({"model": "community.meeting", "id": source})
 
     def test_add_point_from_live_and_cancel(self):
         before = self.rpc(
@@ -1210,28 +1250,12 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             1,
         )
 
-    def test_project_policy_and_existing_external_task(self):
+    def test_project_task_can_use_alternate_project(self):
         fields = self.rpc(
             "community.meeting.series", "fields_get", [], {"attributes": ["type"]}
         )
         if "meeting_todo_requirement" not in fields:
             self.skipTest("Optional Project addon is absent")
-        project = self.rpc(
-            "project.project",
-            "search",
-            [[("name", "=", os.environ["ODOO_TEST_PROJECT"])]],
-        )[0]
-        task = self.rpc(
-            "project.task",
-            "create",
-            [
-                {
-                    "name": "Existing external task",
-                    "project_id": project,
-                    "user_ids": [(4, self.current_user())],
-                }
-            ],
-        )
         series = self.rpc(
             "community.meeting.series",
             "create",
@@ -1239,12 +1263,32 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
                 {
                     "name": "Project policy " + uuid.uuid4().hex[:8],
                     "meeting_todo_requirement": "project",
-                    "meeting_project_mode": "none",
+                    "meeting_project_mode": "series",
                     "meeting_task_scope": "any",
                 }
             ],
         )
         self.retained.append({"model": "community.meeting.series", "id": series})
+        meeting_company = self.record(
+            "community.meeting", self.meeting_id, ["company_id"]
+        )["company_id"][0]
+        configured_project = self.rpc(
+            "project.project", "create", [{
+                "name": "Configured series project " + uuid.uuid4().hex[:6],
+                "company_id": meeting_company,
+            }]
+        )
+        alternate_project_name = "Alternate live task project " + uuid.uuid4().hex[:6]
+        alternate_project = self.rpc(
+            "project.project", "create", [{
+                "name": alternate_project_name,
+                "company_id": meeting_company,
+            }]
+        )
+        self.rpc(
+            "community.meeting.series", "write",
+            [[series], {"meeting_project_id": configured_project}],
+        )
         self.rpc(
             "community.meeting", "write", [[self.meeting_id], {"series_id": series}]
         )
@@ -1254,24 +1298,43 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         card.get_by_label("Task name", exact=True).fill(
             "Assigned follow-up with Project"
         )
-        card.get_by_role("button", name="Add task", exact=True).click()
+        card.get_by_role("button", name="Add follow-up", exact=True).click()
         expect(self.outcome("todo")).to_have_text("Project task required")
         expect(card.get_by_role("button", name="Resolve TODO")).to_be_disabled()
         card.get_by_role("button", name="Create Project task").click()
         dialog = self.page.get_by_role("dialog").last
-        dialog.locator('.o_field_widget[name="existing_task_id"] input').fill(
-            "Existing external task"
-        )
-        self.page.get_by_role(
-            "option", name="Existing external task", exact=True
-        ).click()
+        expect(dialog.get_by_label("Choose a different project")).to_be_visible()
+        expect(dialog.locator('.o_field_widget[name="project_id"]')).not_to_be_visible()
+        dialog.get_by_label("Choose a different project").check()
+        project_field = dialog.locator('.o_field_widget[name="project_id"] input')
+        project_field.fill(alternate_project_name)
+        self.page.get_by_role("option", name=alternate_project_name, exact=True).click()
         dialog.locator('button[name="action_create"]').click()
+        expect(dialog).not_to_be_visible()
+        created_tasks = self.rpc(
+            "project.task", "search_read",
+            [[("project_id", "=", alternate_project)]],
+            {"fields": ["name", "project_id"]},
+        )
+        linked_actions = self.rpc(
+            "community.meeting.action", "search_read",
+            [[("meeting_id", "=", self.meeting_id)]],
+            {"fields": ["name", "project_task_ids"]},
+        )
+        self.assertTrue(
+            created_tasks,
+            "No alternate-project task. Linked actions: %r" % linked_actions,
+        )
+        self.assertEqual(created_tasks[0]["project_id"][0], alternate_project)
+        linked_task_ids = {
+            task_id
+            for action in linked_actions
+            for task_id in action["project_task_ids"]
+        }
+        self.assertTrue(set(task["id"] for task in created_tasks) & linked_task_ids)
         expect(card.get_by_role("button", name="Resolve TODO")).to_be_enabled()
         card.get_by_role("button", name="Resolve TODO").click()
         expect(self.outcome("todo")).to_have_text("Resolved")
-        self.assertEqual(
-            self.rpc("project.task", "search_count", [[("id", "=", task)]]), 1
-        )
 
     def test_approve_and_download_minutes(self):
         card = self.card("decision")

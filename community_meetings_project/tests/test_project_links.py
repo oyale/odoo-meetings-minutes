@@ -79,6 +79,57 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         item.with_user(self.editor).write({"disposition": "closed"})
         self.assertEqual(item.disposition, "closed")
 
+    def test_project_task_wizard_can_override_series_project(self):
+        series_project = self.env["project.project"].create({
+            "name": "Configured series task project",
+            "company_id": self.editor.company_id.id,
+        })
+        alternate_project = self.env["project.project"].create({
+            "name": "Alternate meeting task project",
+            "company_id": self.editor.company_id.id,
+        })
+        self.series.with_user(self.editor).write({
+            "meeting_project_mode": "series",
+            "meeting_project_id": series_project.id,
+        })
+        action = self.env["community.meeting.action"].with_user(self.editor).create({
+            "meeting_id": self.meetings[0].id,
+            "name": "Create in another project",
+        })
+        wizard_model = self.env["community.meeting.project.task.wizard"].with_user(self.editor)
+        defaults = wizard_model.with_context(default_action_id=action.id).default_get(
+            ["action_id", "project_id", "has_default_project"]
+        )
+        self.assertEqual(defaults["project_id"], series_project.id)
+        self.assertTrue(defaults["has_default_project"])
+
+        wizard = wizard_model.create({
+            "action_id": action.id,
+            "name": "Task in alternate project",
+            "project_id": alternate_project.id,
+            "choose_another_project": True,
+        })
+        wizard.action_create()
+
+        task = action.project_task_ids
+        self.assertEqual(task.project_id, alternate_project)
+        self.assertEqual(task.name, "Task in alternate project")
+
+    def test_direct_project_task_link_makes_a_point_a_carryover_candidate(self):
+        self.series.with_user(self.editor).write({"carryover_policy": "review"})
+        source = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": self.meetings[0].id,
+            "name": "Point with a direct Project task",
+            "project_task_ids": [(6, 0, [self.tasks[0].id])],
+        })
+
+        candidates = self.env["community.meeting"]._carryover_candidates(
+            self.series, self.meetings[1].start_datetime
+        )
+
+        self.assertIn(source, candidates)
+        self.assertFalse(source.review_next_meeting)
+
     def test_selected_task_is_carried_without_copying_task(self):
         source = self.meetings[0]
         destination = self.meetings[1]

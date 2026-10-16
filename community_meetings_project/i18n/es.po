@@ -35,6 +35,12 @@ msgid "Choose a project or select an existing task."
 msgstr "Elige un proyecto o selecciona una tarea existente."
 
 #. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+msgid "Choose the project for this task."
+msgstr "Elige el proyecto de esta tarea."
+
+#. module: community_meetings_project
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_project_mode__inherit
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_task_scope__inherit
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_todo_requirement__inherit
@@ -69,6 +75,11 @@ msgstr "Crear tarea de Project"
 #: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__existing_task_id
 msgid "Existing task"
 msgstr "Tarea existente"
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__choose_another_project
+msgid "Choose a different project"
+msgstr "Elegir otro proyecto"
 
 #. module: community_meetings_project
 #: model_terms:ir.ui.view,arch_db:community_meetings_project.view_meeting_settings

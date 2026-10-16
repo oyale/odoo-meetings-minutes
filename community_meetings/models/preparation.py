@@ -217,9 +217,21 @@ class Meeting(models.Model):
                 ("meeting_id.company_id", "=", series.company_id.id),
                 ("meeting_id.start_datetime", "<", start),
                 ("meeting_id.state", "!=", "cancelled"),
-                ("review_next_meeting", "=", True),
             ],
             order="id desc",
+        )
+        # Completed actions still count: the next meeting may review them.
+        active_followup_items = set(
+            self.env["community.meeting.action"].search([
+                ("agenda_item_id", "in", sources.ids),
+                ("state", "!=", "cancelled"),
+            ]).mapped("agenda_item_id").ids
+        )
+        sources = sources.filtered(
+            lambda source: source.review_next_meeting
+            or source.id in active_followup_items
+            # Project is optional, so core must not depend on its fields.
+            or ("project_task_ids" in source._fields and source.project_task_ids)
         )
         # Keep the most recent occurrence per point; pending requests survive gaps.
         result = self.env["community.meeting.agenda.item"]

@@ -195,6 +195,8 @@ class CommunityMeetingProjectTaskWizard(models.TransientModel):
 
     action_id = fields.Many2one("community.meeting.action", required=True, readonly=True)
     project_id = fields.Many2one("project.project")
+    has_default_project = fields.Boolean(readonly=True)
+    choose_another_project = fields.Boolean(string="Choose a different project")
     name = fields.Char(required=True)
     existing_task_id = fields.Many2one('project.task', string='Existing task')
 
@@ -207,13 +209,25 @@ class CommunityMeetingProjectTaskWizard(models.TransientModel):
             project = action.meeting_id._meeting_project(create=False)
             if project:
                 values['project_id'] = project.id
+                values['has_default_project'] = True
         return values
+
+    @api.onchange("choose_another_project")
+    def _onchange_choose_another_project(self):
+        if self.choose_another_project:
+            self.project_id = False
 
     def action_create(self):
         self.ensure_one()
         self.action_id.check_access_rights("write")
         self.action_id.check_access_rule("write")
         self.env["project.task"].check_access_rights("create")
+        if (
+            self.choose_another_project
+            and not self.project_id
+            and not self.existing_task_id
+        ):
+            raise ValidationError(_("Choose the project for this task."))
         if self.project_id.company_id and self.project_id.company_id != self.action_id.meeting_id.company_id:
             raise ValidationError(_("The project must belong to the meeting company."))
         if self.existing_task_id:
@@ -222,6 +236,7 @@ class CommunityMeetingProjectTaskWizard(models.TransientModel):
             project = self.project_id or self.action_id.meeting_id._meeting_project(create=True)
             if not project:
                 raise ValidationError(_('Choose a project or select an existing task.'))
+            project.check_access("read")
             task = self.env["project.task"].create({
                 "name": self.name, "project_id": project.id,
                 "user_ids": [(6, 0, self.action_id.responsible_user_id.ids)],
