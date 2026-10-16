@@ -574,6 +574,7 @@ class AgendaParticipation(models.Model):
             item.check_access("write")
             if item.meeting_id.state in ("approved", "cancelled"):
                 raise UserError(_("Reopen this point in an editable meeting."))
+            item.meeting_id._check_live_editorial(item, result_change=True)
             item.topic_id._reopen(item.reopen_reason)
             agreements = self.env["community.meeting.resolution"].search(
                 [
@@ -584,7 +585,7 @@ class AgendaParticipation(models.Model):
             )
             agreements.write({"status": "withdrawn"})
             super(AgendaParticipation, item).write({"is_followup": False})
-            item.write(
+            item._write_workflow_result(
                 {
                     "disposition": "open",
                     "decision_result": "pending" if item.kind == "decision" else False,

@@ -72,11 +72,11 @@ class CommunityMeetingResolution(models.Model):
                 ("decision_outcome", "!=", False),
             ], limit=1)
             if agreement:
-                item.write({"decision_result": agreement.decision_outcome, "disposition": "closed"})
+                item._write_workflow_result({"decision_result": agreement.decision_outcome, "disposition": "closed"})
             elif item.decision_result in ("approved", "denied"):
                 if item.topic_id.state == 'closed':
                     item.topic_id._reopen(_('Decision agreement withdrawn.'))
-                item.write({"decision_result": "pending", "disposition": "discussed"})
+                item._write_workflow_result({"decision_result": "pending", "disposition": "discussed"})
 
     @api.model_create_multi
     def create(self, vals_list):

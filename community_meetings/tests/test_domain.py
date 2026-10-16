@@ -47,12 +47,18 @@ class TestMeetingDomain(TransactionCase):
         point.action_start_timing()
         point.write({"discussion_notes": "Before pause"})
         point.action_pause_timing()
-        with self.assertRaises(UserError):
+        with self.assertRaises(UserError), self.cr.savepoint():
             point.write({"discussion_notes": "Forbidden during point pause"})
+        with self.assertRaises(UserError), self.cr.savepoint():
+            point.with_context(allow_live_edit=True).write({"disposition": "discussed"})
+        self.assertEqual(point.disposition, "open")
         point.action_start_timing()
         meeting.action_pause_meeting()
         with self.assertRaises(UserError):
             meeting.write({"minutes_notes": "Forbidden during meeting pause"})
+        with self.assertRaises(UserError), self.cr.savepoint():
+            point.write({"disposition": "deferred", "deferral_reason": "Wait"})
+        self.assertEqual(point.disposition, "open")
         with self.assertRaises(UserError):
             self.env["community.meeting.resolution"].create({"meeting_id": meeting.id, "agenda_item_id": point.id, "title": "Forbidden agreement"})
         for model, values in [

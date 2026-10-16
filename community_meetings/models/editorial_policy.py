@@ -18,7 +18,7 @@ class MeetingEditorialPolicy(models.Model):
                 raise UserError(_("Resume the meeting before editing live records."))
             for item in items.filtered(lambda i: i.meeting_id == meeting) if items is not None else []:
                 item.invalidate_recordset(["actual_started_at", "disposition"])
-                if not item.actual_started_at and not (result_change and item.disposition in ("closed", "discussed")):
+                if not item.actual_started_at and not (result_change and item.disposition in ("closed", "discussed", "deferred")):
                     raise UserError(_("Begin or resume this point before editing live records."))
 
     def write(self, vals):
@@ -30,8 +30,13 @@ class MeetingEditorialPolicy(models.Model):
 class AgendaEditorialPolicy(models.Model):
     _inherit = "community.meeting.agenda.item"
 
+    def _write_workflow_result(self, vals):
+        """Use only from server-owned agreement and reopen actions."""
+        self.meeting_id._check_live_editorial(self, result_change=True)
+        return super().write(vals)
+
     def write(self, vals):
-        if "discussion_notes" in vals:
+        if {"discussion_notes", "disposition", "decision_result"}.intersection(vals):
             self.meeting_id._check_live_editorial(self)
         return super().write(vals)
 
