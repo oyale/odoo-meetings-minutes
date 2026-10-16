@@ -117,6 +117,10 @@ class MeetingTopic(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
+            if vals.get("proposal_status") in ("accepted", "rejected", "withdrawn"):
+                raise ValidationError(_("Use a proposal workflow action to change its status."))
+            vals.pop("responded_by_id", None)
+            vals.pop("responded_at", None)
             if (
                 vals.get("state", "open") not in ("open", "proposed")
                 or vals.get("outcome")
@@ -129,6 +133,7 @@ class MeetingTopic(models.Model):
         if {
             "proposal_status", "responded_by_id", "responded_at",
             "submitted_by_user_id", "submitted_at",
+            "proposer_partner_id", "proposal_response",
         }.intersection(vals):
             raise UserError(_("Use a proposal workflow action to change its status."))
         if {
@@ -297,7 +302,9 @@ class MeetingTopic(models.Model):
         if not self._has_proposal_capability():
             raise AccessError(_("You are not authorized to submit agenda proposals."))
         values = dict(values)
-        for guarded in ("proposal_status", "submitted_by_user_id", "submitted_at"):
+        for guarded in (
+            "proposal_status", "submitted_by_user_id", "submitted_at", "proposal_response",
+        ):
             values.pop(guarded, None)
         values.update({
             "state": "proposed",

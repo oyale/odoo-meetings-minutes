@@ -148,6 +148,25 @@ class TestProposalConvergence(TransactionCase):
         topic.action_reject_proposal()
         self.assertNotIn(topic, self.series.pending_proposal_ids)
 
+    def test_a_non_editor_proposer_can_propose_and_withdraw(self):
+        proposer = self.env["res.users"].create({
+            "name": "Plain proposer", "login": "proposal-plain-conv-test",
+            "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
+        })
+        wizard = self.env["community.meeting.point.wizard"].with_user(proposer).create({
+            "propose": True, "proposal_series_id": self.series.id,
+            "name": "From a plain proposer",
+            "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+        })
+        wizard.action_save()
+        topic = self.env["community.meeting.topic"].search([
+            ("name", "=", "From a plain proposer"),
+            ("submitted_by_user_id", "=", proposer.id),
+        ])
+        self.assertEqual(topic.proposal_status, "submitted")
+        topic.with_user(proposer).action_withdraw_proposal()
+        self.assertEqual(topic.proposal_status, "withdrawn")
+
     def test_a_coordinator_sees_another_users_proposal(self):
         coordinator = self.env["res.users"].create({
             "name": "Coordinator", "login": "proposal-coordinator-conv-test",

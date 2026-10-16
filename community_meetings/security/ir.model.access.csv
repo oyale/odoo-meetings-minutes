@@ -38,3 +38,6 @@ access_create_wizard,Create meeting wizard,model_community_meeting_create_wizard
 access_point_wizard,Point wizard,model_community_meeting_point_wizard,group_meeting_editor,1,1,1,1
 access_series_wizard,Series wizard,model_community_meeting_series_wizard,group_meeting_editor,1,1,1,1
 access_carry_review_line,Carry review line,model_community_meeting_carry_review_line,group_meeting_editor,1,1,1,1
+access_topic_proposer,community.meeting.topic proposer,model_community_meeting_topic,group_agenda_proposer,1,1,0,0
+access_agenda_type_proposer,community.meeting.agenda.type proposer,model_community_meeting_agenda_type,group_agenda_proposer,1,0,0,0
+access_point_wizard_proposer,community.meeting.point.wizard proposer,model_community_meeting_point_wizard,group_agenda_proposer,1,1,1,1
