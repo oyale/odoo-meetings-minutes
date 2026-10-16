@@ -147,3 +147,23 @@ class TestProposalConvergence(TransactionCase):
         self.assertIn(topic, self.series.pending_proposal_ids)
         topic.action_reject_proposal()
         self.assertNotIn(topic, self.series.pending_proposal_ids)
+
+    def test_a_coordinator_sees_another_users_proposal(self):
+        coordinator = self.env["res.users"].create({
+            "name": "Coordinator", "login": "proposal-coordinator-conv-test",
+            "groups_id": [(6, 0, [
+                self.env.ref("base.group_user").id,
+                self.env.ref("community_meetings.group_meeting_editor").id,
+            ])],
+        })
+        series = self.env["community.meeting.series"].with_user(coordinator).create({
+            "name": "Coordinated series",
+            "coordinator_user_ids": [(6, 0, [coordinator.id])],
+        })
+        topic = self.env["community.meeting.topic"].with_user(self.editor).propose({
+            "name": "Someone else's idea", "series_id": series.id,
+            "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+        })
+        self.assertIn(topic, series.with_user(coordinator).pending_proposal_ids)
+        topic.with_user(coordinator).action_reject_proposal("no")
+        self.assertEqual(topic.proposal_status, "rejected")

@@ -13,7 +13,7 @@
         <field name="inherit_id" ref="community_meetings.view_community_meeting_series_form"/>
         <field name="arch" type="xml">
             <field name="carryover_policy" position="after">
-                <div class="alert alert-info" invisible="not pending_proposal_ids">
+                <div class="alert alert-info" groups="community_meetings.group_meeting_editor" invisible="not pending_proposal_ids">
                     <strong>Proposals to review</strong>
                     <field name="pending_proposal_ids" nolabel="1" readonly="1">
                         <list create="0" delete="0">
