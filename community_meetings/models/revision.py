@@ -45,6 +45,10 @@ class CommunityMeetingRevision(models.Model):
         for item in meeting.agenda_item_ids.sorted(lambda row: (row.sequence, row.id)):
             agenda.append({
                 "sequence": item.sequence,
+                "topic_id": item.topic_id.id,
+                "priority": item.priority,
+                "deadline": fields.Date.to_string(item.deadline) if item.deadline else "",
+                "estimated_minutes": item.estimated_minutes,
                 "name": item.name,
                 "kind": item.kind,
                 "type": item.agenda_type_id.name,
@@ -194,3 +198,13 @@ class CommunityMeetingRevision(models.Model):
 
     def copy(self, default=None):
         raise UserError(_("Approved revisions cannot be copied."))
+
+    def action_download_pdf(self):
+        self.ensure_one()
+        self.check_access('read')
+        self.meeting_id.check_access('read')
+        if not self.pdf_attachment_id:
+            raise UserError(_('The approved PDF is unavailable.'))
+        return {'type': 'ir.actions.act_url',
+                'url': '/web/content/%s?download=true' % self.pdf_attachment_id.id,
+                'target': 'self'}

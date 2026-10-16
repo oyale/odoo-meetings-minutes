@@ -19,7 +19,8 @@
         <field name="arch" type="xml">
             <form string="Agenda Proposal" create="1" edit="0" delete="0">
                 <header>
-                    <button name="action_withdraw" type="object" string="Withdraw" invisible="status != 'submitted'" groups="community_meetings.group_agenda_proposer"/>
+                    <button name="action_submit" type="object" string="Submit Proposal" class="oe_highlight" invisible="id"/>
+                    <button name="action_withdraw" type="object" string="Withdraw" invisible="not id or status != 'submitted'" groups="community_meetings.group_agenda_proposer"/>
                     <button name="action_open_accept_wizard" type="object" string="Accept into Draft Agenda" class="oe_highlight" invisible="status != 'submitted'" groups="community_meetings.group_meeting_editor"/>
                     <field name="status" widget="statusbar" statusbar_visible="submitted,accepted,rejected,withdrawn"/>
                 </header>

@@ -148,10 +148,13 @@ class CommunityMeetingCarryover(models.Model):
             else:
                 raise ValidationError(_("Choose an explicit destination for meetings outside a series."))
             existing = self.sudo().search([("cycle_key", "=", vals["cycle_key"])], limit=1)
+            if existing and existing.status == 'accepted' and existing.destination_meeting_id.state == 'cancelled' and destination:
+                vals['cycle_key'] += f':after:{existing.id}:meeting:{destination.id}'
+                existing = self.sudo().search([('cycle_key', '=', vals['cycle_key'])], limit=1)
             if existing:
                 results |= existing.with_env(self.env)
                 continue
-            policy = series.carryover_policy if series else "manual"
+            policy = ("review" if self.env.context.get("review_carryovers_in_wizard") else series.carryover_policy) if series else "manual"
             if not destination and series:
                 candidate = self._find_next_meeting(origin_meeting)
                 if candidate:
@@ -224,7 +227,9 @@ class CommunityMeetingCarryover(models.Model):
         if destination.state not in ("draft", "scheduled"):
             raise UserError(_("The destination agenda is no longer editable."))
         labels = {"agenda_item": _("Continued topic"), "resolution": _("Resolution follow-up"), "action": _("Action follow-up")}
+        source = self.origin_agenda_item_id or self.origin_action_id.agenda_item_id or self.origin_resolution_id.agenda_item_id
         item = self.env["community.meeting.agenda.item"].create({
+            "topic_id": source.topic_id.id if source else False,
             "meeting_id": destination.id,
             "name": f"{labels[self.origin_model]}: {self.origin_name}",
             "description": _("Carried forward from %(meeting)s.", meeting=self.origin_meeting_id.code),
@@ -341,7 +346,7 @@ class CommunityMeetingCarryover(models.Model):
                 meeting.check_access_rights("write")
                 meeting.check_access_rule("write")
                 super(CommunityMeetingCarryover, transfer).write({"destination_meeting_id": meeting.id})
-                policy = transfer.series_id.carryover_policy
+                policy = "review" if self.env.context.get("review_carryovers_in_wizard") else transfer.series_id.carryover_policy
                 if policy == "review":
                     super(CommunityMeetingCarryover, transfer).write({"status": "proposed"})
                 elif policy == "automatic":
@@ -380,6 +385,7 @@ class CommunityMeetingCarryoverWizard(models.TransientModel):
             "name": _("Follow up at another meeting"),
             "res_model": self._name,
             "view_mode": "form",
+            "views": [(self.env.ref("community_meetings.view_community_meeting_carryover_wizard").id, "form")],
             "target": "new",
             "context": {
                 "default_origin_model": origin_model,

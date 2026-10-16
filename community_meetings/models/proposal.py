@@ -73,8 +73,8 @@ class CommunityMeetingAgendaProposal(models.Model):
     )
     series_id = fields.Many2one("community.meeting.series", ondelete="restrict", check_company=True)
     meeting_id = fields.Many2one("community.meeting", ondelete="restrict", check_company=True)
-    proposer_partner_id = fields.Many2one("res.partner", required=True, ondelete="restrict", index=True)
-    submitted_by_user_id = fields.Many2one("res.users", required=True, readonly=True, index=True)
+    proposer_partner_id = fields.Many2one("res.partner", required=True, default=lambda self: self.env.user.partner_id, ondelete="restrict", index=True)
+    submitted_by_user_id = fields.Many2one("res.users", required=True, default=lambda self: self.env.user, readonly=True, index=True)
     status = fields.Selection(
         [("submitted", "Submitted"), ("accepted", "Accepted"), ("rejected", "Rejected"), ("withdrawn", "Withdrawn")],
         default="submitted", required=True, index=True,
@@ -133,7 +133,9 @@ class CommunityMeetingAgendaProposal(models.Model):
         for vals in vals_list:
             if vals.get("proposer_partner_id") and vals["proposer_partner_id"] != self.env.user.partner_id.id:
                 raise AccessError(_("You cannot submit a proposal as another contact."))
-            if {"submitted_by_user_id", "status", "destination_item_id", "responded_by_id", "responded_at", "response"}.intersection(vals):
+            if vals.get('submitted_by_user_id') not in (None, False, self.env.uid) or vals.get('status') not in (None, False, 'submitted'):
+                raise AccessError(_("Proposal attribution and status are assigned by the server."))
+            if any(vals.get(key) for key in ('destination_item_id', 'responded_by_id', 'responded_at', 'response')):
                 raise AccessError(_("Proposal attribution and status are assigned by the server."))
             vals["proposer_partner_id"] = self.env.user.partner_id.id
             vals["submitted_by_user_id"] = self.env.uid
@@ -251,6 +253,13 @@ class CommunityMeetingAgendaProposal(models.Model):
         })
         return True
 
+    def action_submit(self):
+        self.ensure_one()
+        self.check_access('read')
+        if self.submitted_by_user_id != self.env.user:
+            raise AccessError(_('You can submit only your own proposal.'))
+        return True
+
     def action_withdraw(self):
         self.ensure_one()
         self.check_access_rights("write")
@@ -272,6 +281,7 @@ class CommunityMeetingAgendaProposal(models.Model):
             "type": "ir.actions.act_window",
             "name": _("Accept Agenda Proposal"),
             "res_model": "community.meeting.proposal.accept.wizard",
+            "views": [(self.env.ref("community_meetings.view_community_meeting_proposal_accept_wizard").id, "form")],
             "view_mode": "form",
             "target": "new",
             "context": {"default_proposal_id": self.id, "default_meeting_id": self.meeting_id.id},

@@ -182,7 +182,7 @@
                                     <field name="status" widget="badge"/>
                                     <field name="snapshot_sha256"/>
                                     <field name="pdf_sha256"/>
-                                    <button name="%(community_meetings.action_report_meeting_revision)d" type="action" string="PDF" context="{'active_model': 'community.meeting.revision', 'active_id': id, 'active_ids': [id]}"/>
+                                    <button name="action_download_pdf" type="object" string="PDF"/>
                                 </list>
                             </field>
                         </page>

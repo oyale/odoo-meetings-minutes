@@ -11,8 +11,8 @@
                     <button t-if="state.meeting.state === 'held'" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="prepareMinutes">Prepare Minutes</button>
                 </div>
                 <span t-if="state.saving" class="text-muted" role="status" aria-live="polite">Saving…</span>
-                <span t-elif="hasUnsavedEditors" class="text-warning" role="status" aria-live="polite">Changes pending</span>
                 <span t-elif="state.saveError" class="text-danger" role="alert">Some changes could not be saved. Retry by editing the affected field.</span>
+                <span t-elif="hasUnsavedEditors" class="text-warning" role="status" aria-live="polite">Changes pending</span>
                 <span t-else="" class="text-success" role="status" aria-live="polite">All changes saved</span>
                 <span t-if="state.meeting.state" class="badge text-bg-primary"><t t-out="stateLabel(state.meeting.state)"/></span>
             </div>
@@ -26,6 +26,7 @@
                     <div class="o_live_header_details">
                         <div><strong>Planned start</strong><span><t t-out="dateTime(state.meeting.start_datetime)"/></span></div>
                         <div><strong>Planned end</strong><span><t t-out="dateTime(state.meeting.end_datetime)"/></span></div>
+                        <div><strong>Duration</strong><span t-out="durationLabel(state.meeting.duration_minutes)"/></div>
                         <div><strong>Actual start</strong><span><t t-out="dateTime(state.meeting.actual_start_datetime)"/></span></div>
                         <div><strong>Actual end</strong><span><t t-out="dateTime(state.meeting.actual_end_datetime)"/></span></div>
                         <div><strong>Organizer</strong><span><t t-out="label(state.meeting.organizer_id)"/></span></div>
@@ -59,10 +60,19 @@
                     <a t-if="state.meeting.meeting_url" t-att-href="state.meeting.meeting_url" target="_blank" rel="noreferrer">Open meeting link</a>
                 </header>
 
+                <section t-if="state.incoming.length" class="alert alert-info o_live_incoming" aria-label="Points to continue">
+                    <h2>Points to continue</h2>
+                    <div t-foreach="state.incoming" t-as="transfer" t-key="transfer.id" class="mb-2">
+                        <strong t-out="transfer.origin_name"/> <span t-out="label(transfer.origin_meeting_id)"/>
+                        <p t-if="transfer.reason" t-out="transfer.reason"/>
+                        <button class="btn btn-success" t-on-click="() => this.reviewCarryover(transfer, true)">Accept</button>
+                        <button class="btn btn-outline-secondary" t-on-click="() => this.reviewCarryover(transfer, false)">Dismiss</button>
+                    </div>
+                </section>
                 <section class="o_live_agenda">
                     <div class="o_live_section_title">
                         <div><h2>Agenda</h2><span class="text-muted"><t t-out="completedCount"/> of <t t-out="state.items.length"/> points completed</span></div>
-                        <div class="o_live_agenda_tools">
+                        <div class="o_live_agenda_tools"><button t-if="!locked" class="btn btn-primary" t-on-click="addPoint">Add Point</button>
                             <button class="btn btn-outline-secondary" t-att-disabled="!visibleItems.length" t-on-click="() => this.navigateItem(-1)" title="Previous point" aria-label="Previous agenda point"><i class="fa fa-arrow-up" aria-hidden="true"/></button>
                             <button class="btn btn-outline-secondary" t-att-disabled="!visibleItems.length" t-on-click="() => this.navigateItem(1)" title="Next point" aria-label="Next agenda point"><i class="fa fa-arrow-down" aria-hidden="true"/></button>
                             <button class="btn btn-outline-secondary" t-att-aria-pressed="state.showPendingOnly" t-on-click="togglePending">Pending only</button>
@@ -73,7 +83,7 @@
                     <t t-elif="!visibleItems.length"><p class="text-muted">There are no pending agenda points.</p></t>
                     <article t-foreach="visibleItems" t-as="item" t-key="item.id" t-att-id="'agenda-card-' + item.id" t-att-class="'o_live_agenda_card ' + (state.activeItemId === item.id ? 'o_live_current' : '')">
                         <div class="o_live_card_header">
-                            <button class="o_live_expand" t-on-click="() => this.toggle(item)" t-att-aria-expanded="state.expanded[item.id]" t-att-aria-controls="'agenda-panel-' + item.id">
+                            <button class="o_live_expand" t-on-click="() => this.toggle(item)" t-att-aria-expanded="state.expanded[item.id] ? 'true' : 'false'" t-att-aria-controls="'agenda-panel-' + item.id">
                                 <i t-att-class="state.expanded[item.id] ? 'fa fa-chevron-down' : 'fa fa-chevron-right'" aria-hidden="true"/>
                                 <span class="o_live_item_title"><t t-out="item.name"/></span>
                                 <span t-if="state.activeItemId === item.id" class="visually-hidden">Current agenda point</span>
@@ -83,13 +93,22 @@
                             <select t-if="state.editingTypes[item.id]" class="form-select o_live_type" t-att-value="item.agenda_type_id[0]" t-att-disabled="locked" t-on-change="(ev) => this.updateItem(item, 'agenda_type_id', ev.target.value)" aria-label="Point type">
                                 <option t-foreach="state.types" t-as="type" t-key="type.id" t-att-value="type.id" t-att-disabled="!type.active"><t t-out="type.name"/><t t-if="!type.active"> (archived)</t></option>
                             </select>
+                            <span t-if="item.priority !== '1'" t-att-class="'o_live_priority o_live_priority_' + item.priority" t-att-title="priorityLabel(item)" t-att-aria-label="priorityLabel(item)"><i class="fa fa-flag" aria-hidden="true"/><span class="visually-hidden" t-out="priorityLabel(item)"/></span>
                             <span class="badge o_live_outcome_badge" t-att-class="outcomeBadgeClass(item)"><t t-out="pointOutcomeLabel(item)"/></span>
                         </div>
                         <div t-att-id="'agenda-panel-' + item.id" t-att-class="'o_live_card_body ' + (state.expanded[item.id] ? '' : 'd-none')">
-                            <div t-if="item.description" class="o_live_planned"><strong>Planned topic</strong><div t-out="safeHtml(item.description)"/></div>
-                            <div class="o_live_point_actions" role="group" aria-label="Change agenda point result">
+                            <details t-if="item.description" class="o_live_planned" open="open"><summary>Planned topic</summary><div t-out="safeHtml(item.description)"/></details>
+                            <details t-if="!locked" class="o_live_advanced"><summary>Point options</summary><button class="btn btn-link" t-on-click="() => this.editPoint(item)">Edit point details</button>
+                                <input class="form-control" aria-label="Reason for reopening" placeholder="Reason for reopening" t-on-input="(ev) => { item.reopen_reason = ev.target.value; }"/>
+                                <button class="btn btn-link" t-on-click="() => this.reopenPoint(item)">Reopen point</button>
+                            </details>
+                            <div class="text-muted o_live_point_meta"><span t-if="item.deadline">Due <t t-out="item.deadline"/> · </span><span t-if="item.estimated_minutes"><t t-out="item.estimated_minutes"/> min</span></div>
+                            <label t-if="!locked" class="form-check-label"><input class="form-check-input" type="checkbox" aria-label="Review at next meeting" t-att-checked="item.review_next_meeting" t-on-change="(ev) => this.updateItem(item, 'review_next_meeting', ev.target.checked)"/> Review at next meeting</label>
+                            <div t-if="item.is_followup" class="alert alert-light">Follow-up of a closed point: <t t-out="item.topic_outcome"/><button t-if="!locked" class="btn btn-outline-success" t-on-click="() => this.applyPointAction(item, 'discussed')">Review complete</button></div>
+                            <div t-if="!item.is_followup" class="o_live_point_actions" role="group" aria-label="Change agenda point result">
                                 <button t-if="!locked and typeBehavior(item) === 'information' and pointOutcome(item) !== 'discussed'" class="btn btn-outline-success" t-on-click="() => this.applyPointAction(item, 'discussed')" aria-label="Mark as done"><i class="fa fa-check" aria-hidden="true"/> Done</button>
                                 <button t-if="!locked and typeBehavior(item) === 'discussion' and pointOutcome(item) !== 'closed'" class="btn btn-outline-success" t-on-click="() => this.applyPointAction(item, 'closed')" aria-label="Resolve discussion"><i class="fa fa-check-circle" aria-hidden="true"/> Resolve</button>
+                                <button t-if="!locked and typeBehavior(item) === 'todo' and item.disposition !== 'closed'" class="btn btn-outline-success" t-att-disabled="!hasTodoAction(item)" t-on-click="() => this.applyPointAction(item, 'closed')" aria-label="Resolve TODO"><i class="fa fa-check-circle" aria-hidden="true"/> Resolve TODO</button>
                                 <button t-if="!locked and typeBehavior(item) === 'decision' and !decisionAgreement(item)" class="btn btn-outline-success" t-on-click="() => this.applyPointAction(item, 'approved')" aria-label="Approve decision"><i class="fa fa-thumbs-up" aria-hidden="true"/> Approve</button>
                                 <button t-if="!locked and typeBehavior(item) === 'decision' and !decisionAgreement(item)" class="btn btn-outline-danger" t-on-click="() => this.applyPointAction(item, 'denied')" aria-label="Reject decision"><i class="fa fa-thumbs-down" aria-hidden="true"/> Reject</button>
                                 <button t-if="!locked and pointOutcome(item) !== 'deferred'" class="btn btn-outline-secondary" t-on-click="() => this.applyPointAction(item, 'deferred')" aria-label="Postpone agenda point"><i class="fa fa-clock-o" aria-hidden="true"/> Postpone</button>
@@ -170,10 +189,12 @@
                             </details>
                             <div class="o_live_subsection">
                                 <h3>Follow-up tasks</h3>
+                                <p t-if="typeBehavior(item) === 'todo' and item.disposition !== 'closed'" class="text-muted">A follow-up task must be recorded before this TODO can be resolved.</p>
                                 <ul t-if="pointActions(item).length" class="o_live_inline_records">
                                     <li t-foreach="pointActions(item)" t-as="task" t-key="task.id">
                                         <input class="form-control" aria-label="Task name" t-att-value="task.name" t-on-change="(ev) => this.updateAction(task, 'name', ev.target.value)"/>
                                         <span class="badge text-bg-light"><t t-out="actionStateLabel(task.state)"/></span>
+                                        <button t-if="task.followup_activity_id and !locked" class="btn btn-link" t-on-click="() => this.completeActivity(task)">Complete activity</button>
                                         <span t-if="task.deadline" class="text-muted">Due <t t-out="task.deadline"/></span>
                                         <select class="form-select o_live_task_owner" aria-label="Task owner" t-att-value="task.responsible_user_id?.[0] || ''" t-on-change="(ev) => this.updateAction(task, 'responsible_user_id', ev.target.value)">
                                             <option value="">Unassigned</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id"><t t-out="user.name"/></option>
@@ -186,7 +207,7 @@
                                 <div t-if="!locked" class="o_live_add_row o_live_task_form">
                                     <input class="form-control" aria-label="Task name" placeholder="Task" t-att-value="state.newAction[item.id]?.name || ''" t-on-input="(ev) => this.setAction(item, 'name', ev.target.value)"/>
                                     <input class="form-control" type="date" aria-label="Deadline" t-att-value="state.newAction[item.id]?.deadline || ''" t-on-change="(ev) => this.setAction(item, 'deadline', ev.target.value)"/>
-                                    <select class="form-select o_live_task_owner" aria-label="Task owner" t-att-value="state.newAction[item.id]?.responsible_user_id || ''" t-on-change="(ev) => this.setAction(item, 'responsible_user_id', ev.target.value)"><option value="">Unassigned</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id"><t t-out="user.name"/></option></select>
+                                    <select class="form-select o_live_task_owner" aria-label="Task owner" t-att-value="state.newAction[item.id]?.responsible_user_id ?? state.defaultOwner" t-on-change="(ev) => this.setAction(item, 'responsible_user_id', ev.target.value)"><option value="">Unassigned</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id"><t t-out="user.name"/></option></select>
                                     <button class="btn btn-outline-primary" t-att-disabled="state.submitting['action:' + item.id]" t-on-click="() => this.addAction(item)">Add task</button>
                                 </div>
                             </div>

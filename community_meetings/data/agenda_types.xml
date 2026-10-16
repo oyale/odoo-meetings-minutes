@@ -8,4 +8,7 @@
     <record id="agenda_type_decision" model="community.meeting.agenda.type">
         <field name="name">Decision</field><field name="behavior">decision</field><field name="sequence">30</field>
     </record>
+    <record id="agenda_type_todo" model="community.meeting.agenda.type">
+        <field name="name">TODO</field><field name="behavior">todo</field><field name="sequence">40</field>
+    </record>
 </odoo>

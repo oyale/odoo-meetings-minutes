@@ -1,7 +1,7 @@
 {
     "name": "Community Meetings",
     "summary": "Operational meetings, agendas, resolutions and minutes",
-    "version": "18.0.1.0.13",
+    "version": "18.0.2.0.0",
     "category": "Services/Meetings",
     "license": "AGPL-3",
     "depends": ["base", "web", "web_editor", "mail"],
@@ -9,6 +9,7 @@
         "security/groups.xml",
         "security/ir.model.access.csv",
         "security/rules.xml",
+        "security/topic_rules.xml",
         "data/sequences.xml",
         "data/agenda_types.xml",
         "report/meeting_report.xml",
@@ -20,10 +21,12 @@
         "views/carryover_views.xml",
         "views/menus.xml",
         "views/user_views.xml",
+        "views/preparation_views.xml",
     ],
     "assets": {
         "web.assets_backend": [
             "community_meetings/static/src/live_meeting/live_meeting.js",
+            "community_meetings/static/src/live_meeting/meeting_list.js",
             "community_meetings/static/src/live_meeting/live_meeting.xml",
             "community_meetings/static/src/live_meeting/live_meeting.scss",
         ],

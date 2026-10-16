@@ -16,7 +16,7 @@ class CommunityMeetingAgendaItem(models.Model):
     sequence = fields.Integer(default=10)
     name = fields.Char(required=True)
     kind = fields.Selection(
-        [("information", "Information"), ("discussion", "Discussion"), ("decision", "Decision")],
+        [("information", "Information"), ("discussion", "Discussion"), ("decision", "Decision"), ("todo", "TODO")],
         default="discussion", required=True,
     )
     agenda_type_id = fields.Many2one(
@@ -52,7 +52,7 @@ class CommunityMeetingAgendaItem(models.Model):
             raise ValidationError(_("Agenda items cannot be added to approved or cancelled meetings."))
 
     @api.constrains("kind", "decision_result", "disposition")
-    def _check_decision_result(self):
+    def _check_workflow_requirements(self):
         for item in self:
             if item.kind != "decision" and item.decision_result:
                 raise ValidationError(_("Only decision agenda items can have a decision outcome."))
@@ -67,9 +67,16 @@ class CommunityMeetingAgendaItem(models.Model):
                     ("agenda_item_id", "=", item.id), ("status", "=", "active"),
                     ("decision_outcome", "!=", False),
                 ], limit=1)
-                if item.disposition == "closed" or item.decision_result in ("approved", "denied") or agreement:
-                    if not agreement or item.decision_result != agreement.decision_outcome or item.disposition != "closed":
-                        raise ValidationError(_("Record an active agreement approving or rejecting this decision before closing it. The point's result must match that agreement."))
+                if (
+                    (item.disposition == "closed" or item.decision_result in ("approved", "denied") or agreement)
+                    and (
+                        not agreement or item.decision_result != agreement.decision_outcome
+                        or item.disposition != "closed"
+                    )
+                ):
+                    raise ValidationError(_("Record an active agreement approving or rejecting this decision before closing it. The point's result must match that agreement."))
+            if item.kind == "todo" and item.disposition == "closed" and not item._followup_actions():
+                raise ValidationError(_("Create a follow-up task for this TODO before resolving it."))
 
     @api.onchange("kind")
     def _onchange_kind(self):
@@ -175,3 +182,15 @@ class CommunityMeetingAgendaItem(models.Model):
         if self.meeting_id.state in ("approved", "cancelled"):
             raise UserError(_("Agenda items cannot be deferred after approval or cancellation."))
         return self.env["community.meeting.carryover.wizard"].action_open_for(self, "agenda_item")
+
+    def _check_todo_has_followup_action(self):
+        for item in self.filtered(lambda row: row.kind == "todo" and row.disposition == "closed"):
+            if not item._followup_actions():
+                raise ValidationError(_("A resolved TODO must keep at least one non-cancelled follow-up task."))
+
+    def _consume_review(self):
+        # Scheduling metadata may change after approval; snapshots remain immutable.
+        return super().write({'review_next_meeting': False})
+
+    def _restore_review(self):
+        return super().write({'review_next_meeting': True})

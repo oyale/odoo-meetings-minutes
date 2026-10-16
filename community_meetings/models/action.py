@@ -5,7 +5,7 @@ from odoo.exceptions import UserError, ValidationError
 class CommunityMeetingAction(models.Model):
     _name = "community.meeting.action"
     _description = "Meeting Follow-up Action"
-    _inherit = ["mail.thread"]
+    _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "deadline, id"
     _check_company_auto = True
 
@@ -18,9 +18,10 @@ class CommunityMeetingAction(models.Model):
         "community.meeting.resolution", ondelete="restrict", check_company=True,
     )
     agenda_item_id = fields.Many2one("community.meeting.agenda.item", ondelete="restrict", check_company=True)
+    topic_id = fields.Many2one(related="agenda_item_id.topic_id", store=True, index=True)
     name = fields.Char(required=True)
     description = fields.Html()
-    responsible_user_id = fields.Many2one("res.users", check_company=True, tracking=True)
+    responsible_user_id = fields.Many2one("res.users", default=lambda self: self.env.user, check_company=True, tracking=True)
     deadline = fields.Date(tracking=True)
     state = fields.Selection(
         [("open", "Open"), ("in_progress", "In Progress"), ("done", "Done"), ("cancelled", "Cancelled")],
@@ -54,13 +55,32 @@ class CommunityMeetingAction(models.Model):
     def write(self, vals):
         if "meeting_id" in vals and any(record.meeting_id.id != vals["meeting_id"] for record in self):
             raise UserError(_("An action cannot be moved to another meeting."))
-        if any(record.meeting_id.state == "cancelled" for record in self):
+        if any(record.meeting_id.state == "cancelled" and not record.topic_id for record in self):
             raise UserError(_("Actions in cancelled meetings cannot be edited."))
-        return super().write(vals)
+        agenda_items = self.mapped("agenda_item_id")
+        topics_before = agenda_items.topic_id
+        if vals.get('agenda_item_id'):
+            target = self.env['community.meeting.agenda.item'].browse(vals['agenda_item_id'])
+            target.check_access('read')
+            topics_before |= target.topic_id
+        for topic in topics_before.sorted('id'):
+            topic._lock_workflow()
+        result = super().write(vals)
+        topics = (agenda_items | self.mapped("agenda_item_id")).mapped('topic_id')
+        self.env['community.meeting.agenda.item'].sudo().search([('topic_id', 'in', topics.ids)])._check_todo_has_followup_action()
+        return result
 
     def unlink(self):
         if any(record.meeting_id.state not in ("draft", "cancelled") for record in self):
             raise UserError(_("Actions can only be deleted from draft meetings."))
+        topics = self.mapped('topic_id')
+        for topic in topics.sorted('id'):
+            topic._lock_workflow()
+        for item in self.env['community.meeting.agenda.item'].sudo().search([
+            ('topic_id', 'in', topics.ids), ('kind', '=', 'todo'), ('disposition', '=', 'closed')]):
+            remaining = item._followup_actions() - self
+            if not remaining:
+                raise ValidationError(_("A resolved TODO must keep at least one non-cancelled follow-up task."))
         return super().unlink()
 
     def action_request_followup(self):

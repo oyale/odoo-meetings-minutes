@@ -1,8 +1,8 @@
 # Community Meetings
 
 `community_meetings` is the Odoo 18 Community core for operational meetings,
-agendas, resolutions and follow-up actions. It depends only on `base` and
-`mail`; Project and Calendar integrations are separate addons.
+agendas, resolutions and follow-up actions. It depends on `base`, `mail`, `web` and
+`web_editor`; Project and Calendar integrations are separate addons.
 
 ## Install
 
@@ -38,3 +38,28 @@ database or bind another HTTP port.
 ## License
 
 Original addon code is licensed AGPL-3.0-or-later.
+
+## Prepare and run a meeting
+
+**New** opens a guided flow: series, date and duration, attendees, continuing
+points and new agenda points. Series defaults are copied, so later series edits
+do not alter existing meetings. Use **Add Point** for a title and rich body;
+priority is normal by default, and deadline/minutes are under **More options**.
+
+A point keeps its identity across meetings. Each participation preserves its
+own discussion and outcome. **Postpone** marks it for the next meeting;
+**Review at next meeting** also schedules follow-up of an already resolved
+point. Review proposals appear above the meeting form and live agenda. Series
+can include continuing points automatically or require editorial review.
+
+Live cards show outcomes read-only and offer explicit actions. Decisions are
+approved/rejected through agreements. TODO points require an assigned follow-up
+before resolution. Completing that work is separate from resolving the agenda
+point. Follow-ups create Odoo activities for their owners; completing the
+activity updates the durable follow-up rather than deleting the evidence.
+Task owners need access to the originating meeting.
+
+**Point options** offers point details and reopening with a reason. Approved
+minutes keep their snapshot and original PDF when a shared point changes.
+Attachments in point bodies are reserved for a later delivery; rich text and
+links are supported now.

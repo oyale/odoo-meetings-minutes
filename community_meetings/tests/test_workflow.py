@@ -49,6 +49,42 @@ class TestMeetingWorkflow(TransactionCase):
         agreement.write({"status": "withdrawn"})
         self.assertEqual((item.decision_result, item.disposition), ("pending", "discussed"))
 
+    def test_todo_requires_a_live_followup_action_before_resolving(self):
+        meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "TODO rules"})
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": meeting.id, "name": "Prepare the draft", "kind": "todo",
+        })
+        self.assertEqual(item.agenda_type_id, self.env.ref("community_meetings.agenda_type_todo"))
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            item.write({"disposition": "closed"})
+        first = self.env["community.meeting.action"].with_user(self.editor).create({
+            "meeting_id": meeting.id, "agenda_item_id": item.id, "name": "Prepare draft",
+        })
+        if "project_task_ids" in first._fields:
+            project_group = self.env.ref("project.group_project_user")
+            self.editor.write({"groups_id": [(4, project_group.id)]})
+            project = self.env["project.project"].sudo().create({
+                "name": "TODO project", "user_id": self.editor.id,
+            })
+            task = self.env["project.task"].sudo().create({
+                "name": "Prepare draft", "project_id": project.id,
+            })
+            first.write({"project_task_ids": [(4, task.id)]})
+        item.write({"disposition": "closed"})
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            first.write({"state": "cancelled"})
+        self.assertEqual(item.disposition, "closed")
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            first.unlink()
+
+    def test_todo_can_be_postponed_without_a_followup_action(self):
+        meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "TODO postponement"})
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": meeting.id, "name": "Wait for input", "kind": "todo",
+        })
+        item.write({"disposition": "deferred", "deferral_reason": "Waiting for input"})
+        self.assertEqual(item.disposition, "deferred")
+
     def test_informational_agenda_and_workflow(self):
         meeting = self.env["community.meeting"].with_user(self.editor).create({
             "name": "Operations check-in",
@@ -145,9 +181,8 @@ class TestMeetingWorkflow(TransactionCase):
     def test_series_can_open_a_new_meeting_with_series_defaults(self):
         series = self.env["community.meeting.series"].with_user(self.editor).create({"name": "Weekly"})
         action = series.with_user(self.editor).action_new_meeting()
-        self.assertEqual(action["res_model"], "community.meeting")
+        self.assertEqual(action["res_model"], "community.meeting.create.wizard")
         self.assertEqual(action["context"]["default_series_id"], series.id)
-        self.assertEqual(action["context"]["default_company_id"], series.company_id.id)
 
     def test_live_meeting_records_actual_start_and_end(self):
         meeting = self.env["community.meeting"].with_user(self.editor).create({
@@ -193,6 +228,8 @@ class TestMeetingWorkflow(TransactionCase):
         item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
             "meeting_id": meeting.id, "name": "Topic", "kind": "discussion", "disposition": "closed",
         })
+        item.with_user(self.editor).write({'reopen_reason': 'Change the purpose of this point'})
+        item.with_user(self.editor).action_reopen()
         item.with_user(self.editor).write({"kind": "decision"})
         self.assertEqual(item.disposition, "open")
         self.assertEqual(item.decision_result, "pending")
