@@ -60,6 +60,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         return payload["result"]
 
     def setUp(self):
+        self.errors_before = len(self.console_errors)
         self.meeting_id = False
         self.item_ids = {}
         start = (datetime.utcnow() + timedelta(days=1)).replace(microsecond=0)
@@ -68,7 +69,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             "start_datetime": start.strftime("%Y-%m-%d %H:%M:%S"),
         }])
         self.addCleanup(self.cleanup_meeting)
-        for kind in ("information", "discussion", "decision"):
+        for kind in ("information", "discussion", "decision", "todo"):
             agenda_type = self.rpc("community.meeting.agenda.type", "search", [[("behavior", "=", kind), ("active", "=", True)]], {"limit": 1})
             if not agenda_type:
                 self.fail("No active agenda type for %s" % kind)
@@ -83,7 +84,6 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.page.get_by_role("button", name="Open Live Meeting").click(timeout=30000)
         self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
         self.page.get_by_role("button", name="Expand / Collapse all").click()
-        self.errors_before = len(self.console_errors)
 
     def cleanup_meeting(self):
         if not self.meeting_id:
@@ -122,6 +122,36 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         card.get_by_role("button", name="Resolve discussion").click()
         expect(self.outcome("discussion")).to_have_text("Resolved")
         self.assertEqual(self.record("community.meeting.agenda.item", self.item_ids["discussion"], ["disposition"])["disposition"], "closed")
+
+    def test_todo_requires_a_followup_task_before_resolution(self):
+        card = self.card("todo")
+        button = card.get_by_role("button", name="Resolve TODO")
+        expect(self.outcome("todo")).to_have_text("Task required")
+        expect(button).to_be_disabled()
+        card.get_by_label("Task name").fill("Prepare the requested draft")
+        card.get_by_role("button", name="Add task").click()
+        fields = self.rpc("community.meeting.action", "fields_get", [], {"attributes": ["type"]})
+        requires_project = "project_task_ids" in fields and self.record("community.meeting.agenda.item", self.item_ids["todo"], ["requires_project_task"])["requires_project_task"]
+        if requires_project:
+            expect(self.outcome("todo")).to_have_text("Project task required")
+            expect(button).to_be_disabled()
+            create_project_task = card.get_by_role("button", name="Create Project task")
+            expect(create_project_task).to_be_visible()
+            create_project_task.click()
+            dialog = self.page.get_by_role("dialog")
+            expect(dialog.get_by_role("button", name="Create and Link")).to_be_visible()
+            project_field = dialog.locator(".o_field_widget[name='project_id'] input")
+            project_name = os.environ.get("ODOO_TEST_PROJECT", "Playwright TODO project")
+            project_field.fill(project_name)
+            self.page.get_by_role("option", name=project_name, exact=True).click()
+            dialog.get_by_role("button", name="Create and Link").click()
+            expect(dialog).not_to_be_visible()
+        expect(self.outcome("todo")).to_have_text("Task assigned")
+        expect(button).to_be_enabled()
+
+        button.click()
+        expect(self.outcome("todo")).to_have_text("Resolved")
+        self.assertEqual(self.record("community.meeting.agenda.item", self.item_ids["todo"], ["disposition"])["disposition"], "closed")
 
     def test_decision_requires_and_uses_agreement_without_direct_edit(self):
         card = self.card("decision")
@@ -192,7 +222,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.assertIn("proposed deadline", dissent["body"])
 
     def test_defer_works_for_each_point_type(self):
-        for kind in ("information", "discussion", "decision"):
+        for kind in ("information", "discussion", "decision", "todo"):
             with self.subTest(kind=kind):
                 card = self.card(kind)
                 card.get_by_role("button", name="Postpone agenda point").click()
