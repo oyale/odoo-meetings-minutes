@@ -6,6 +6,7 @@ import { deserializeDateTime, formatDateTime } from "@web/core/l10n/dates";
 import { registry } from "@web/core/registry";
 import { loadBundle } from "@web/core/assets";
 import { ensureJQuery } from "@web/core/ensure_jquery";
+import { user } from "@web/core/user";
 import { useService } from "@web/core/utils/hooks";
 
 const OUTCOMES = {
@@ -35,6 +36,7 @@ export class LiveMeeting extends Component {
                 }
             }
         });
+        this.canApproveMinutes = false;
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
@@ -77,6 +79,7 @@ export class LiveMeeting extends Component {
     get hasUnsavedEditors() { return Object.values(this.state.unsavedEditors).some(Boolean); }
 
     async load() {
+        this.canApproveMinutes = await user.hasGroup("community_meetings.group_meeting_approver");
         if (!this.meetingId) {
             this.state.loading = false;
             this.notification.add(_t("Could not identify the meeting to open. Return to the Meetings list and open it again."), { type: "danger" });
@@ -496,14 +499,14 @@ export class LiveMeeting extends Component {
         });
     }
 
-    openMeeting(id) {
-        return this.actionService.doAction({
-            type: "ir.actions.act_window",
-            res_model: "community.meeting",
-            res_id: id,
-            views: [[false, "form"]],
-            target: "current",
-        });
+    async openMeeting(id) {
+        if (!await this.flushEditors()) return;
+        const action = await this.orm.call("community.meeting", "action_open_live_meeting", [[id]]);
+        return this.actionService.doAction(action);
+    }
+    async approveMinutes() {
+        if (!await this.flushEditors()) return;
+        await this.transition("action_approve_minutes", "approved");
     }
 
     async updateOutcome(item, value) {

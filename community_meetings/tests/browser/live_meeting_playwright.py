@@ -380,6 +380,29 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(self.page.locator(".o_live_minutes_approval")).to_be_visible()
         expect(self.page.locator(".o_live_minutes_approval")).to_contain_text("No pending minutes")
 
+    def test_review_previous_minutes_opens_live_and_approves(self):
+        series = self.rpc("community.meeting.series", "create", [{"name": "Review minutes series"}])
+        self.rpc("community.meeting", "write", [[self.meeting_id], {"series_id": series}])
+        self.rpc("community.meeting", "action_mark_held", [[self.meeting_id]])
+        self.rpc("community.meeting", "action_draft_minutes", [[self.meeting_id]])
+        current = self.rpc("community.meeting", "create", [{
+            "name": "Review previous minutes", "series_id": series,
+            "start_datetime": (datetime.utcnow() + timedelta(days=3)).strftime("%Y-%m-%d %H:%M:%S"),
+        }])
+        agenda_type = self.rpc("community.meeting.agenda.type", "search", [[("behavior", "=", "minutes_approval")]], {"limit": 1})[0]
+        self.rpc("community.meeting.agenda.item", "create", [{"meeting_id": current, "name": "Approve previous minutes", "agenda_type_id": agenda_type}])
+        self.rpc("community.meeting", "action_schedule", [[current]])
+        self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, current))
+        self.page.get_by_role("button", name="Open Live Meeting").click()
+        expect(self.page.locator(".o_community_live_meeting")).to_be_visible()
+        if self.page.locator(".o_live_expand").first.get_attribute("aria-expanded") == "false":
+            self.page.locator(".o_live_expand").first.click()
+        self.page.get_by_role("button", name="Open minutes", exact=True).click()
+        expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_be_visible()
+        self.page.get_by_role("button", name="Approve Minutes", exact=True).click()
+        expect(self.page.get_by_label("Meeting name")).to_have_count(0)
+        self.assertEqual(self.record("community.meeting", self.meeting_id, ["state"])["state"], "approved")
+
     def test_header_details_and_add_point_remain_available_while_paused(self):
         self.page.get_by_role("button", name="Start Meeting").click()
         self.page.get_by_role("button", name="Pause Meeting").click()

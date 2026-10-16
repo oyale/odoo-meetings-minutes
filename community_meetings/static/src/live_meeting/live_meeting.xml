@@ -10,6 +10,7 @@
                     <button t-if="state.meeting.state === 'scheduled' and meetingPaused" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="resumeMeeting">Resume Meeting</button>
                     <button t-if="state.meeting.state === 'scheduled' and state.meeting.actual_start_datetime" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="markHeld">Finish Meeting</button>
                     <button t-if="state.meeting.state === 'scheduled' and !state.meeting.actual_start_datetime" class="btn btn-outline-secondary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="markHeld">Record as Already Held</button>
+                    <button t-if="state.meeting.state === 'minutes_draft' and canApproveMinutes" class="btn btn-primary" t-att-disabled="state.saving > 0 or state.submitting['meeting:' + meetingId]" t-on-click="approveMinutes">Approve Minutes</button>
                     <button t-if="state.meeting.state === 'held'" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="prepareMinutes">Prepare Minutes</button>
                 </div>
                 <span t-if="state.saving" class="text-muted" role="status" aria-live="polite">Saving…</span>
