@@ -45,17 +45,19 @@ export class LiveMeeting extends Component {
     get locked() { return ["approved", "cancelled"].includes(this.state.meeting.state); }
 
     async load() {
-        const [meetings, items, types, dissents, actions, resolutions, privateNotes, users] = await Promise.all([
-            this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "start_datetime", "end_datetime", "actual_start_datetime", "actual_end_datetime", "organizer_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id"]),
+        const [meetings, items, types, dissents, actions, resolutions, privateNotes] = await Promise.all([
+            this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "company_id", "start_datetime", "end_datetime", "actual_start_datetime", "actual_end_datetime", "organizer_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id"]),
             this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "sequence", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "deferral_reason"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.agenda.type", [], ["name", "behavior", "active"], { order: "sequence, name", context: { active_test: false } }),
             this.orm.searchRead("community.meeting.dissent", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "body", "kind", "author_display_name", "author_partner_id"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.action", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "name", "description", "responsible_user_id", "deadline", "state"], { order: "deadline, id" }),
             this.orm.searchRead("community.meeting.resolution", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "title", "body", "status"], { order: "id" }),
             this.orm.searchRead("community.meeting.editor.note", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "content"], { order: "id" }),
-            this.orm.searchRead("res.users", [["active", "=", true], ["share", "=", false]], ["name"], { order: "name", limit: 200 }),
         ]);
         this.state.meeting = meetings[0];
+        const users = await this.orm.searchRead("res.users", [
+            ["active", "=", true], ["share", "=", false], ["company_ids", "in", [meetings[0].company_id[0]]],
+        ], ["name"], { order: "name", limit: 200 });
         this.state.attendees = meetings[0].attendee_partner_ids.length
             ? await this.orm.searchRead("res.partner", [["id", "in", meetings[0].attendee_partner_ids]], ["name"], { order: "name" })
             : [];
@@ -91,6 +93,11 @@ export class LiveMeeting extends Component {
         this.editors.set(key, wysiwyg);
         await wysiwyg.startEdition();
         wysiwyg.$editable[0].classList.add("odoo-editor-qweb");
+        const label = key === "minutes_notes" ? _t("Meeting minutes")
+            : key.startsWith("discussion_notes:") ? _t("Discussion notes")
+                : key.startsWith("dissent:") ? _t("Dissent or reservation")
+                    : key.startsWith("resolution:") ? _t("Agreement") : _t("Private editorial note");
+        wysiwyg.$editable[0].setAttribute("aria-label", label);
     }
     async saveRichText(key, recordId, model, field) {
         const editor = this.editors.get(key);
@@ -113,6 +120,7 @@ export class LiveMeeting extends Component {
     }
     typeBehavior(item) { return this.state.types.find((type) => type.id === item.agenda_type_id?.[0])?.behavior || item.kind; }
     pointOutcome(item) {
+        if (this.state.deferrals[item.id]) return "deferred";
         if (this.typeBehavior(item) === "decision") {
             return item.disposition === "deferred" ? "deferred" : item.decision_result === "pending" && item.disposition === "discussed" ? "discussed" : item.decision_result || "pending";
         }

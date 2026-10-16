@@ -51,6 +51,7 @@
                             <button class="o_live_expand" t-on-click="() => this.toggle(item)" t-att-aria-expanded="state.expanded[item.id]" t-att-aria-controls="'agenda-panel-' + item.id">
                                 <i t-att-class="state.expanded[item.id] ? 'fa fa-chevron-down' : 'fa fa-chevron-right'" aria-hidden="true"/>
                                 <span class="o_live_item_title"><t t-out="item.name"/></span>
+                                <span t-if="state.activeItemId === item.id" class="visually-hidden">Current agenda point</span>
                             </button>
                             <span t-if="!state.editingTypes[item.id]" class="badge text-bg-light o_live_type_badge"><t t-out="label(item.agenda_type_id)"/></span>
                             <button t-if="!locked and !state.editingTypes[item.id]" class="btn btn-link o_live_type_edit" t-on-click="() => this.toggleTypeEditor(item)" title="Change point type" aria-label="Change point type"><i class="fa fa-pencil" aria-hidden="true"/></button>
