@@ -20,12 +20,9 @@ class TestProposalConvergence(TransactionCase):
         )
 
     def test_review_actions_drive_the_status(self):
-        topic = self.env["community.meeting.topic"].with_user(self.editor).create({
+        topic = self.env["community.meeting.topic"].with_user(self.editor).propose({
             "name": "Proposed point", "series_id": self.series.id,
             "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
-            "state": "proposed", "proposal_status": "submitted",
-            "proposer_partner_id": self.editor.partner_id.id,
-            "submitted_by_user_id": self.editor.id,
         })
         self.assertEqual(topic.state, "proposed")
         topic.action_accept_proposal()
@@ -41,12 +38,9 @@ class TestProposalConvergence(TransactionCase):
                 self.env.ref("community_meetings.group_meeting_editor").id,
             ])],
         })
-        topic = self.env["community.meeting.topic"].with_user(self.editor).create({
+        topic = self.env["community.meeting.topic"].with_user(self.editor).propose({
             "name": "P", "series_id": self.series.id,
             "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
-            "state": "proposed", "proposal_status": "submitted",
-            "proposer_partner_id": self.editor.partner_id.id,
-            "submitted_by_user_id": self.editor.id,
         })
         with self.assertRaises(AccessError), self.cr.savepoint():
             topic.with_user(other).action_withdraw_proposal()
@@ -94,7 +88,7 @@ class TestProposalConvergence(TransactionCase):
         )
         self.assertTrue(any(c.get("reason") == "Proposed point" for c in candidates))
 
-    def test_including_a_proposal_opens_it_and_creates_a_participation(self):
+    def test_including_a_proposal_opens_it_and_adds_it_to_the_agenda(self):
         topic = self.env["community.meeting.topic"].with_user(self.editor).propose({
             "name": "Included proposal", "series_id": self.series.id,
             "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
@@ -138,6 +132,41 @@ class TestProposalConvergence(TransactionCase):
         self.assertEqual(discarded.proposal_status, "rejected")
         self.assertTrue(meeting.agenda_item_ids.filtered(lambda i: i.topic_id == accepted))
         self.assertFalse(meeting.agenda_item_ids.filtered(lambda i: i.topic_id == postponed))
+        self.assertFalse(meeting.agenda_item_ids.filtered(lambda i: i.topic_id == discarded))
+
+    def test_wizard_propose_mode_creates_the_point(self):
+        wizard = self.env["community.meeting.point.wizard"].with_user(self.editor).create({
+            "propose": True, "proposal_series_id": self.series.id,
+            "name": "From the wizard", "priority": "2", "description": "<p>Body</p>",
+            "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+        })
+        wizard.action_save()
+        topic = self.env["community.meeting.topic"].search([("name", "=", "From the wizard")])
+        self.assertEqual(topic.state, "proposed")
+        self.assertEqual(topic.proposal_status, "submitted")
+        self.assertEqual(topic.priority, "2")
+        self.assertEqual(topic.series_id, self.series)
+
+    def test_submit_on_behalf_requires_a_grant(self):
+        partner = self.env["res.partner"].create({"name": "On-behalf contact"})
+        values = {
+            "name": "On behalf point", "series_id": self.series.id,
+            "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+        }
+        with self.assertRaises(AccessError), self.cr.savepoint():
+            self.env["community.meeting.topic"].with_user(self.editor).submit_on_behalf(
+                partner.id, values
+            )
+        self.env["community.meeting.proposal.grant"].with_user(self.editor).create({
+            "partner_id": partner.id, "company_id": self.series.company_id.id,
+            "series_id": self.series.id,
+        })
+        topic = self.env["community.meeting.topic"].with_user(self.editor).submit_on_behalf(
+            partner.id, values
+        )
+        self.assertEqual(topic.proposer_partner_id, partner)
+        self.assertEqual(topic.submitted_by_user_id, self.editor)
+        self.assertEqual(topic.proposal_status, "submitted")
 
     def test_pending_proposals_are_listed_on_the_series(self):
         topic = self.env["community.meeting.topic"].with_user(self.editor).propose({

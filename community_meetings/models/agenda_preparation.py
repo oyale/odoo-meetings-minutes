@@ -96,10 +96,9 @@ class AgendaPreparation(models.Model):
                 return
             topic = self.env["community.meeting.topic"].browse(candidate["topic_id"])
             topic.action_accept_proposal()
-            item = self.env["community.meeting.agenda.item"].create({
+            return self.env["community.meeting.agenda.item"].create({
                 "meeting_id": self.id, "topic_id": topic.id,
             })
-            return item
         if candidate.get("transfer_id"):
             transfer = transfers.browse(candidate["transfer_id"])
             if not accept:

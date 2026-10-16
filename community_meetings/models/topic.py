@@ -49,12 +49,12 @@ class MeetingTopic(models.Model):
         check_company=True,
     )
     proposer_partner_id = fields.Many2one("res.partner", ondelete="restrict", index=True)
-    submitted_by_user_id = fields.Many2one("res.users", readonly=True)
+    submitted_by_user_id = fields.Many2one("res.users", readonly=True, index=True)
     submitted_at = fields.Datetime(readonly=True)
     proposal_status = fields.Selection(
         [("submitted", "Submitted"), ("accepted", "Accepted"),
          ("rejected", "Rejected"), ("withdrawn", "Withdrawn")],
-        copy=False,
+        copy=False, index=True,
     )
     proposal_response = fields.Text()
     responded_by_id = fields.Many2one("res.users", readonly=True)
@@ -121,6 +121,9 @@ class MeetingTopic(models.Model):
                 raise ValidationError(_("Use a proposal workflow action to change its status."))
             vals.pop("responded_by_id", None)
             vals.pop("responded_at", None)
+            if not self.env.context.get("meeting_proposal_create"):
+                for server_field in ("proposer_partner_id", "submitted_by_user_id", "submitted_at"):
+                    vals.pop(server_field, None)
             if (
                 vals.get("state", "open") not in ("open", "proposed")
                 or vals.get("outcome")
@@ -313,7 +316,7 @@ class MeetingTopic(models.Model):
             "submitted_by_user_id": submitted_by.id if hasattr(submitted_by, "id") else submitted_by,
             "submitted_at": fields.Datetime.now(),
         })
-        return self.sudo().create(values)
+        return self.with_context(meeting_proposal_create=True).sudo().create(values)
 
     @api.model
     def submit_on_behalf(self, partner_id, values):

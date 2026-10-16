@@ -386,6 +386,13 @@ class PointWizard(models.TransientModel):
 
     def action_save_another(self):
         self.action_save()
+        if self.propose:
+            return self._open(
+                {
+                    "default_propose": True,
+                    "default_proposal_series_id": self.proposal_series_id.id,
+                }
+            )
         return self._open(
             {
                 "default_meeting_id": self.meeting_id.id,
