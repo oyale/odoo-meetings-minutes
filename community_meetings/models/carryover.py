@@ -178,6 +178,11 @@ class CommunityMeetingCarryover(models.Model):
             if destination and policy == "automatic":
                 transfer._materialize(destination, automatic=True)
             if model_name == "agenda_item" and vals.get("reason"):
+                if source.kind == "decision" and source.decision_result in ("approved", "denied"):
+                    source.meeting_id.resolution_ids.filtered(
+                        lambda resolution: resolution.agenda_item_id == source
+                        and resolution.status == "active" and resolution.decision_outcome
+                    ).write({"status": "withdrawn"})
                 source.write({"disposition": "deferred", "deferral_reason": vals["reason"]})
         return results
 

@@ -1,7 +1,7 @@
 {
     "name": "Community Meetings",
     "summary": "Operational meetings, agendas, resolutions and minutes",
-    "version": "18.0.1.0.12",
+    "version": "18.0.1.0.13",
     "category": "Services/Meetings",
     "license": "AGPL-3",
     "depends": ["base", "web", "web_editor", "mail"],

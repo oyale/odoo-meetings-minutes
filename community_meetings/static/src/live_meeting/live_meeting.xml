@@ -83,12 +83,17 @@
                             <select t-if="state.editingTypes[item.id]" class="form-select o_live_type" t-att-value="item.agenda_type_id[0]" t-att-disabled="locked" t-on-change="(ev) => this.updateItem(item, 'agenda_type_id', ev.target.value)" aria-label="Point type">
                                 <option t-foreach="state.types" t-as="type" t-key="type.id" t-att-value="type.id" t-att-disabled="!type.active"><t t-out="type.name"/><t t-if="!type.active"> (archived)</t></option>
                             </select>
-                            <div class="o_live_outcome"><label t-att-for="'outcome-' + item.id">Result</label><select t-att-id="'outcome-' + item.id" class="form-select o_live_status" t-att-value="pointOutcome(item)" t-att-disabled="locked" t-on-change="(ev) => this.updateOutcome(item, ev.target.value)" aria-label="Point outcome">
-                                <option t-foreach="outcomeOptions(item)" t-as="entry" t-key="entry[0]" t-att-value="entry[0]"><t t-out="entry[1]"/></option>
-                            </select></div>
+                            <span class="badge o_live_outcome_badge" t-att-class="outcomeBadgeClass(item)"><t t-out="pointOutcomeLabel(item)"/></span>
                         </div>
                         <div t-att-id="'agenda-panel-' + item.id" t-att-class="'o_live_card_body ' + (state.expanded[item.id] ? '' : 'd-none')">
                             <div t-if="item.description" class="o_live_planned"><strong>Planned topic</strong><div t-out="safeHtml(item.description)"/></div>
+                            <div class="o_live_point_actions" role="group" aria-label="Change agenda point result">
+                                <button t-if="!locked and typeBehavior(item) === 'information' and pointOutcome(item) !== 'discussed'" class="btn btn-outline-success" t-on-click="() => this.applyPointAction(item, 'discussed')" aria-label="Mark as done"><i class="fa fa-check" aria-hidden="true"/> Done</button>
+                                <button t-if="!locked and typeBehavior(item) === 'discussion' and pointOutcome(item) !== 'closed'" class="btn btn-outline-success" t-on-click="() => this.applyPointAction(item, 'closed')" aria-label="Resolve discussion"><i class="fa fa-check-circle" aria-hidden="true"/> Resolve</button>
+                                <button t-if="!locked and typeBehavior(item) === 'decision' and !decisionAgreement(item)" class="btn btn-outline-success" t-on-click="() => this.applyPointAction(item, 'approved')" aria-label="Approve decision"><i class="fa fa-thumbs-up" aria-hidden="true"/> Approve</button>
+                                <button t-if="!locked and typeBehavior(item) === 'decision' and !decisionAgreement(item)" class="btn btn-outline-danger" t-on-click="() => this.applyPointAction(item, 'denied')" aria-label="Reject decision"><i class="fa fa-thumbs-down" aria-hidden="true"/> Reject</button>
+                                <button t-if="!locked and pointOutcome(item) !== 'deferred'" class="btn btn-outline-secondary" t-on-click="() => this.applyPointAction(item, 'deferred')" aria-label="Postpone agenda point"><i class="fa fa-clock-o" aria-hidden="true"/> Postpone</button>
+                            </div>
                             <label class="form-label" t-att-for="'discussion-' + item.id">Discussion notes</label>
                             <t t-if="locked"><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></t>
                             <t t-else="">
@@ -120,10 +125,10 @@
                                     </li>
                                 </ul>
                                 <p t-else="" class="text-muted">No dissent recorded.</p>
-                                <div t-if="!locked" class="o_live_add_row">
-                                    <input class="form-control" placeholder="Author (optional)" t-att-value="state.newDissent[item.id]?.author_display_name || ''" t-on-input="(ev) => this.setDissent(item, 'author_display_name', ev.target.value)"/>
+                                <div t-if="!locked" class="o_live_add_row o_live_dissent_form">
+                                    <input class="form-control" aria-label="Dissent author" placeholder="Name of the person expressing the dissent (optional)" t-att-value="state.newDissent[item.id]?.author_display_name || ''" t-on-input="(ev) => this.setDissent(item, 'author_display_name', ev.target.value)"/>
                                     <select class="form-select" aria-label="Statement type" t-att-value="state.newDissent[item.id]?.kind || 'dissent'" t-on-change="(ev) => this.setDissent(item, 'kind', ev.target.value)"><option value="dissent">Dissent</option><option value="reservation">Reservation</option><option value="minority_opinion">Minority opinion</option></select>
-                                    <textarea class="form-control" rows="2" placeholder="Record a dissent or reservation…" t-att-value="state.newDissent[item.id]?.body || ''" t-on-input="(ev) => this.setDissent(item, 'body', ev.target.value)"/>
+                                    <textarea class="form-control" aria-label="Dissent statement" rows="2" placeholder="Record a dissent or reservation…" t-att-value="state.newDissent[item.id]?.body || ''" t-on-input="(ev) => this.setDissent(item, 'body', ev.target.value)"/>
                                     <label class="form-check-label"><input class="form-check-input" type="checkbox" t-att-checked="state.newDissent[item.id]?.include_in_minutes !== false" t-on-change="(ev) => this.setDissent(item, 'include_in_minutes', ev.target.checked)"/> Include in minutes</label>
                                     <button class="btn btn-outline-primary" t-att-disabled="state.submitting['dissent:' + item.id]" t-on-click="() => this.addDissent(item)">Add dissent</button>
                                 </div>
@@ -131,13 +136,15 @@
                             <div class="o_live_subsection">
                                 <h3>Agreements and resolutions</h3>
                                 <div t-foreach="pointResolutions(item)" t-as="resolution" t-key="resolution.id" class="o_live_resolution_editor">
-                                    <input class="form-control" aria-label="Agreement title" t-att-value="resolution.title" t-att-disabled="locked" t-on-change="(ev) => this.updateResolution(resolution, 'title', ev.target.value)"/>
-                                    <select t-if="typeBehavior(item) === 'decision'" class="form-select" aria-label="Decision result" t-att-value="resolution.decision_outcome || ''" t-att-disabled="locked" t-on-change="(ev) => this.updateResolution(resolution, 'decision_outcome', ev.target.value || false)"><option value="">Decision pending</option><option value="approved">Approved</option><option value="denied">Rejected</option></select>
-                                    <select class="form-select" aria-label="Agreement status" t-att-value="resolution.status" t-att-disabled="locked" t-on-change="(ev) => this.updateResolution(resolution, 'status', ev.target.value)"><option value="active">Active</option><option value="superseded">Superseded</option><option value="withdrawn">Withdrawn</option></select>
-                                    <button t-if="!locked" class="btn btn-link" t-on-click="() => this.requestRecordCarryover('community.meeting.resolution', resolution)">Follow up at another meeting</button>
+                                    <strong class="o_live_agreement_title"><t t-out="resolution.title"/></strong>
+                                    <span t-if="resolution.decision_outcome and resolution.status === 'active'" class="badge" t-att-class="resolution.decision_outcome === 'approved' ? 'text-bg-success' : 'text-bg-danger'"><t t-if="resolution.decision_outcome === 'approved'">Approved</t><t t-else="">Rejected</t> decision</span>
+                                    <span t-elif="resolution.decision_outcome" class="badge text-bg-light">Withdrawn — <t t-if="resolution.decision_outcome === 'approved'">previously approved</t><t t-else="">previously rejected</t></span>
+                                    <span t-else="" class="badge text-bg-light"><t t-out="resolution.status"/></span>
+                                    <button t-if="!locked and resolution.decision_outcome and resolution.status === 'active'" class="btn btn-outline-secondary" t-on-click="() => this.withdrawDecisionAgreement(item, resolution)">Withdraw decision agreement</button>
+                                    <button t-if="!locked and !resolution.decision_outcome" class="btn btn-link" t-on-click="() => this.requestRecordCarryover('community.meeting.resolution', resolution)">Follow up at another meeting</button>
                                     <div t-if="locked or !state.editingRecords['resolution-' + resolution.id]" class="o_live_rich_readonly" t-out="safeHtml(resolution.body)"/>
                                     <t t-else=""><t t-component="Wysiwyg" t-props="{ options: richTextOptions(resolution.body, 'resolution:' + resolution.id, 'community.meeting.resolution', resolution.id, 'body'), editingValue: resolution.body, startWysiwyg: richTextStarter('resolution:' + resolution.id, resolution.id, 'community.meeting.resolution', 'body') }"/></t>
-                                    <button t-if="!locked" class="btn btn-link" t-on-click="() => this.toggleRecordEditor('resolution-' + resolution.id)"><t t-if="state.editingRecords['resolution-' + resolution.id]">Done editing</t><t t-else="">Edit agreement</t></button>
+                                    <button t-if="!locked and !resolution.decision_outcome" class="btn btn-link" t-on-click="() => this.toggleRecordEditor('resolution-' + resolution.id)"><t t-if="state.editingRecords['resolution-' + resolution.id]">Done editing</t><t t-else="">Edit agreement</t></button>
                                 </div>
                                 <div t-if="!locked" class="o_live_add_row o_live_resolution_form">
                                     <input t-att-id="'agreement-title-' + item.id" class="form-control" aria-label="Agreement title" placeholder="Agreement title" t-att-value="state.newResolution[item.id]?.title || ''" t-on-input="(ev) => this.setResolution(item, 'title', ev.target.value)"/>
@@ -187,7 +194,8 @@
                     </article>
                 </section>
 
-                <section class="o_live_general_records">
+                <!-- Pending product decision: remove or restore meeting-wide records. -->
+                <section t-if="false" class="o_live_general_records">
                     <h2>Meeting level records</h2>
                     <div class="o_live_subsection">
                         <h3>General agreements</h3>

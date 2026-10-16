@@ -408,3 +408,53 @@ msgstr "El resultado requiere un punto de tipo decisión."
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Withdraw the decision agreement before changing the point type."
 msgstr "Retira el acuerdo de decisión antes de cambiar el tipo de punto."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Done"
+msgstr "Hecho"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Resolve"
+msgstr "Resolver"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Approve"
+msgstr "Aprobar"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Reject"
+msgstr "Rechazar"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Postpone"
+msgstr "Posponer"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Withdraw decision agreement"
+msgstr "Retirar el acuerdo de decisión"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "decision"
+msgstr "decisión"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "The decision is pending again. Record a new agreement to resolve it."
+msgstr "La decisión vuelve a estar pendiente. Registra un nuevo acuerdo para resolverla."

@@ -32,9 +32,8 @@
     .o_live_item_title { font-weight: 600; overflow-wrap: anywhere; }
     .o_live_type { width: 180px; }
     .o_live_type_badge { white-space: normal; }
-    .o_live_status { width: 225px; }
-    .o_live_outcome { display: flex; flex-direction: column; gap: 4px; }
-    .o_live_outcome label { font-size: .8rem; font-weight: 600; }
+    .o_live_outcome_badge { font-size: .875rem; white-space: nowrap; }
+    .o_live_point_actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 18px; }
     details.o_live_subsection > summary { cursor: pointer; font-weight: 600; padding: 8px 0; }
     .o_live_card_body { padding: 4px 18px 18px 42px; }
     .o_live_planned { margin-bottom: 16px; }
@@ -44,6 +43,8 @@
     .o_live_subsection h3 { font-size: 1rem; }
     .o_live_inline_records { list-style: none; padding: 0; margin: 0 0 8px; }
     .o_live_inline_records li { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; padding: 7px 0; }
+    .o_live_inline_records li.o_live_record_editor { display: grid; grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr); align-items: start; }
+    .o_live_inline_records li.o_live_record_editor > :nth-child(n + 3) { grid-column: 1 / -1; }
     .o_live_record_editor, .o_live_resolution_editor { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(120px, 1fr) auto; align-items: center; gap: 8px; }
     .o_live_record_editor textarea { grid-column: 1 / -1; }
     .o_live_resolution_form { display: grid; grid-template-columns: 1fr 2fr auto; width: 100%; }
@@ -55,16 +56,19 @@
     .o_live_general_task { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
     .o_live_general_task > input:first-child { flex: 1; }
     .o_live_add_row textarea, .o_live_add_row input:first-child { flex: 1; }
+    .o_live_dissent_form { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr); align-items: center; }
+    .o_live_dissent_form textarea, .o_live_dissent_form .form-check-label { grid-column: 1 / -1; }
+    .o_live_dissent_form button { justify-self: start; }
     .o_live_task_form input[type="date"] { max-width: 180px; }
     @media (max-width: 800px) {
         padding: 14px;
         .o_live_header_details { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .o_live_section_title { align-items: flex-start; flex-direction: column; }
         .o_live_card_header { flex-wrap: wrap; }
-        .o_live_type, .o_live_status { width: auto; flex: 1 1 145px; }
+        .o_live_type, .o_live_outcome_badge { width: auto; flex: 1 1 145px; }
         .o_live_card_body { padding-left: 16px; }
         .o_live_add_row { align-items: stretch; flex-direction: column; }
-        .o_live_record_editor, .o_live_resolution_editor, .o_live_resolution_form { grid-template-columns: minmax(0, 1fr); }
+        .o_live_record_editor, .o_live_resolution_editor, .o_live_resolution_form, .o_live_dissent_form { grid-template-columns: minmax(0, 1fr); }
         .o_live_general_task { align-items: stretch; flex-direction: column; }
     }
 }

@@ -202,12 +202,36 @@ export class LiveMeeting extends Component {
         }
         return item.disposition;
     }
+    pointOutcomeLabel(item) {
+        if (this.typeBehavior(item) === "information" && item.disposition === "discussed") return _t("Done");
+        const entry = (OUTCOMES[this.typeBehavior(item)] || OUTCOMES.discussion).find(([value]) => value === this.pointOutcome(item));
+        return entry?.[1] || _t("Pending");
+    }
+    outcomeBadgeClass(item) {
+        const value = this.pointOutcome(item);
+        return ["approved", "closed", "discussed"].includes(value) ? "text-bg-success"
+            : value === "denied" ? "text-bg-danger"
+                : value === "deferred" ? "text-bg-warning" : "text-bg-secondary";
+    }
+    async applyPointAction(item, value) {
+        if (this.typeBehavior(item) === "decision" && ["approved", "denied"].includes(value)) {
+            const agreement = this.decisionAgreement(item);
+            if (agreement) return;
+            this.state.newResolution[item.id] = { ...this.state.newResolution[item.id], decision_outcome: value };
+            this.state.expanded[item.id] = true;
+            requestAnimationFrame(() => document.getElementById(`agreement-title-${item.id}`)?.focus());
+            return;
+        }
+        return this.updateOutcome(item, value);
+    }
+    async withdrawDecisionAgreement(item, resolution) {
+        const saved = await this.updateResolution(resolution, "status", "withdrawn");
+        if (saved) {
+            this.notification.add(_t("The decision is pending again. Record a new agreement to resolve it."), { type: "info" });
+        }
+    }
     decisionAgreement(item) { return this.pointResolutions(item).find((row) => row.status === "active" && row.decision_outcome); }
     newDecisionOutcome(item) { return this.state.newResolution[item.id]?.decision_outcome ?? (this.decisionAgreement(item) ? "" : "approved"); }
-    outcomeOptions(item) {
-        const options = OUTCOMES[this.typeBehavior(item)] || OUTCOMES.discussion;
-        return this.decisionAgreement(item) ? options.filter(([value]) => !["discussed", "deferred"].includes(value)) : options;
-    }
     async refreshDecision(itemId) {
         const item = this.state.items.find((row) => row.id === itemId);
         if (!item) return;
@@ -291,18 +315,7 @@ export class LiveMeeting extends Component {
     async updateOutcome(item, value) {
         if (this.typeBehavior(item) === "decision") {
             const agreement = this.decisionAgreement(item);
-            if (["approved", "denied"].includes(value)) {
-                if (agreement) return this.updateResolution(agreement, "decision_outcome", value);
-                this.state.expanded[item.id] = true;
-                this.state.newResolution[item.id] = { ...this.state.newResolution[item.id], decision_outcome: value };
-                this.notification.add(_t("Record the agreement to confirm this decision."), { type: "info" });
-                requestAnimationFrame(() => document.getElementById(`agreement-title-${item.id}`)?.focus());
-                return;
-            }
-            if (agreement && value === "pending") {
-                const saved = await this.updateResolution(agreement, "decision_outcome", false);
-                if (!saved) return;
-            }
+            if (["approved", "denied"].includes(value)) return this.applyPointAction(item, value);
         }
         if (value === "deferred") {
             this.state.deferrals[item.id] = { reason: item.deferral_reason || "" };
@@ -338,6 +351,8 @@ export class LiveMeeting extends Component {
             this.notification.add("Add a reason before postponing this point.", { type: "warning" });
             return;
         }
+        const agreement = this.decisionAgreement(item);
+        if (agreement && !(await this.updateResolution(agreement, "status", "withdrawn"))) return;
         await this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], {
             disposition: "deferred", deferral_reason: reason,
             ...(this.typeBehavior(item) === "decision" ? { decision_result: "pending" } : {}),
