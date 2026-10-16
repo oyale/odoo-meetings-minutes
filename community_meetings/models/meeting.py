@@ -29,8 +29,8 @@ class CommunityMeeting(models.Model):
         string="Readers", check_company=True,
     )
     attendee_partner_ids = fields.Many2many("res.partner", string="Attendees")
-    start_datetime = fields.Datetime(tracking=True)
-    end_datetime = fields.Datetime(tracking=True)
+    start_datetime = fields.Datetime(string="Estimated Start Datetime", tracking=True)
+    end_datetime = fields.Datetime(string="Estimated End Datetime", tracking=True)
     actual_start_datetime = fields.Datetime(readonly=True, copy=False, tracking=True)
     actual_end_datetime = fields.Datetime(readonly=True, copy=False, tracking=True)
     location = fields.Char()

@@ -739,13 +739,13 @@ msgstr "Personas y serie"
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-msgid "Planned end"
+msgid "Estimated end"
 msgstr "Fin previsto"
 
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-msgid "Planned start"
+msgid "Estimated start"
 msgstr "Inicio previsto"
 
 #. module: community_meetings
@@ -1110,3 +1110,19 @@ msgstr "Sin fecha"
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "decision"
 msgstr "decisión"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting__start_datetime
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_create_wizard__start_datetime
+msgid "Estimated Start Datetime"
+msgstr "Fecha y hora de inicio estimadas"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting__end_datetime
+msgid "Estimated End Datetime"
+msgstr "Fecha y hora de fin estimadas"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "There are no points to carry over into this meeting."
+msgstr "No hay puntos para arrastrar a esta reunión."

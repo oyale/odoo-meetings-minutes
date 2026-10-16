@@ -237,6 +237,26 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
         self.page.locator(".o_form_view").wait_for()
 
+    def test_empty_html_live_in_debug_mode(self):
+        self.rpc(
+            "community.meeting", "write", [[self.meeting_id], {"minutes_notes": False}]
+        )
+        self.rpc(
+            "community.meeting.agenda.item",
+            "write",
+            [list(self.item_ids.values()), {"discussion_notes": False}],
+        )
+        self.page.goto(
+            "%s/web?debug=1#model=community.meeting&id=%s&view_type=form"
+            % (BASE_URL, self.meeting_id)
+        )
+        self.page.locator('button[name="action_open_live_meeting"]').click()
+        expect(self.page.locator(".o_community_live_meeting")).to_be_visible()
+        self.page.get_by_role("button", name="Expand / Collapse all").click()
+        expect(
+            self.card("information").locator('[contenteditable="true"]').first
+        ).to_be_visible()
+
     def test_navigation_and_filter(self):
         self.page.get_by_role("button", name="Expand / Collapse all").click()
         expect(self.card("information").locator(".o_live_expand")).to_have_attribute(
@@ -711,6 +731,9 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             re.compile("Guided series")
         )
         wizard.locator('button[name="action_next"]').click()
+        expect(
+            wizard.get_by_text("Estimated Start Datetime", exact=True)
+        ).to_be_visible()
         duration = wizard.locator('.o_field_widget[name="duration_hours"] input')
         expect(duration).to_have_value("01:30")
         name = "Guided meeting " + uuid.uuid4().hex[:8]
@@ -723,6 +746,11 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             wizard.locator('.o_field_widget[name="attendee_partner_ids"]')
         ).to_contain_text(user["partner_id"][1])
         wizard.locator('button[name="action_next"]').click()
+        expect(
+            wizard.get_by_text(
+                "There are no points to carry over into this meeting.", exact=True
+            )
+        ).to_be_visible()
         wizard.locator('button[name="action_next"]').click()
         wizard.locator('button[name="action_add_point"]').click()
         point = self.page.get_by_role("dialog").last

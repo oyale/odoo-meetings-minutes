@@ -24,7 +24,7 @@ class MeetingCreateWizard(models.TransientModel):
         "res.company", default=lambda self: self.env.company, required=True
     )
     name = fields.Char(string="Meeting title")
-    start_datetime = fields.Datetime(default=fields.Datetime.now)
+    start_datetime = fields.Datetime(string="Estimated Start Datetime", default=fields.Datetime.now)
     duration_hours = fields.Float(string="Approximate duration", default=1.0)
     attendee_partner_ids = fields.Many2many("res.partner", string="Attendees")
     defaults_applied = fields.Boolean()
