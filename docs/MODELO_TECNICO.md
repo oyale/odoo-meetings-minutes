@@ -33,8 +33,7 @@ erDiagram
     PARTICIPACION ||--o{ SEGUIMIENTO : origina
     PUNTO ||--o{ SEGUIMIENTO : conserva
     REUNION ||--o{ REVISION_ACTA : versiona
-    REUNION ||--o{ PROPUESTA : puede_recibir
-    SERIE o|--o{ PROPUESTA : puede_recibir
+    PUNTO o|--o{ PUNTO : referencia_origen
     SOLICITUD_ARRASTRE o|--o| PARTICIPACION : materializa
 ```
 
@@ -48,11 +47,12 @@ erDiagram
 | Acuerdo | `.resolution` | Texto y estado del acuerdo; puede determinar aprobación/rechazo de un punto decisorio. |
 | Disenso / nota privada | `.dissent` / `.editor.note` | Disenso ligado a punto o acuerdo, con inclusión optativa en acta; notas editoriales privadas excluidas de publicación. |
 | Seguimiento | `.action` | Trabajo asignado, plazo y progreso; conserva el enlace al punto y a la sesión de origen. |
-| Propuesta | `.agenda.proposal` | Solicitud independiente de incorporación a agenda, sujeta a elegibilidad y revisión. |
+| Propuesta | `.topic` con `state=proposed` | Punto de una serie aún no admitido; guarda autoría, respuesta y estado de revisión. No tiene participación hasta incluirse. |
 | Arrastre | `.carryover` | Solicitud trazable desde punto, acuerdo o seguimiento hacia otra reunión; puede esperar una serie de destino. |
 | Revisión | `.revision` | Evidencia aprobada: snapshot JSON, PDF, hashes, aprobador y versión anterior. |
 
-**Punto ≠ participación.** Reutilizar un punto dentro de su serie conserva su
+**Punto ≠ participación.** Una propuesta ya es un punto, aunque todavía no
+figure en ninguna reunión. Reutilizar un punto dentro de su serie conserva su
 identidad y crea otra participación. Los cambios de contenido se propagan a
 participaciones futuras aún no iniciadas; las sesiones pasadas conservan su
 contenido. El seguimiento de un acuerdo hacia otra serie crea otro punto y
@@ -83,7 +83,7 @@ stateDiagram-v2
     [*] --> open: creación ordinaria
     proposed --> open: admitir
     open --> closed: resultado válido de una participación
-    closed --> open: reabrir con motivo
+    closed --> open: reabrir
 ```
 
 El punto tiene `state`, `outcome` y `postponed`. La participación tiene
@@ -104,7 +104,9 @@ no debe modificar su resultado global.
 
 Comenzar un punto activa su cronómetro y pausa los demás. Pausar conserva el
 tiempo acumulado; reanudar suma otro intervalo. En live, los registros se editan
-con el punto en curso; las notas también pueden editarse al redactar el acta.
+con el punto en curso. La pausa de reunión o punto bloquea también los cambios
+directos de notas y resultado en el servidor; las acciones de acuerdo y reapertura
+aplican las transiciones válidas. Las notas pueden editarse al redactar el acta.
 Posponer activa la revisión futura. Al finalizar, los puntos iniciados y sin
 resolver quedan preparados para revisión posterior.
 
@@ -114,13 +116,15 @@ resolver quedan preparados para revisión posterior.
 flowchart TD
     S[Serie y fecha] --> W[Asistente: valores por defecto, asistentes y agenda]
     A[Puntos pospuestos o con seguimientos] --> W
-    W --> M[Crear reunión y participaciones]
+    PP[Puntos propuestos de la serie] --> W
+    W --> REV{Incluir, posponer o descartar cada candidato}
+    REV --> M[Crear reunión y participaciones]
     Q[Solicitud desde acuerdo: serie destino] --> D{Existe próxima reunión elegible?}
     D -->|No| P[Solicitud pendiente]
     P -->|Se crea una reunión elegible| D
     D -->|Sí| POL{Política de destino}
     POL -->|Automática| I[Materializar participación]
-    POL -->|Revisión| V[Proponer: aceptar o descartar]
+    POL -->|Revisión| V[Revisar candidato]
     POL -->|Manual| H[Intervención explícita]
     V -->|Aceptar| I
     M --> V
@@ -134,10 +138,14 @@ Los seguimientos completados también pueden justificar revisión en otra sesió
 Al finalizar una reunión, ciertos seguimientos abiertos de puntos cerrados se
 promueven a nuevos puntos trazables.
 
-Una propuesta tiene su propio circuito: **submitted → accepted / rejected / withdrawn**.
-Aceptarla incorpora un punto a una reunión en borrador. Su autorización combina
-grupos habilitados y concesiones por persona, empresa, serie y vigencia; poder
-proponer no concede acceso general a las reuniones.
+Una propuesta es un `.topic` con `state=proposed` y
+`proposal_status=submitted`. Puede pasar a **accepted**, **rejected** o
+**withdrawn**; aceptar la candidatura crea su participación y abre el mismo
+punto persistente. Posponerla no crea participación y conserva la candidatura;
+descartarla la rechaza. La elegibilidad usa grupos autorizados y concesiones por
+persona, empresa, serie y vigencia. Poder proponer no concede acceso general a
+las reuniones. Los candidatos de arrastre también pueden incluirse, posponerse
+o descartarse; los descartes quedan trazados por la solicitud de arrastre.
 
 ## 5. Seguimientos y Project
 
@@ -158,8 +166,10 @@ en el punto persistente. Cada seguimiento crea el tipo elegido. La actividad se
 vincula al registro `.action`, que conserva la trazabilidad; no se crea trabajo
 paralelo independiente. Project añade su propio tipo sin generar actividades.
 Se admiten varios responsables: una actividad por persona, o varios asignados a
-la tarea Project. La actividad parcial completada se conserva; el seguimiento
-termina cuando todos han completado su parte. El responsable lector puede
+la tarea Project. El progreso de cada actividad completada se conserva; el
+seguimiento termina cuando todos han completado su parte. Borrar la última
+actividad válida de un TODO cerrado se rechaza; completarla registra evidencia
+durable antes de que Odoo retire la actividad nativa. El responsable lector puede
 completar su actividad sin adquirir permisos editoriales.
 
 Project resuelve configuración de empresa → serie: sin proyecto predeterminado,
@@ -167,6 +177,12 @@ proyecto común o proyecto por serie. Distingue el destino predeterminado, el
 requisito para cerrar TODO y el ámbito de tareas seleccionables. Las condiciones
 de cierre se conservan como snapshots para que una configuración posterior no
 invalide silenciosamente un cierre histórico.
+
+La serie de una reunión puede asignarse, cambiarse o retirarse mientras siga
+en borrador o programada, sin ejecución live ni revisión aprobada. La serie
+nueva debe estar activa y coincidir en empresa y tipo de reunión. Los puntos
+exclusivos siguen la serie; un punto compartido con otra reunión impide un
+cambio incompatible. La revisión aprobada y su PDF no se reescriben.
 
 ## 6. Integridad, publicación y acceso
 
@@ -199,11 +215,22 @@ desglose de implementación y validación se mantiene en [PLAN_CONCERNS.md](PLAN
 | Media | Dos significados de tarea. | Actividades/To-dos nativos configurables en core; task pertenece a Project; varios responsables con trazabilidad y evidencia de cierre. |
 | Media | Fecha sin hora ni zona explícita. | Fecha y hora locales en live, zona por serie, UTC en almacenamiento; recurrencia local y rechazo de horas ambiguas/inexistentes. |
 
+### Pendientes de comprobación
+
+La validación completa de navegador, incluida la separación de core y Project,
+está pendiente en el ticket local 48 del plan de ejecución.
+Los resultados antiguos de Playwright y cobertura son evidencia fechada, no
+validación de los cambios de este ciclo. La posible eliminación de registros
+generales de reunión, los puntos recurrentes y el flujo de adjuntos siguen como
+decisiones futuras independientes.
+
 Fuentes principales: [modelo de reunión](../community_meetings/models/meeting.py),
 [puntos y participaciones](../community_meetings/models/topic.py),
 [reglas de agenda](../community_meetings/models/agenda_item.py),
 [arrastre](../community_meetings/models/carryover.py),
 [asistente](../community_meetings/models/creation_wizard.py),
+[candidatos de agenda](../community_meetings/models/agenda_preparation.py),
+[elegibilidad de propuestas](../community_meetings/models/proposal_eligibility.py),
 [revisiones](../community_meetings/models/revision.py),
 [actividades](../community_meetings/models/followup_activity.py),
 [roles](../community_meetings/security/groups.xml),
