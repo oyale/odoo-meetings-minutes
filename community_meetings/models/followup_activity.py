@@ -132,7 +132,7 @@ class FollowupActivity(models.Model):
 
     def _has_execution_evidence(self):
         self.ensure_one()
-        return bool(self.followup_activity_id or self.followup_activity_completed_on)
+        return bool(self.followup_activity_ids.exists() or self.followup_activity_completed_on)
 
     def _sync_followup_activity(self):
         todo_type = self.env.ref(
@@ -254,6 +254,39 @@ class FollowupActivity(models.Model):
 class MailActivity(models.Model):
     _inherit = "mail.activity"
 
+    def unlink(self):
+        linked = self.env["community.meeting.action"].sudo().search([
+            ("followup_activity_ids", "in", self.ids),
+        ])
+        topics = linked.topic_id
+        for topic in topics.sorted("id"):
+            topic._lock_workflow()
+        closed = self.env["community.meeting.agenda.item"].sudo().search([
+            ("topic_id", "in", topics.ids),
+            ("kind", "=", "todo"),
+            ("disposition", "=", "closed"),
+        ])
+        for item in closed:
+            actions = self.env["community.meeting.action"].sudo().search([
+                ("topic_id", "=", item.topic_id.id),
+                ("state", "!=", "cancelled"),
+                ("responsible_user_id", "!=", False),
+            ])
+            if not any(
+                action._has_execution_evidence()
+                if action not in linked or action.followup_kind == "task"
+                else bool(
+                    action.followup_activity_completed_on
+                    or (action.followup_activity_ids.exists() - self)
+                )
+                for action in actions
+            ):
+                raise ValidationError(_(
+                    "A resolved TODO must keep at least one non-cancelled follow-up task. "
+                    "Reopen the point before removing its last activity."
+                ))
+        return super().unlink()
+
     def _action_done(self, feedback=False, attachment_ids=None):
         meeting_activities = self.filtered(
             lambda a: a.res_model == "community.meeting.action"
@@ -271,6 +304,15 @@ class MailActivity(models.Model):
                 raise AccessError(_("You can only complete your own follow-up activities."))
         completed = {a.id: meeting_activities.filtered(lambda activity: activity in a.followup_activity_ids).user_id.ids for a in followups}
         finished_ids = {a.id: meeting_activities.filtered(lambda activity: activity in a.followup_activity_ids).ids for a in followups}
+        # Odoo unlinks completed activities internally. Record the durable
+        # evidence first so the ordinary unlink guard can distinguish completion
+        # from deleting the last open activity on a closed TODO.
+        for action in followups:
+            completed_ids = set(action.completed_user_ids.ids) | set(completed[action.id])
+            if set(action.responsible_user_ids.ids) <= completed_ids:
+                super(FollowupActivity, action.sudo()).write({
+                    "followup_activity_completed_on": fields.Datetime.now(),
+                })
         result = super()._action_done(feedback=feedback, attachment_ids=attachment_ids)
         for action in followups:
             # Native activity ownership authorizes only these completion fields;

@@ -588,6 +588,65 @@ class TestMeetingDomain(TransactionCase):
         self.assertTrue(task.followup_activity_id)
         self.assertEqual(str(task.followup_activity_id.date_deadline), "2026-12-02")
 
+    def test_closed_todo_rejects_deleting_its_last_native_activity(self):
+        meeting = self.env["community.meeting"].create({"name": "Native evidence"})
+        item = self.env["community.meeting.agenda.item"].create({
+            "meeting_id": meeting.id, "name": "Closed TODO", "kind": "todo",
+        })
+        action = self.env["community.meeting.action"].create({
+            "meeting_id": meeting.id, "agenda_item_id": item.id,
+            "name": "Required activity", "followup_kind": "todo",
+        })
+        activity = action.followup_activity_id
+        item.write({"disposition": "closed"})
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            activity.unlink()
+        self.assertTrue(activity.exists())
+        self.assertEqual(item.disposition, "closed")
+        activity.action_feedback(feedback="Completed")
+        self.assertTrue(action.followup_activity_completed_on)
+        self.assertTrue(item._followup_actions())
+
+    def test_closed_todo_keeps_evidence_when_one_of_two_activities_is_removed(self):
+        other = self.env["res.users"].sudo().create({
+            "name": "Other owner", "login": "native-evidence-other-owner",
+            "groups_id": [(6, 0, [
+                self.env.ref("base.group_user").id,
+                self.env.ref("community_meetings.group_meeting_reader").id,
+            ])],
+        })
+        meeting = self.env["community.meeting"].create({
+            "name": "Two owners", "reader_user_ids": [(4, other.id)],
+        })
+        item = self.env["community.meeting.agenda.item"].create({
+            "meeting_id": meeting.id, "name": "Two-owner TODO", "kind": "todo",
+        })
+        action = self.env["community.meeting.action"].create({
+            "meeting_id": meeting.id, "agenda_item_id": item.id,
+            "name": "Shared work", "followup_kind": "todo",
+            "responsible_user_ids": [(6, 0, [self.env.uid, other.id])],
+        })
+        item.write({"disposition": "closed"})
+        first = action.followup_activity_id
+        first.unlink()
+        self.assertEqual(len(action.followup_activity_ids.exists()), 1)
+        self.assertTrue(item._followup_actions())
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            action.followup_activity_ids.unlink()
+
+    def test_open_todo_allows_deleting_native_activity(self):
+        meeting = self.env["community.meeting"].create({"name": "Open TODO"})
+        item = self.env["community.meeting.agenda.item"].create({
+            "meeting_id": meeting.id, "name": "Open point", "kind": "todo",
+        })
+        action = self.env["community.meeting.action"].create({
+            "meeting_id": meeting.id, "agenda_item_id": item.id,
+            "name": "Optional activity", "followup_kind": "todo",
+        })
+        activity = action.followup_activity_id
+        activity.unlink()
+        self.assertFalse(activity.exists())
+
     def test_core_todo_uses_native_activity(self):
         meeting = self.env["community.meeting"].create({"name": "Task meeting"})
         item = self.env["community.meeting.agenda.item"].create(
