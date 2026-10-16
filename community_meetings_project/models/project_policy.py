@@ -6,7 +6,10 @@ MODES = [
     ("global", "Company project"),
     ("series", "Project per series"),
 ]
-REQUIREMENTS = [("core", "Assigned follow-up"), ("project", "Linked Project task")]
+REQUIREMENTS = [
+    ("core", "Assigned meeting task or Odoo activity"),
+    ("project", "Assigned follow-up with linked Project task"),
+]
 SCOPES = [("any", "Any accessible project"), ("configured", "Configured project only")]
 
 
@@ -18,7 +21,10 @@ class Company(models.Model):
     )
     meeting_project_id = fields.Many2one("project.project", check_company=True)
     meeting_todo_requirement = fields.Selection(
-        REQUIREMENTS, string="TODO closure requirement", default="core", required=True
+        REQUIREMENTS,
+        string="Evidence required to close a TODO",
+        default="core",
+        required=True,
     )
     meeting_task_scope = fields.Selection(
         SCOPES, string="Selectable tasks", default="any", required=True
@@ -56,7 +62,7 @@ class Series(models.Model):
     )
     meeting_todo_requirement = fields.Selection(
         [("inherit", "Company default")] + REQUIREMENTS,
-        string="TODO closure requirement",
+        string="Evidence required to close a TODO",
         default="inherit",
         required=True,
     )

@@ -195,7 +195,7 @@
                                         <div class="o_live_followup_task_title">
                                             <label class="form-label" t-att-for="'live-task-name-' + task.id">Task</label>
                                             <input class="form-control" t-att-id="'live-task-name-' + task.id" aria-label="Task name" t-att-value="task.name" t-on-change="(ev) => this.updateAction(task, 'name', ev.target.value)"/>
-                                            <span class="badge text-bg-light"><t t-out="actionStateLabel(task.state)"/></span>
+                                            <div class="o_live_followup_badges"><span class="badge text-bg-light"><t t-out="followupKindLabel(task)"/></span><span t-if="task.followup_kind === 'activity' and actionActivityType(task)" class="badge text-bg-light"><t t-out="actionActivityType(task)"/></span><span class="badge text-bg-light"><t t-out="actionStateLabel(task.state)"/></span></div>
                                         </div>
                                         <div class="o_live_followup_task_fields">
                                             <label class="o_live_task_field"><span>Assigned to</span>
@@ -214,10 +214,12 @@
                                 </ul>
                                 <p t-else="" class="text-muted">No follow-up tasks.</p>
                                 <div t-if="!locked" class="o_live_add_row o_live_task_form">
-                                    <input class="form-control" aria-label="Task name" placeholder="Task" t-att-value="state.newAction[item.id]?.name || ''" t-on-input="(ev) => this.setAction(item, 'name', ev.target.value)"/>
-                                    <input class="form-control" type="date" aria-label="Deadline" t-att-value="state.newAction[item.id]?.deadline || ''" t-on-change="(ev) => this.setAction(item, 'deadline', ev.target.value)"/>
-                                    <select class="form-select o_live_task_owner" aria-label="Task owner" t-att-value="state.newAction[item.id]?.responsible_user_id ?? state.defaultOwner" t-on-change="(ev) => this.setAction(item, 'responsible_user_id', ev.target.value)"><option value="">Unassigned</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id"><t t-out="user.name"/></option></select>
-                                    <button class="btn btn-outline-primary" t-att-disabled="state.submitting['action:' + item.id]" t-on-click="() => this.addAction(item)">Add task</button>
+                                    <label class="o_live_task_field"><span>Follow-up title</span><input class="form-control" aria-label="Task name" placeholder="Follow-up" t-att-value="state.newAction[item.id]?.name || ''" t-on-input="(ev) => this.setAction(item, 'name', ev.target.value)"/></label>
+                                    <label class="o_live_task_field"><span>Follow-up type</span><select class="form-select" aria-label="Follow-up type" t-att-value="state.newAction[item.id]?.followup_kind || state.followupDefaults.kind" t-on-change="(ev) => this.setAction(item, 'followup_kind', ev.target.value)"><option value="task">Meeting task</option><option value="activity">Odoo activity</option><option value="todo">Odoo To-do</option></select></label>
+                                    <label t-if="(state.newAction[item.id]?.followup_kind || state.followupDefaults.kind) === 'activity'" class="o_live_task_field"><span>Activity type</span><select class="form-select" aria-label="Activity type" t-att-value="state.newAction[item.id]?.followup_activity_type_id || state.followupDefaults.activity_type_id || ''" t-on-change="(ev) => this.setAction(item, 'followup_activity_type_id', ev.target.value)"><option value="">Choose activity type</option><option t-foreach="state.activityTypes" t-as="activityType" t-key="activityType.id" t-att-value="activityType.id"><t t-out="activityType.name"/></option></select></label>
+                                    <label class="o_live_task_field"><span>Assigned to</span><select class="form-select o_live_task_owner" aria-label="Task owner" t-att-value="state.newAction[item.id]?.responsible_user_id ?? state.defaultOwner" t-on-change="(ev) => this.setAction(item, 'responsible_user_id', ev.target.value)"><option value="">Unassigned</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id"><t t-out="user.name"/></option></select></label>
+                                    <label class="o_live_task_field"><span>Due date</span><input class="form-control" type="date" aria-label="Deadline" t-att-value="state.newAction[item.id]?.deadline || ''" t-on-change="(ev) => this.setAction(item, 'deadline', ev.target.value)"/></label>
+                                    <button class="btn btn-outline-primary" t-att-disabled="state.submitting['action:' + item.id]" t-on-click="() => this.addAction(item)">Add follow-up</button>
                                 </div>
                             </div>
                         </div>
@@ -246,6 +248,7 @@
                     <div class="o_live_subsection">
                         <h3>General follow-up tasks</h3>
                         <div t-foreach="generalActions" t-as="task" t-key="task.id" class="o_live_general_task">
+                            <span class="badge text-bg-light"><t t-out="followupKindLabel(task)"/></span>
                             <input class="form-control" aria-label="Task name" t-att-value="task.name" t-on-change="(ev) => this.updateAction(task, 'name', ev.target.value)"/>
                             <select class="form-select o_live_task_owner" aria-label="Task owner" t-att-value="task.responsible_user_id?.[0] || ''" t-on-change="(ev) => this.updateAction(task, 'responsible_user_id', ev.target.value)"><option value="">Unassigned</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id"><t t-out="user.name"/></option></select>
                             <input class="form-control o_live_task_deadline" type="date" aria-label="Task deadline" t-att-value="task.deadline || ''" t-on-change="(ev) => this.updateAction(task, 'deadline', ev.target.value)"/>
@@ -253,10 +256,12 @@
                             <button t-if="!locked" class="btn btn-link" t-on-click="() => this.requestRecordCarryover('community.meeting.action', task)">Follow up at another meeting</button>
                         </div>
                         <div t-if="!locked" class="o_live_add_row">
-                            <input class="form-control" aria-label="General task name" placeholder="Task" t-att-value="state.newAction.general?.name || ''" t-on-input="(ev) => this.setGeneralValue('newAction', 'name', ev.target.value)"/>
+                            <input class="form-control" aria-label="General task name" placeholder="Follow-up" t-att-value="state.newAction.general?.name || ''" t-on-input="(ev) => this.setGeneralValue('newAction', 'name', ev.target.value)"/>
+                            <select class="form-select" aria-label="General follow-up type" t-att-value="state.newAction.general?.followup_kind || state.followupDefaults.kind" t-on-change="(ev) => this.setGeneralValue('newAction', 'followup_kind', ev.target.value)"><option value="task">Meeting task</option><option value="activity">Odoo activity</option><option value="todo">Odoo To-do</option></select>
+                            <select t-if="(state.newAction.general?.followup_kind || state.followupDefaults.kind) === 'activity'" class="form-select" aria-label="General activity type" t-att-value="state.newAction.general?.followup_activity_type_id || state.followupDefaults.activity_type_id || ''" t-on-change="(ev) => this.setGeneralValue('newAction', 'followup_activity_type_id', ev.target.value)"><option value="">Choose activity type</option><option t-foreach="state.activityTypes" t-as="activityType" t-key="activityType.id" t-att-value="activityType.id"><t t-out="activityType.name"/></option></select>
                             <select class="form-select o_live_task_owner" aria-label="Task owner" t-att-value="state.newAction.general?.responsible_user_id || ''" t-on-change="(ev) => this.setGeneralValue('newAction', 'responsible_user_id', ev.target.value)"><option value="">Unassigned</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id"><t t-out="user.name"/></option></select>
                             <input class="form-control o_live_task_deadline" type="date" aria-label="Task deadline" t-att-value="state.newAction.general?.deadline || ''" t-on-change="(ev) => this.setGeneralValue('newAction', 'deadline', ev.target.value)"/>
-                            <button class="btn btn-outline-primary" t-att-disabled="state.submitting['action:general']" t-on-click="addGeneralAction">Add task</button>
+                            <button class="btn btn-outline-primary" t-att-disabled="state.submitting['action:general']" t-on-click="addGeneralAction">Add follow-up</button>
                         </div>
                     </div>
                     <details class="o_live_subsection">

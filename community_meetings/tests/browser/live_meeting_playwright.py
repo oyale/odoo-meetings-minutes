@@ -82,7 +82,13 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.rpc("community.meeting", "action_schedule", [[self.meeting_id]])
         self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
         self.page.get_by_role("button", name="Open Live Meeting").click(timeout=30000)
-        self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
+        try:
+            self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
+        except Exception as error:
+            raise AssertionError(
+                "Live meeting did not render agenda cards; browser errors: %r; URL: %s"
+                % (self.console_errors, self.page.url)
+            ) from error
         self.page.get_by_role("button", name="Expand / Collapse all").click()
 
     def cleanup_meeting(self):

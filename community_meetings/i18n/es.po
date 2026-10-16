@@ -1138,3 +1138,67 @@ msgstr "Fecha límite"
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Status"
 msgstr "Estado"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_kind
+msgid "Follow-up type"
+msgstr "Tipo de seguimiento"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Meeting task"
+msgstr "Tarea de reunión"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Odoo activity"
+msgstr "Actividad de Odoo"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Odoo To-do"
+msgstr "TODO de Odoo"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Choose an Odoo activity type."
+msgstr "Elige un tipo de actividad de Odoo."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Follow-up title"
+msgstr "Título del seguimiento"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Activity type"
+msgstr "Tipo de actividad"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Add follow-up"
+msgstr "Añadir seguimiento"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_res_company__meeting_default_followup_kind
+msgid "Default follow-up type"
+msgstr "Tipo de seguimiento predeterminado"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__default_activity_type_id
+#: model:ir.model.fields,field_description:community_meetings.field_res_company__meeting_default_activity_type_id
+#: model:ir.model.fields,field_description:community_meetings.field_res_config_settings__meeting_default_activity_type_id
+msgid "Default Odoo activity type"
+msgstr "Tipo predeterminado de actividad de Odoo"
+
+#. module: community_meetings
+#: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__default_followup_kind__inherit
+msgid "Company default"
+msgstr "Valor predeterminado de la compañía"

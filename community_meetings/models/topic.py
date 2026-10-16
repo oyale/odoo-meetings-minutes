@@ -375,10 +375,15 @@ class AgendaParticipation(models.Model):
 
     def _followup_actions(self):
         self.ensure_one()
-        return self.env["community.meeting.action"].search(
+        actions = self.env["community.meeting.action"].search(
             [
                 ("topic_id", "=", self.topic_id.id),
                 ("state", "!=", "cancelled"),
                 ("responsible_user_id", "!=", False),
             ]
+        )
+        return actions.filtered(
+            lambda action: action.followup_kind == "task"
+            or action.followup_activity_id
+            or action.followup_activity_completed_on
         )

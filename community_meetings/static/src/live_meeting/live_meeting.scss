@@ -48,6 +48,7 @@
     .o_live_followup_task_title .form-label { grid-column: 1 / -1; margin: 0; color: var(--body-color, #495057); font-size: .875rem; }
     .o_live_followup_task_title input { min-width: 0; width: 100%; font-size: 1rem; }
     .o_live_followup_task_title .badge { white-space: nowrap; }
+    .o_live_followup_badges { display: flex; justify-content: end; gap: 6px; flex-wrap: wrap; }
     .o_live_followup_task_title .o_live_project_task, .o_live_followup_task_title .o_live_create_project_task { grid-column: 1 / -1; justify-self: start; }
     .o_live_followup_task_fields { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(150px, .8fr) minmax(140px, .7fr); gap: 12px; }
     .o_live_task_field { display: flex; flex-direction: column; gap: 4px; min-width: 0; color: var(--body-color, #495057); font-size: .875rem; }
@@ -68,7 +69,10 @@
     .o_live_dissent_form { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr); align-items: center; }
     .o_live_dissent_form textarea, .o_live_dissent_form .form-check-label { grid-column: 1 / -1; }
     .o_live_dissent_form button { justify-self: start; }
-    .o_live_task_form input[type="date"] { max-width: 180px; }
+    .o_live_task_form { display: grid; grid-template-columns: minmax(220px, 1.4fr) minmax(170px, 1fr) minmax(190px, 1fr) minmax(170px, 1fr) auto; align-items: end; gap: 10px; width: 100%; }
+    .o_live_task_form .o_live_task_field { min-width: 0; }
+    .o_live_general_records .o_live_add_row { display: grid; grid-template-columns: minmax(220px, 1.4fr) minmax(170px, 1fr) minmax(190px, 1fr) minmax(160px, .8fr) minmax(160px, .8fr) auto; width: 100%; }
+    .o_live_task_form input[type="date"] { max-width: none; }
     @media (max-width: 800px) {
         padding: 14px;
         .o_live_header_details { grid-template-columns: repeat(2, minmax(0, 1fr)); }

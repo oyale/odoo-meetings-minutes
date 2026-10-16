@@ -28,7 +28,7 @@ export class LiveMeeting extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
-        this.state = useState({ loading: true, saving: 0, saveError: false, unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, attendees: [], incoming: [], defaultOwner: false });
+        this.state = useState({ loading: true, saving: 0, saveError: false, unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, meeting: {}, items: [], types: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "task", activity_type_id: false, todo_activity_type_id: false }, expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, attendees: [], incoming: [], defaultOwner: false });
         this.pendingWrites = new Map();
         this.editors = new Map();
         this.editorTimers = new Map();
@@ -69,6 +69,8 @@ export class LiveMeeting extends Component {
             this.orm.searchRead("community.meeting.editor.note", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "content"], { order: "id" }),
         ]);
         this.state.meeting = meetings[0];
+        this.state.followupDefaults = await this.orm.call("community.meeting", "get_followup_defaults", [[this.meetingId]]);
+        this.state.activityTypes = await this.orm.searchRead("mail.activity.type", [["active", "=", true]], ["name"], { order: "sequence, name" });
         this.state.attendeeIds = [...meetings[0].attendee_partner_ids];
         const users = await this.orm.searchRead("res.users", [
             ["active", "=", true], ["share", "=", false], ["company_ids", "in", [meetings[0].company_id[0]]],
@@ -81,7 +83,7 @@ export class LiveMeeting extends Component {
         this.state.dissents = dissents;
         this.state.defaultOwner = (await this.orm.call("community.meeting.action", "default_get", [["responsible_user_id"]])).responsible_user_id;
         const topicIds = items.map((i) => i.topic_id[0]);
-        this.state.actions = await this.orm.searchRead("community.meeting.action", [["topic_id", "in", topicIds]], ["agenda_item_id", "topic_id", "name", "description", "responsible_user_id", "deadline", "state", "followup_activity_id"], { order: "deadline, id" });
+        this.state.actions = await this.orm.searchRead("community.meeting.action", [["topic_id", "in", topicIds]], ["agenda_item_id", "topic_id", "name", "description", "responsible_user_id", "deadline", "state", "followup_kind", "followup_activity_type_id", "followup_activity_id", "followup_activity_completed_on"], { order: "deadline, id" });
         this.state.incoming = await this.orm.searchRead("community.meeting.carryover", [["destination_meeting_id", "=", this.meetingId], ["status", "in", ["pending", "proposed"]]], ["origin_name", "origin_meeting_id", "reason"]);
         this.state.resolutions = resolutions;
         this.state.privateNotes = privateNotes;
@@ -95,6 +97,18 @@ export class LiveMeeting extends Component {
     dateTime(value) { return value ? formatDateTime(deserializeDateTime(value)) : _t("Not set"); }
     stateLabel(value) { return MEETING_STATES[value] || value || ""; }
     actionStateLabel(value) { return ACTION_STATES[value] || value || ""; }
+    followupKindLabel(action) {
+        return {
+            task: _t("Meeting task"),
+            activity: _t("Odoo activity"),
+            todo: _t("Odoo To-do"),
+        }[action.followup_kind] || _t("Meeting task");
+    }
+    actionActivityType(action) {
+        return this.state.activityTypes.find(
+            (type) => type.id === action.followup_activity_type_id?.[0]
+        )?.name || "";
+    }
     safeHtml(value) { return markup(value || ""); }
     richTextOptions(value, key, model, recordId, field) {
         return {
@@ -463,9 +477,15 @@ export class LiveMeeting extends Component {
     async addAction(item) {
         const form = this.state.newAction[item.id] || {};
         if (!form.name?.trim()) return;
-        const values = { meeting_id: this.meetingId, agenda_item_id: item.id, name: form.name.trim(), deadline: form.deadline || false, responsible_user_id: form.responsible_user_id === undefined ? this.state.defaultOwner : (Number(form.responsible_user_id) || false) };
+        const followupKind = form.followup_kind || this.state.followupDefaults.kind;
+        const activityType = Number(form.followup_activity_type_id || this.state.followupDefaults.activity_type_id) || false;
+        if (followupKind === "activity" && !activityType) {
+            this.notification.add(_t("Choose an Odoo activity type."), { type: "warning" });
+            return;
+        }
+        const values = { meeting_id: this.meetingId, agenda_item_id: item.id, name: form.name.trim(), deadline: form.deadline || false, responsible_user_id: form.responsible_user_id === undefined ? this.state.defaultOwner : (Number(form.responsible_user_id) || false), followup_kind: followupKind, followup_activity_type_id: followupKind === "todo" ? this.state.followupDefaults.todo_activity_type_id : activityType };
         await this.createRecord(`action:${item.id}`, "community.meeting.action", values, async (record) => {
-            const [saved] = await this.orm.read("community.meeting.action", [record.id], ["topic_id", "followup_activity_id", "responsible_user_id"]);
+            const [saved] = await this.orm.read("community.meeting.action", [record.id], ["topic_id", "followup_activity_id", "followup_activity_completed_on", "responsible_user_id", "followup_kind", "followup_activity_type_id"]);
             this.state.actions.push({ ...record, ...saved });
             this.state.newAction[item.id] = {};
         });
@@ -473,11 +493,20 @@ export class LiveMeeting extends Component {
     async addGeneralAction() {
         const form = this.state.newAction.general || {};
         if (!form.name?.trim()) return;
+        const followupKind = form.followup_kind || this.state.followupDefaults.kind;
+        const activityType = Number(form.followup_activity_type_id || this.state.followupDefaults.activity_type_id) || false;
+        if (followupKind === "activity" && !activityType) {
+            this.notification.add(_t("Choose an Odoo activity type."), { type: "warning" });
+            return;
+        }
         await this.createRecord("action:general", "community.meeting.action", {
             meeting_id: this.meetingId, name: form.name.trim(), deadline: form.deadline || false,
             responsible_user_id: form.responsible_user_id === undefined ? this.state.defaultOwner : (Number(form.responsible_user_id) || false),
-        }, (record) => {
-            this.state.actions.push(record);
+            followup_kind: followupKind,
+            followup_activity_type_id: followupKind === "todo" ? this.state.followupDefaults.todo_activity_type_id : activityType,
+        }, async (record) => {
+            const [saved] = await this.orm.read("community.meeting.action", [record.id], ["topic_id", "followup_activity_id", "followup_activity_completed_on", "followup_kind", "followup_activity_type_id", "responsible_user_id"]);
+            this.state.actions.push({ ...record, ...saved });
             this.state.newAction.general = {};
         });
     }

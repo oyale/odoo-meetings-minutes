@@ -134,6 +134,32 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(item.topic_id.state, "open")
         self.assertFalse(item.review_next_meeting)
 
+    def test_followup_defaults_inherit_company_and_allow_series_override(self):
+        company = self.env.company
+        call_type = self.env["mail.activity.type"].search(
+            [("category", "=", "phonecall")], limit=1
+        )
+        self.assertTrue(call_type, "Odoo Call activity type must be installed")
+        company.sudo().write(
+            {
+                "meeting_default_followup_kind": "activity",
+                "meeting_default_activity_type_id": call_type.id,
+            }
+        )
+        series = self.env["community.meeting.series"].create(
+            {"name": "Follow-up defaults", "default_followup_kind": "inherit"}
+        )
+        meeting = self.env["community.meeting"].create(
+            {"name": "Inherited follow-up defaults", "series_id": series.id}
+        )
+        defaults = meeting.get_followup_defaults()
+        self.assertEqual(defaults["kind"], "activity")
+        self.assertEqual(defaults["activity_type_id"], call_type.id)
+        series.write({"default_followup_kind": "task"})
+        self.assertEqual(meeting.get_followup_defaults()["kind"], "task")
+        series.write({"default_followup_kind": "todo"})
+        self.assertEqual(meeting.get_followup_defaults()["kind"], "todo")
+
     def test_activity_completion_is_durable_and_reopening_reschedules(self):
         meeting = self.env["community.meeting"].create({"name": "Activity meeting"})
         item = self.env["community.meeting.agenda.item"].create(
@@ -144,6 +170,10 @@ class TestMeetingDomain(TransactionCase):
                 "meeting_id": meeting.id,
                 "agenda_item_id": item.id,
                 "name": "Draft the report",
+                "followup_kind": "activity",
+                "followup_activity_type_id": self.env.ref(
+                    "mail.mail_activity_data_todo"
+                ).id,
             }
         )
         activity = task.followup_activity_id
@@ -157,6 +187,25 @@ class TestMeetingDomain(TransactionCase):
         task.write({"state": "open", "deadline": "2026-12-02"})
         self.assertTrue(task.followup_activity_id)
         self.assertEqual(str(task.followup_activity_id.date_deadline), "2026-12-02")
+
+    def test_meeting_task_does_not_create_an_odoo_activity(self):
+        meeting = self.env["community.meeting"].create({"name": "Task meeting"})
+        item = self.env["community.meeting.agenda.item"].create(
+            {"meeting_id": meeting.id, "name": "TODO", "kind": "todo"}
+        )
+        task = self.env["community.meeting.action"].create(
+            {
+                "meeting_id": meeting.id,
+                "agenda_item_id": item.id,
+                "name": "A meeting task",
+                "followup_kind": "task",
+            }
+        )
+        self.assertFalse(task.followup_activity_id)
+        self.assertTrue(item._followup_actions())
+        item.write({"disposition": "closed"})
+        task.write({"state": "done"})
+        self.assertEqual(task.state, "done")
 
     def test_closed_point_followup_preserves_global_result_until_explicit_reopen(self):
         series = self.env["community.meeting.series"].create({"name": "Follow-up"})

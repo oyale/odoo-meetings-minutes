@@ -112,8 +112,11 @@ ACTIONS = {
         "add rich point from live",
         "cancel point wizard without side effects",
     ],
-    "test_live_task_activity_completion_is_not_in_meeting_controls": [
-        "keep activity completion out of live task editor"
+    "test_followup_kinds_keep_tasks_and_odoo_activities_distinct": [
+        "create meeting task without implicit activity",
+        "choose Odoo activity type",
+        "create native Odoo To-do",
+        "keep activity completion out of live task editor",
     ],
     "test_automatic_continuation_reuses_identity_and_links": [
         "postponement schedules review",
@@ -222,6 +225,20 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
         self.assertEqual(len(rows), 1)
         return rows[0]["id"]
+
+    def wait_action_record(self, name):
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            rows = self.rpc(
+                "community.meeting.action",
+                "search_read",
+                [[("meeting_id", "=", self.meeting_id), ("name", "=", name)]],
+                {"fields": ["name", "agenda_item_id", "followup_kind", "followup_activity_id"], "limit": 1},
+            )
+            if rows:
+                return rows[0]
+            self.page.wait_for_timeout(100)
+        self.fail("Follow-up %r was not saved" % name)
 
     def edit_rich(self, locator, text):
         expect(locator).to_be_visible()
@@ -939,37 +956,79 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         card.locator(".o_live_expand").click()
         expect(card.locator(".o_live_planned")).to_contain_text("Detailed topic")
 
-    def test_live_task_activity_completion_is_not_in_meeting_controls(self):
+    def test_followup_kinds_keep_tasks_and_odoo_activities_distinct(self):
         card = self.card("discussion")
-        card.locator(".o_live_task_form").get_by_label("Task name").fill(
-            "Assigned follow-up"
-        )
-        card.get_by_role("button", name="Add task", exact=True).click()
-        row = card.locator('li:has(select[aria-label="Task status"])')
+        form = card.locator(".o_live_task_form")
+        form.get_by_label("Task name").fill("Standalone meeting task")
+        form.get_by_role("button", name="Add follow-up").click()
+        row = card.locator('li:has(select[aria-label="Task status"])').last
         expect(row).to_be_visible()
         expect(row.locator(".o_live_followup_task_title")).to_be_visible()
-        expect(row.get_by_label("Task name")).to_be_visible()
-        expect(row.get_by_label("Task owner")).to_be_visible()
-        expect(row.get_by_label("Task deadline")).to_be_visible()
-        expect(row.get_by_label("Task status")).to_be_visible()
         expect(
             card.get_by_role("button", name="Complete activity", exact=True)
         ).to_have_count(0)
         task_id = self.related("community.meeting.action", "discussion")
-        activity = self.record(
-            "community.meeting.action", task_id, ["followup_activity_id"]
-        )["followup_activity_id"]
-        self.assertTrue(activity, "Assigned follow-up should schedule an activity.")
-        self.assertEqual(
-            self.record("community.meeting.action", task_id, ["state"])["state"], "open"
+        self.assertFalse(
+            self.record("community.meeting.action", task_id, ["followup_activity_id"])[
+                "followup_activity_id"
+            ]
         )
-        self.page.set_viewport_size({"width": 390, "height": 844})
-        for label in ("Task name", "Task owner", "Task deadline", "Task status"):
-            expect(row.get_by_label(label)).to_be_visible()
-            bounds = row.get_by_label(label).bounding_box()
-            self.assertGreater(bounds["width"], 80, label)
-            self.assertGreaterEqual(bounds["x"], 0, label)
-            self.assertLessEqual(bounds["x"] + bounds["width"], 390, label)
+        self.assertEqual(
+            self.record("community.meeting.action", task_id, ["followup_kind"])[
+                "followup_kind"
+            ],
+            "task",
+        )
+
+        form.get_by_label("Task name").fill("Odoo call activity")
+        form.get_by_label("Follow-up type").select_option("activity")
+        activity_type = next(
+            (
+                row["id"]
+                for row in self.rpc(
+                    "mail.activity.type",
+                    "search_read",
+                    [[("active", "=", True)]],
+                    {"fields": ["name", "category"], "limit": 50},
+                )
+                if row.get("category") == "phonecall"
+            ),
+            None,
+        )
+        self.assertTrue(activity_type, "Odoo Call activity type must be available")
+        form.get_by_label("Activity type").select_option(str(activity_type))
+        form.get_by_role("button", name="Add follow-up").click()
+        record = self.wait_action_record("Odoo call activity")
+        self.assertEqual(record["agenda_item_id"][0], self.item_ids["discussion"])
+        self.assertEqual(record["followup_kind"], "activity")
+        self.assertTrue(record["followup_activity_id"])
+        self.assertEqual(
+            self.record(
+                "mail.activity", record["followup_activity_id"][0], ["activity_type_id"]
+            )["activity_type_id"][0],
+            activity_type,
+        )
+
+        form.get_by_label("Task name").fill("Native Odoo to-do")
+        form.get_by_label("Follow-up type").select_option("todo")
+        form.get_by_role("button", name="Add follow-up").click()
+        todo_record = self.wait_action_record("Native Odoo to-do")
+        self.assertEqual(todo_record["agenda_item_id"][0], self.item_ids["discussion"])
+        self.assertEqual(todo_record["followup_kind"], "todo")
+        self.assertTrue(todo_record["followup_activity_id"])
+        todo_activity = self.record(
+            "mail.activity",
+            todo_record["followup_activity_id"][0],
+            ["activity_type_id"],
+        )
+        native_todo = self.rpc(
+            "mail.activity.type",
+            "search_read",
+            [[("name", "=", "To-Do")]],
+            {"fields": ["id"], "limit": 1},
+        )
+        self.assertTrue(native_todo, "The native Odoo To-Do type must be installed")
+        self.assertEqual(todo_activity["activity_type_id"][0], native_todo[0]["id"])
 
     def test_automatic_continuation_reuses_identity_and_links(self):
         series = self.rpc(
