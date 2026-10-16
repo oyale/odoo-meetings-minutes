@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="community_meetings_project.LiveMeetingProjectTasks"
+       t-inherit="community_meetings.LiveMeeting" t-inherit-mode="extension">
+        <xpath expr="//li[@t-foreach='pointActions(item)']/span[contains(@class, 'badge')]" position="after">
+            <span t-foreach="state.projectTasksByAction[task.id] || []" t-as="projectTask" t-key="projectTask.id"
+                  class="badge text-bg-info o_live_project_task"><t t-out="projectTask.name"/></span>
+            <button t-if="!locked and !(state.projectTasksByAction[task.id] || []).length" class="btn btn-sm btn-outline-primary o_live_create_project_task"
+                    t-on-click="() => this.createProjectTask(task)">Create Project task</button>
+        </xpath>
+        <xpath expr="//p[contains(., 'A follow-up task must be recorded before this TODO can be resolved.')]" position="after">
+            <p t-if="typeBehavior(item) === 'todo' and item.requires_project_task and item.disposition !== 'closed' and !hasTodoAction(item)"
+               class="text-muted">This meeting policy requires a Project task linked to the follow-up.</p>
+        </xpath>
+    </t>
+</templates>

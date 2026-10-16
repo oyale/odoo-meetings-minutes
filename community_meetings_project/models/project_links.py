@@ -9,6 +9,22 @@ class ProjectTaskLinkChecks(models.AbstractModel):
     _description = "Community Meeting Project Task Link Checks"
     _abstract = True
 
+    def _check_closed_todo_project_tasks(self, agenda_items, excluded_action_ids=(), excluded_task_ids=()):
+        for topic in agenda_items.topic_id.sorted('id'):
+            topic._lock_workflow()
+        for item in agenda_items.filtered(lambda row: row.kind == "todo" and row.disposition == "closed" and row.requires_project_task):
+            actions = item.env["community.meeting.action"].search([
+                ("topic_id", "=", item.topic_id.id), ("state", "!=", "cancelled"), ("responsible_user_id", "!=", False),
+                ("id", "not in", list(excluded_action_ids)),
+            ])
+            tasks = actions.mapped('project_task_ids').filtered(lambda task: task.id not in excluded_task_ids and task.user_ids and task.state != '1_canceled' and task.active and (not task.company_id or task.company_id == item.company_id))
+            scope = item.task_scope_snapshot or item.meeting_id._project_policy()['meeting_task_scope']
+            if scope == 'configured':
+                allowed = item.allowed_project_snapshot_id or item.meeting_id._meeting_project()
+                tasks = tasks.filtered(lambda task: task.project_id == allowed)
+            if not tasks:
+                raise ValidationError(_("Link a Project task to a follow-up action before resolving this TODO."))
+
     def _check_task_links(self, task_ids, meeting):
         if not task_ids:
             return self.env["project.task"]
@@ -21,6 +37,10 @@ class ProjectTaskLinkChecks(models.AbstractModel):
         tasks.check_access_rule("write")
         if any(task.company_id and task.company_id != meeting.company_id for task in tasks):
             raise ValidationError(_("Linked tasks must belong to the meeting company."))
+        if meeting._project_policy()['meeting_task_scope'] == 'configured':
+            project = meeting._meeting_project()
+            if not project or any(task.project_id != project for task in tasks):
+                raise ValidationError(_('Select a task from the configured meeting project.'))
         return tasks
 
     @api.model
@@ -82,7 +102,9 @@ class CommunityMeetingAgendaItem(models.Model):
             for record in self:
                 ids = self._task_ids_after_commands(vals["project_task_ids"], record.project_task_ids.ids)
                 self.env["community.meeting.project.task.mixin"]._check_task_links(ids, record.meeting_id)
-        return super().write(vals)
+        result = super().write(vals)
+        self._check_closed_todo_project_tasks(self)
+        return result
 
 
 class CommunityMeetingResolution(models.Model):
@@ -129,14 +151,28 @@ class CommunityMeetingAction(models.Model):
                 meeting = self.env["community.meeting"].browse(vals.get("meeting_id"))
                 ids = self._task_ids_after_commands(vals["project_task_ids"])
                 self.env["community.meeting.project.task.mixin"]._check_task_links(ids, meeting)
-        return super().create(vals_list)
+        records = super().create(vals_list)
+        items = self.env['community.meeting.agenda.item'].sudo().search([('topic_id', 'in', records.topic_id.ids)])
+        self._check_closed_todo_project_tasks(items)
+        return records
 
     def write(self, vals):
         if "project_task_ids" in vals:
             for record in self:
                 ids = self._task_ids_after_commands(vals["project_task_ids"], record.project_task_ids.ids)
                 self.env["community.meeting.project.task.mixin"]._check_task_links(ids, record.meeting_id)
-        return super().write(vals)
+        agenda_items = self.mapped("agenda_item_id")
+        result = super().write(vals)
+        items = self.env['community.meeting.agenda.item'].sudo().search([('topic_id', 'in', (agenda_items | self.mapped('agenda_item_id')).topic_id.ids)])
+        self._check_closed_todo_project_tasks(items)
+        return result
+
+    def unlink(self):
+        affected_items = self.env['community.meeting.agenda.item'].sudo().search([('topic_id', 'in', self.topic_id.ids)])
+        self.env["community.meeting.project.task.mixin"]._check_closed_todo_project_tasks(
+            affected_items, excluded_action_ids=self.ids
+        )
+        return super().unlink()
 
     def action_create_project_task(self):
         self.ensure_one()
@@ -147,6 +183,7 @@ class CommunityMeetingAction(models.Model):
             "name": _("Create Project Task"),
             "res_model": "community.meeting.project.task.wizard",
             "view_mode": "form",
+            "views": [(self.env.ref("community_meetings_project.view_community_meeting_project_task_wizard").id, "form")],
             "target": "new",
             "context": {"default_action_id": self.id, "default_name": self.name},
         }
@@ -157,8 +194,20 @@ class CommunityMeetingProjectTaskWizard(models.TransientModel):
     _description = "Create and Link a Project Task"
 
     action_id = fields.Many2one("community.meeting.action", required=True, readonly=True)
-    project_id = fields.Many2one("project.project", required=True)
+    project_id = fields.Many2one("project.project")
     name = fields.Char(required=True)
+    existing_task_id = fields.Many2one('project.task', string='Existing task')
+
+    @api.model
+    def default_get(self, names):
+        values = super().default_get(names)
+        if values.get('action_id'):
+            action = self.env['community.meeting.action'].browse(values['action_id'])
+            action.check_access('write')
+            project = action.meeting_id._meeting_project(create=False)
+            if project:
+                values['project_id'] = project.id
+        return values
 
     def action_create(self):
         self.ensure_one()
@@ -167,16 +216,38 @@ class CommunityMeetingProjectTaskWizard(models.TransientModel):
         self.env["project.task"].check_access_rights("create")
         if self.project_id.company_id and self.project_id.company_id != self.action_id.meeting_id.company_id:
             raise ValidationError(_("The project must belong to the meeting company."))
-        task = self.env["project.task"].create({
-            "name": self.name,
-            "project_id": self.project_id.id,
-        })
+        if self.existing_task_id:
+            task = self.existing_task_id
+        else:
+            project = self.project_id or self.action_id.meeting_id._meeting_project(create=True)
+            if not project:
+                raise ValidationError(_('Choose a project or select an existing task.'))
+            task = self.env["project.task"].create({
+                "name": self.name, "project_id": project.id,
+                "user_ids": [(6, 0, self.action_id.responsible_user_id.ids)],
+            })
         self.action_id.write({"project_task_ids": [(4, task.id)]})
         return {"type": "ir.actions.act_window_close"}
 
 
 class ProjectTask(models.Model):
     _inherit = "project.task"
+
+    def write(self, vals):
+        actions = self.env['community.meeting.action'].sudo().search([('project_task_ids', 'in', self.ids)])
+        for topic in actions.topic_id.sorted('id'):
+            topic._lock_workflow()
+        result = super().write(vals)
+        items = self.env['community.meeting.agenda.item'].sudo().search([('topic_id', 'in', actions.topic_id.ids)])
+        self.env['community.meeting.project.task.mixin'].sudo()._check_closed_todo_project_tasks(items)
+        return result
+
+    def unlink(self):
+        # Validate the same rule as closure, including historical scope and company.
+        actions = self.env['community.meeting.action'].sudo().search([('project_task_ids', 'in', self.ids)])
+        items = self.env['community.meeting.agenda.item'].sudo().search([('topic_id', 'in', actions.topic_id.ids)])
+        self.env['community.meeting.project.task.mixin'].sudo()._check_closed_todo_project_tasks(items, excluded_task_ids=self.ids)
+        return super().unlink()
 
     def action_view_community_meeting_links(self):
         self.ensure_one()

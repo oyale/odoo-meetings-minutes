@@ -1,0 +1,165 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Community Meetings Project 18.0\n"
+"PO-Revision-Date: 2026-10-16 00:00+0000\n"
+"Last-Translator: Community Meetings contributors\n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+msgid "A Project task required by a resolved TODO cannot be deleted."
+msgstr "No se puede eliminar una tarea de Project necesaria para un TODO resuelto."
+
+#. module: community_meetings_project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_task_scope__any
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_task_scope__any
+msgid "Any accessible project"
+msgstr "Cualquier proyecto accesible"
+
+#. module: community_meetings_project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_agenda_item__project_requirement_snapshot__core
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_todo_requirement__core
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_todo_requirement__core
+msgid "Assigned follow-up"
+msgstr "Seguimiento asignado"
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+msgid "Choose a project or select an existing task."
+msgstr "Elige un proyecto o selecciona una tarea existente."
+
+#. module: community_meetings_project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_project_mode__inherit
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_task_scope__inherit
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_todo_requirement__inherit
+msgid "Company default"
+msgstr "Valor de la compañía"
+
+#. module: community_meetings_project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_project_mode__global
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_project_mode__global
+msgid "Company project"
+msgstr "Proyecto global de la compañía"
+
+#. module: community_meetings_project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_task_scope__configured
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_task_scope__configured
+msgid "Configured project only"
+msgstr "Solo el proyecto configurado"
+
+#. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.js:0
+msgid "Could not open the Project task form."
+msgstr "No se pudo abrir el formulario de tarea de Project."
+
+#. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
+msgid "Create Project task"
+msgstr "Crear tarea de Project"
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__existing_task_id
+msgid "Existing task"
+msgstr "Tarea existente"
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_meeting_settings
+msgid "Existing tasks"
+msgstr "Tareas existentes"
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+msgid "Link a Project task to a follow-up action before resolving this TODO."
+msgstr "Vincula una tarea de Project a una acción de seguimiento antes de resolver este TODO."
+
+#. module: community_meetings_project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_agenda_item__project_requirement_snapshot__project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_todo_requirement__project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_todo_requirement__project
+msgid "Linked Project task"
+msgstr "Tarea de Project vinculada"
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_meeting_settings
+msgid "Meeting task policy"
+msgstr "Política de tareas de reuniones"
+
+#. module: community_meetings_project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_project_mode__none
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_project_mode__none
+msgid "No default project"
+msgstr "Sin proyecto predeterminado"
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series__meeting_project_mode
+#: model:ir.model.fields,field_description:community_meetings_project.field_res_company__meeting_project_mode
+#: model:ir.model.fields,field_description:community_meetings_project.field_res_config_settings__meeting_project_mode
+msgid "Project destination"
+msgstr "Destino de las tareas"
+
+#. module: community_meetings_project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_project_mode__series
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_project_mode__series
+msgid "Project per series"
+msgstr "Proyecto por serie"
+
+#. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.js:0
+msgid "Project task required"
+msgstr "Falta la tarea de Project"
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+msgid "Select a task from the configured meeting project."
+msgstr "Selecciona una tarea del proyecto configurado para las reuniones."
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series__meeting_task_scope
+#: model:ir.model.fields,field_description:community_meetings_project.field_res_company__meeting_task_scope
+#: model:ir.model.fields,field_description:community_meetings_project.field_res_config_settings__meeting_task_scope
+msgid "Selectable tasks"
+msgstr "Tareas seleccionables"
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series__meeting_project_id
+msgid "Series project"
+msgstr "Proyecto de la serie"
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_meeting_settings
+msgid "TODO closure"
+msgstr "Resolución de TODO"
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series__meeting_todo_requirement
+#: model:ir.model.fields,field_description:community_meetings_project.field_res_company__meeting_todo_requirement
+#: model:ir.model.fields,field_description:community_meetings_project.field_res_config_settings__meeting_todo_requirement
+msgid "TODO closure requirement"
+msgstr "Requisito para resolver TODO"
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_project_policy
+msgid "Task Policy"
+msgstr "Política de tareas"
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_meeting_settings
+msgid "Task project"
+msgstr "Proyecto de las tareas"
+
+#. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
+msgid "This meeting policy requires a Project task linked to the follow-up."
+msgstr "La política de esta reunión exige una tarea de Project vinculada al seguimiento."

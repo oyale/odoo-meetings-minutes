@@ -44,7 +44,7 @@
         <field name="model">community.meeting.project.task.wizard</field>
         <field name="arch" type="xml">
             <form string="Create Project Task">
-                <group><field name="action_id"/><field name="name"/><field name="project_id"/></group>
+                <group><field name="action_id"/><field name="existing_task_id" options="{'no_create':True}"/><field name="name" invisible="existing_task_id"/><field name="project_id" invisible="existing_task_id"/></group>
                 <footer>
                     <button name="action_create" type="object" string="Create and Link" class="oe_highlight"/>
                     <button string="Cancel" special="cancel"/>
@@ -78,4 +78,7 @@
             </xpath>
         </field>
     </record>
+
+<record id="view_series_project_policy" model="ir.ui.view"><field name="name">community.meeting.series.project.policy</field><field name="model">community.meeting.series</field><field name="inherit_id" ref="community_meetings.view_community_meeting_series_form"/><field name="arch" type="xml"><xpath expr="//notebook" position="inside"><page string="Task Policy"><group><field name="meeting_project_mode"/><field name="meeting_project_id"/><field name="meeting_todo_requirement"/><field name="meeting_task_scope"/></group></page></xpath></field></record>
+<record id="view_meeting_settings" model="ir.ui.view"><field name="name">meeting.settings.project</field><field name="model">res.config.settings</field><field name="inherit_id" ref="base.res_config_settings_view_form"/><field name="arch" type="xml"><xpath expr="//form" position="inside"><app name="community_meetings" string="Meetings" groups="base.group_system"><block title="Meeting task policy"><setting string="Task project"><field name="meeting_project_mode"/><field name="meeting_project_id"/></setting><setting string="TODO closure"><field name="meeting_todo_requirement"/></setting><setting string="Existing tasks"><field name="meeting_task_scope"/></setting></block></app></xpath></field></record>
 </odoo>
