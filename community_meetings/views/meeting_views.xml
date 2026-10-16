@@ -46,7 +46,8 @@
                         </group>
                         <group string="People and series" col="4">
                             <field name="code" readonly="1"/>
-                            <field name="organizer_id"/>
+                            <field name="organizer_id" groups="community_meetings.group_meeting_manager"/>
+                            <field name="organizer_id" groups="!community_meetings.group_meeting_manager" readonly="organizer_id != uid"/>
                             <field name="secretary_id"/>
                             <field name="attendee_partner_ids" widget="many2many_tags"/>
                             <field name="company_id" groups="base.group_multi_company"/>
@@ -171,8 +172,10 @@
                         </page>
                         <page string="Access" groups="community_meetings.group_meeting_editor">
                             <group>
-                                <field name="editor_user_ids" widget="many2many_tags"/>
-                                <field name="reader_user_ids" widget="many2many_tags"/>
+                                <field name="editor_user_ids" widget="many2many_tags" groups="community_meetings.group_meeting_manager"/>
+                                <field name="editor_user_ids" widget="many2many_tags" groups="!community_meetings.group_meeting_manager" readonly="organizer_id != uid"/>
+                                <field name="reader_user_ids" widget="many2many_tags" groups="community_meetings.group_meeting_manager"/>
+                                <field name="reader_user_ids" widget="many2many_tags" groups="!community_meetings.group_meeting_manager" readonly="organizer_id != uid"/>
                             </group>
                         </page>
                     </notebook>
