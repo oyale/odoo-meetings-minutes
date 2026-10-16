@@ -4,13 +4,11 @@ import { Component, onMounted, onWillStart, onWillUnmount, useState } from "@odo
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
-const DISPOSITIONS = [
-    ["open", "Open"],
-    ["discussed", "Treated / Discussed"],
-    ["deferred", "Postponed"],
-    ["closed", "Resolved"],
-];
-const OUTCOMES = [["pending", "Pending"], ["approved", "Approved"], ["denied", "Denied"]];
+const OUTCOMES = {
+    information: [["open", "Pending"], ["discussed", "Discussed"], ["deferred", "Postponed"]],
+    discussion: [["open", "Pending"], ["discussed", "Discussed"], ["closed", "Resolved"], ["deferred", "Postponed"]],
+    decision: [["pending", "Pending"], ["discussed", "Discussed — decision pending"], ["approved", "Approved"], ["denied", "Denied"], ["deferred", "Postponed"]],
+};
 
 export class LiveMeeting extends Component {
     static template = "community_meetings.LiveMeeting";
@@ -35,8 +33,6 @@ export class LiveMeeting extends Component {
 
     get meetingId() { return this.props.action.params.meeting_id; }
     get locked() { return ["approved", "cancelled"].includes(this.state.meeting.state); }
-    get dispositions() { return DISPOSITIONS; }
-    get outcomes() { return OUTCOMES; }
 
     async load() {
         const [meetings, items, types, dissents, actions] = await Promise.all([
@@ -63,6 +59,13 @@ export class LiveMeeting extends Component {
         return this.state.attendees.map((partner) => partner.name).join(", ") || "No attendees listed";
     }
     typeBehavior(item) { return this.state.types.find((type) => type.id === item.agenda_type_id?.[0])?.behavior || item.kind; }
+    pointOutcome(item) {
+        if (this.typeBehavior(item) === "decision") {
+            return item.disposition === "deferred" ? "deferred" : item.decision_result === "pending" && item.disposition === "discussed" ? "discussed" : item.decision_result || "pending";
+        }
+        return item.disposition;
+    }
+    outcomeOptions(item) { return OUTCOMES[this.typeBehavior(item)] || OUTCOMES.discussion; }
     pointDissents(item) { return this.state.dissents.filter((row) => row.agenda_item_id?.[0] === item.id); }
     pointActions(item) { return this.state.actions.filter((row) => row.agenda_item_id?.[0] === item.id); }
     toggle(item) { this.state.expanded[item.id] = !this.state.expanded[item.id]; }
@@ -90,6 +93,23 @@ export class LiveMeeting extends Component {
     async updateItem(item, field, value) {
         const normalized = field === "agenda_type_id" ? Number(value) : value;
         return this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], { [field]: normalized }, async () => {
+            const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result"]);
+            Object.assign(item, saved);
+        });
+    }
+
+    async updateOutcome(item, value) {
+        let values;
+        if (this.typeBehavior(item) === "decision") {
+            values = value === "deferred"
+                ? { disposition: "deferred", decision_result: "pending" }
+                : value === "discussed"
+                    ? { disposition: "discussed", decision_result: "pending" }
+                    : { disposition: value === "approved" || value === "denied" ? "closed" : "open", decision_result: value };
+        } else {
+            values = { disposition: value };
+        }
+        return this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], values, async () => {
             const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result"]);
             Object.assign(item, saved);
         });

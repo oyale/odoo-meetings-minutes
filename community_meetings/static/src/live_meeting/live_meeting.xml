@@ -42,11 +42,8 @@
                             <select class="form-select o_live_type" t-att-value="item.agenda_type_id[0]" t-att-disabled="locked" t-on-change="(ev) => this.updateItem(item, 'agenda_type_id', ev.target.value)" aria-label="Point type">
                                 <option t-foreach="state.types" t-as="type" t-key="type.id" t-att-value="type.id" t-att-disabled="!type.active"><t t-out="type.name"/><t t-if="!type.active"> (archived)</t></option>
                             </select>
-                            <select class="form-select o_live_status" t-att-value="item.disposition" t-att-disabled="locked" t-on-change="(ev) => this.updateItem(item, 'disposition', ev.target.value)" aria-label="Point status">
-                                <option t-foreach="dispositions" t-as="entry" t-key="entry[0]" t-att-value="entry[0]"><t t-out="entry[1]"/></option>
-                            </select>
-                            <select t-if="typeBehavior(item) === 'decision'" class="form-select o_live_outcome" t-att-value="item.decision_result || 'pending'" t-att-disabled="locked" t-on-change="(ev) => this.updateItem(item, 'decision_result', ev.target.value)" aria-label="Decision outcome">
-                                <option t-foreach="outcomes" t-as="entry" t-key="entry[0]" t-att-value="entry[0]"><t t-out="entry[1]"/></option>
+                            <select class="form-select o_live_status" t-att-value="pointOutcome(item)" t-att-disabled="locked" t-on-change="(ev) => this.updateOutcome(item, ev.target.value)" aria-label="Point outcome">
+                                <option t-foreach="outcomeOptions(item)" t-as="entry" t-key="entry[0]" t-att-value="entry[0]"><t t-out="entry[1]"/></option>
                             </select>
                         </div>
                         <div t-if="state.expanded[item.id]" t-att-id="'agenda-panel-' + item.id" class="o_live_card_body">

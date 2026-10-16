@@ -56,6 +56,8 @@ class CommunityMeetingAgendaItem(models.Model):
         for item in self:
             if item.kind != "decision" and item.decision_result:
                 raise ValidationError(_("Only decision agenda items can have a decision outcome."))
+            if item.decision_result in ("approved", "denied") and item.disposition != "closed":
+                raise ValidationError(_("An approved or denied decision must be marked as resolved."))
 
     @api.onchange("kind")
     def _onchange_kind(self):
@@ -95,6 +97,10 @@ class CommunityMeetingAgendaItem(models.Model):
                 vals["agenda_type_id"] = agenda_type.id
             if kind == "decision":
                 vals.setdefault("decision_result", "pending")
+                if vals.get("decision_result") in ("approved", "denied"):
+                    vals["disposition"] = "closed"
+                elif vals.get("disposition") == "deferred":
+                    vals["decision_result"] = "pending"
             else:
                 vals.pop("decision_result", None)
             values_list.append(vals)
@@ -121,6 +127,8 @@ class CommunityMeetingAgendaItem(models.Model):
                 item_vals = dict(vals)
                 if vals["kind"] == "decision" and item.kind != "decision":
                     item_vals.setdefault("decision_result", "pending")
+                    if item.disposition == "closed":
+                        item_vals["disposition"] = "open"
                 elif vals["kind"] != "decision":
                     item_vals["decision_result"] = False
                 if item_vals.get("disposition") == "deferred":

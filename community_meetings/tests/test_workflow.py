@@ -126,6 +126,23 @@ class TestMeetingWorkflow(TransactionCase):
             "meeting_id": meeting.id, "name": "Approve the proposal", "kind": "decision",
         })
         self.assertEqual(item.decision_result, "pending")
+
+    def test_decision_result_resolves_agenda_item(self):
+        meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "Consistent decision"})
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": meeting.id, "name": "Decision", "kind": "decision",
+        })
+        item.with_user(self.editor).write({"decision_result": "approved"})
+        self.assertEqual(item.disposition, "closed")
+
+    def test_switching_to_decision_clears_old_resolved_status(self):
+        meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "Type change"})
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": meeting.id, "name": "Topic", "kind": "discussion", "disposition": "closed",
+        })
+        item.with_user(self.editor).write({"kind": "decision"})
+        self.assertEqual(item.disposition, "open")
+        self.assertEqual(item.decision_result, "pending")
         item.with_user(self.editor).write({"decision_result": "approved"})
         self.assertEqual(item.decision_result, "approved")
         item.with_user(self.editor).write({"decision_result": "denied"})
