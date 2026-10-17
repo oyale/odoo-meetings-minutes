@@ -74,8 +74,11 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
+  test:
+    uses: ./.github/workflows/test.yml
+
   publish:
-    needs: build
+    needs: [build, test]
     runs-on: ubuntu-latest
     environment:
       name: pypi
