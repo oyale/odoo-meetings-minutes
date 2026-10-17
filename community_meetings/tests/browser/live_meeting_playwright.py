@@ -410,6 +410,15 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.page.get_by_role("button", name="Approve Minutes", exact=True).click()
         expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_have_count(0)
         self.assertEqual(self.record("community.meeting", self.meeting_id, ["state"])["state"], "approved")
+        previous_code = self.record("community.meeting", self.meeting_id, ["code"])["code"]
+        self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, current))
+        self.page.get_by_role("button", name="Open Live Meeting").click()
+        self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
+        if self.page.locator(".o_live_expand").first.get_attribute("aria-expanded") == "false":
+            self.page.locator(".o_live_expand").first.click()
+        approval = self.page.locator(".o_live_minutes_approval")
+        expect(approval).to_contain_text("Approved previous minutes")
+        expect(approval).to_contain_text(previous_code)
 
     def test_agreement_followup_asks_for_series(self):
         self.retain_carryover = True

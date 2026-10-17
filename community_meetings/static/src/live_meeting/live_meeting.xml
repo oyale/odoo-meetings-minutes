@@ -131,6 +131,15 @@
                                     </li>
                                 </ul>
                                 <p t-if="!state.pendingMinutes.length" class="text-muted mb-0">No pending minutes.</p>
+                                <div t-if="approvalsFor(item).length" class="mt-2">
+                                    <label class="form-label">Approved previous minutes</label>
+                                    <ul class="list-unstyled mb-0">
+                                        <li t-foreach="approvalsFor(item)" t-as="approved" t-key="approved.id" class="d-flex align-items-center gap-2">
+                                            <span><i class="fa fa-check text-success" aria-hidden="true"/> <t t-out="approved.code"/> — <t t-out="approved.name"/></span>
+                                            <button class="btn btn-sm btn-link p-0" t-on-click="() => this.openMeeting(approved.meeting_id)" aria-label="Open minutes">Review</button>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                             <div class="text-muted o_live_point_meta"><span t-if="item.presenter_partner_id">Proposed by <t t-out="label(item.presenter_partner_id)"/> · </span><span t-if="item.deadline">Due <t t-out="item.deadline"/> · </span><span t-if="item.estimated_minutes">Estimated <t t-out="item.estimated_minutes"/> min</span></div>
                             <details t-if="item.actual_started_at and !readOnly" class="o_live_advanced"><summary>Point options</summary><button class="btn btn-link" t-on-click="() => this.editPoint(item)">Edit point details</button></details>

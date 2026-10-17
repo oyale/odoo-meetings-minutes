@@ -1,5 +1,6 @@
 from . import meeting_kind
 from . import meeting
+from . import minutes_approval
 from . import series
 from . import agenda_item
 from . import agenda_type

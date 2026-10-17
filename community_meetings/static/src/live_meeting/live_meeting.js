@@ -41,7 +41,7 @@ export class LiveMeeting extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
-        this.state = useState({ loading: true, saving: 0, saveError: false, saveErrorDetail: "", unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, headerDraft: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissentReasons: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "task", activity_type_id: false, todo_activity_type_id: false }, expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], pendingMinutes: [], defaultOwner: false });
+        this.state = useState({ loading: true, saving: 0, saveError: false, saveErrorDetail: "", unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, headerDraft: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissentReasons: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "task", activity_type_id: false, todo_activity_type_id: false }, expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], pendingMinutes: [], minutesApprovals: [], defaultOwner: false });
         this.pendingWrites = new Map();
         this.editors = new Map();
         this.editorTimers = new Map();
@@ -120,6 +120,7 @@ export class LiveMeeting extends Component {
         this.state.actions = await this.orm.searchRead("community.meeting.action", [["topic_id", "in", topicIds]], ["agenda_item_id", "topic_id", "name", "description", "responsible_user_id", "responsible_user_ids", "deadline", "state", "followup_kind", "followup_activity_type_id", "followup_activity_id", "followup_activity_completed_on"], { order: "deadline, id" });
         this.state.incoming = this.state.capabilities.can_edit ? await this.orm.searchRead("community.meeting.carryover", [["destination_meeting_id", "=", this.meetingId], ["status", "in", ["pending", "proposed"]]], ["origin_name", "origin_meeting_id", "reason"]) : [];
         this.state.pendingMinutes = await this.orm.call("community.meeting", "get_pending_minutes_for_approval", [[this.meetingId]]);
+        this.state.minutesApprovals = await this.orm.call("community.meeting", "get_minutes_approval_history", [[this.meetingId]]);
         this.state.resolutions = resolutions;
         this.state.privateNotes = privateNotes;
         this.state.users = users;
@@ -534,6 +535,10 @@ export class LiveMeeting extends Component {
     }
     nextMeetingLocalValue(item) {
         return item.next_meeting_datetime ? deserializeDateTime(item.next_meeting_datetime).setZone(this.state.capabilities.timezone).toFormat("yyyy-MM-dd'T'HH:mm") : "";
+    }
+
+    approvalsFor(item) {
+        return this.state.minutesApprovals.filter((entry) => entry.agenda_item_id === item.id);
     }
 
     async openMeeting(id) {

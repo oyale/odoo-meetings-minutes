@@ -63,6 +63,10 @@ class CommunityMeetingAgendaItem(models.Model):
         string="Next meeting date", copy=False,
         help="Date chosen for the next meeting by a 'Next Meeting' point.",
     )
+    minutes_approval_ids = fields.One2many(
+        "community.meeting.minutes.approval", "agenda_item_id",
+        string="Approved previous minutes", copy=False,
+    )
     private_note_ids = fields.One2many(
         "community.meeting.editor.note", "agenda_item_id",
         groups="community_meetings.group_meeting_editor",

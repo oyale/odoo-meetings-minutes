@@ -191,6 +191,34 @@ class TestMeetingDomain(TransactionCase):
             lambda item: item.agenda_type_id.behavior == "minutes_approval"
         ))
 
+    def test_approved_previous_minutes_are_recorded_on_later_point(self):
+        series = self.env["community.meeting.series"].create({
+            "name": "Approval history", "has_minutes_approval_point": True,
+        })
+        previous = self.env["community.meeting"].create({
+            "name": "Previous", "series_id": series.id,
+            "start_datetime": "2026-10-01 10:00:00",
+        })
+        previous.action_schedule()
+        previous.action_mark_held()
+        previous.action_draft_minutes()
+        self.env["community.meeting.agenda.item"].create({
+            "meeting_id": previous.id, "name": "Topic", "kind": "discussion",
+        })
+        later = self.env["community.meeting"].create({
+            "name": "Later", "series_id": series.id,
+            "start_datetime": "2026-10-08 10:00:00",
+        })
+        point = later.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
+        self.assertTrue(point)
+        self.assertEqual(later.get_pending_minutes_for_approval()[0]["id"], previous.id)
+        previous.action_approve_minutes()
+        self.assertEqual(later.get_pending_minutes_for_approval(), [])
+        history = later.get_minutes_approval_history()
+        self.assertEqual(len(history), 1)
+        self.assertEqual(history[0]["meeting_id"], previous.id)
+        self.assertEqual(point.minutes_approval_ids.meeting_id, previous)
+
     def test_series_next_meeting_rule_proposes_date(self):
         series = self.env["community.meeting.series"].create({"name": "Recurrence"})
         series.write({"next_meeting_rule": "interval_days", "next_meeting_interval_days": 7})

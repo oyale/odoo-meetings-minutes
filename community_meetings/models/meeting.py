@@ -303,6 +303,45 @@ class CommunityMeeting(models.Model):
             for m in meetings
         ]
 
+    def _record_approved_previous_minutes(self):
+        """Register this approval on the minutes-approval point of later meetings.
+
+        The live "pending minutes" list is a query; without this the approval
+        would leave no trace once the previous meeting leaves held/minutes_draft.
+        """
+        self.ensure_one()
+        if not self.series_id or not self.start_datetime:
+            return
+        later = self.env["community.meeting"].sudo().search([
+            ("series_id", "=", self.series_id.id),
+            ("start_datetime", ">", self.start_datetime),
+            ("state", "in", ("draft", "scheduled", "held", "minutes_draft")),
+        ])
+        points = later.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
+        approvals = self.env["community.meeting.minutes.approval"].sudo()
+        for point in points:
+            if not approvals.search_count([
+                ("agenda_item_id", "=", point.id), ("meeting_id", "=", self.id),
+            ]):
+                approvals.create({"agenda_item_id": point.id, "meeting_id": self.id})
+
+    def get_minutes_approval_history(self):
+        """Previously approved minutes recorded on this meeting's approval points."""
+        self.ensure_one()
+        records = self.env["community.meeting.minutes.approval"].search([
+            ("agenda_item_id.meeting_id", "=", self.id),
+        ])
+        return [
+            {
+                "id": record.id,
+                "agenda_item_id": record.agenda_item_id.id,
+                "meeting_id": record.meeting_id.id,
+                "code": record.meeting_id.code,
+                "name": record.meeting_id.name,
+            }
+            for record in records
+        ]
+
     def action_start_meeting(self):
         for meeting in self:
             meeting.check_access_rights("write")
@@ -436,6 +475,7 @@ class CommunityMeeting(models.Model):
             meeting._validate_before_approval()
             revision = self.env["community.meeting.revision"]._create_approved_revision(meeting)
             meeting._set_approved_revision(revision)
+            meeting._record_approved_previous_minutes()
             revisions |= revision
         return revisions
 
