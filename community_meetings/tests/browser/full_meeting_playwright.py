@@ -149,10 +149,10 @@ ACTIONS = {
         "open meeting list from root menu",
         "open new meeting wizard from its submenu",
     ],
-    "test_followup_kinds_keep_tasks_and_odoo_activities_distinct": [
-        "create meeting task without implicit activity",
+    "test_followup_activity_uses_configured_activity_type": [
+        "create follow-up with default activity type",
         "choose Odoo activity type",
-        "create native Odoo To-do",
+        "create follow-up with native Odoo To-Do type",
         "keep activity completion out of live task editor",
     ],
     "test_automatic_continuation_reuses_identity_and_links": [
@@ -1152,11 +1152,11 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         dialog.get_by_role("button", name="Cancel").click()
         expect(dialog).not_to_be_visible()
 
-    def test_followup_kinds_keep_tasks_and_odoo_activities_distinct(self):
+    def test_followup_activity_uses_configured_activity_type(self):
         card = self.card("discussion")
         card.get_by_role("button", name="Add follow-up", exact=True).click()
         form = card.locator(".o_live_task_form")
-        form.get_by_label("Task name").fill("Native meeting to-do")
+        form.get_by_label("Task name").fill("Native meeting follow-up")
         form.get_by_role("button", name="Add follow-up").click()
         row = card.locator('li:has(select[aria-label="Task status"])').last
         expect(row).to_be_visible()
@@ -1174,11 +1174,10 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             self.record("community.meeting.action", task_id, ["followup_kind"])[
                 "followup_kind"
             ],
-            "todo",
+            "activity",
         )
 
         form.get_by_label("Task name").fill("Odoo call activity")
-        form.get_by_label("Follow-up type").select_option("activity")
         activity_type = next(
             (
                 row["id"]
@@ -1209,17 +1208,6 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
 
         form.get_by_label("Task name").fill("Native Odoo to-do")
-        form.get_by_label("Follow-up type").select_option("todo")
-        form.get_by_role("button", name="Add follow-up").click()
-        todo_record = self.wait_action_record("Native Odoo to-do")
-        self.assertEqual(todo_record["agenda_item_id"][0], self.item_ids["discussion"])
-        self.assertEqual(todo_record["followup_kind"], "todo")
-        self.assertTrue(todo_record["followup_activity_id"])
-        todo_activity = self.record(
-            "mail.activity",
-            todo_record["followup_activity_id"][0],
-            ["activity_type_id"],
-        )
         native_todo = self.rpc(
             "mail.activity.type",
             "search_read",
@@ -1227,6 +1215,17 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             {"fields": ["id"], "limit": 1},
         )
         self.assertTrue(native_todo, "The native Odoo To-Do type must be installed")
+        form.get_by_label("Activity type").select_option(str(native_todo[0]["id"]))
+        form.get_by_role("button", name="Add follow-up").click()
+        todo_record = self.wait_action_record("Native Odoo to-do")
+        self.assertEqual(todo_record["agenda_item_id"][0], self.item_ids["discussion"])
+        self.assertEqual(todo_record["followup_kind"], "activity")
+        self.assertTrue(todo_record["followup_activity_id"])
+        todo_activity = self.record(
+            "mail.activity",
+            todo_record["followup_activity_id"][0],
+            ["activity_type_id"],
+        )
         self.assertEqual(todo_activity["activity_type_id"][0], native_todo[0]["id"])
 
     def test_automatic_continuation_reuses_identity_and_links(self):

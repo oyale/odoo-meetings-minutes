@@ -9,8 +9,8 @@ CONTENT_FIELDS = (
     "priority",
     "deadline",
     "estimated_minutes",
-    "followup_policy",
-    "default_followup_kind",
+    "followup_allowed_kinds",
+    "followup_default_kind",
 )
 
 
@@ -687,8 +687,8 @@ class TopicCopyWizard(models.TransientModel):
             "priority": source.priority,
             "deadline": source.deadline,
             "estimated_minutes": source.estimated_minutes,
-            "followup_policy": source.followup_policy,
-            "default_followup_kind": source.default_followup_kind,
+            "followup_allowed_kinds": [(6, 0, source.followup_allowed_kinds.ids)],
+            "followup_default_kind": source.followup_default_kind,
             "company_id": source.company_id.id,
             "series_id": self.destination_series_id.id,
             "state": "open",

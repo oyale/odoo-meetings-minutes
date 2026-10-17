@@ -475,20 +475,17 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         finally:
             context.close()
 
-    def test_native_policy_and_multiple_responsible_people_persist(self):
+    def test_multiple_responsible_people_persist(self):
         login = os.environ.get("ODOO_REVIEWER_LOGIN")
         if not login:
             self.skipTest("Disposable reviewer is not configured")
         reviewer = self.rpc("res.users", "search", [[("login", "=", login)]], {"limit": 1})[0]
         owner = self.record("community.meeting", self.meeting_id, ["organizer_id"])["organizer_id"][0]
         self.rpc("community.meeting", "write", [[self.meeting_id], {"reader_user_ids": [[4, reviewer]]}])
-        self.rpc("community.meeting.agenda.item", "write", [[self.item_ids["discussion"]], {"followup_policy": "todo"}])
         self.page.reload(wait_until="domcontentloaded")
         card = self.card("discussion")
         card.get_by_role("button", name="Add follow-up", exact=True).click()
         form = card.locator(".o_live_task_form")
-        expect(form.get_by_label("Follow-up type").locator('option[value="activity"]')).to_have_count(0)
-        expect(form.get_by_label("Follow-up type")).to_have_value("todo")
         form.get_by_label("Task name").fill("Shared native to-do")
         form.get_by_text("Several responsible people", exact=True).click()
         form.get_by_label("Responsible people").select_option([str(owner), str(reviewer)])

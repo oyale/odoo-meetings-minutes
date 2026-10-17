@@ -1,7 +1,7 @@
 {
     "name": "Community Meetings",
     "summary": "Operational meetings, agendas, resolutions and minutes",
-    "version": "18.0.4.0.0",
+    "version": "18.0.5.0.0",
     "category": "Services/Meetings",
     "license": "AGPL-3",
     "depends": ["base", "web", "web_editor", "mail"],
@@ -10,6 +10,7 @@
         "security/ir.model.access.csv",
         "security/rules.xml",
         "security/topic_rules.xml",
+        "data/followup_kinds.xml",
         "data/sequences.xml",
         "data/agenda_types.xml",
         "data/meeting_kinds.xml",

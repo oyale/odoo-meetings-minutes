@@ -617,46 +617,28 @@ class TestMeetingDomain(TransactionCase):
 
         self.assertNotIn(point, candidates)
 
-    def test_followup_defaults_inherit_company_and_allow_series_override(self):
+    def test_followup_allowed_kinds_cascade(self):
         company = self.env.company
-        call_type = self.env["mail.activity.type"].search(
-            [("category", "=", "phonecall")], limit=1
-        )
-        self.assertTrue(call_type, "Odoo Call activity type must be installed")
-        company.sudo().write(
-            {
-                "meeting_default_followup_kind": "activity",
-                "meeting_default_activity_type_id": call_type.id,
-            }
-        )
-        series = self.env["community.meeting.series"].create(
-            {"name": "Follow-up defaults", "default_followup_kind": "inherit"}
-        )
-        meeting = self.env["community.meeting"].create(
-            {"name": "Inherited follow-up defaults", "series_id": series.id}
-        )
-        defaults = meeting.get_followup_defaults()
-        self.assertEqual(defaults["kind"], "activity")
-        self.assertEqual(defaults["activity_type_id"], call_type.id)
-        series.write({"default_followup_kind": "todo"})
-        self.assertEqual(meeting.get_followup_defaults()["kind"], "todo")
-        series.write({"followup_policy": "activity"})
-        self.assertEqual(meeting.get_followup_defaults()["kind"], "activity")
-        item = self.env["community.meeting.agenda.item"].create({"name": "Override", "meeting_id": meeting.id, "followup_policy": "todo"})
-        defaults = item.get_followup_defaults()
-        self.assertEqual(defaults["kind"], "todo")
-        self.assertNotIn("activity", defaults["allowed_kinds"])
-        with self.assertRaises(ValidationError):
-            self.env["community.meeting.action"].create({"name": "Forbidden activity", "meeting_id": meeting.id, "agenda_item_id": item.id, "followup_kind": "activity"})
+        activity = self.env.ref("community_meetings.followup_kind_activity")
+        company.sudo().write({"followup_allowed_kinds": [(6, 0, activity.ids)]})
+        series = self.env["community.meeting.series"].create({"name": "Allowed kinds"})
+        meeting = self.env["community.meeting"].create({
+            "name": "Cascade", "series_id": series.id, "start_datetime": "2026-11-05 10:00:00",
+        })
+        item = self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Point"})
+        self.assertEqual(meeting.get_followup_defaults(item.id)["allowed_kinds"], ["activity"])
+        self.assertEqual(meeting.get_followup_defaults(item.id)["kind"], "activity")
+        # A point override narrows nothing new in core, but must be accepted.
+        item.followup_default_kind = "activity"
+        self.assertEqual(item.get_followup_defaults()["kind"], "activity")
 
-    def test_activity_only_policy_uses_activity_type_with_stale_todo_default(self):
+    def test_activity_default_uses_company_activity_type(self):
         call_type = self.env["mail.activity.type"].search([
             ("category", "=", "phonecall"),
         ], limit=1)
         self.assertTrue(call_type)
         self.env.company.sudo().write({
-            "meeting_followup_policy": "activity",
-            "meeting_default_followup_kind": "todo",
+            "followup_default_kind": "activity",
             "meeting_default_activity_type_id": call_type.id,
         })
         meeting = self.env["community.meeting"].create({"name": "Activity-only policy"})
@@ -707,7 +689,7 @@ class TestMeetingDomain(TransactionCase):
         })
         action = self.env["community.meeting.action"].create({
             "meeting_id": meeting.id, "agenda_item_id": item.id,
-            "name": "Required activity", "followup_kind": "todo",
+            "name": "Required activity", "followup_kind": "activity",
         })
         activity = action.followup_activity_id
         item.write({"disposition": "closed"})
@@ -735,7 +717,7 @@ class TestMeetingDomain(TransactionCase):
         })
         action = self.env["community.meeting.action"].create({
             "meeting_id": meeting.id, "agenda_item_id": item.id,
-            "name": "Shared work", "followup_kind": "todo",
+            "name": "Shared work", "followup_kind": "activity",
             "responsible_user_ids": [(6, 0, [self.env.uid, other.id])],
         })
         item.write({"disposition": "closed"})
@@ -753,7 +735,7 @@ class TestMeetingDomain(TransactionCase):
         })
         action = self.env["community.meeting.action"].create({
             "meeting_id": meeting.id, "agenda_item_id": item.id,
-            "name": "Optional activity", "followup_kind": "todo",
+            "name": "Optional activity", "followup_kind": "activity",
         })
         activity = action.followup_activity_id
         activity.unlink()
@@ -769,7 +751,7 @@ class TestMeetingDomain(TransactionCase):
                 "meeting_id": meeting.id,
                 "agenda_item_id": item.id,
                 "name": "A native meeting to-do",
-                "followup_kind": "todo",
+                "followup_kind": "activity",
             }
         )
         self.assertTrue(task.followup_activity_id)

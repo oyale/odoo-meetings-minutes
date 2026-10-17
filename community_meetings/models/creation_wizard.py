@@ -2,7 +2,7 @@ import uuid
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 from .topic import PRIORITIES
-from .followup_activity import FOLLOWUP_POLICIES, FOLLOWUP_KINDS
+from .followup_activity import FOLLOWUP_KIND_CODES
 
 
 class MeetingCreateWizard(models.TransientModel):
@@ -281,8 +281,12 @@ class PointWizard(models.TransientModel):
     )
     related_loaded = fields.Boolean(default=False, copy=False, readonly=True)
     origin_topic_id = fields.Many2one(related="topic_id.origin_topic_id", readonly=True)
-    followup_policy = fields.Selection([("inherit", "Series/company default")] + FOLLOWUP_POLICIES, default="inherit", required=True)
-    default_followup_kind = fields.Selection([("inherit", "Series/company default")] + FOLLOWUP_KINDS, default="inherit", required=True)
+    followup_allowed_kinds = fields.Many2many(
+        "community.meeting.followup.kind",
+        "point_wizard_followup_kind_rel", "wizard_id", "kind_id",
+        string="Allowed follow-up types",
+    )
+    followup_default_kind = fields.Selection([("inherit", "Series/company default")] + FOLLOWUP_KIND_CODES, default="inherit", required=True)
     name = fields.Char(string="Title")
     agenda_type_id = fields.Many2one(
         "community.meeting.agenda.type",
@@ -356,8 +360,8 @@ class PointWizard(models.TransientModel):
             "estimated_minutes": self.estimated_minutes or (
                 self.series_id._point_estimated_minutes_default() if self.series_id else 0
             ),
-            "followup_policy": self.followup_policy,
-            "default_followup_kind": self.default_followup_kind,
+            "followup_allowed_kinds": [(6, 0, self.followup_allowed_kinds.ids)],
+            "followup_default_kind": self.followup_default_kind,
         }
 
     def _write_related_points(self, topic):
@@ -414,8 +418,8 @@ class PointWizard(models.TransientModel):
             "priority": self.priority,
             "deadline": self.deadline,
             "estimated_minutes": self.estimated_minutes or self.proposal_series_id._point_estimated_minutes_default(),
-            "followup_policy": self.followup_policy,
-            "default_followup_kind": self.default_followup_kind,
+            "followup_allowed_kinds": [(6, 0, self.followup_allowed_kinds.ids)],
+            "followup_default_kind": self.followup_default_kind,
             "series_id": self.proposal_series_id.id,
             "company_id": self.proposal_series_id.company_id.id,
         }
