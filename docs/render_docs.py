@@ -63,6 +63,26 @@ GROUP_NAMES = {
     "es": [("Guía", 0, 3), ("Administrar", 3, 6), ("Uso", 6, 12), ("Integraciones", 12, 14), ("Más", 14, None)],
 }
 
+THEME_JS = """<script>
+(function () {
+  var t = localStorage.getItem("theme") ||
+      (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", t);
+  document.addEventListener("DOMContentLoaded", function () {
+    var b = document.getElementById("themeToggle");
+    if (!b) return;
+    var paint = function () { b.textContent = document.documentElement.getAttribute("data-theme") === "dark" ? "☀️" : "🌙"; };
+    paint();
+    b.addEventListener("click", function () {
+      var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("theme", next);
+      paint();
+    });
+  });
+})();
+</script>"""
+
 MERMAID_JS = """<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
 <script>document.addEventListener("DOMContentLoaded", function () {
   var blocks = document.querySelectorAll("pre code.language-mermaid");
@@ -77,6 +97,7 @@ MERMAID_JS = """<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/me
 
 CSS = """
 :root { --brand:#714B67; --ink:#21262d; --muted:#57606a; --line:#d0d7de; --bg:#fff; --soft:#f6f8fa; }
+[data-theme="dark"] { --brand:#c9a6d9; --ink:#e4e4ea; --muted:#9aa0aa; --line:#33333d; --bg:#14141a; --soft:#1f1f27; }
 * { box-sizing: border-box; }
 body { margin:0; font:16px/1.65 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
        color:var(--ink); background:var(--bg); }
@@ -95,20 +116,24 @@ th { background:var(--soft); }
 blockquote { margin:1em 0; padding:.6em 1em; border-left:4px solid var(--brand);
              background:var(--soft); border-radius:0 8px 8px 0; }
 blockquote p { margin:.2em 0; }
-.mermaid svg { max-width:100%; height:auto; }
-img { max-width:100%; border:1px solid var(--line); border-radius:8px; margin:.6em 0; }
+img { max-width:100%; border:1px solid var(--line); border-radius:8px; margin:.6em 0; background:#fff; }
 em { color:var(--muted); }
-/* layout */
-.langbar { background:var(--brand); color:#fff; padding:.5em 1.2em; font-size:.9em; }
-.langbar a { color:#fff; text-decoration:underline; margin-left:.4em; }
-.langbar .brand { font-weight:700; margin-right:1em; }
+.mermaid svg { max-width:100%; height:auto; }
+.mermaid { background:var(--soft); border-radius:8px; padding:10px; }
+.langbar { background:var(--brand); color:#fff; padding:.5em 1.2em; font-size:.9em;
+           display:flex; align-items:center; gap:1em; }
+.langbar .brand { font-weight:700; }
+.langbar a { color:#fff; text-decoration:underline; }
+.langbar .spacer { flex:1; }
+#themeToggle { background:none; border:1px solid rgba(255,255,255,.5); color:#fff;
+               border-radius:6px; padding:.15em .55em; cursor:pointer; font-size:1em; }
 .wrap { display:flex; align-items:flex-start; }
 nav.side { width:260px; flex:0 0 260px; background:var(--soft); min-height:100vh;
            padding:1.2em .9em; font-size:.92em; }
 nav.side h3 { font-size:.8em; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);
               margin:1.2em .4em .3em; }
 nav.side a { display:block; padding:.28em .6em; border-radius:6px; color:var(--ink); }
-nav.side a:hover { background:#eaecef; text-decoration:none; }
+nav.side a:hover { background:var(--line); text-decoration:none; }
 nav.side a.current { background:var(--brand); color:#fff; }
 main.content { flex:1 1 auto; padding:2em 3em 4em; max-width:980px; min-width:0; }
 main.content.single { margin:0 auto; float:none; }
@@ -127,7 +152,9 @@ def langbar(lang, counterpart_href):
     cls = ' style="opacity:.45;pointer-events:none;"' if not counterpart_href else ""
     return ('<div class="langbar"><span class="brand">Community Meetings</span>'
             f'{LANGS[lang]["title"].split("—")[-1].strip()}'
-            f'<a href="{href}"{cls}>{LANGS[lang]["switch"]} →</a></div>')
+            f'<a href="{href}"{cls}>{LANGS[lang]["switch"]} →</a>'
+            '<span class="spacer"></span>'
+            '<button id="themeToggle" type="button" aria-label="Toggle theme"></button></div>')
 
 
 def rewrite_links(html, page_rel, mode, single_slugs):
@@ -191,7 +218,7 @@ def build_multi(lang):
             f'<h3>{t}</h3>{"".join(nav_items[a:b if b is not None else len(nav_items)])}'
             for t, a, b in GROUP_NAMES.get(lang, [("Menu", 0, None)]))
         doc = f"""<!doctype html><html lang="{lang}"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">{THEME_JS}
 <title>{Path(rel).stem.replace('-', ' ').title()} — {cfg['title']}</title>{MERMAID_JS}<style>{CSS}</style></head>
 <body>{langbar(lang, counterpart)}<div class="wrap"><nav class="side">{side}</nav>
 <main class="content">{html}</main></div></body></html>"""
@@ -222,7 +249,7 @@ def build_single(lang):
     counterpart = "../html-%s/single-%s.html" % (other, other)
     side = "".join(toc)
     doc = f"""<!doctype html><html lang="{lang}"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">{THEME_JS}
 <title>{cfg['title']}</title>{MERMAID_JS}<style>{CSS}</style></head><body>{langbar(lang, counterpart)}
 <div class="wrap"><nav class="side"><h3>Contents</h3>{side}</nav>
 <main class="content single">{"".join(chunks)}</main></div></body></html>"""
