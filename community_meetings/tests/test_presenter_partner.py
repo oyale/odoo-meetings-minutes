@@ -114,3 +114,48 @@ class TestPresenterPartner(TransactionCase):
         )
         self.assertEqual(topic.presenter_partner_id, proposer)
         self.assertNotEqual(topic.presenter_partner_id, self.editor.partner_id)
+
+    def _wizard(self, **values):
+        return self.env["community.meeting.point.wizard"].with_user(self.editor).create({
+            "meeting_id": self.meeting.id, **values,
+        })
+
+    def test_wizard_chosen_responsible_reaches_the_point(self):
+        owner = self.env["res.partner"].create({"name": "Chosen owner"})
+        wizard = self._wizard(
+            name="Owned new point",
+            agenda_type_id=self.env.ref("community_meetings.agenda_type_discussion").id,
+            presenter_partner_id=owner.id,
+        )
+        wizard.action_save()
+        self.assertEqual(wizard.created_item_id.topic_id.presenter_partner_id, owner)
+
+    def test_wizard_edit_of_reused_point_updates_the_point(self):
+        source = self.env["community.meeting"].with_user(self.editor).create({"name": "Reuse source"})
+        original = self._point("Reused point", meeting=source)
+        owner = self.env["res.partner"].create({"name": "New owner"})
+        wizard = self._wizard(topic_id=original.topic_id.id)
+        wizard._onchange_topic_id()
+        self.assertEqual(wizard.presenter_partner_id, original.topic_id.presenter_partner_id)
+        wizard.presenter_partner_id = owner
+        wizard.action_save()
+        self.assertEqual(original.topic_id.presenter_partner_id, owner)
+
+    def test_wizard_proposal_carries_the_chosen_responsible(self):
+        series = self.env["community.meeting.series"].with_user(self.editor).create({
+            "name": "Wizard proposal series",
+        })
+        chosen = self.env["res.partner"].create({"name": "Chosen proposal owner"})
+        wizard = self._wizard(
+            propose=True,
+            proposal_series_id=series.id,
+            name="Wizard proposed point",
+            agenda_type_id=self.env.ref("community_meetings.agenda_type_discussion").id,
+            presenter_partner_id=chosen.id,
+        )
+        wizard.action_save()
+        topic = self.env["community.meeting.topic"].search(
+            [("name", "=", "Wizard proposed point")]
+        )
+        self.assertEqual(topic.presenter_partner_id, chosen)
+        self.assertNotEqual(topic.presenter_partner_id, self.editor.partner_id)

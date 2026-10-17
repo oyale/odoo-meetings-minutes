@@ -298,6 +298,7 @@ class PointWizard(models.TransientModel):
     more_options = fields.Boolean(string="More options")
     deadline = fields.Date()
     estimated_minutes = fields.Integer()
+    presenter_partner_id = fields.Many2one("res.partner", string="Responsible")
     included = fields.Boolean(readonly=True)
     created_item_id = fields.Many2one("community.meeting.agenda.item", readonly=True)
     propose = fields.Boolean()
@@ -317,6 +318,7 @@ class PointWizard(models.TransientModel):
         if self.topic_id:
             self.related_topic_ids = self.topic_id.related_topic_ids
             self.related_loaded = True
+            self.presenter_partner_id = self.topic_id.presenter_partner_id
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -347,10 +349,16 @@ class PointWizard(models.TransientModel):
     def _item_values(self, meeting):
         self.ensure_one()
         if self.topic_id:
-            return {"meeting_id": meeting.id, "topic_id": self.topic_id.id}
+            vals = {"meeting_id": meeting.id, "topic_id": self.topic_id.id}
+            if (
+                self.presenter_partner_id
+                and self.presenter_partner_id != self.topic_id.presenter_partner_id
+            ):
+                vals["presenter_partner_id"] = self.presenter_partner_id.id
+            return vals
         if not self.name or not self.agenda_type_id:
             raise ValidationError(_("Enter a title and select a point type."))
-        return {
+        vals = {
             "meeting_id": meeting.id,
             "name": self.name,
             "agenda_type_id": self.agenda_type_id.id,
@@ -363,6 +371,9 @@ class PointWizard(models.TransientModel):
             "followup_allowed_kinds": [(6, 0, self.followup_allowed_kinds.ids)],
             "followup_default_kind": self.followup_default_kind,
         }
+        if self.presenter_partner_id:
+            vals["presenter_partner_id"] = self.presenter_partner_id.id
+        return vals
 
     def _write_related_points(self, topic):
         if not topic:
@@ -411,7 +422,7 @@ class PointWizard(models.TransientModel):
         )
 
     def _proposal_values(self):
-        return {
+        values = {
             "name": self.name,
             "description": self.description,
             "agenda_type_id": self.agenda_type_id.id,
@@ -423,6 +434,9 @@ class PointWizard(models.TransientModel):
             "series_id": self.proposal_series_id.id,
             "company_id": self.proposal_series_id.company_id.id,
         }
+        if self.presenter_partner_id:
+            values["presenter_partner_id"] = self.presenter_partner_id.id
+        return values
 
     def action_cancel(self):
         self.ensure_one()

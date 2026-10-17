@@ -3,7 +3,7 @@
         <field name="name">community.meeting.topic.form</field><field name="model">community.meeting.topic</field>
         <field name="arch" type="xml"><form string="Point"><header><button name="action_copy_to_series" type="object" string="Copy to another series" groups="community_meetings.group_meeting_editor"/></header><sheet>
             <h1><field name="name"/></h1>
-            <group><field name="agenda_type_id" widget="meeting_agenda_type"/><field name="state" readonly="1"/><field name="outcome" readonly="1"/><field name="postponed" readonly="1"/><field name="priority"/><field name="deadline"/><field name="estimated_minutes"/><field name="series_id" readonly="1"/></group>
+            <group><field name="agenda_type_id" widget="meeting_agenda_type"/><field name="state" readonly="1"/><field name="outcome" readonly="1"/><field name="postponed" readonly="1"/><field name="presenter_partner_id"/><field name="priority"/><field name="deadline"/><field name="estimated_minutes"/><field name="series_id" readonly="1"/></group>
             <field name="description" widget="html"/>
             <group string="Advanced follow-up options"><field name="followup_allowed_kinds" widget="many2many_tags"/><field name="followup_default_kind"/></group>
             <group string="Related"><field name="origin_topic_id" readonly="1" invisible="not origin_topic_id"/><field name="related_topic_ids" widget="many2many_tags" domain="[('company_id', '=', company_id), ('id', '!=', id)]"/></group>
@@ -51,6 +51,7 @@
 <div class="o_meeting_point_help text-muted" invisible="topic_id">Explain the subject so any attendee can follow it. Add the links or documents needed to act on it.</div>
 <field name="description" widget="html" invisible="topic_id"/>
 <group invisible="topic_id"><group string="Planning"><field name="priority"/><field name="deadline"/><field name="estimated_minutes"/></group></group>
+<group><field name="presenter_partner_id"/></group>
 <group invisible="topic_id"><field name="more_options" widget="boolean_toggle"/></group>
 <group string="More options" invisible="not more_options and not topic_id">
     <field name="topic_id" options="{'no_create': True}" domain="[('company_id', '=', company_id), ('series_id', '=', series_id)]"/>
