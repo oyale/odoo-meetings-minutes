@@ -405,8 +405,8 @@ class CommunityMeeting(models.Model):
         self.ensure_one()
         self.check_access_rights("read")
         self.check_access_rule("read")
-        if self.state not in ("scheduled", "held", "minutes_draft"):
-            raise UserError(_("The live meeting view is available for scheduled or ongoing meetings."))
+        if self.state not in ("scheduled", "held", "minutes_draft", "approved"):
+            raise UserError(_("The live meeting view is available for scheduled, ongoing or approved meetings."))
         return {"type": "ir.actions.client", "tag": "community_meetings.live_meeting",
                 "name": _("Live Meeting"), "target": "main",
                 "context": {"active_model": self._name, "active_id": self.id, "active_ids": self.ids},

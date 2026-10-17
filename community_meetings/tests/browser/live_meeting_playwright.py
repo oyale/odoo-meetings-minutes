@@ -419,6 +419,11 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         approval = self.page.locator(".o_live_minutes_approval")
         expect(approval).to_contain_text("Approved previous minutes")
         expect(approval).to_contain_text(previous_code)
+        approval.get_by_role("button", name="Open minutes").first.click()
+        expect(self.page.locator(".o_community_live_meeting")).to_be_visible()
+        expect(self.page.get_by_role("button", name="Add Point", exact=True)).to_have_count(0)
+        expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_have_count(0)
+        expect(self.page.locator(".o_live_rich_readonly").first).to_be_visible()
 
     def test_agreement_followup_asks_for_series(self):
         self.retain_carryover = True

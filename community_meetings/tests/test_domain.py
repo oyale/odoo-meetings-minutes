@@ -228,6 +228,22 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(history[0]["meeting_id"], previous.id)
         self.assertEqual(point.minutes_approval_ids.meeting_id, previous)
 
+    def test_approved_minutes_open_read_only_in_live_view(self):
+        meeting = self.env["community.meeting"].create({"name": "Approved live view", "start_datetime": "2026-11-02 10:00:00"})
+        meeting.action_schedule()
+        meeting.action_mark_held()
+        meeting.action_draft_minutes()
+        self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Topic", "kind": "discussion"})
+        meeting.action_approve_minutes()
+        self.assertEqual(meeting.state, "approved")
+        action = meeting.action_open_live_meeting()
+        self.assertEqual(action["tag"], "community_meetings.live_meeting")
+        self.assertEqual(action["params"]["meeting_id"], meeting.id)
+        self.assertFalse(meeting.get_live_capabilities()["can_edit"])
+        draft = self.env["community.meeting"].create({"name": "Draft live view", "start_datetime": "2026-11-03 10:00:00"})
+        with self.assertRaises(UserError):
+            draft.action_open_live_meeting()
+
     def test_meeting_code_falls_back_without_colliding(self):
         sequence = self.env["ir.sequence"].search([("code", "=", "community.meeting")])
         self.assertTrue(sequence, "The meeting sequence should exist after install.")
