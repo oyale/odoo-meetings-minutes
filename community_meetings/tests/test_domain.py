@@ -654,6 +654,21 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(action.followup_kind, "activity")
         self.assertEqual(action.followup_activity_id.activity_type_id, call_type)
 
+    def test_followup_conversion_replaces_container(self):
+        meeting = self.env["community.meeting"].create({"name": "Conversion"})
+        item = self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Point"})
+        action = self.env["community.meeting.action"].create({
+            "meeting_id": meeting.id, "agenda_item_id": item.id, "name": "Follow up",
+            "responsible_user_id": self.env.uid, "followup_kind": "activity",
+        })
+        self.assertTrue(action.followup_activity_ids)
+        action.action_convert_followup_kind("activity")
+        self.assertEqual(action.followup_kind, "activity")
+        self.assertEqual(len(action.followup_activity_ids), 1)
+        action.state = "done"
+        with self.assertRaises(UserError):
+            action.action_convert_followup_kind("activity")
+
     def test_activity_completion_is_durable_and_reopening_reschedules(self):
         meeting = self.env["community.meeting"].create({"name": "Activity meeting"})
         item = self.env["community.meeting.agenda.item"].create(

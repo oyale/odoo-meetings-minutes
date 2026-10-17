@@ -1,5 +1,5 @@
 from odoo import _, api, fields, models
-from odoo.exceptions import AccessError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 
 FOLLOWUP_KIND_CODES = [("activity", "Odoo activity")]
 
@@ -187,6 +187,31 @@ class FollowupActivity(models.Model):
 
     def _sync_external_artifact(self):
         # Core has no external container; project containers override this.
+        return True
+
+    def _clear_followup_artifact(self):
+        self.ensure_one()
+        if self.followup_kind == "activity":
+            self.followup_activity_ids.exists().unlink()
+            super(FollowupActivity, self).write({
+                "followup_activity_ids": [(5, 0, 0)], "followup_activity_id": False,
+            })
+        return True
+
+    def action_convert_followup_kind(self, kind):
+        self.ensure_one()
+        self.check_access("write")
+        if self.state in ("done", "cancelled"):
+            raise UserError(_("Only open follow-ups can be converted."))
+        if self.meeting_id.state in ("approved", "cancelled"):
+            raise UserError(_("Follow-ups in approved or cancelled meetings cannot be converted."))
+        allowed = self.agenda_item_id.get_followup_defaults()["allowed_kinds"]
+        if kind not in allowed:
+            raise UserError(_("This follow-up type is not allowed for this point."))
+        if kind == self.followup_kind:
+            return True
+        self._clear_followup_artifact()
+        self.write({"followup_kind": kind})
         return True
 
     @api.model_create_multi
