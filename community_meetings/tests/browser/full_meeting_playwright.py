@@ -108,7 +108,11 @@ ACTIONS = {
     "test_point_type": ["change point type"],
     "test_mobile_layout": ["use live on mobile width"],
     "test_form_edit_and_schedule": ["edit meeting form", "schedule meeting"],
-    "test_create_meeting_and_point": ["create meeting", "create agenda point"],
+    "test_create_meeting_and_point": [
+        "create meeting",
+        "create agenda point",
+        "review meeting summary",
+    ],
     "test_series_creation": ["create series", "new meeting from series"],
     "test_carryover_request": [
         "request carryover",
@@ -717,6 +721,10 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         expect(wizard.locator('.o_field_widget[name="line_ids"]')).to_contain_text(
             "Created agenda title"
         )
+        wizard.locator('button[name="action_next"]').click()
+        expect(
+            wizard.locator('.o_field_widget[name="review_summary"]')
+        ).to_contain_text("Created agenda title")
         wizard.locator('button[name="action_finish"]').click()
         expect(
             self.page.locator('.o_form_view .o_field_widget[name="name"] input').first
@@ -922,6 +930,10 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         expect(wizard.locator('.o_field_widget[name="line_ids"]')).to_contain_text(
             "Rich guided point"
         )
+        wizard.locator('button[name="action_next"]').click()
+        expect(
+            wizard.locator('.o_field_widget[name="review_summary"]')
+        ).to_contain_text("Rich guided point")
         wizard.locator('button[name="action_finish"]').click()
         expect(
             self.page.locator('.o_form_view .o_field_widget[name="name"] input').first
@@ -1033,6 +1045,10 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         expect(row).to_be_visible()
         expect(row.locator('input[data-value="include"]')).to_be_checked()
         wizard.locator('button[name="action_next"]').click()
+        wizard.locator('button[name="action_next"]').click()
+        expect(
+            wizard.locator('.o_field_widget[name="review_summary"]')
+        ).to_contain_text(source_name)
         wizard.locator('button[name="action_finish"]').click()
         expect(wizard).not_to_be_visible(timeout=30000)
         created_meetings = self.rpc(
@@ -1538,6 +1554,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         wizard.locator('button[name="action_back"]').click()
         wizard.locator('button[name="action_next"]').click()
         expect(row.locator('input[data-value="discard"]')).to_be_checked()
+        wizard.locator('button[name="action_next"]').click()
         wizard.locator('button[name="action_next"]').click()
         wizard.locator('button[name="action_finish"]').click()
         expect(self.page.get_by_role("dialog")).to_have_count(0)

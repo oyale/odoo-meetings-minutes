@@ -16,6 +16,7 @@ class MeetingCreateWizard(models.TransientModel):
             ("people", "Attendees"),
             ("carryover", "Continue points"),
             ("agenda", "Agenda"),
+            ("review", "Review"),
         ],
         default="series",
         required=True,
@@ -41,6 +42,7 @@ class MeetingCreateWizard(models.TransientModel):
     token = fields.Char(
         default=lambda self: str(uuid.uuid4()), readonly=True, required=True
     )
+    review_summary = fields.Text(compute="_compute_review_summary", string="Review")
 
     @api.model
     def _open(self, context):
@@ -89,6 +91,49 @@ class MeetingCreateWizard(models.TransientModel):
                 wizard.name = suggestion
             wizard.suggested_name = suggestion
 
+    @api.depends(
+        "series_id",
+        "name",
+        "start_datetime",
+        "duration_hours",
+        "attendee_partner_ids",
+        "carry_line_ids.name",
+        "carry_line_ids.decision",
+        "line_ids.name",
+        "line_ids.topic_id",
+        "line_ids.agenda_type_id",
+        "line_ids.included",
+    )
+    def _compute_review_summary(self):
+        for wizard in self:
+            when = ""
+            if wizard.start_datetime:
+                when = fields.Datetime.context_timestamp(
+                    wizard, wizard.start_datetime
+                ).strftime("%Y-%m-%d %H:%M")
+            attendees = ", ".join(
+                wizard.attendee_partner_ids.mapped("display_name")
+            ) or _("None")
+            carried = [
+                "%s (%s)" % (line.name or "", line.decision)
+                for line in wizard.carry_line_ids
+            ]
+            agenda = [
+                "%s — %s" % (
+                    line.name or line.topic_id.display_name or "",
+                    line.agenda_type_id.display_name or "",
+                )
+                for line in wizard.line_ids.filtered("included")
+            ]
+            wizard.review_summary = "\n".join([
+                _("Series: %s") % (wizard.series_id.name or _("Standalone meeting")),
+                _("Title: %s") % (wizard.name or ""),
+                _("When: %s (%sh)") % (when, "%g" % wizard.duration_hours),
+                _("Attendees: %s") % attendees,
+                _("Carried points: %s") % ("; ".join(carried) or _("None")),
+                _("Agenda: %s") % ("; ".join(agenda) or _("None")),
+            ])
+
     def action_use_series_defaults(self):
         self.ensure_one()
         if self.series_id:
@@ -112,7 +157,7 @@ class MeetingCreateWizard(models.TransientModel):
         self.ensure_one()
         if self.step == "when":
             self._suggest_series_name()
-        steps = ["series", "when", "people", "carryover", "agenda"]
+        steps = ["series", "when", "people", "carryover", "agenda", "review"]
         if self.step == "when" and (
             not self.name or not self.start_datetime or self.duration_hours <= 0
         ):
@@ -134,7 +179,7 @@ class MeetingCreateWizard(models.TransientModel):
 
     def action_back(self):
         self.ensure_one()
-        steps = ["series", "when", "people", "carryover", "agenda"]
+        steps = ["series", "when", "people", "carryover", "agenda", "review"]
         self.step = steps[max(0, steps.index(self.step) - 1)]
         return self._reload()
 

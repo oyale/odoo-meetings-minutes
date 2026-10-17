@@ -92,7 +92,7 @@ permisos/multiempresa, integridad de actas, concurrencia, accesibilidad completa
 ni el recorrido con Project desinstalado (que cubre la separación core).
 
 Validación de desarrollo del 2026-10-17 (commit addons pendiente de publicar): 56
-escenarios correctos, 0 fallos, 0 errores y 104/104 acciones del inventario
+escenarios correctos, 0 fallos, 0 errores y 105/105 acciones del inventario
 cubiertas (100 %). La evidencia Project queda pendiente: la base de desarrollo no
 tiene `community_meetings_project` instalado y la suite core no debe instalarlo.
 El informe de cada ejecución es la evidencia vigente.
