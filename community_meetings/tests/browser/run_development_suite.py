@@ -14,7 +14,7 @@ import subprocess
 import sys
 
 
-def main():
+def main(script_path=None, project=False):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--development", action="store_true", required=True)
     parser.add_argument("--host", default="pelayo@meeting-minutes.local")
@@ -24,7 +24,6 @@ def main():
     args = parser.parse_args()
     login = "playwright-full-" + secrets.token_hex(8)
     password = secrets.token_urlsafe(32)
-    project_name = "Browser project " + secrets.token_hex(8)
     proposer_login = login + "-proposer"
     reviewer_login = login + "-reviewer"
     remote_command = shlex.join(
@@ -66,14 +65,12 @@ def main():
 
     setup = f"""
 groups = [env.ref('base.group_user').id, env.ref('community_meetings.group_meeting_editor').id, env.ref('community_meetings.group_meeting_approver').id]
-project_installed = 'project.project' in env.registry.models
-if project_installed:
+if {project!r}:
+    assert 'community.meeting.project.task.wizard' in env.registry.models, 'Project extension must be installed before its browser suite'
     groups.append(env.ref('project.group_project_manager').id)
 user = env['res.users'].create({{'name': {login!r}, 'login': {login!r}, 'email': 'browser-editor@example.test', 'password': {password!r}, 'lang': 'en_US', 'groups_id': [(6, 0, groups)]}})
 env['res.users'].create({{'name': {reviewer_login!r}, 'login': {reviewer_login!r}, 'email': 'browser-reviewer@example.test', 'password': {password!r}, 'lang': 'en_US', 'groups_id': [(6, 0, [env.ref('base.group_user').id, env.ref('community_meetings.group_meeting_approver').id])]}})
 env['res.users'].create({{'name': {proposer_login!r}, 'login': {proposer_login!r}, 'password': {password!r}, 'lang': 'en_US', 'groups_id': [(6, 0, [env.ref('base.group_user').id, env.ref('community_meetings.group_agenda_proposer').id])]}})
-if project_installed:
-    env['project.project'].create({{'name': {project_name!r}, 'user_id': user.id}})
 env.cr.commit()
 """
     cleanup = f"""
@@ -103,9 +100,6 @@ if user:
         proposer_partner.unlink()
     env['community.meeting.topic'].search([('create_uid', '=', user.id)]).unlink()
     env['community.meeting.series'].search([('create_uid', '=', user.id)]).unlink()
-    if 'project.project' in env.registry.models:
-        projects = env['project.project'].search([('name', '=', {project_name!r}), ('user_id', '=', user.id)])
-        projects.unlink()
     partner = user.partner_id
     user.unlink()
     partner.unlink()
@@ -122,12 +116,11 @@ if user:
             ODOO_BASE_URL=args.base_url,
             ODOO_LOGIN=login,
             ODOO_PASSWORD=password,
-            ODOO_TEST_PROJECT=project_name,
             ODOO_PROPOSER_LOGIN=proposer_login,
             ODOO_PROPOSER_PASSWORD=password,
             ODOO_REVIEWER_LOGIN=reviewer_login,
         )
-        script = Path(__file__).with_name("full_meeting_playwright.py")
+        script = script_path or Path(__file__).with_name("full_meeting_playwright.py")
         return subprocess.run(
             [sys.executable, str(script), *args.tests], env=env
         ).returncode

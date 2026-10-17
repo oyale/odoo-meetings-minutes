@@ -310,7 +310,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             self.assertEqual(editor.count(), 1, "Discussion editor was duplicated after resuming a point")
             card.get_by_role("button", name="Pause point").click()
             expect(card.get_by_text("Point paused", exact=True)).to_be_visible()
-            self.assertEqual(editor.count(), 1, "Discussion editor was recreated after pausing a point")
+            self.assertEqual(editor.count(), 0, "A paused point must show notes read-only")
 
     def test_live_meeting_survives_browser_refresh(self):
         self.assertLessEqual(
@@ -334,7 +334,8 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(editor).to_have_attribute("contenteditable", "true")
         self.page.get_by_role("button", name="Pause Meeting").click()
         expect(self.page.get_by_role("button", name="Resume Meeting")).to_be_visible()
-        expect(editor).to_have_attribute("contenteditable", "false")
+        expect(editor).to_have_count(0)
+        expect(card.locator(".o_live_rich_readonly").first).to_be_visible()
         meeting = self.record("community.meeting", self.meeting_id, ["actual_paused_at", "actual_end_datetime"])
         self.assertTrue(meeting["actual_paused_at"])
         self.assertFalse(meeting["actual_end_datetime"])
@@ -365,6 +366,13 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             "has_minutes_approval_point": True,
             "has_next_meeting_point": True,
         }])
+        previous = self.rpc("community.meeting", "create", [{
+            "name": "Structural previous meeting",
+            "series_id": series,
+            "start_datetime": "2026-10-01 10:00:00",
+        }])
+        self.rpc("community.meeting", "action_schedule", [[previous]])
+        self.rpc("community.meeting", "action_mark_held", [[previous]])
         start = (datetime.utcnow() + timedelta(days=1)).replace(microsecond=0)
         meeting_id = self.rpc("community.meeting", "create", [{
             "name": "Structural live meeting",
@@ -378,7 +386,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.page.get_by_role("button", name="Expand / Collapse all").click()
         expect(self.page.locator('[aria-label="Next meeting date"]')).to_be_visible()
         expect(self.page.locator(".o_live_minutes_approval")).to_be_visible()
-        expect(self.page.locator(".o_live_minutes_approval")).to_contain_text("No pending minutes")
+        expect(self.page.locator(".o_live_minutes_approval")).to_contain_text("Structural previous meeting")
 
     def test_review_previous_minutes_opens_live_and_approves(self):
         series = self.rpc("community.meeting.series", "create", [{"name": "Review minutes series"}])
@@ -400,7 +408,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.page.get_by_role("button", name="Open minutes", exact=True).click()
         expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_be_visible()
         self.page.get_by_role("button", name="Approve Minutes", exact=True).click()
-        expect(self.page.get_by_label("Meeting name")).to_have_count(0)
+        expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_have_count(0)
         self.assertEqual(self.record("community.meeting", self.meeting_id, ["state"])["state"], "approved")
 
     def test_agreement_followup_asks_for_series(self):
@@ -471,15 +479,17 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         form.get_by_text("Several responsible people", exact=True).click()
         form.get_by_label("Responsible people").select_option([str(owner), str(reviewer)])
         form.get_by_role("button", name="Add follow-up", exact=True).click()
-        row = card.locator(".o_live_followup_task").filter(has_text="Shared native to-do")
+        row = card.locator(".o_live_followup_task").last
         expect(row).to_be_visible()
+        expect(row.get_by_label("Task name")).to_have_value("Shared native to-do")
         rows = self.rpc("community.meeting.action", "search_read", [[("agenda_item_id", "=", self.item_ids["discussion"])]], {"fields": ["responsible_user_ids", "followup_activity_ids"]})
         self.assertEqual(set(rows[0]["responsible_user_ids"]), {owner, reviewer})
         self.assertEqual(len(rows[0]["followup_activity_ids"]), 2)
         self.page.reload(wait_until="domcontentloaded")
         card = self.card("discussion")
-        row = card.locator(".o_live_followup_task").filter(has_text="Shared native to-do")
+        row = card.locator(".o_live_followup_task").last
         expect(row).to_be_visible()
+        expect(row.get_by_label("Task name")).to_have_value("Shared native to-do")
         row.get_by_text("Several responsible people", exact=True).click()
         row.get_by_label("Responsible people").select_option([str(owner)])
         expect(row.get_by_label("Responsible people").locator("option:checked")).to_have_count(1)
@@ -540,22 +550,6 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         card.get_by_role("button", name="Add follow-up", exact=True).click()
         card.get_by_label("Task name").fill("Prepare the requested draft")
         card.get_by_role("button", name="Add follow-up").click()
-        fields = self.rpc("community.meeting.action", "fields_get", [], {"attributes": ["type"]})
-        requires_project = "project_task_ids" in fields and self.record("community.meeting.agenda.item", self.item_ids["todo"], ["requires_project_task"])["requires_project_task"]
-        if requires_project:
-            expect(self.outcome("todo")).to_have_text("Project task required")
-            expect(button).to_be_disabled()
-            create_project_task = card.get_by_role("button", name="Create Project task")
-            expect(create_project_task).to_be_visible()
-            create_project_task.click()
-            dialog = self.page.get_by_role("dialog")
-            expect(dialog.get_by_role("button", name="Create and Link")).to_be_visible()
-            project_field = dialog.locator(".o_field_widget[name='project_id'] input")
-            project_name = os.environ.get("ODOO_TEST_PROJECT", "Playwright TODO project")
-            project_field.fill(project_name)
-            self.page.get_by_role("option", name=project_name, exact=True).click()
-            dialog.get_by_role("button", name="Create and Link").click()
-            expect(dialog).not_to_be_visible()
         expect(self.outcome("todo")).to_have_text("Task assigned")
         expect(button).to_be_enabled()
 
@@ -575,10 +569,12 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         agreement = self.rpc("community.meeting.resolution", "search_read", [[("agenda_item_id", "=", self.item_ids["decision"])]], {"fields": ["decision_outcome", "status"], "limit": 1})[0]
         self.assertEqual((agreement["decision_outcome"], agreement["status"]), ("approved", "active"))
         self.assertEqual(card.get_by_label("Decision result", exact=True).count(), 0)
-        card.get_by_role("button", name="Withdraw decision agreement").click()
-        expect(self.outcome("decision")).to_have_text("Discussed — decision pending")
+        card.get_by_role("button", name="Undo point result").click()
+        card.get_by_role("button", name="Reopen point").click()
+        expect(self.outcome("decision")).to_have_text("Pending")
+        card.get_by_role("button", name="Resume point").click()
         card.get_by_role("button", name="Add agreement", exact=True).click()
-        title.fill("Reject the decision")
+        card.get_by_placeholder("Agreement title").fill("Reject the decision")
         card.get_by_label("New decision result").select_option("denied")
         card.get_by_placeholder("What was agreed?").fill("Rejected after reconsideration")
         card.get_by_role("button", name="Add agreement", exact=True).click()
@@ -592,6 +588,9 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         card.get_by_placeholder("What was agreed?").fill("Approval must be revisited.")
         card.get_by_role("button", name="Add agreement", exact=True).click()
         expect(self.outcome("decision")).to_have_text("Approved")
+        card.get_by_role("button", name="Undo point result").click()
+        card.get_by_role("button", name="Reopen point").click()
+        card.get_by_role("button", name="Resume point").click()
         card.get_by_role("button", name="Postpone agenda point").click()
         card.get_by_label("Reason for postponing").fill("The approval needs review.")
         card.get_by_role("button", name="Leave postponed").click()
@@ -606,7 +605,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.assertEqual(agreement["status"], "withdrawn")
         expect(self.outcome("decision")).to_have_text("Postponed")
 
-    def test_dissent_author_kind_and_statement_are_usable(self):
+    def test_dissent_author_reason_and_statement_are_usable(self):
         card = self.card("discussion")
         card.get_by_role("button", name="Add dissent").click()
         author = card.get_by_label("Dissent author")
@@ -615,19 +614,19 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(author).to_be_visible()
         expect(statement).to_be_visible()
         author.fill("Ada Lovelace")
-        kind.select_option("reservation")
+        kind.select_option(label="Reservation")
         statement.fill("I disagree with the proposed deadline.")
         card.get_by_role("button", name="Add dissent").click()
         deadline = time.time() + 8
         dissent = []
         while time.time() < deadline and not dissent:
-            dissent = self.rpc("community.meeting.dissent", "search_read", [[("meeting_id", "=", self.meeting_id)]], {"fields": ["author_display_name", "kind", "body"], "limit": 1})
+            dissent = self.rpc("community.meeting.dissent", "search_read", [[("meeting_id", "=", self.meeting_id)]], {"fields": ["author_display_name", "reason_id", "body"], "limit": 1})
             if not dissent:
                 time.sleep(0.2)
         self.assertTrue(dissent, "The dissent form did not create a record.")
         dissent = dissent[0]
         self.assertEqual(dissent["author_display_name"], "Ada Lovelace")
-        self.assertEqual(dissent["kind"], "reservation")
+        self.assertEqual(dissent["reason_id"][1], "Reservation")
         self.assertIn("proposed deadline", dissent["body"])
 
     def test_defer_works_for_each_point_type(self):

@@ -53,9 +53,9 @@ ACTIONS = {
     "test_postponing_an_approved_decision_withdraws_its_agreement": [
         "postpone approved decision"
     ],
-    "test_dissent_author_kind_and_statement_are_usable": [
+    "test_dissent_author_reason_and_statement_are_usable": [
         "add dissent author",
-        "choose dissent kind",
+        "choose dissent reason",
         "save dissent statement",
     ],
     "test_defer_works_for_each_point_type": ["postpone each point type"],
@@ -87,7 +87,7 @@ ACTIONS = {
     ],
     "test_dissent_editing": [
         "edit dissent author",
-        "edit dissent kind",
+        "edit dissent reason",
         "exclude dissent from minutes",
         "edit dissent body",
     ],
@@ -161,10 +161,6 @@ ACTIONS = {
         "accept continuing point in live",
         "dismiss continuing point in live",
     ],
-    "test_project_task_can_use_alternate_project": [
-        "configure Project requirement",
-        "choose a different project for a new task",
-    ],
     "test_save_failure_keeps_text_and_retry_persists": ["recover after save failure"],
     "test_mobile_point_wizard_and_keyboard_cancel": [
         "point wizard on mobile",
@@ -204,6 +200,13 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             self.console_errors[self.errors_before :],
             "Browser errors: " + repr(self.console_errors[self.errors_before :]),
         )
+
+    def consume_injected_write_error(self, marker):
+        errors = self.console_errors[self.errors_before :]
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("Live meeting write failed", errors[0])
+        self.assertIn(marker, errors[0])
+        del self.console_errors[self.errors_before :]
 
     def cleanup_meeting(self):
         if not self.meeting_id or not self.rpc(
@@ -312,10 +315,8 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         checkbox = self.card("information").get_by_role(
             "checkbox", name="Review at next meeting"
         )
-        checkbox.check()
-        expect(
-            self.page.get_by_text("Could not save this change.", exact=False)
-        ).to_be_visible()
+        checkbox.click()
+        expect(self.page.get_by_role("alert").filter(has_text="Some changes could not be saved.")).to_be_visible()
         expect(checkbox).to_be_enabled()
         expect(checkbox).not_to_be_checked()
         self.assertFalse(
@@ -335,6 +336,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
                 ["review_next_meeting"],
             )["review_next_meeting"]
         )
+        self.consume_injected_write_error("Injected failure")
 
     def test_review_next_meeting_toggle_persists(self):
         checkbox = self.card("information").get_by_role(
@@ -519,7 +521,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         self.assertFalse(self.rpc("community.meeting.action", "search", [[("id", "=", action_id)]]))
 
     def test_dissent_editing(self):
-        self.test_dissent_author_kind_and_statement_are_usable()
+        self.test_dissent_author_reason_and_statement_are_usable()
         row = self.card("discussion").locator(".o_live_record_list li").first
         row.get_by_label("Author", exact=True).fill("Grace Hopper")
         row.get_by_label("Author", exact=True).press("Tab")
@@ -530,10 +532,16 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "author_display_name",
             "Grace Hopper",
         )
-        row.get_by_label("Statement type").select_option("reservation")
-        self.wait_field(
-            "community.meeting.dissent", record_id, "kind", "reservation"
-        )
+        row.get_by_label("Statement type").select_option(label="Dissent")
+        dissent_reason = self.rpc(
+            "community.meeting.dissent.reason", "search", [[("name", "=", "Dissent")]], {"limit": 1}
+        )[0]
+        deadline = time.time() + 10
+        saved = self.record("community.meeting.dissent", record_id, ["reason_id"])["reason_id"]
+        while time.time() < deadline and (not saved or saved[0] != dissent_reason):
+            self.page.wait_for_timeout(100)
+            saved = self.record("community.meeting.dissent", record_id, ["reason_id"])["reason_id"]
+        self.assertEqual(saved[1], "Dissent")
         row.get_by_label("Include in minutes").click()
         expect(row.get_by_label("Include in minutes")).not_to_be_checked()
         self.wait_field(
@@ -730,17 +738,12 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             BASE_URL + "/odoo/action-community_meetings.action_community_meeting_series"
         )
         self.page.locator(".o_list_button_add").click()
-        self.page.locator('.o_field_widget[name="name"] input').fill(name)
-        with self.page.expect_response(
-            lambda response: "/web_save" in response.url
-        ) as saved:
-            self.page.get_by_role(
-                "button", name=re.compile("^Save(?: manually)?$")
-            ).click()
-        self.assertNotIn("error", saved.value.json())
-        expect(self.page.locator(".o_form_status_indicator")).not_to_have_class(
-            re.compile("o_form_status_indicator_dirty")
-        )
+        series_wizard = self.page.get_by_role("dialog").last
+        series_wizard.locator('.o_field_widget[name="name"] input').fill(name)
+        for _ in range(3):
+            series_wizard.locator('button[name="action_next"]').click()
+        series_wizard.locator('button[name="action_finish"]').click()
+        expect(series_wizard).not_to_be_visible()
         rows = self.rpc("community.meeting.series", "search", [[("name", "=", name)]])
         self.assertEqual(len(rows), 1)
         self.addCleanup(self.rpc, "community.meeting.series", "unlink", [rows])
@@ -767,24 +770,8 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         # Series cleanup must run after meeting cleanup.
         self.retain_carryover = True
         self.retained.append({"model": "community.meeting.series", "id": series})
-        self.open_form()
-        self.page.get_by_role("button", name="Open Live Meeting").click()
-        self.page.get_by_role("button", name="Expand / Collapse all").click()
-        card = self.card("discussion")
-        card.get_by_role("button", name="Postpone agenda point").click()
-        card.get_by_label("Reason for postponing").fill("Review next week")
-        card.get_by_role("button", name="Request next meeting carryover").click()
-        dialog = self.page.get_by_role("dialog")
-        dialog.get_by_role("button", name="Request Follow-up", exact=True).click()
-        expect(dialog).not_to_be_visible()
-        transfers = self.rpc(
-            "community.meeting.carryover",
-            "search_read",
-            [[("origin_agenda_item_id", "=", self.item_ids["discussion"])]],
-            {"fields": ["status"]},
-        )
-        self.assertEqual(len(transfers), 1)
-        expect(self.outcome("discussion")).to_have_text("Postponed")
+        # Defer an unstarted point before the meeting runs: live edits are
+        # server-guarded once a point or the meeting is under way.
         self.rpc(
             "community.meeting.carryover",
             "create",
@@ -796,6 +783,24 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
                 }
             ],
         )
+        self.open_form()
+        self.page.get_by_role("button", name="Open Live Meeting").click()
+        self.page.get_by_role("button", name="Expand / Collapse all").click()
+        card = self.card("discussion")
+        card.get_by_role("button", name="Postpone agenda point").click()
+        card.get_by_label("Reason for postponing").fill("Review next week")
+        card.get_by_role("button", name="Move to another meeting series").click()
+        dialog = self.page.get_by_role("dialog")
+        dialog.get_by_role("button", name="Request Follow-up", exact=True).click()
+        expect(dialog).not_to_be_visible()
+        transfers = self.rpc(
+            "community.meeting.carryover",
+            "search_read",
+            [[("origin_agenda_item_id", "=", self.item_ids["discussion"])]],
+            {"fields": ["status"]},
+        )
+        self.assertEqual(len(transfers), 1)
+        expect(self.outcome("discussion")).to_have_text("Postponed")
         destination = self.rpc(
             "community.meeting",
             "create",
@@ -909,8 +914,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
         expect(
             point.locator('.o_field_widget[name="estimated_minutes"] input')
-        ).not_to_be_visible()
-        point.locator('.o_field_widget[name="more_options"] input').check()
+        ).to_be_visible()
         point.locator('.o_field_widget[name="estimated_minutes"] input').fill("20")
         point.locator('.o_field_widget[name="deadline"] input').fill("12/20/2026")
         point.locator('button[name="action_save"]').click()
@@ -1345,93 +1349,6 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             1,
         )
 
-    def test_project_task_can_use_alternate_project(self):
-        fields = self.rpc(
-            "community.meeting.series", "fields_get", [], {"attributes": ["type"]}
-        )
-        if "meeting_todo_requirement" not in fields:
-            self.skipTest("Optional Project addon is absent")
-        series = self.rpc(
-            "community.meeting.series",
-            "create",
-            [
-                {
-                    "name": "Project policy " + uuid.uuid4().hex[:8],
-                    "meeting_todo_requirement": "project",
-                    "meeting_project_mode": "series",
-                    "meeting_task_scope": "any",
-                }
-            ],
-        )
-        self.retained.append({"model": "community.meeting.series", "id": series})
-        meeting_company = self.record(
-            "community.meeting", self.meeting_id, ["company_id"]
-        )["company_id"][0]
-        configured_project = self.rpc(
-            "project.project", "create", [{
-                "name": "Configured series project " + uuid.uuid4().hex[:6],
-                "company_id": meeting_company,
-            }]
-        )
-        alternate_project_name = "Alternate live task project " + uuid.uuid4().hex[:6]
-        alternate_project = self.rpc(
-            "project.project", "create", [{
-                "name": alternate_project_name,
-                "company_id": meeting_company,
-            }]
-        )
-        self.rpc(
-            "community.meeting.series", "write",
-            [[series], {"meeting_project_id": configured_project}],
-        )
-        self.rpc(
-            "community.meeting", "write", [[self.meeting_id], {"series_id": series}]
-        )
-        self.open_live(self.meeting_id)
-        card = self.card("todo")
-        card.get_by_role("button", name="Add follow-up", exact=True).click()
-        card.get_by_label("Task name", exact=True).fill(
-            "Assigned follow-up with Project"
-        )
-        card.get_by_label("Follow-up type", exact=True).select_option("task")
-        card.get_by_role("button", name="Add follow-up", exact=True).click()
-        expect(self.outcome("todo")).to_have_text("Project task required")
-        expect(card.get_by_role("button", name="Done")).to_be_disabled()
-        card.get_by_role("button", name="Create Project task").click()
-        dialog = self.page.get_by_role("dialog").last
-        expect(dialog.get_by_label("Choose a different project")).to_be_visible()
-        expect(dialog.locator('.o_field_widget[name="project_id"]')).not_to_be_visible()
-        dialog.get_by_label("Choose a different project").check()
-        project_field = dialog.locator('.o_field_widget[name="project_id"] input')
-        project_field.fill(alternate_project_name)
-        self.page.get_by_role("option", name=alternate_project_name, exact=True).click()
-        dialog.locator('button[name="action_create"]').click()
-        expect(dialog).not_to_be_visible()
-        created_tasks = self.rpc(
-            "project.task", "search_read",
-            [[("project_id", "=", alternate_project)]],
-            {"fields": ["name", "project_id"]},
-        )
-        linked_actions = self.rpc(
-            "community.meeting.action", "search_read",
-            [[("meeting_id", "=", self.meeting_id)]],
-            {"fields": ["name", "project_task_ids"]},
-        )
-        self.assertTrue(
-            created_tasks,
-            "No alternate-project task. Linked actions: %r" % linked_actions,
-        )
-        self.assertEqual(created_tasks[0]["project_id"][0], alternate_project)
-        linked_task_ids = {
-            task_id
-            for action in linked_actions
-            for task_id in action["project_task_ids"]
-        }
-        self.assertTrue(set(task["id"] for task in created_tasks) & linked_task_ids)
-        expect(card.get_by_role("button", name="Done")).to_be_enabled()
-        card.get_by_role("button", name="Done").click()
-        expect(self.outcome("todo")).to_have_text("Resolved")
-
     def test_approve_and_download_minutes(self):
         card = self.card("decision")
         card.get_by_role("button", name="Add agreement", exact=True).click()
@@ -1529,12 +1446,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             '[contenteditable="true"][aria-label="Discussion notes"]'
         )
         self.edit_rich(editor, "Unsaved text must survive an error")
-        expect(
-            self.page.get_by_text(
-                "Some changes could not be saved. Retry by editing the affected field.",
-                exact=True,
-            )
-        ).to_be_visible()
+        expect(self.page.get_by_role("alert").filter(has_text="Some changes could not be saved.")).to_be_visible()
         expect(editor).to_contain_text("Unsaved text must survive")
         self.assertNotIn(
             "Unsaved text",
@@ -1552,6 +1464,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "discussion_notes",
             "Recovered notes after retry",
         )
+        self.consume_injected_write_error("Injected save failure")
 
     def test_mobile_point_wizard_and_keyboard_cancel(self):
         self.page.set_viewport_size({"width": 390, "height": 844})
@@ -1617,10 +1530,14 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             '.o_field_widget[name="carry_line_ids"] tr.o_data_row'
         ).filter(has_text="Browser Discussion case")
         expect(row).to_be_visible()
-        row.locator('input[data-value="postpone"]').check()
+        rows = wizard.locator('.o_field_widget[name="carry_line_ids"] tr.o_data_row')
+        expect(rows).to_have_count(1)
+        row = rows.first
+        row.locator('td[name="decision"]').click()
+        row.locator('input[data-value="discard"]').check()
         wizard.locator('button[name="action_back"]').click()
         wizard.locator('button[name="action_next"]').click()
-        expect(row.locator('input[data-value="postpone"]')).to_be_checked()
+        expect(row.locator('input[data-value="discard"]')).to_be_checked()
         wizard.locator('button[name="action_next"]').click()
         wizard.locator('button[name="action_finish"]').click()
         expect(self.page.get_by_role("dialog")).to_have_count(0)
@@ -1795,11 +1712,11 @@ class CoverageResult(unittest.TextTestResult):
             pass  # Preserve the original failure if the browser itself has died.
 
 
-if __name__ == "__main__":
+def run_suite(test_case=FullMeetingBrowserChecks, actions=ACTIONS):
     if "--list-actions" in sys.argv:
-        print(json.dumps(ACTIONS, indent=2))
+        print(json.dumps(actions, indent=2))
         raise SystemExit(0)
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(FullMeetingBrowserChecks)
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(test_case)
     if len(sys.argv) > 1:
         suite = unittest.TestSuite(
             t for t in suite if any(part in t._testMethodName for part in sys.argv[1:])
@@ -1807,23 +1724,29 @@ if __name__ == "__main__":
     result = unittest.TextTestRunner(verbosity=2, resultclass=CoverageResult).run(suite)
     covered = [
         a
-        for method, actions in ACTIONS.items()
+        for method, method_actions in actions.items()
         if method in result.passed
-        for a in actions
+        for a in method_actions
     ]
-    total = sum(map(len, ACTIONS.values()))
+    total = sum(map(len, actions.values()))
     report = {
+        "suite": test_case.__name__,
+        "tests_run": result.testsRun,
+        "tests_passed": len(result.passed),
+        "tests_failed": len(result.failures),
+        "tests_errored": len(result.errors),
+        "tests_skipped": [{"test": str(test), "reason": reason} for test, reason in result.skipped],
         "total_actions": total,
         "passed_actions": len(covered),
         "percent": round(100 * len(covered) / total, 1),
         "covered": covered,
         "uncovered": [
             a
-            for m, actions in ACTIONS.items()
+            for m, method_actions in actions.items()
             if m not in result.passed
-            for a in actions
+            for a in method_actions
         ],
-        "retained_records": FullMeetingBrowserChecks.retained,
+        "retained_records": test_case.retained,
         "scope": "Explicit inventory of frequent current editor actions; not code coverage or measured user telemetry.",
     }
     ARTIFACTS.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -1834,6 +1757,10 @@ if __name__ == "__main__":
     )
     raise SystemExit(
         0
-        if result.wasSuccessful() and (len(sys.argv) > 1 or report["percent"] >= 90)
+        if result.wasSuccessful() and not result.skipped and (len(sys.argv) > 1 or report["percent"] >= 90)
         else 1
     )
+
+
+if __name__ == "__main__":
+    run_suite()

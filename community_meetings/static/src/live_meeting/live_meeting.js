@@ -332,8 +332,9 @@ export class LiveMeeting extends Component {
     async refreshDecision(itemId) {
         const item = this.state.items.find((row) => row.id === itemId);
         if (!item) return;
-        const [saved] = await this.orm.read("community.meeting.agenda.item", [itemId], ["disposition", "decision_result", "topic_state", "topic_outcome", "is_followup"]);
+        const [saved] = await this.orm.read("community.meeting.agenda.item", [itemId], ["disposition", "decision_result", "topic_state", "topic_outcome", "is_followup", "actual_started_at", "actual_minutes", "actual_seconds"]);
         Object.assign(item, saved);
+        if (!item.actual_started_at) this.setPointEditorsEditable(item, false);
         const resolutions = await this.orm.searchRead("community.meeting.resolution", [["agenda_item_id", "=", itemId]], ["agenda_item_id", "title", "body", "status", "decision_outcome"], { order: "id" });
         const refreshed = new Map(resolutions.map((row) => [row.id, row]));
         this.state.resolutions = this.state.resolutions
@@ -622,6 +623,7 @@ export class LiveMeeting extends Component {
     cancelDeferral(item) { delete this.state.deferrals[item.id]; }
 
     async saveDeferral(item) {
+        if (!await this.flushEditors()) return;
         const draft = this.state.deferrals[item.id] || {};
         const reason = (draft.reason || "").trim();
         const code = draft.code || "";
@@ -758,7 +760,7 @@ export class LiveMeeting extends Component {
     }
     async addResolution(item) {
         const form = this.state.newResolution[item.id] || {};
-        if (!form.title?.trim()) return;
+        if (!form.title?.trim() || !await this.flushEditors()) return;
         await this.createRecord(`resolution:${item.id}`, "community.meeting.resolution", {
             meeting_id: this.meetingId, agenda_item_id: item.id, title: form.title.trim(), body: form.body || false,
             decision_outcome: this.typeBehavior(item) === "decision" ? (this.newDecisionOutcome(item) || false) : false,
@@ -784,6 +786,7 @@ export class LiveMeeting extends Component {
         this.state.newResolution[item.id][key] = value;
     }
     async updateResolution(resolution, field, value) {
+        if (!await this.flushEditors()) return false;
         return this.write(`resolution:${resolution.id}`, "community.meeting.resolution", [resolution.id], { [field]: value }, async () => {
             if (resolution.agenda_item_id) {
                 await this.refreshDecision(resolution.agenda_item_id[0]);
@@ -795,7 +798,11 @@ export class LiveMeeting extends Component {
     }
     toggleRecordEditor(key) { this.state.editingRecords[key] = !this.state.editingRecords[key]; }
     async updateDissent(dissent, field, value) {
-        await this.write(`dissent:${dissent.id}`, "community.meeting.dissent", [dissent.id], { [field]: value }, () => { dissent[field] = value; });
+        const normalized = field === "reason_id" ? Number(value) : value;
+        await this.write(`dissent:${dissent.id}`, "community.meeting.dissent", [dissent.id], { [field]: normalized }, async () => {
+            const [saved] = await this.orm.read("community.meeting.dissent", [dissent.id], [field]);
+            dissent[field] = saved[field];
+        });
     }
     async requestRecordCarryover(model, record) {
         try {
