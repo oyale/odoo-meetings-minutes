@@ -32,6 +32,19 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
             "meeting_id": cls.meetings[0].id, "name": "Project integration point",
         })
 
+    def test_project_todo_container_creates_private_task(self):
+        meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "Todo container"})
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({"meeting_id": meeting.id, "name": "Point"})
+        action = self.env["community.meeting.action"].with_user(self.editor).create({
+            "meeting_id": meeting.id, "agenda_item_id": item.id, "name": "Buy milk",
+            "responsible_user_id": self.editor.id, "followup_kind": "project_todo",
+        })
+        self.assertFalse(action.followup_activity_ids)
+        self.assertEqual(len(action.project_task_ids), 1)
+        self.assertFalse(action.project_task_ids.project_id)
+        self.assertTrue(action.project_task_ids.user_ids)
+        self.assertTrue(action._has_execution_evidence())
+
     def test_multiple_task_links_and_reverse_navigation(self):
         meeting = self.meetings[0]
         agenda = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
@@ -45,7 +58,7 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         })
         action = self.env["community.meeting.action"].with_user(self.editor).create({
             "meeting_id": meeting.id, "name": "Linked action",
-            "followup_kind": "task",
+            "followup_kind": "project_task",
             "agenda_item_id": agenda.id,
             "project_task_ids": [(6, 0, [self.tasks[0].id])],
         })
@@ -67,7 +80,7 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         })
         action = self.env["community.meeting.action"].with_user(self.editor).create({
             "meeting_id": meeting.id, "agenda_item_id": item.id, "name": "Implement proposal",
-            "followup_kind": "task",
+            "followup_kind": "project_task",
         })
         with self.assertRaises(ValidationError), self.cr.savepoint():
             item.with_user(self.editor).write({"disposition": "closed"})
@@ -102,7 +115,7 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         action = self.env["community.meeting.action"].with_user(self.editor).create({
             "meeting_id": self.meetings[0].id,
             "name": "Create in another project",
-            "followup_kind": "task",
+            "followup_kind": "project_task",
             "agenda_item_id": self.item.id,
         })
         wizard_model = self.env["community.meeting.project.task.wizard"].with_user(self.editor)
@@ -146,7 +159,7 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         action = self.env["community.meeting.action"].with_user(self.editor).create({
             "meeting_id": source.id,
             "name": "Continue this work",
-            "followup_kind": "task",
+            "followup_kind": "project_task",
             "agenda_item_id": self.item.id,
             "project_task_ids": [(6, 0, [self.tasks[0].id])],
         })

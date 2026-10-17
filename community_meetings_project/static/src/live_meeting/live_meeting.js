@@ -6,10 +6,13 @@ import { LiveMeeting } from "@community_meetings/live_meeting/live_meeting";
 
 patch(LiveMeeting.prototype, {
     followupKindLabel(action) {
-        return action.followup_kind === "task" ? _t("Project task") : super.followupKindLabel(action);
+        return {
+            project_task: _t("Project task"),
+            project_todo: _t("To-do"),
+        }[action.followup_kind] || super.followupKindLabel(action);
     },
     actionHasExecutionEvidence(action) {
-        return action.followup_kind === "task" ? (this.state.projectTasksByAction?.[action.id] || []).some(task => task.valid) : super.actionHasExecutionEvidence(action);
+        return ["project_task", "project_todo"].includes(action.followup_kind) ? (this.state.projectTasksByAction?.[action.id] || []).some(task => task.valid) : super.actionHasExecutionEvidence(action);
     },
     async load(...args) {
         await super.load(...args);

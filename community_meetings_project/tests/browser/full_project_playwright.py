@@ -67,7 +67,7 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         card.get_by_label("Task name", exact=True).fill(
             "Assigned follow-up with Project"
         )
-        card.get_by_label("Follow-up type", exact=True).select_option("task")
+        card.get_by_label("Follow-up type", exact=True).select_option("project_task")
         card.get_by_role("button", name="Add follow-up", exact=True).click()
         expect(self.outcome("todo")).to_have_text("Project task required")
         expect(card.get_by_role("button", name="Done")).to_be_disabled()

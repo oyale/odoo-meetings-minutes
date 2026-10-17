@@ -86,11 +86,54 @@ class ProjectTaskLinkChecks(models.AbstractModel):
         return records
 
 
+class Company(models.Model):
+    _inherit = "res.company"
+
+    followup_default_kind = fields.Selection(
+        selection_add=[("project_task", "Project task"), ("project_todo", "To-do")],
+        ondelete={"project_task": "set default", "project_todo": "set default"},
+    )
+
+
+class MeetingSeries(models.Model):
+    _inherit = "community.meeting.series"
+
+    followup_default_kind = fields.Selection(
+        selection_add=[("project_task", "Project task"), ("project_todo", "To-do")],
+        ondelete={"project_task": "set default", "project_todo": "set default"},
+    )
+
+
+class Topic(models.Model):
+    _inherit = "community.meeting.topic"
+
+    followup_default_kind = fields.Selection(
+        selection_add=[("project_task", "Project task"), ("project_todo", "To-do")],
+        ondelete={"project_task": "set default", "project_todo": "set default"},
+    )
+
+
+def post_init_allow_project_kinds(env):
+    kinds = env["community.meeting.followup.kind"].search([("code", "in", ["project_task", "project_todo"])])
+    activity = env["community.meeting.followup.kind"].search([("code", "=", "activity")])
+    for company in env["res.company"].search([]):
+        if not company.followup_allowed_kinds:
+            company.followup_allowed_kinds = [(6, 0, (activity | kinds).ids)]
+    for series in env["community.meeting.series"].search([]):
+        if series.followup_allowed_kinds:
+            missing = kinds - series.followup_allowed_kinds
+            series.followup_allowed_kinds = [(4, kind.id) for kind in missing]
+
+
 class CommunityMeetingAgendaItem(models.Model):
     _name = "community.meeting.agenda.item"
     _inherit = ["community.meeting.agenda.item", "community.meeting.project.task.mixin"]
     _description = "Meeting Agenda Item"
 
+    followup_default_kind = fields.Selection(
+        selection_add=[("project_task", "Project task"), ("project_todo", "To-do")],
+        ondelete={"project_task": "set default", "project_todo": "set default"},
+    )
     project_task_ids = fields.Many2many(
         "project.task", "community_meeting_agenda_task_rel", "agenda_item_id", "task_id",
         string="Project Tasks",
@@ -146,13 +189,51 @@ class CommunityMeetingAction(models.Model):
     _name = "community.meeting.action"
     _inherit = ["community.meeting.action", "community.meeting.project.task.mixin"]
     _description = "Meeting Follow-up Action"
-    followup_kind = fields.Selection(selection_add=[("task", "Project task")], ondelete={"task": "set default"})
+    followup_kind = fields.Selection(
+        selection_add=[("project_task", "Project task"), ("project_todo", "To-do")],
+        ondelete={"project_task": "set default", "project_todo": "set default"},
+    )
 
     def _has_execution_evidence(self):
         self.ensure_one()
-        if self.followup_kind != "task":
+        if self.followup_kind not in ("project_task", "project_todo"):
             return super()._has_execution_evidence()
         return bool(self.project_task_ids.filtered(lambda task: task.active and task.user_ids and task.state != "1_canceled"))
+
+    def _sync_external_artifact(self):
+        for action in self:
+            if action.followup_kind == "project_todo":
+                action._sync_project_todo()
+            # project_task links existing tasks through the wizard; nothing to sync.
+        return True
+
+    def _sync_project_todo(self):
+        self.ensure_one()
+        owners = self.responsible_user_ids
+        tasks = self.project_task_ids.filtered(lambda task: not task.project_id)
+        if self.state in ("done", "cancelled") or not owners:
+            return True
+        values = {
+            "name": self.name,
+            "date_deadline": self.deadline or fields.Date.context_today(self),
+            "user_ids": [(6, 0, owners.ids)],
+        }
+        if tasks:
+            tasks.write(values)
+        else:
+            task = self.env["project.task"].create({**values, "company_id": self.company_id.id})
+            self.write({"project_task_ids": [(4, task.id)]})
+        return True
+
+    def _clear_followup_artifact(self):
+        result = super()._clear_followup_artifact()
+        for action in self:
+            if action.followup_kind == "project_todo":
+                projects = action.project_task_ids.filtered(lambda task: not task.project_id)
+                action.write({"project_task_ids": [(3, task.id) for task in projects]})
+            elif action.followup_kind == "project_task":
+                action.write({"project_task_ids": [(5, 0, 0)]})
+        return result
 
     project_task_ids = fields.Many2many(
         "project.task", "community_meeting_action_task_rel", "action_id", "task_id",
@@ -179,7 +260,7 @@ class CommunityMeetingAction(models.Model):
         agenda_items = self.mapped("agenda_item_id")
         result = super().write(vals)
         if {"responsible_user_ids", "responsible_user_id"}.intersection(vals):
-            for action in self.filtered(lambda record: record.followup_kind == "task"):
+            for action in self.filtered(lambda record: record.followup_kind == "project_task"):
                 if action.project_task_ids:
                     action.project_task_ids.write({"user_ids": [(4, uid) for uid in action.responsible_user_ids.ids]})
         items = self.env['community.meeting.agenda.item'].sudo().search([('topic_id', 'in', (agenda_items | self.mapped('agenda_item_id')).topic_id.ids)])
@@ -195,7 +276,7 @@ class CommunityMeetingAction(models.Model):
 
     def action_create_project_task(self):
         self.ensure_one()
-        if self.followup_kind != "task":
+        if self.followup_kind != "project_task":
             raise ValidationError(_("Project tasks can only be linked to Project task follow-ups."))
         self.check_access_rights("write")
         self.check_access_rule("write")
@@ -242,7 +323,7 @@ class CommunityMeetingProjectTaskWizard(models.TransientModel):
         self.ensure_one()
         self.action_id.check_access_rights("write")
         self.action_id.check_access_rule("write")
-        if self.action_id.followup_kind != "task":
+        if self.action_id.followup_kind != "project_task":
             raise ValidationError(_("Project tasks can only be linked to Project task follow-ups."))
         self.env["project.task"].check_access_rights("create")
         if (
@@ -278,6 +359,12 @@ class ProjectTask(models.Model):
         for topic in actions.topic_id.sorted('id'):
             topic._lock_workflow()
         result = super().write(vals)
+        if "state" in vals:
+            completable = actions.filtered(lambda a: a.followup_kind in ("project_task", "project_todo") and a.state not in ("done", "cancelled"))
+            for action in completable:
+                tasks = action.project_task_ids
+                if tasks and all(task.state == "1_done" for task in tasks):
+                    action.write({"state": "done"})
         items = self.env['community.meeting.agenda.item'].sudo().search([('topic_id', 'in', actions.topic_id.ids)])
         self.env['community.meeting.project.task.mixin'].sudo()._check_closed_todo_project_tasks(items)
         return result
