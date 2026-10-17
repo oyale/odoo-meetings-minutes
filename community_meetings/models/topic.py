@@ -448,6 +448,12 @@ class AgendaParticipation(models.Model):
                 for key in CONTENT_FIELDS:
                     value = topic[key]
                     vals[key] = value.id if key == "agenda_type_id" else value
+                if not vals.get("estimated_minutes"):
+                    vals["estimated_minutes"] = (
+                        meeting.series_id._point_estimated_minutes_default()
+                        if meeting.series_id
+                        else meeting.company_id.meeting_estimated_minutes
+                    )
                 vals["is_followup"] = topic.state == "closed"
             else:
                 if not vals.get("agenda_type_id"):

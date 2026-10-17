@@ -379,6 +379,31 @@ class TestMeetingDomain(TransactionCase):
 
         self.assertEqual(transfer.destination_item_id.estimated_minutes, 35)
 
+    def test_same_series_carryover_fills_missing_point_estimate_from_series(self):
+        series = self.env["community.meeting.series"].create({
+            "name": "Carryover estimate series", "default_estimated_minutes": 25,
+        })
+        origin = self.env["community.meeting"].create({
+            "name": "Origin without estimate", "series_id": series.id,
+            "start_datetime": "2026-10-01 10:00:00",
+        })
+        source = self.env["community.meeting.agenda.item"].create({
+            "meeting_id": origin.id, "name": "Legacy point", "estimated_minutes": 0,
+        })
+        destination = self.env["community.meeting"].create({
+            "name": "Destination", "series_id": series.id,
+            "start_datetime": "2026-10-08 10:00:00",
+        })
+        transfer = self.env["community.meeting.carryover"].create({
+            "origin_model": "agenda_item", "origin_record_id": source.id,
+            "destination_series_id": series.id,
+            "destination_meeting_id": destination.id,
+        })
+
+        transfer.action_accept(destination.id)
+
+        self.assertEqual(transfer.destination_item_id.estimated_minutes, 25)
+
     def test_followup_promotes_to_point_when_origin_closes(self):
         meeting = self.env["community.meeting"].create({
             "name": "Promotion",
