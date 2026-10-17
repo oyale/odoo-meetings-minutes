@@ -160,7 +160,7 @@ export class LiveMeeting extends Component {
     followupDefaults(item) { return this.state.followupByItem?.[item.id] || this.state.followupDefaults; }
     topicById(topicId) { return this.state.topicsById?.[topicId] || false; }
     itemForTopic(topicId) {
-        return this.state.items.find((item) => item.topic_id?.[0] === topicId) || false;
+        return this.visibleItems.find((item) => item.topic_id?.[0] === topicId) || false;
     }
     relatedTopics(item) {
         const topic = this.topicById(item.topic_id?.[0]);
@@ -173,19 +173,14 @@ export class LiveMeeting extends Component {
         return topic?.origin_topic_id ? this.topicById(topic.origin_topic_id[0]) : false;
     }
     originActionName(item) {
-        const topic = this.topicById(item.topic_id?.[0]);
-        if (!topic?.origin_action_id) return "";
-        return (
-            this.state.actions.find((action) => action.id === topic.origin_action_id[0])?.name
-            || _t("Follow-up")
-        );
+        return this.topicById(item.topic_id?.[0])?.origin_action_id?.[1] || "";
     }
     hasPointRelations(item) {
         return Boolean(
             this.relatedTopics(item).length || this.originTopic(item) || this.originActionName(item)
         );
     }
-    async jumpToItem(itemId) {
+    jumpToItem(itemId) {
         const item = this.state.items.find((row) => row.id === itemId);
         if (!item) return;
         this.state.activeItemId = item.id;
