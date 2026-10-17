@@ -1,0 +1,251 @@
+#!/usr/bin/env python3
+"""Render the Community Meetings user guides (markdown) to HTML.
+
+Modes:
+  --mode multi   one HTML page per markdown file, with sidebar navigation
+  --mode single  one big self-contained HTML page per language
+  --mode both    build both (default)
+
+Languages: english lives in docs/user, spanish in docs/user_es. The rendered
+header carries a language switcher linking the equivalent page in the other
+language. Only stdlib + `markdown` are required.
+"""
+import argparse
+import re
+from pathlib import Path
+
+import markdown
+
+ROOT = Path(__file__).resolve().parent
+LANGS = {
+    "en": {"src": ROOT / "user", "title": "Community Meetings — User & Administrator Guide",
+           "switch": "Español", "switch_to": "es"},
+    "es": {"src": ROOT / "user_es", "title": "Community Meetings — Guía de uso y administración",
+           "switch": "English", "switch_to": "en"},
+}
+OUTBASE = ROOT / "_build"
+PAGE_ORDER = [
+    "index.md", "concepts.md", "roles-and-permissions.md",
+    "admin/configuration.md", "admin/series.md", "admin/catalogs.md",
+    "user/prepare-meeting.md", "user/propose-a-point.md", "user/live-meeting.md",
+    "user/minutes-and-approval.md", "user/followups.md", "user/carryovers.md",
+    "integrations/calendar.md", "integrations/project.md",
+    "faq.md",
+]
+MD_EXTENSIONS = ["tables", "fenced_code", "sane_lists", "smarty"]
+
+MERMAID_JS = """<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>document.addEventListener("DOMContentLoaded", function () {
+  var blocks = document.querySelectorAll("pre code.language-mermaid");
+  blocks.forEach(function (b) {
+    var d = document.createElement("div");
+    d.className = "mermaid";
+    d.textContent = b.textContent;
+    b.parentElement.replaceWith(d);
+  });
+  if (blocks.length && window.mermaid) mermaid.run();
+});</script>"""
+
+CSS = """
+:root { --brand:#714B67; --ink:#21262d; --muted:#57606a; --line:#d0d7de; --bg:#fff; --soft:#f6f8fa; }
+* { box-sizing: border-box; }
+body { margin:0; font:16px/1.65 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+       color:var(--ink); background:var(--bg); }
+a { color:var(--brand); text-decoration:none; }
+a:hover { text-decoration:underline; }
+code, pre { font-family:ui-monospace, "Cascadia Code", Menlo, Consolas, monospace; font-size:.9em; }
+code { background:var(--soft); padding:.15em .35em; border-radius:4px; }
+pre { background:var(--soft); padding:14px; border-radius:8px; overflow:auto; }
+pre code { background:none; padding:0; }
+h1 { font-size:1.9em; border-bottom:3px solid var(--brand); padding-bottom:.3em; }
+h2 { font-size:1.4em; border-bottom:1px solid var(--line); padding-bottom:.25em; margin-top:2em; }
+h3 { font-size:1.15em; margin-top:1.6em; }
+table { border-collapse:collapse; width:100%; margin:1em 0; }
+th, td { border:1px solid var(--line); padding:.5em .75em; text-align:left; vertical-align:top; }
+th { background:var(--soft); }
+blockquote { margin:1em 0; padding:.6em 1em; border-left:4px solid var(--brand);
+             background:var(--soft); border-radius:0 8px 8px 0; }
+blockquote p { margin:.2em 0; }
+.mermaid svg { max-width:100%; height:auto; }
+img { max-width:100%; border:1px solid var(--line); border-radius:8px; margin:.6em 0; }
+em { color:var(--muted); }
+/* layout */
+.langbar { background:var(--brand); color:#fff; padding:.5em 1.2em; font-size:.9em; }
+.langbar a { color:#fff; text-decoration:underline; margin-left:.4em; }
+.langbar .brand { font-weight:700; margin-right:1em; }
+.wrap { display:flex; align-items:flex-start; }
+nav.side { width:260px; flex:0 0 260px; background:var(--soft); min-height:100vh;
+           padding:1.2em .9em; font-size:.92em; }
+nav.side h3 { font-size:.8em; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);
+              margin:1.2em .4em .3em; }
+nav.side a { display:block; padding:.28em .6em; border-radius:6px; color:var(--ink); }
+nav.side a:hover { background:#eaecef; text-decoration:none; }
+nav.side a.current { background:var(--brand); color:#fff; }
+main.content { flex:1 1 auto; padding:2em 3em 4em; max-width:980px; min-width:0; }
+main.content.single { margin:0 auto; float:none; }
+.pagenav { margin-top:3em; display:flex; justify-content:space-between; gap:1em; }
+.pagenav a { font-weight:600; }
+"""
+
+
+def md_to_html(text):
+    return markdown.markdown(text, extensions=MD_EXTENSIONS)
+
+
+def langbar(lang, counterpart_href):
+    other = LANGS[LANGS[lang]["switch_to"]]
+    href = counterpart_href or "#"
+    cls = ' style="opacity:.45;pointer-events:none;"' if not counterpart_href else ""
+    return ('<div class="langbar"><span class="brand">Community Meetings</span>'
+            f'{LANGS[lang]["title"].split("—")[-1].strip()}'
+            f'<a href="{href}"{cls}>{LANGS[lang]["switch"]} →</a></div>')
+
+
+def rewrite_links(html, page_rel, mode, single_slugs):
+    """Rewrite .md links to .html (multi) or #anchors (single)."""
+    def repl(m):
+        href = m.group(1)
+        if href.startswith(("http", "img/")):
+            return m.group(0)
+        target = href.split("#")[0]
+        anchor = "#" + m.group(2) if m.group(2) else ""
+        if mode == "multi":
+            out = (target[:-3] + ".html") if target.endswith(".md") else target
+            resolved = (Path(page_rel).parent / target).as_posix() if target else page_rel
+            _ = resolved
+            return f'href="{out}{anchor}"'
+        slug = single_slugs.get(target, single_slugs.get("index.md", "index"))
+        return f'href="{slug}.html{anchor}" if False else "#slug-{slug}{anchor}"'
+    return re.sub(r'href="([^"]+?\.md)(#[^"]+)?"', lambda m: _rewrite_single(m, mode, single_slugs, page_rel), html)
+
+
+def _rewrite_single(m, mode, single_slugs, page_rel):
+    href, anchor = m.group(1), m.group(2) or ""
+    if href.startswith(("http", "img/")):
+        return m.group(0)
+    if mode == "multi":
+        return 'href="%s.html%s"' % (href[:-3], anchor)
+    target = (Path(page_rel).parent / href).as_posix() if href else page_rel
+    slug = single_slugs.get(target)
+    return 'href="#slug-%s%s"' % (slug, anchor) if slug else m.group(0)
+
+
+def slugify(rel):
+    return re.sub(r"[^a-z0-9]+", "-", rel.lower()).strip("-")
+
+
+def build_multi(lang):
+    cfg = LANGS[lang]
+    src, outdir = cfg["src"], OUTBASE / ("html-" + lang)
+    pages = [p for p in PAGE_ORDER if (src / p).exists()]
+    pages += [str(p.relative_to(src)) for p in sorted(src.rglob("*.md"))
+              if str(p.relative_to(src)) not in pages]
+    pages = [p for p in pages if not p.startswith("img/")]
+    for rel in pages:
+        depth = "../" * rel.count("/")
+        text = (src / rel).read_text(encoding="utf-8")
+        html = md_to_html(text)
+        html = re.sub(r'href="([^"]+?)\.md(#[^"]+)?"', r'href="\1.html\2"', html)
+        html = re.sub(r'(src="|href=")img/', lambda m: m.group(1) + depth + 'img/', html)
+        counterpart = None
+        other_src = LANGS[LANGS[lang]["switch_to"]]["src"]
+        if (other_src / rel).exists():
+            counterpart = depth + "../html-%s/%s.html" % (LANGS[lang]["switch_to"], rel[:-3])
+        depth = "../" * (rel.count("/") )
+        nav_items = []
+        for other_rel in pages:
+            cls = ' class="current"' if other_rel == rel else ""
+            label = ("— " if "/" in other_rel else "") + Path(other_rel).stem.replace("-", " ").replace("_", " ")
+            nav_items.append(f'<a{cls} href="{depth}{other_rel[:-3]}.html">{label}</a>')
+        groups = [
+            ("Guide", [i for i in nav_items[:3]]),
+            ("Administer", nav_items[3:6]),
+            ("Use", nav_items[6:12]),
+            ("Integrations", nav_items[12:14]),
+            ("More", nav_items[14:]),
+        ]
+        side = "".join(f'<h3>{t}</h3>{"".join(items)}' for t, items in groups if items)
+        doc = f"""<!doctype html><html lang="{lang}"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{Path(rel).stem.replace('-', ' ').title()} — {cfg['title']}</title>{MERMAID_JS}<style>{CSS}</style></head>
+<body>{langbar(lang, counterpart)}<div class="wrap"><nav class="side">{side}</nav>
+<main class="content">{html}</main></div></body></html>"""
+        dest = outdir / (rel[:-3] + ".html")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(doc, encoding="utf-8")
+    # copy images
+    copy_imgs(src, outdir)
+    return outdir
+
+
+def build_single(lang):
+    cfg = LANGS[lang]
+    src, outdir = cfg["src"], OUTBASE / ("html-" + lang)
+    pages = [p for p in PAGE_ORDER if (src / p).exists()]
+    single_slugs = {rel: slugify(rel) for rel in pages}
+    chunks, toc = [], []
+    for rel in pages:
+        text = (src / rel).read_text(encoding="utf-8")
+        html = md_to_html(text)
+        html = re.sub(r'href="([^"]+?)\.md(#[^"]+)?"',
+                      lambda m: 'href="#slug-%s%s"' % (single_slugs.get((Path(rel).parent / m.group(1)).as_posix(),
+                                                                       single_slugs["index.md"]), m.group(2) or ""), html)
+        chunks.append(f'<div id="slug-{single_slugs[rel]}">{html}<hr></div>')
+        label = ("— " if "/" in rel else "") + Path(rel).stem.replace("-", " ")
+        toc.append(f'<a href="#slug-{single_slugs[rel]}">{label}</a>')
+    other = "es" if lang == "en" else "en"
+    counterpart = "../html-%s/single-%s.html" % (other, other)
+    side = "".join(toc)
+    doc = f"""<!doctype html><html lang="{lang}"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{cfg['title']}</title>{MERMAID_JS}<style>{CSS}</style></head><body>{langbar(lang, counterpart)}
+<div class="wrap"><nav class="side"><h3>Contents</h3>{side}</nav>
+<main class="content single">{"".join(chunks)}</main></div></body></html>"""
+    outdir.mkdir(parents=True, exist_ok=True)
+    (outdir / ("single-" + lang + ".html")).write_text(doc, encoding="utf-8")
+    copy_imgs(src, outdir)
+    return outdir
+
+
+def copy_imgs(src, outdir):
+    import shutil
+    imgsrc = src / "img"
+    if imgsrc.exists():
+        (outdir / "img").mkdir(parents=True, exist_ok=True)
+        for img in imgsrc.glob("*.png"):
+            shutil.copy(img, outdir / "img" / img.name)
+
+
+def build_root_redirect():
+    """Root page: auto-redirect by browser language, fallback English."""
+    (OUTBASE / "index.html").write_text(
+        '<!doctype html><html><head><meta charset="utf-8">'
+        '<script>location.replace(navigator.language.startsWith("es")'
+        '? "html-es/index.html" : "html-en/index.html");</script>'
+        '<meta http-equiv="refresh" content="0;url=html-en/index.html">'
+        '</head><body><a href="html-en/index.html">English</a> · '
+        '<a href="html-es/index.html">Español</a></body></html>', encoding="utf-8")
+    (OUTBASE / ".nojekyll").write_text("", encoding="utf-8")
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--lang", choices=["en", "es", "both"], default="both")
+    ap.add_argument("--mode", choices=["multi", "single", "both"], default="both")
+    args = ap.parse_args()
+    langs = ["en", "es"] if args.lang == "both" else [args.lang]
+    for lang in langs:
+        if not LANGS[lang]["src"].exists():
+            print(f"[skip] {lang}: {LANGS[lang]['src']} not found")
+            continue
+        modes = ["multi", "single"] if args.mode == "both" else [args.mode]
+        for mode in modes:
+            out = build_single(lang) if mode == "single" else build_multi(lang)
+            print(f"[ok] {lang}/{mode} → {out}")
+    if args.lang == "both":
+        build_root_redirect()
+        print("[ok] root redirect → " + str(OUTBASE / "index.html"))
+
+
+if __name__ == "__main__":
+    main()

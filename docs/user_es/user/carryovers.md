@@ -1,0 +1,41 @@
+# Arrastres: mover puntos entre reuniones (editor)
+
+Un **arrastre** continúa el tratamiento de un punto (o revisa un seguimiento, o
+mueve un acuerdo) en una reunión posterior.
+
+## Las tres vías para mover un punto
+
+1. **Política de serie — Revisión** *(por defecto)*: al terminar una reunión, sus
+   puntos sin terminar se ofrecen a la siguiente reunión de la serie. Los editores
+   aceptan/descartan al crearla y en la pantalla en vivo (*Puntos que continúan*).
+2. **Política de serie — Automática**: lo mismo, sin preguntar.
+3. **Manual**: desde cualquier punto, **Posponer → Mover a otra reunión** abre el
+   asistente de arrastre, sea cual sea la política.
+
+## El asistente de arrastre
+
+![Asistente de arrastre](img/carryover-wizard.png)
+
+- **Serie de destino** (obligatoria para acuerdos/actas) o **reunión de destino**
+  (para puntos y seguimientos).
+- **Motivo** — texto libre; pre-rellenado con el motivo del aplazamiento si existe.
+- Con el módulo Project: se pueden arrastrar explícitamente las **tareas de
+  proyecto** vinculadas (selección del editor).
+
+Los editores de la reunión de destino las reciben como *Puntos que continúan*
+(política Revisión) o las encuentran ya en la agenda (política Automática). El
+registro muestra la reunión de origen, el contexto y quién respondió.
+
+## Aceptar / descartar
+
+- **Accept** — el punto entra en la agenda de destino como una nueva participación
+  del mismo punto (la identidad se conserva).
+- **Dismiss** — se rechaza la oferta; con política *Revisión* puede ofrecerse de
+  nuevo más adelante, y *Discard* en el asistente de creación la descarta para
+  siempre.
+
+## Documentación relacionada
+
+- [Política de arrastre de la serie](../admin/series.md#políticas)
+- [Asistente de creación, puntos que continúan](prepare-meeting.md#el-asistente-guiado)
+- [Tareas de Project en los arrastres](../integrations/project.md)

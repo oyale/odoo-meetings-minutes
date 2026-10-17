@@ -1,0 +1,66 @@
+# Actas y aprobación (editor / aprobador)
+
+El acta se construye desde el trabajo de la reunión en vivo y se formaliza en dos
+pasos: **preparar → aprobar**.
+
+## 1. Preparar el acta (editor)
+
+Con la reunión **Celebrada**, pulsa *Prepare Minutes* (pantalla en vivo) o en el
+formulario. La reunión pasa a **Acta en borrador**:
+
+- La sección **Meeting notes** (parte baja de la pantalla en vivo, o pestaña
+  *Minutes* del formulario) se convierte en el foco. Es texto enriquecido con
+  autoguardado.
+- Las notas de discusión de cada punto permanecen en su punto; la sección de notas
+  es donde vive el relato del acta.
+- Los editores aún pueden añadir contenido, ajustar acuerdos/discrepancias y
+  corregir seguimientos (la [política de añadir
+  puntos](../admin/configuration.md#añadir-puntos) limita los puntos de agenda
+  nuevos).
+- Las **notas editoriales privadas** quedan fuera del acta — úsalas para remarks
+  internos y bórralas antes de aprobar si conviene.
+
+> **Consejo:** el punto de aprobación del acta de las reuniones *posteriores*
+> listará este acta hasta aprobarla — apruébala pronto para no ensuciar la cola.
+
+## 2. Aprobar (aprobador)
+
+Un **aprobador** pulsa **Approve Minutes** (pantalla en vivo o cabecera del
+formulario).
+
+La aprobación:
+
+- congela la reunión en estado **Aprobada**;
+- crea una **revisión** inmutable con instantánea del contenido (SHA-256) y su
+  **PDF**;
+- marca el acta como aprobada en los *puntos de aprobación del acta* de las
+  reuniones posteriores de la serie;
+- deja la reunión en solo lectura para todos.
+
+## Revisiones aprobadas y enmiendas
+
+La pestaña **Approved Revisions** lista cada revisión: número, fecha de aprobación,
+aprobador, estado y botón **PDF**.
+
+Tras la aprobación, cambiar el contenido está bloqueado a propósito. Si hay que
+corregir algo, un aprobador pulsa **Start Amendment**: la reunión reabre para
+edición bajo una nueva revisión; la revisión anterior y su PDF permanecen intactos
+en la historia.
+
+![Revisiones aprobadas](img/revisions.png)
+
+## Discrepancias y acta
+
+Las discrepancias marcadas **include in minutes** forman parte del registro
+aprobado; las no marcadas quedan solo para uso editorial. Repásalas con el editor
+antes de aprobar.
+
+## Preguntas frecuentes
+
+**¿Quién firma?** Quien aprueba (queda registrado en la revisión).
+
+**¿Se re-aprueba tras una enmienda?** Sí — la enmienda se aprueba igual que el
+original y produce la revisión N+1.
+
+**¿Un lector ve el acta enmendada?** Los lectores siempre ven el último contenido
+aprobado y pueden descargar el PDF de cada revisión de la reunión si tenían acceso.
