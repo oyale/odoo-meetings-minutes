@@ -676,8 +676,16 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         decision_topic = self.record(
             "community.meeting.agenda.item", decision_item, ["topic_id"]
         )["topic_id"][0]
+        self.rpc(
+            "community.meeting.topic", "write",
+            [[decision_topic], {"presenter_partner_id": False}],
+        )
         user = self.rpc("res.users", "read", [[self.current_user()], ["partner_id"]])[0]
         partner_id, partner_name = user["partner_id"]
+        self.rpc(
+            "community.meeting.agenda.item", "write",
+            [[discussion_item], {"priority": "2"}],
+        )
 
         def make_outside_point(name):
             meeting = self.rpc(
@@ -732,7 +740,19 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         card = self.page.locator(".o_live_agenda_card").filter(
             has_text="Browser Discussion case"
         )
-        expect(card.locator(".o_live_presenter_badge")).to_contain_text(partner_name)
+        badge = card.locator(".o_live_presenter_badge")
+        expect(badge).to_contain_text(partner_name)
+        expect(badge.locator("img")).to_have_attribute(
+            "src", "/web/image/res.partner/%s/avatar_128" % partner_id
+        )
+        priority_badge = card.locator(".o_live_priority")
+        type_badge = card.locator(".o_live_type_badge")
+        outcome_badge = card.locator(".o_live_outcome_badge")
+        self.assertLess(badge.bounding_box()["x"], priority_badge.bounding_box()["x"])
+        self.assertLess(
+            priority_badge.bounding_box()["x"], type_badge.bounding_box()["x"]
+        )
+        self.assertLess(type_badge.bounding_box()["x"], outcome_badge.bounding_box()["x"])
 
         expand = card.locator(".o_live_expand")
         if expand.get_attribute("aria-expanded") == "false":
@@ -748,6 +768,10 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             ".o_live_related_point", has_text="Outside related point"
         )
         expect(outside_chip.first).to_have_js_property("tagName", "SPAN")
+        origin_chip = relations.locator(
+            ".o_live_related_point", has_text="Outside origin point"
+        )
+        expect(origin_chip.first).to_have_js_property("tagName", "SPAN")
         relations.locator(
             ".o_live_related_point", has_text="Browser Decision case"
         ).first.click()
@@ -755,6 +779,8 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         expect(decision_card.locator(".o_live_expand")).to_have_attribute(
             "aria-expanded", "true"
         )
+        expect(decision_card.locator(".o_live_presenter_badge")).to_have_count(0)
+        expect(decision_card.locator(".o_live_related_points")).to_have_count(0)
 
     def test_mobile_layout(self):
         self.page.set_viewport_size({"width": 390, "height": 844})

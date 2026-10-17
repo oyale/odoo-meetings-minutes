@@ -96,14 +96,14 @@
                                 <span class="o_live_item_title"><t t-out="item.name"/></span>
                                 <span t-if="state.activeItemId === item.id" class="visually-hidden">Current agenda point</span>
                             </button>
+                            <span t-if="item.presenter_partner_id" class="o_tag o_live_presenter_badge"><img class="o_avatar o_avatar_small" t-att-src="'/web/image/res.partner/' + item.presenter_partner_id[0] + '/avatar_128'" t-att-alt="label(item.presenter_partner_id)"/><t t-out="label(item.presenter_partner_id)"/></span>
+                            <span t-if="item.priority !== '1'" t-att-class="'o_live_priority o_live_priority_' + item.priority" t-att-title="priorityLabel(item)" t-att-aria-label="priorityLabel(item)"><i class="fa fa-flag" aria-hidden="true"/><span class="visually-hidden" t-out="priorityLabel(item)"/></span>
                             <span t-if="!state.editingTypes[item.id] or !item.actual_started_at" class="badge text-bg-light o_live_type_badge"><t t-out="label(item.agenda_type_id)"/></span>
                             <button t-if="item.actual_started_at and !readOnly and !state.editingTypes[item.id]" class="btn btn-link o_live_type_edit" t-on-click="() => this.toggleTypeEditor(item)" title="Change point type" aria-label="Change point type"><i class="fa fa-pencil" aria-hidden="true"/></button>
                             <select t-if="state.editingTypes[item.id] and item.actual_started_at" class="form-select o_live_type" t-att-value="item.agenda_type_id[0]" t-att-disabled="readOnly" t-on-change="(ev) => this.updateItem(item, 'agenda_type_id', ev.target.value)" aria-label="Point type">
                                 <option t-foreach="state.types" t-as="type" t-key="type.id" t-att-value="type.id" t-att-disabled="!type.active"><t t-out="type.name"/><t t-if="!type.active"> (archived)</t></option>
                             </select>
-                            <span t-if="item.priority !== '1'" t-att-class="'o_live_priority o_live_priority_' + item.priority" t-att-title="priorityLabel(item)" t-att-aria-label="priorityLabel(item)"><i class="fa fa-flag" aria-hidden="true"/><span class="visually-hidden" t-out="priorityLabel(item)"/></span>
                             <span class="badge o_live_outcome_badge" t-att-class="outcomeBadgeClass(item)"><t t-out="pointOutcomeLabel(item)"/></span>
-                            <span t-if="item.presenter_partner_id" class="badge text-bg-secondary o_live_presenter_badge"><i class="fa fa-user" aria-hidden="true"/> <t t-out="label(item.presenter_partner_id)"/></span>
                             <div t-if="!readOnly and state.meeting.actual_start_datetime and !state.meeting.actual_end_datetime and canStartPoint(item)" class="o_live_point_timer">
                                 <span t-if="item.actual_started_at" class="badge text-bg-success">Point in progress</span>
                                 <span t-elif="item.has_started" class="badge text-bg-secondary">Point paused</span>
