@@ -298,6 +298,25 @@ class PointWizard(models.TransientModel):
     more_options = fields.Boolean(string="More options")
     deadline = fields.Date()
     estimated_minutes = fields.Integer()
+
+    @api.model
+    def default_get(self, fields_list):
+        defaults = super().default_get(fields_list)
+        if "estimated_minutes" in fields_list and not defaults.get("estimated_minutes"):
+            meeting_id = defaults.get("meeting_id") or self.env.context.get("default_meeting_id")
+            series_id = defaults.get("proposal_series_id") or self.env.context.get("default_proposal_series_id")
+            if series_id:
+                defaults["estimated_minutes"] = self.env["community.meeting.series"].browse(
+                    series_id
+                )._point_estimated_minutes_default()
+            elif meeting_id:
+                meeting = self.env["community.meeting"].browse(meeting_id)
+                defaults["estimated_minutes"] = (
+                    meeting.series_id._point_estimated_minutes_default()
+                    if meeting.series_id
+                    else meeting.company_id.meeting_estimated_minutes
+                )
+        return defaults
     presenter_partner_id = fields.Many2one("res.partner", string="Responsible")
     presenter_loaded = fields.Boolean(default=False, copy=False, readonly=True)
     included = fields.Boolean(readonly=True)
@@ -310,9 +329,16 @@ class PointWizard(models.TransientModel):
     )
     def _compute_scope(self):
         for w in self:
-            parent = w.meeting_id or w.creation_wizard_id or w.proposal_series_id
-            w.series_id = parent.series_id if parent else False
-            w.company_id = parent.company_id if parent else self.env.company
+            parent = w.meeting_id or w.creation_wizard_id
+            if parent:
+                w.series_id = parent.series_id
+                w.company_id = parent.company_id
+            elif w.proposal_series_id:
+                w.series_id = w.proposal_series_id
+                w.company_id = w.proposal_series_id.company_id
+            else:
+                w.series_id = False
+                w.company_id = self.env.company
 
     @api.onchange("topic_id")
     def _onchange_topic_id(self):
@@ -376,7 +402,9 @@ class PointWizard(models.TransientModel):
             "priority": self.priority,
             "deadline": self.deadline,
             "estimated_minutes": self.estimated_minutes or (
-                self.series_id._point_estimated_minutes_default() if self.series_id else 0
+                self.series_id._point_estimated_minutes_default()
+                if self.series_id
+                else self.meeting_id.company_id.meeting_estimated_minutes
             ),
             "followup_allowed_kinds": [(6, 0, self.followup_allowed_kinds.ids)],
             "followup_default_kind": self.followup_default_kind,
@@ -417,6 +445,8 @@ class PointWizard(models.TransientModel):
         if self.estimated_minutes < 0:
             raise ValidationError(_("Estimated minutes cannot be negative."))
         if self.meeting_id:
+            if not self.meeting_id.add_point_allowed:
+                raise ValidationError(_("New points cannot be added to this meeting anymore."))
             if not self.created_item_id:
                 self.created_item_id = self.env["community.meeting.agenda.item"].create(
                     self._item_values(self.meeting_id)

@@ -91,6 +91,21 @@ class MeetingSeriesWizard(models.TransientModel):
         self.step = steps[max(0, steps.index(self.step) - 1)]
         return self._reload()
 
+    time_tracking = fields.Selection(
+        [("inherit", "Company default"), ("on", "On"), ("off", "Off")],
+        default="inherit", required=True,
+    )
+    add_point_policy = fields.Selection(
+        [
+            ("inherit", "Company default"),
+            ("draft", "Draft only"),
+            ("scheduled", "Before it starts"),
+            ("ongoing", "While it runs"),
+        ],
+        default="inherit", required=True,
+    )
+    default_estimated_minutes = fields.Integer(string="Default point estimate (minutes)")
+
     def action_finish(self):
         self.ensure_one()
         self.check_access("write")
@@ -107,6 +122,9 @@ class MeetingSeriesWizard(models.TransientModel):
                 "company_id": self.company_id.id,
                 "active": self.active,
                 "carryover_policy": self.carryover_policy,
+                "time_tracking": self.time_tracking,
+                "add_point_policy": self.add_point_policy,
+                "default_estimated_minutes": self.default_estimated_minutes,
                 "timezone": self.timezone,
                 "duration_hours": self.duration_hours,
                 "attendee_partner_ids": [(6, 0, self.attendee_partner_ids.ids)],
