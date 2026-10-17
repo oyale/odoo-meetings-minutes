@@ -116,3 +116,14 @@ class TestPointWizard(TransactionCase):
     def test_live_add_point_marks_the_context(self):
         action = self.meeting.with_user(self.editor).action_add_point_live()
         self.assertTrue(action["context"]["from_live"])
+
+    def test_proposal_scope_computes_from_series(self):
+        series = self.env["community.meeting.series"].with_user(self.editor).create({"name": "Proposal scope series"})
+        wizard = self.env["community.meeting.point.wizard"].with_user(self.editor).create({
+            "propose": True, "name": "Proposal point", "proposal_series_id": series.id,
+        })
+        self.assertEqual(wizard.series_id, series)
+        self.assertEqual(wizard.company_id, series.company_id)
+        wizard.action_save()
+        topic = self.env["community.meeting.topic"].search([("name", "=", "Proposal point")])
+        self.assertEqual(topic.series_id, series)

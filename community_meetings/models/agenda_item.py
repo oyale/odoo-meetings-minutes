@@ -41,7 +41,7 @@ class CommunityMeetingAgendaItem(models.Model):
         [("pending", "Pending Decision"), ("approved", "Approved"), ("denied", "Denied")],
         string="Decision outcome",
     )
-    deferral_reason = fields.Text()
+    deferral_reason = fields.Text(string="Postponement reason")
     deferral_reason_code = fields.Selection(
         [
             ("blocked_point", "Blocked by another point"),

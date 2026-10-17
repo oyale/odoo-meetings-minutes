@@ -5,7 +5,7 @@
         <field name="arch" type="xml">
             <list create="0" edit="0" delete="0">
                 <field name="origin_meeting_id"/>
-                <field name="origin_model"/>
+                <field name="origin_model" column_invisible="1"/>
                 <field name="origin_name"/>
                 <field name="destination_meeting_id"/>
                 <field name="reason"/>
@@ -28,7 +28,7 @@
                 <sheet>
                     <group>
                         <field name="origin_meeting_id"/>
-                        <field name="origin_model"/>
+                        <field name="origin_model" invisible="1"/>
                         <field name="origin_name"/>
                         <field name="origin_context"/>
                         <field name="destination_meeting_id"/>
@@ -46,11 +46,11 @@
         <field name="name">community.meeting.carryover.wizard.form</field>
         <field name="model">community.meeting.carryover.wizard</field>
         <field name="arch" type="xml">
-            <form string="Follow Up at Another Meeting">
+            <form string="Move to Another Meeting">
                 <group>
-                    <field name="origin_model"/>
-                    <field name="origin_record_id"/>
-                    <field name="origin_meeting_id"/>
+                    <field name="origin_model" invisible="1"/>
+                    <field name="origin_record_id" invisible="1"/>
+                    <field name="origin_meeting_id" readonly="1"/>
                     <field name="company_id" invisible="1"/>
                     <field name="series_id" invisible="1"/>
                     <field name="source_start_datetime" invisible="1"/>
@@ -59,7 +59,7 @@
                     <field name="reason"/>
                 </group>
                 <footer>
-                    <button name="action_request" type="object" string="Request Follow-up" class="oe_highlight"/>
+                    <button name="action_request" type="object" string="Request Move" class="oe_highlight"/>
                     <button string="Cancel" special="cancel"/>
                 </footer>
             </form>
@@ -71,7 +71,7 @@
         <field name="view_mode">list,form</field>
     </record>
     <record id="action_community_meeting_carryover_request" model="ir.actions.act_window">
-        <field name="name">Follow Up at Another Meeting</field>
+        <field name="name">Move to Another Meeting</field>
         <field name="res_model">community.meeting.carryover.wizard</field>
         <field name="view_mode">form</field>
         <field name="view_id" ref="view_community_meeting_carryover_wizard"/>
