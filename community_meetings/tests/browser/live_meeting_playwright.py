@@ -82,7 +82,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             }])
         self.rpc("community.meeting", "action_schedule", [[self.meeting_id]])
         self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
-        self.page.get_by_role("button", name="Open Live Meeting").click(timeout=30000)
+        self.page.get_by_role("button", name="Open Meeting").click(timeout=30000)
         try:
             self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
         except Exception as error:
@@ -174,7 +174,10 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         )["review_next_meeting"])
 
     def test_live_result_can_be_undone_and_manual_actual_time_is_hidden(self):
-        self.page.get_by_text("Minutes secretary", exact=True).wait_for()
+        header = self.page.locator(".o_live_header_primary")
+        expect(header.get_by_label("Minutes secretary")).to_be_visible()
+        expect(self.page.get_by_text("Estimated duration", exact=True)).not_to_be_visible()
+        self.page.locator(".o_live_more_details > summary").click()
         expect(self.page.get_by_text("Estimated duration", exact=True)).to_be_visible()
         card = self.card("discussion")
         card.get_by_role("button", name="Done").click()
@@ -193,7 +196,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         first = self.card("information", begin=False)
         second = self.card("discussion", begin=False)
         first.get_by_role("button", name="Begin point").click()
-        expect(first.get_by_text("Point in progress", exact=True)).to_be_visible()
+        expect(first.locator(".o_live_point_timer_status")).to_have_attribute("aria-label", "Point in progress")
         self.wait_timer(self.item_ids["information"], True)
         started = self.record(
             "community.meeting.agenda.item", self.item_ids["information"],
@@ -222,7 +225,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.assertGreaterEqual(first_seconds, 120)
 
         second.get_by_role("button", name="Begin point").click()
-        expect(second.get_by_text("Point in progress", exact=True)).to_be_visible()
+        expect(second.locator(".o_live_point_timer_status")).to_have_attribute("aria-label", "Point in progress")
         self.page.get_by_role("button", name="Previous agenda point").click()
         first.get_by_role("button", name="Resume point").click()
         expect(first.get_by_role("button", name="Pause point")).to_be_visible()
@@ -291,7 +294,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(record_actions.get_by_role("button", name="Add dissent")).to_be_visible()
         expect(record_actions.get_by_role("button", name="Add agreement")).to_be_visible()
         card.get_by_role("button", name="Pause point").click()
-        expect(card.get_by_text("Point paused", exact=True)).to_be_visible()
+        expect(card.locator(".o_live_point_timer_status")).to_have_attribute("aria-label", "Point paused")
         self.assertEqual(
             card.locator('[contenteditable="true"][aria-label="Discussion notes"]').count(),
             0,
@@ -310,7 +313,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             expect(card.get_by_role("button", name="Pause point")).to_be_visible()
             self.assertEqual(editor.count(), 1, "Discussion editor was duplicated after resuming a point")
             card.get_by_role("button", name="Pause point").click()
-            expect(card.get_by_text("Point paused", exact=True)).to_be_visible()
+            expect(card.locator(".o_live_point_timer_status")).to_have_attribute("aria-label", "Point paused")
             self.assertEqual(editor.count(), 0, "A paused point must show notes read-only")
 
     def test_live_meeting_survives_browser_refresh(self):
@@ -353,7 +356,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             "minutes_draft",
         )
         self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
-        self.page.get_by_role("button", name="Open Live Meeting").click(timeout=30000)
+        self.page.get_by_role("button", name="Open Meeting").click(timeout=30000)
         self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
         self.page.get_by_role("button", name="Expand / Collapse all").click()
         card = self.card("discussion", begin=False)
@@ -382,7 +385,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         }])
         self.rpc("community.meeting", "action_schedule", [[meeting_id]])
         self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, meeting_id))
-        self.page.get_by_role("button", name="Open Live Meeting").click(timeout=30000)
+        self.page.get_by_role("button", name="Open Meeting").click(timeout=30000)
         self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
         self.page.get_by_role("button", name="Expand / Collapse all").click()
         expect(self.page.locator('[aria-label="Next meeting date"]')).to_be_visible()
@@ -402,18 +405,18 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.rpc("community.meeting.agenda.item", "create", [{"meeting_id": current, "name": "Approve previous minutes", "agenda_type_id": agenda_type}])
         self.rpc("community.meeting", "action_schedule", [[current]])
         self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, current))
-        self.page.get_by_role("button", name="Open Live Meeting").click()
+        self.page.get_by_role("button", name="Open Meeting").click()
         expect(self.page.locator(".o_community_live_meeting")).to_be_visible()
         if self.page.locator(".o_live_expand").first.get_attribute("aria-expanded") == "false":
             self.page.locator(".o_live_expand").first.click()
         self.page.get_by_role("button", name="Open minutes", exact=True).click()
         expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_be_visible()
         self.page.get_by_role("button", name="Approve Minutes", exact=True).click()
-        expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_have_count(0)
+        expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_have_count(0, timeout=30000)
         self.assertEqual(self.record("community.meeting", self.meeting_id, ["state"])["state"], "approved")
         previous_code = self.record("community.meeting", self.meeting_id, ["code"])["code"]
         self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, current))
-        self.page.get_by_role("button", name="Open Live Meeting").click()
+        self.page.get_by_role("button", name="Open Meeting").click()
         self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
         if self.page.locator(".o_live_expand").first.get_attribute("aria-expanded") == "false":
             self.page.locator(".o_live_expand").first.click()
@@ -441,7 +444,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         dialog = self.page.get_by_role("dialog")
         expect(dialog.locator('.o_field_widget[name="destination_meeting_id"]')).to_have_count(0)
         expect(dialog.locator('.o_field_widget[name="destination_series_id"] input')).to_have_value(series_name)
-        dialog.get_by_role("button", name="Request Follow-up", exact=True).click()
+        dialog.get_by_role("button", name="Request Move", exact=True).click()
         expect(dialog).not_to_be_visible()
         transfers = self.rpc("community.meeting.carryover", "search_read", [[("origin_meeting_id", "=", self.meeting_id), ("origin_model", "=", "resolution")]], {"fields": ["destination_series_id", "destination_meeting_id"]})
         self.assertEqual(transfers[0]["destination_series_id"][0], series)
@@ -465,7 +468,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             page.locator('button[type="submit"]').click()
             page.wait_for_url("**/odoo**")
             page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
-            page.get_by_role("button", name="Open Live Meeting").click()
+            page.get_by_role("button", name="Open Meeting").click()
             expect(page.get_by_role("button", name="Approve Minutes", exact=True)).to_be_visible()
             expect(page.get_by_role("button", name="Add Point", exact=True)).to_have_count(0)
             expect(page.locator('[contenteditable="true"]')).to_have_count(0)
@@ -488,9 +491,10 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         card.get_by_role("button", name="Add follow-up", exact=True).click()
         form = card.locator(".o_live_task_form")
         form.get_by_label("Task name").fill("Shared native to-do")
-        form.get_by_text("Several responsible people", exact=True).click()
+        form.get_by_text("Assign to multiple people", exact=False).click()
         form.get_by_label("Responsible people").select_option([str(owner), str(reviewer)])
         form.get_by_role("button", name="Add follow-up", exact=True).click()
+        expect(form).to_have_count(0)
         row = card.locator(".o_live_followup_task").last
         expect(row).to_be_visible()
         expect(row.get_by_label("Task name")).to_have_value("Shared native to-do")
@@ -502,7 +506,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         row = card.locator(".o_live_followup_task").last
         expect(row).to_be_visible()
         expect(row.get_by_label("Task name")).to_have_value("Shared native to-do")
-        row.get_by_text("Several responsible people", exact=True).click()
+        row.get_by_text("Multiple people", exact=False).click()
         row.get_by_label("Responsible people").select_option([str(owner)])
         expect(row.get_by_label("Responsible people").locator("option:checked")).to_have_count(1)
 
@@ -532,6 +536,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.page.get_by_label("Meeting name").fill("Paused meeting header edited")
         self.page.get_by_label("Meeting name").press("Tab")
         self.page.get_by_label("Minutes secretary").select_option(label=LOGIN)
+        self.page.locator(".o_live_more_details > summary").click()
         self.page.get_by_label("Location").fill("Board Room")
         self.page.get_by_label("Location").press("Tab")
         self.page.get_by_label("Meeting link").fill("https://meet.example.test/board")
@@ -547,6 +552,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.assertEqual(saved["location"], "Board Room")
         self.assertEqual(saved["meeting_url"], "https://meet.example.test/board")
         self.page.reload(wait_until="domcontentloaded")
+        self.page.locator(".o_live_more_details > summary").click()
         expect(self.page.get_by_label("Meeting name")).to_have_value("Paused meeting header edited")
         expect(self.page.get_by_label("Location", exact=True)).to_have_value("Board Room")
         expect(self.page.get_by_label("Minutes secretary").locator("option:checked")).to_have_text(LOGIN)

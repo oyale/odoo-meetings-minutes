@@ -72,10 +72,17 @@ ACTIONS = {
     "test_focus_mode_presents_one_point_at_a_time": [
         "switch to one-point focus mode",
         "navigate between focused points",
+        "hide meeting notes and editor controls in focus mode",
+        "check mobile focus layout for overflow",
         "return to full agenda",
+    ],
+    "test_next_meeting_datetime_is_primary_in_agenda": [
+        "see next meeting date without expanding its point",
+        "keep next meeting date prominent in focus mode",
     ],
     "test_discussion_notes_can_expand_and_description_stays_visible": [
         "read point description without another disclosure",
+        "see estimated point duration in collapsed header",
         "enlarge discussion notes editor",
         "restore compact notes editor",
     ],
@@ -158,6 +165,10 @@ ACTIONS = {
     "test_add_point_from_live_and_cancel": [
         "add rich point from live",
         "cancel point wizard without side effects",
+    ],
+    "test_live_view_is_available_in_draft_and_respects_add_policy": [
+        "open draft meeting workspace",
+        "respect series point-add policy",
     ],
     "test_meetings_root_opens_list_and_preserves_submenus": [
         "open meeting list from root menu",
@@ -360,6 +371,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         checkbox = self.card("information").get_by_role(
             "checkbox", name="Review at next meeting"
         )
+        self.assertTrue(checkbox.evaluate("el => Boolean(el.closest('.o_live_point_footer'))"))
         checkbox.check()
         expect(checkbox).to_be_checked()
         expect(checkbox).to_be_enabled()
@@ -456,7 +468,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "Session notes persisted",
         )
         self.open_form()
-        self.page.get_by_role("button", name="Open Live Meeting").click()
+        self.page.get_by_role("button", name="Open Meeting").click()
         self.page.get_by_role("button", name="Expand / Collapse all").click()
         expect(
             self.card("discussion").locator(
@@ -541,6 +553,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
     def test_dissent_editing(self):
         self.test_dissent_author_reason_and_statement_are_usable()
         row = self.card("discussion").locator(".o_live_record_list li").first
+        row.get_by_text("Edit details", exact=True).click()
         row.get_by_label("Author", exact=True).fill("Grace Hopper")
         row.get_by_label("Author", exact=True).press("Tab")
         record_id = self.related("community.meeting.dissent", "discussion")
@@ -550,7 +563,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "author_display_name",
             "Grace Hopper",
         )
-        row.get_by_label("Statement type").select_option(label="Dissent")
+        row.get_by_label("Dissent reason").select_option(label="Dissent")
         dissent_reason = self.rpc(
             "community.meeting.dissent.reason", "search", [[("name", "=", "Dissent")]], {"limit": 1}
         )[0]
@@ -632,6 +645,9 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
 
     def test_session_lifecycle(self):
+        self.rpc("community.meeting", "write", [[self.meeting_id], {"duration_minutes": 95}])
+        self.page.reload(wait_until="domcontentloaded")
+        expect(self.page.locator(".o_live_duration_chip")).to_contain_text("01:35")
         self.page.get_by_role("button", name="Start Meeting", exact=True).click()
         expect(
             self.page.get_by_role("button", name="Finish Meeting", exact=True)
@@ -642,6 +658,14 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             )["actual_start_datetime"]
         )
         self.page.get_by_role("button", name="Finish Meeting", exact=True).click()
+        dialog = self.page.get_by_role("dialog")
+        expect(dialog).to_contain_text("agenda point(s) are not resolved")
+        expect(dialog).to_contain_text("Browser Information case")
+        dialog.get_by_role("button", name="Continue meeting", exact=True).click()
+        expect(self.page.get_by_role("button", name="Finish Meeting", exact=True)).to_be_visible()
+        self.assertEqual(self.record("community.meeting", self.meeting_id, ["state"])["state"], "scheduled")
+        self.page.get_by_role("button", name="Finish Meeting", exact=True).click()
+        self.page.get_by_role("dialog").get_by_role("button", name="Finish meeting", exact=True).click()
         expect(
             self.page.get_by_role("button", name="Prepare Minutes", exact=True)
         ).to_be_visible()
@@ -654,6 +678,9 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         self.page.get_by_role(
             "button", name="Record as Already Held", exact=True
         ).click()
+        dialog = self.page.get_by_role("dialog")
+        expect(dialog).to_contain_text("are not resolved")
+        dialog.get_by_role("button", name="Finish meeting", exact=True).click()
         expect(
             self.page.get_by_role("button", name="Prepare Minutes", exact=True)
         ).to_be_visible()
@@ -734,6 +761,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
                 "meeting_id": self.meeting_id,
                 "agenda_item_id": discussion_item,
                 "name": "Promoted origin follow-up",
+                "description": "Prior follow-up discussion and owner context.",
             }],
         )
         self.rpc(
@@ -786,10 +814,25 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         preview = relations.get_by_role("region", name="Related: Outside related point")
         expect(preview).to_be_visible()
         expect(preview).to_contain_text("Background from the related point")
+        expect(preview).to_contain_text("From meeting")
+        expect(preview.locator(".o_live_relation_source_title")).to_contain_text("Outside relation")
+        expect(preview.locator(".o_live_relation_source_facts")).to_contain_text("Not set")
+        expect(preview.get_by_role("button", name="Open minutes")).to_be_visible()
         origin_chip = relations.locator(
             ".o_live_related_point", has_text="Outside origin point"
         )
         expect(origin_chip.first).to_have_js_property("tagName", "BUTTON")
+        followup_chip = relations.locator(
+            ".o_live_related_point", has_text="Promoted origin follow-up"
+        )
+        followup_chip.click()
+        followup_preview = relations.get_by_role(
+            "region", name="Follow-up details: Promoted origin follow-up"
+        )
+        expect(followup_preview).to_contain_text("Prior follow-up discussion and owner context")
+        expect(followup_preview).to_contain_text("From meeting")
+        expect(followup_preview.locator(".o_live_relation_source_heading")).to_contain_text("From meeting")
+        expect(followup_preview.get_by_role("button", name="Open minutes")).to_be_visible()
         relations.locator(
             ".o_live_related_point", has_text="Browser Decision case"
         ).first.click()
@@ -824,6 +867,25 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         self.page.get_by_role("button", name="Next agenda point").click()
         expect(cards).to_have_count(1)
         expect(cards.first).to_contain_text("Browser Discussion case")
+        self.page.get_by_role("button", name="Start Meeting").click()
+        cards.first.get_by_role("button", name="Begin point").click()
+        expect(cards.first.locator(".o_live_discussion_notes")).to_be_visible()
+        expect(cards.first.get_by_role("button", name="Edit point options")).to_be_visible()
+        next_date = self.page.get_by_label("Next meeting date", exact=True)
+        if next_date.count():
+            expect(next_date).to_be_disabled()
+        footer = cards.first.locator(".o_live_point_footer")
+        if footer.count():
+            card_bottom = cards.first.evaluate("el => el.getBoundingClientRect().bottom")
+            footer_bottom = footer.evaluate("el => el.getBoundingClientRect().bottom")
+            self.assertLessEqual(footer_bottom, card_bottom + 1, "Focus card border must contain the point action footer")
+        expect(cards.first.get_by_role("button", name="Enlarge editor")).to_have_count(0)
+        expect(self.page.locator(".o_live_minutes")).to_be_hidden()
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        main = self.page.locator("main.o_community_live_meeting")
+        overflow = main.evaluate("el => ({width: el.clientWidth, scrollWidth: el.scrollWidth})")
+        self.assertLessEqual(overflow["scrollWidth"] - overflow["width"], 1, overflow)
+        self.page.set_viewport_size({"width": 1440, "height": 1000})
         self.page.get_by_role("button", name="Show full agenda").click()
         expect(agenda).not_to_have_class(re.compile("o_live_focus_mode"))
         expect(cards).to_have_count(4)
@@ -832,12 +894,14 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         discussion_id = self.item_ids["discussion"]
         self.rpc("community.meeting.agenda.item", "write", [[discussion_id], {
             "description": "<p>Background everyone should read before the discussion.</p>",
+            "estimated_minutes": 25,
         }])
         self.page.reload(wait_until="domcontentloaded")
         card = self.card("discussion")
         description = card.locator(".o_live_planned")
         expect(description).to_be_visible()
         expect(description).to_contain_text("Background everyone should read")
+        expect(card.locator(".o_live_estimate_badge")).to_contain_text("Est. 25 min")
         self.assertEqual(description.locator("details, summary").count(), 0)
         card.locator(".o_live_expand").click()
         expect(card.locator(".o_live_expand")).to_have_attribute("aria-expanded", "false")
@@ -850,6 +914,52 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         self.assertGreaterEqual(editor.bounding_box()["height"], 300)
         card.get_by_role("button", name="Reduce editor").click()
         expect(editor).not_to_have_class(re.compile("o_live_richtext_expanded"))
+
+    def test_next_meeting_datetime_is_primary_in_agenda(self):
+        next_meeting_type = self.rpc(
+            "community.meeting.agenda.type", "search",
+            [[("behavior", "=", "next_meeting"), ("active", "=", True)]],
+            {"limit": 1},
+        )[0]
+        self.rpc("community.meeting.agenda.item", "create", [{
+            "meeting_id": self.meeting_id,
+            "name": "Browser Next Meeting case",
+            "agenda_type_id": next_meeting_type,
+            "sequence": 99,
+            "next_meeting_datetime": "2027-04-12 10:30:00",
+            "estimated_minutes": 15,
+        }])
+        self.page.reload(wait_until="domcontentloaded")
+        card = self.page.locator(".o_live_agenda_card").filter(
+            has_text="Browser Next Meeting case"
+        )
+        feature = card.locator(".o_live_next_meeting_feature")
+        expect(feature).to_be_visible()
+        expect(feature.get_by_label("Next meeting date")).to_be_visible()
+        expect(feature.get_by_label("Next meeting date")).to_be_disabled()
+        expect(card.locator(".o_live_estimate_badge")).to_contain_text("Est. 15 min")
+        self.assertEqual(
+            card.locator(".o_live_card_header").evaluate(
+                "el => el.nextElementSibling?.classList.contains('o_live_next_meeting_feature')"
+            ),
+            True,
+        )
+        card.locator(".o_live_expand").click()
+        self.page.get_by_role("button", name="Focus on one point").click()
+        focused = self.page.locator(".o_live_agenda_card")
+        expect(focused).to_have_count(1)
+        expect(focused.locator(".o_live_next_meeting_feature")).to_be_visible()
+        next_date = focused.get_by_label("Next meeting date")
+        expect(next_date).to_be_visible()
+        if self.page.get_by_role("button", name="Start Meeting", exact=True).count():
+            self.page.get_by_role("button", name="Start Meeting", exact=True).click()
+            expect(next_date).to_be_disabled()
+            focused.get_by_role("button", name="Begin point", exact=True).click()
+            expect(next_date).to_be_enabled()
+            focused.get_by_role("button", name="Pause point", exact=True).click()
+            expect(next_date).to_be_disabled()
+            focused.get_by_role("button", name="Resume point", exact=True).click()
+            expect(next_date).to_be_enabled()
 
     def test_form_edit_and_schedule(self):
         # Separate draft fixture: the standard case is already scheduled.
@@ -864,10 +974,11 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
         self.page.locator('.o_field_widget[name="location"] input').fill("Browser room")
         self.page.get_by_role("button", name="Schedule", exact=True).click()
-        expect(
-            self.page.get_by_role("button", name="Open Live Meeting")
-        ).to_be_visible()
+        deadline = time.monotonic() + 30
         record = self.record("community.meeting", draft, ["location", "state"])
+        while record["state"] != "scheduled" and time.monotonic() < deadline:
+            self.page.wait_for_timeout(250)
+            record = self.record("community.meeting", draft, ["location", "state"])
         self.assertEqual(
             (record["location"], record["state"]), ("Browser room", "scheduled")
         )
@@ -966,14 +1077,14 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             ],
         )
         self.open_form()
-        self.page.get_by_role("button", name="Open Live Meeting").click()
+        self.page.get_by_role("button", name="Open Meeting").click()
         self.page.get_by_role("button", name="Expand / Collapse all").click()
         card = self.card("discussion")
         card.get_by_role("button", name="Postpone agenda point").click()
         card.get_by_label("Reason for postponing").fill("Review next week")
         card.get_by_role("button", name="Move to another meeting series").click()
         dialog = self.page.get_by_role("dialog")
-        dialog.get_by_role("button", name="Request Follow-up", exact=True).click()
+        dialog.get_by_role("button", name="Request Move", exact=True).click()
         expect(dialog).not_to_be_visible()
         transfers = self.rpc(
             "community.meeting.carryover",
@@ -1147,7 +1258,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         expect(self.page.locator(".o_live_priority_3")).to_have_attribute(
             "aria-label", "Critical"
         )
-        expect(self.page.locator(".o_live_point_meta")).to_contain_text("20 min")
+        expect(self.page.locator(".o_live_estimate_badge")).to_contain_text("Est. 20 min")
         expect(self.page.locator(".o_live_planned")).to_contain_text("Background")
 
     def test_followup_points_are_offered_in_new_meeting_wizard(self):
@@ -1294,6 +1405,27 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         card.locator(".o_live_expand").click()
         expect(card.locator(".o_live_planned")).to_contain_text("Detailed topic")
 
+    def test_live_view_is_available_in_draft_and_respects_add_policy(self):
+        series = self.rpc(
+            "community.meeting.series",
+            "create",
+            [{"name": "Browser draft-only " + uuid.uuid4().hex[:8], "add_point_policy": "draft"}],
+        )
+        self.rpc("community.meeting", "write", [[self.meeting_id], {"series_id": series}])
+        self.open_form()
+        self.page.get_by_role("button", name="Open Meeting").click()
+        expect(self.page.get_by_role("button", name="Add Point", exact=True)).to_have_count(0)
+
+        draft = self.rpc("community.meeting", "create", [{
+            "name": "Draft workspace " + uuid.uuid4().hex[:8],
+            "start_datetime": "2030-01-01 10:00:00",
+        }])
+        self.addCleanup(self.delete_draft, draft)
+        self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, draft))
+        self.page.get_by_role("button", name="Open Meeting").click()
+        expect(self.page.locator('.o_live_header input[aria-label="Meeting name"]')).to_have_value(re.compile("Draft workspace"))
+        expect(self.page.get_by_role("button", name="Add Point", exact=True)).to_be_visible()
+
     def test_meetings_root_opens_list_and_preserves_submenus(self):
         self.page.goto(BASE_URL + "/web")
         self.page.locator(".o_navbar_apps_menu").click()
@@ -1332,6 +1464,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         form = card.locator(".o_live_task_form")
         form.get_by_label("Task name").fill("Native meeting follow-up")
         form.get_by_role("button", name="Add follow-up").click()
+        expect(form).to_have_count(0)
         row = card.locator('li:has(select[aria-label="Task status"])').last
         expect(row).to_be_visible()
         expect(row.locator(".o_live_followup_task_title")).to_be_visible()
@@ -1351,6 +1484,8 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "activity",
         )
 
+        card.get_by_role("button", name="Add follow-up", exact=True).click()
+        expect(form).to_be_visible()
         form.get_by_label("Task name").fill("Odoo call activity")
         activity_type = next(
             (
@@ -1381,6 +1516,8 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             activity_type,
         )
 
+        card.get_by_role("button", name="Add follow-up", exact=True).click()
+        expect(form).to_be_visible()
         form.get_by_label("Task name").fill("Native Odoo to-do")
         native_todo = self.rpc(
             "mail.activity.type",
@@ -1564,6 +1701,8 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "PRIVATE_NOT_FOR_PUBLICATION"
         )
         self.page.get_by_role("button", name="Finish Meeting", exact=True).click()
+        expect(self.page.get_by_role("dialog")).to_contain_text("agenda point(s) are not resolved")
+        self.page.get_by_role("dialog").get_by_role("button", name="Finish meeting", exact=True).click()
         expect(self.page.get_by_role("button", name="Prepare Minutes", exact=True)).to_be_visible()
         self.page.get_by_role("button", name="Prepare Minutes", exact=True).click()
         self.wait_field("community.meeting", self.meeting_id, "state", "minutes_draft")

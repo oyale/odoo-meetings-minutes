@@ -240,9 +240,6 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(action["tag"], "community_meetings.live_meeting")
         self.assertEqual(action["params"]["meeting_id"], meeting.id)
         self.assertFalse(meeting.get_live_capabilities()["can_edit"])
-        draft = self.env["community.meeting"].create({"name": "Draft live view", "start_datetime": "2026-11-03 10:00:00"})
-        with self.assertRaises(UserError):
-            draft.action_open_live_meeting()
 
     def test_meeting_code_falls_back_without_colliding(self):
         sequence = self.env["ir.sequence"].search([("code", "=", "community.meeting")])

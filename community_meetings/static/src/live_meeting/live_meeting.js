@@ -7,6 +7,7 @@ import { registry } from "@web/core/registry";
 import { loadBundle } from "@web/core/assets";
 import { ensureJQuery } from "@web/core/ensure_jquery";
 import { useService } from "@web/core/utils/hooks";
+import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 
 const { DateTime } = luxon;
 
@@ -41,7 +42,8 @@ export class LiveMeeting extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
-        this.state = useState({ loading: true, saving: 0, saveError: false, saveErrorDetail: "", unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, headerDraft: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissentReasons: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "activity", activity_type_id: false }, expanded: {}, expandedNotes: {}, relatedTopicOpenId: false, focusMode: false, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], pendingMinutes: [], minutesApprovals: [], defaultOwner: false });
+        this.dialog = useService("dialog");
+        this.state = useState({ loading: true, saving: 0, saveError: false, saveErrorDetail: "", unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, headerDraft: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissentReasons: [], dissents: [], actions: [], relatedActionsById: {}, resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "activity", activity_type_id: false }, expanded: {}, expandedNotes: {}, relatedTopicOpenId: false, relatedActionOpenId: false, focusMode: false, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], pendingMinutes: [], minutesApprovals: [], defaultOwner: false });
         this.pendingWrites = new Map();
         this.editors = new Map();
         this.editorTimers = new Map();
@@ -76,6 +78,7 @@ export class LiveMeeting extends Component {
     get locked() { return !this.state.capabilities?.can_edit || ["approved", "cancelled"].includes(this.state.meeting.state); }
     get meetingPaused() { return Boolean(this.state.meeting.actual_paused_at); }
     get readOnly() { return this.locked || this.meetingPaused; }
+    get canAddPoint() { return Boolean(this.state.capabilities?.can_add_point); }
     get draftingMinutes() { return ["held", "minutes_draft"].includes(this.state.meeting.state); }
     get hasUnsavedEditors() { return Object.values(this.state.unsavedEditors).some(Boolean); }
 
@@ -85,8 +88,7 @@ export class LiveMeeting extends Component {
             this.notification.add(_t("Could not identify the meeting to open. Return to the Meetings list and open it again."), { type: "danger" });
             return;
         }
-        this.state.capabilities = await this.orm.call("community.meeting", "get_live_capabilities", [[this.meetingId]]);
-        this.canApproveMinutes = this.state.capabilities.can_approve;
+        await this.refreshCapabilities();
         const editorial = this.state.capabilities.can_view_editorial;
         const [meetings, items, types, dissents, actions, resolutions, privateNotes] = await Promise.all([
             this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "company_id", "start_datetime", "end_datetime", "actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_end_datetime", "actual_duration_minutes", "organizer_id", "secretary_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id", "duration_minutes", "coordinator_role_label", "secretary_role_label"]),
@@ -117,7 +119,7 @@ export class LiveMeeting extends Component {
         this.state.dissents = dissents;
         this.state.defaultOwner = (await this.orm.call("community.meeting.action", "default_get", [["responsible_user_id"]])).responsible_user_id;
         const topicIds = items.map((i) => i.topic_id?.[0]).filter(Boolean);
-        this.state.actions = await this.orm.searchRead("community.meeting.action", [["topic_id", "in", topicIds]], ["agenda_item_id", "topic_id", "name", "description", "responsible_user_id", "responsible_user_ids", "deadline", "state", "followup_kind", "followup_activity_type_id", "followup_activity_id", "followup_activity_completed_on"], { order: "deadline, id" });
+        this.state.actions = await this.orm.searchRead("community.meeting.action", [["topic_id", "in", topicIds]], ["agenda_item_id", "topic_id", "meeting_id", "name", "description", "responsible_user_id", "responsible_user_ids", "deadline", "state", "followup_kind", "followup_activity_type_id", "followup_activity_id", "followup_activity_completed_on"], { order: "deadline, id" });
         const meetingTopics = await this.orm.searchRead(
             "community.meeting.topic",
             [["id", "in", topicIds]],
@@ -134,8 +136,50 @@ export class LiveMeeting extends Component {
                   "community.meeting.topic", [["id", "in", extraTopicIds]], ["name", "description", "state", "outcome", "priority", "deadline", "estimated_minutes", "presenter_partner_id", "series_id"]
               )
             : [];
+        const topicRecords = [...meetingTopics, ...extraTopics];
+        const originActionIds = [...new Set(topicRecords.map((topic) => topic.origin_action_id?.[0]).filter(Boolean))];
+        const relatedActions = originActionIds.length
+            ? await this.orm.searchRead(
+                  "community.meeting.action", [["id", "in", originActionIds]],
+                  ["name", "description", "meeting_id", "deadline", "state", "followup_kind", "followup_activity_type_id", "responsible_user_id", "responsible_user_ids"],
+              )
+            : [];
+        const participations = topicRecords.length
+            ? await this.orm.searchRead(
+                  "community.meeting.agenda.item", [["topic_id", "in", topicRecords.map((topic) => topic.id)]],
+                  ["topic_id", "meeting_id"], { order: "id" },
+              )
+            : [];
+        const sourceMeetingIds = [...new Set([
+            this.meetingId,
+            ...participations.map((item) => item.meeting_id?.[0]).filter(Boolean),
+            ...relatedActions.map((action) => action.meeting_id?.[0]).filter(Boolean),
+        ])];
+        const sourceMeetings = sourceMeetingIds.length
+            ? await this.orm.searchRead(
+                  "community.meeting", [["id", "in", sourceMeetingIds]],
+                  ["name", "code", "state", "start_datetime", "meeting_url", "series_id", "location", "duration_minutes"],
+              )
+            : [];
+        const meetingById = Object.fromEntries(sourceMeetings.map((meeting) => [meeting.id, meeting]));
+        const sourceMeetingByTopic = {};
+        for (const participation of participations) {
+            const topicId = participation.topic_id?.[0];
+            const sourceMeeting = meetingById[participation.meeting_id?.[0]];
+            if (topicId && sourceMeeting && !sourceMeetingByTopic[topicId]) {
+                sourceMeetingByTopic[topicId] = sourceMeeting;
+            }
+        }
+        for (const topic of topicRecords) topic.sourceMeeting = sourceMeetingByTopic[topic.id] || false;
+        const actionById = Object.fromEntries(
+            [...this.state.actions, ...relatedActions].map((action) => [action.id, action])
+        );
+        for (const action of Object.values(actionById)) {
+            action.sourceMeeting = meetingById[action.meeting_id?.[0]] || false;
+        }
+        this.state.relatedActionsById = actionById;
         this.state.topicsById = Object.fromEntries(
-            [...meetingTopics, ...extraTopics].map((topic) => [topic.id, topic])
+            topicRecords.map((topic) => [topic.id, topic])
         );
         this.state.incoming = this.state.capabilities.can_edit ? await this.orm.searchRead("community.meeting.carryover", [["destination_meeting_id", "=", this.meetingId], ["status", "in", ["pending", "proposed"]]], ["origin_name", "origin_meeting_id", "reason"]) : [];
         this.state.pendingMinutes = await this.orm.call("community.meeting", "get_pending_minutes_for_approval", [[this.meetingId]]);
@@ -146,8 +190,16 @@ export class LiveMeeting extends Component {
         this.state.expanded = Object.fromEntries(items.map((item, index) => [item.id, index === 0]));
         this.state.expandedNotes = {};
         this.state.relatedTopicOpenId = false;
+        this.state.relatedActionOpenId = false;
         this.state.activeItemId = items[0]?.id || false;
         this.state.loading = false;
+    }
+
+    async refreshCapabilities() {
+        this.state.capabilities = await this.orm.call(
+            "community.meeting", "get_live_capabilities", [[this.meetingId]]
+        );
+        this.canApproveMinutes = this.state.capabilities.can_approve;
     }
 
     label(value) { return Array.isArray(value) ? value[1] : (value || ""); }
@@ -175,7 +227,11 @@ export class LiveMeeting extends Component {
         return topic?.origin_topic_id ? this.topicById(topic.origin_topic_id[0]) : false;
     }
     originActionName(item) {
-        return this.topicById(item.topic_id?.[0])?.origin_action_id?.[1] || "";
+        return this.originAction(item)?.name || this.topicById(item.topic_id?.[0])?.origin_action_id?.[1] || "";
+    }
+    originAction(item) {
+        const reference = this.topicById(item.topic_id?.[0])?.origin_action_id;
+        return reference ? this.state.relatedActionsById?.[reference[0]] || { id: reference[0], name: reference[1] } : false;
     }
     hasPointRelations(item) {
         return Boolean(
@@ -193,17 +249,29 @@ export class LiveMeeting extends Component {
         return topic.state === "proposed" ? _t("Proposed") : _t("Open");
     }
     toggleRelatedTopic(topicId) {
+        this.state.relatedActionOpenId = false;
         this.state.relatedTopicOpenId = this.state.relatedTopicOpenId === topicId ? false : topicId;
+    }
+    toggleRelatedAction(actionId) {
+        this.state.relatedTopicOpenId = false;
+        this.state.relatedActionOpenId = this.state.relatedActionOpenId === actionId ? false : actionId;
     }
     jumpToItem(itemId) {
         const item = this.state.items.find((row) => row.id === itemId);
         if (!item) return;
         this.state.relatedTopicOpenId = false;
+        this.state.relatedActionOpenId = false;
         this.state.activeItemId = item.id;
         this.state.expanded[item.id] = true;
         document.getElementById(`agenda-card-${item.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
     followupChoices(item) { return (this.followupDefaults(item).allowed_kinds || []).map(kind => ({ kind, label: this.followupKindLabel({followup_kind: kind}) })); }
+    supportsMultipleOwners(kind) { return ["activity", "project_task", "project_todo"].includes(kind); }
+    multipleOwnerHelp(kind) {
+        return kind === "activity"
+            ? _t("Odoo creates a separate activity for each person.")
+            : _t("All selected people are assigned to the same task.");
+    }
     actionActivityType(action) {
         return this.state.activityTypes.find(
             (type) => type.id === action.followup_activity_type_id?.[0]
@@ -295,8 +363,16 @@ export class LiveMeeting extends Component {
     attendees() {
         return this.state.attendees.map((partner) => partner.name).join(", ") || _t("No attendees listed");
     }
+    get timingEnabled() { return Boolean(this.state.capabilities?.time_tracking); }
     canEditDiscussion(item) {
-        return !this.locked && (this.draftingMinutes || (!this.meetingPaused && Boolean(item.actual_started_at)));
+        if (this.locked) return false;
+        if (!this.timingEnabled) return !this.meetingPaused;
+        return this.draftingMinutes || (!this.meetingPaused && Boolean(item.actual_started_at));
+    }
+    canEditNextMeetingDate(item) {
+        if (this.locked || this.state.meeting.state !== "scheduled" || this.meetingPaused) return false;
+        if (!this.timingEnabled) return true;
+        return Boolean(this.state.meeting.actual_start_datetime && !this.state.meeting.actual_end_datetime && item.actual_started_at);
     }
     async saveHeaderField(field, value) {
         if (this.locked) return;
@@ -327,7 +403,7 @@ export class LiveMeeting extends Component {
             const results = await this.orm.searchRead("res.partner", [["name", "ilike", value]], ["name"], { order: "name", limit: 20 });
             if (token === this.partnerSearchToken) this.state.partnerResults = results;
         } catch (error) {
-            if (token === this.partnerSearchToken) this.notification.add("Contacts could not be searched.", { type: "danger" });
+            if (token === this.partnerSearchToken) this.notification.add(_t("Contacts could not be searched."), { type: "danger" });
         }
     }
     toggleAttendee(partnerId) {
@@ -370,6 +446,17 @@ export class LiveMeeting extends Component {
             : value === "denied" ? "text-bg-danger"
                 : value === "deferred" ? "text-bg-warning" : "text-bg-secondary";
     }
+    outcomeIcon(item) {
+        const value = this.pointOutcome(item);
+        return value === "approved" || value === "closed" || value === "discussed" ? "fa-check-circle"
+            : value === "denied" ? "fa-times-circle"
+                : value === "deferred" ? "fa-pause-circle"
+                    : value === "in_progress" ? "fa-play-circle" : "fa-clock-o";
+    }
+    typeIcon(item) {
+        return ({ information: "fa-info-circle", discussion: "fa-comments-o", decision: "fa-gavel", todo: "fa-check-square-o", next_meeting: "fa-calendar", minutes_approval: "fa-file-text-o" })[this.typeBehavior(item)] || "fa-circle-o";
+    }
+    pointTimerLabel(item) { return item.actual_started_at ? _t("Point in progress") : _t("Point paused"); }
     async applyPointAction(item, value) {
         if (this.typeBehavior(item) === "todo" && value === "closed" && !this.hasTodoAction(item)) {
             this.notification.add(_t("Add a follow-up task before resolving this TODO."), { type: "warning" });
@@ -434,6 +521,12 @@ export class LiveMeeting extends Component {
         return index < 0 ? 0 : index + 1;
     }
     get completedCount() { return this.state.items.filter((item) => ["discussed", "closed"].includes(item.disposition)).length; }
+    get unresolvedItems() {
+        return this.state.items.filter((item) =>
+            !["discussed", "closed"].includes(item.disposition)
+            || (this.typeBehavior(item) === "decision" && !this.decisionAgreement(item))
+        );
+    }
     canStartPoint(item) {
         return item.disposition !== "closed"
             && !(this.typeBehavior(item) === "information" && item.disposition === "discussed");
@@ -496,6 +589,7 @@ export class LiveMeeting extends Component {
             const active = this.visibleItems.find((item) => item.id === this.state.activeItemId) || this.visibleItems[0];
             this.state.activeItemId = active?.id || false;
             for (const item of this.state.items) this.state.expanded[item.id] = item.id === this.state.activeItemId;
+            if (active) this.state.expandedNotes[active.id] = false;
         }
     }
     toggleNotesExpanded(item) {
@@ -507,13 +601,15 @@ export class LiveMeeting extends Component {
         const next = items[Math.max(0, Math.min(items.length - 1, index + offset))];
         if (!next || next.id === this.state.activeItemId) return;
         if (!await this.flushEditors()) return;
-        const running = this.state.items.filter((item) => item.actual_started_at);
-        for (const item of running) {
-            await this.orm.call("community.meeting.agenda.item", "action_pause_timing", [[item.id]]);
-        }
-        if (running.length) {
-            await this.refreshPointTiming();
-            for (const item of running) this.setPointEditorsEditable(item, false);
+        if (this.timingEnabled) {
+            const running = this.state.items.filter((item) => item.actual_started_at);
+            for (const item of running) {
+                await this.orm.call("community.meeting.agenda.item", "action_pause_timing", [[item.id]]);
+            }
+            if (running.length) {
+                await this.refreshPointTiming();
+                for (const item of running) this.setPointEditorsEditable(item, false);
+            }
         }
         for (const item of this.state.items) this.state.expanded[item.id] = false;
         this.state.activeItemId = next.id;
@@ -585,6 +681,7 @@ export class LiveMeeting extends Component {
     }
 
     async toggleReview(item, checked) {
+        if (!this.canEditDiscussion(item)) return;
         const key = `review:${item.id}`;
         if (this.state.submitting[key]) return;
         this.state.submitting[key] = true;
@@ -610,6 +707,7 @@ export class LiveMeeting extends Component {
     }
 
     async setNextMeetingDate(item, value) {
+        if (!this.canEditNextMeetingDate(item)) return;
         const zone = this.state.capabilities.timezone;
         const local = value ? DateTime.fromISO(value, { zone }) : null;
         if (local && (!local.isValid || local.toFormat("yyyy-MM-dd'T'HH:mm") !== value || local.getPossibleOffsets().length > 1)) {
@@ -760,7 +858,7 @@ export class LiveMeeting extends Component {
                 if (saved.disposition === "deferred") delete this.state.deferrals[item.id];
             } });
         } catch (error) {
-            this.notification.add("Could not open the carryover request.", { type: "danger" });
+            this.notification.add(_t("Could not open the carryover request."), { type: "danger" });
         }
     }
 
@@ -782,7 +880,7 @@ export class LiveMeeting extends Component {
             await onCreated(record);
         } catch (error) {
             this.state.saveError = true;
-            this.notification.add("Could not save this record. Your entry is still available; retry when ready.", { type: "danger" });
+            this.notification.add(_t("Could not save this record. Your entry is still available; retry when ready."), { type: "danger" });
         } finally {
             this.state.saving--;
             this.state.submitting[key] = false;
@@ -801,6 +899,7 @@ export class LiveMeeting extends Component {
         }, (record) => {
             this.state.dissents.push(record);
             this.state.newDissent[item.id] = "";
+            this.state.panels[item.id].dissent = false;
         });
     }
     async addAction(item) {
@@ -819,6 +918,7 @@ export class LiveMeeting extends Component {
             const [saved] = await this.orm.read("community.meeting.action", [record.id], ["topic_id", "followup_activity_id", "followup_activity_completed_on", "responsible_user_id", "responsible_user_ids", "followup_kind", "followup_activity_type_id"]);
             this.state.actions.push({ ...record, ...saved });
             this.state.newAction[item.id] = {};
+            this.state.panels[item.id].followup = false;
         });
     }
     setDissent(item, key, value) {
@@ -828,6 +928,9 @@ export class LiveMeeting extends Component {
     setAction(item, key, value) {
         this.state.newAction[item.id] ||= {};
         this.state.newAction[item.id][key] = value;
+        if (key === "followup_kind" && !this.supportsMultipleOwners(value)) {
+            delete this.state.newAction[item.id].responsible_user_ids;
+        }
     }
     selectedUserIds(event) { return Array.from(event.target.selectedOptions, option => Number(option.value)); }
     async updateAction(action, field, value) {
@@ -871,6 +974,7 @@ export class LiveMeeting extends Component {
             this.state.resolutions.push(record);
             this.state.newResolution[item.id] = {};
             await this.refreshDecision(item.id);
+            this.state.panels[item.id].agreement = false;
         });
     }
     async addPrivateNote(item) {
@@ -881,6 +985,7 @@ export class LiveMeeting extends Component {
         }, (record) => {
             this.state.privateNotes.push(record);
             this.state.newPrivateNote[item.id] = "";
+            this.state.panels[item.id].privateNote = false;
         });
     }
     setPrivateNote(item, value) { this.state.newPrivateNote[item.id] = value; }
@@ -912,7 +1017,7 @@ export class LiveMeeting extends Component {
             const action = await this.orm.call(model, "action_request_followup", [[record.id]]);
             await this.actionService.doAction(action);
         } catch (error) {
-            this.notification.add("Could not open the carryover request.", { type: "danger" });
+            this.notification.add(_t("Could not open the carryover request."), { type: "danger" });
         }
     }
     async transition(method, state) {
@@ -924,17 +1029,35 @@ export class LiveMeeting extends Component {
             this.state.meeting.state = state;
             const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["actual_start_datetime", "actual_end_datetime", "actual_duration_minutes"]);
             Object.assign(this.state.meeting, saved);
+            await this.refreshCapabilities();
             if (state === "held") {
                 await this.refreshPointTiming();
                 for (const item of this.state.items) this.setPointEditorsEditable(item, false);
             }
         } catch (error) {
-            this.notification.add("The meeting status could not be changed. Please retry.", { type: "danger" });
+            this.notification.add(_t("The meeting status could not be changed. Please retry."), { type: "danger" });
         } finally {
             this.state.submitting[key] = false;
         }
     }
-    markHeld() { return this.transition("action_mark_held", "held"); }
+    async markHeld() {
+        if (!await this.flushEditors()) return;
+        const unresolved = this.unresolvedItems;
+        if (!unresolved.length) return this.transition("action_mark_held", "held");
+        const preview = unresolved.slice(0, 4).map((item) => `• ${item.name}`).join("\n");
+        const more = unresolved.length > 4 ? _t("\n…and %(count)s more.", { count: unresolved.length - 4 }) : "";
+        this.dialog.add(ConfirmationDialog, {
+            title: _t("Finish with unresolved points?"),
+            body: _t("%(count)s agenda point(s) are not resolved:\n%(points)s%(more)s\n\nFinish the meeting anyway?", {
+                count: unresolved.length, points: preview, more,
+            }),
+            confirmLabel: _t("Finish meeting"),
+            cancelLabel: _t("Continue meeting"),
+            confirmClass: "btn-warning",
+            confirm: () => this.transition("action_mark_held", "held"),
+            cancel: () => {},
+        });
+    }
     async startMeeting() {
         const key = `meeting:${this.meetingId}`;
         if (this.state.submitting[key]) return;
@@ -943,8 +1066,9 @@ export class LiveMeeting extends Component {
             await this.orm.call("community.meeting", "action_start_meeting", [[this.meetingId]]);
             const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_duration_minutes"]);
             Object.assign(this.state.meeting, saved);
+            await this.refreshCapabilities();
         } catch (error) {
-            this.notification.add("The meeting could not be started. Please retry.", { type: "danger" });
+            this.notification.add(_t("The meeting could not be started. Please retry."), { type: "danger" });
         } finally {
             this.state.submitting[key] = false;
         }
@@ -957,6 +1081,7 @@ export class LiveMeeting extends Component {
             await this.orm.call("community.meeting", paused ? "action_pause_meeting" : "action_resume_meeting", [[this.meetingId]]);
             const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["actual_paused_at", "actual_paused_seconds", "actual_duration_minutes"]);
             Object.assign(this.state.meeting, saved);
+            await this.refreshCapabilities();
             await this.refreshPointTiming();
             if (paused) for (const item of this.state.items) this.setPointEditorsEditable(item, false);
         } catch (error) {
@@ -1006,7 +1131,7 @@ export class LiveMeeting extends Component {
     setReopenReason(item, value) { this.state.reopening[item.id] = value; }
     async close() {
         if (!await this.flushEditors()) {
-            this.notification.add("Save the pending edits before leaving this meeting.", { type: "warning" });
+            this.notification.add(_t("Save the pending edits before leaving this meeting."), { type: "warning" });
             return;
         }
         if (this.props.close) return this.props.close();
