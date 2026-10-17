@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_calendar_event_form_community_meeting" model="ir.ui.view">
+        <field name="name">calendar.event.form.community.meeting</field>
+        <field name="model">calendar.event</field>
+        <field name="inherit_id" ref="calendar.view_calendar_event_form"/>
+        <field name="arch" type="xml">
+            <field name="res_id" position="after">
+                <field name="community_meeting_id" invisible="1"/>
+            </field>
+            <sheet position="before">
+                <div class="alert alert-info" role="status" invisible="not community_meeting_id">
+                    <p>This event is managed by its community meeting. Use the meeting link to view or edit meeting details.</p>
+                </div>
+            </sheet>
+            <field name="name" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="start_date" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="start" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="duration" position="attributes">
+                <attribute name="readonly">(id and recurrency) or not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="allday" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="event_tz" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="recurrency" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="rrule_type_ui" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="interval" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="rrule_type" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="month_by" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="day" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="byday" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="weekday" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="end_type" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="count" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="until" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="location" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="videocall_location" position="attributes">
+                <attribute name="readonly">videocall_source == 'discuss' or not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="categ_ids" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="show_as" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="privacy" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="user_id" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="description" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="alarm_ids" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <field name="partner_ids" position="attributes">
+                <attribute name="readonly">not user_can_edit or community_meeting_id</attribute>
+            </field>
+            <div name="send_buttons" position="attributes">
+                <attribute name="invisible">community_meeting_id or not user_can_edit</attribute>
+            </div>
+            <page name="page_invitations" position="attributes">
+                <attribute name="invisible">community_meeting_id or not user_can_edit</attribute>
+            </page>
+        </field>
+    </record>
+</odoo>
