@@ -5,11 +5,11 @@ pasos: **preparar → aprobar**.
 
 ## 1. Preparar el acta (editor)
 
-Con la reunión **Celebrada**, pulsa *Prepare Minutes* (pantalla en vivo) o en el
+Con la reunión **Celebrada**, pulsa *Preparar el acta* (pantalla en vivo) o en el
 formulario. La reunión pasa a **Acta en borrador**:
 
-- La sección **Meeting notes** (parte baja de la pantalla en vivo, o pestaña
-  *Minutes* del formulario) se convierte en el foco. Es texto enriquecido con
+- La sección **Notas de la reunión** (parte baja de la pantalla en vivo, o pestaña
+  *Acta* del formulario) se convierte en el foco. Es texto enriquecido con
   autoguardado.
 - Las notas de discusión de cada punto permanecen en su punto; la sección de notas
   es donde vive el relato del acta.
@@ -25,7 +25,7 @@ formulario. La reunión pasa a **Acta en borrador**:
 
 ## 2. Aprobar (aprobador)
 
-Un **aprobador** pulsa **Approve Minutes** (pantalla en vivo o cabecera del
+Un **aprobador** pulsa **Aprobar el acta** (pantalla en vivo o cabecera del
 formulario).
 
 La aprobación:
@@ -39,11 +39,11 @@ La aprobación:
 
 ## Revisiones aprobadas y enmiendas
 
-La pestaña **Approved Revisions** lista cada revisión: número, fecha de aprobación,
+La pestaña **Revisiones aprobadas** lista cada revisión: número, fecha de aprobación,
 aprobador, estado y botón **PDF**.
 
 Tras la aprobación, cambiar el contenido está bloqueado a propósito. Si hay que
-corregir algo, un aprobador pulsa **Start Amendment**: la reunión reabre para
+corregir algo, un aprobador pulsa **Iniciar una modificación**: la reunión reabre para
 edición bajo una nueva revisión; la revisión anterior y su PDF permanecen intactos
 en la historia.
 
@@ -51,7 +51,7 @@ en la historia.
 
 ## Discrepancias y acta
 
-Las discrepancias marcadas **include in minutes** forman parte del registro
+Las discrepancias marcadas **incluir en el acta** forman parte del registro
 aprobado; las no marcadas quedan solo para uso editorial. Repásalas con el editor
 antes de aprobar.
 

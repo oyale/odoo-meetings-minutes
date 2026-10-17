@@ -1,7 +1,7 @@
 # Preparar una reunión (editor)
 
 Dos puntos de entrada: el asistente **Nueva reunión** (guiado) o abrir una serie y
-pulsar **New Meeting** allí (el mismo asistente, con la serie preseleccionada).
+pulsar **Nueva reunión** allí (el mismo asistente, con la serie preseleccionada).
 
 ![Lista de reuniones](img/meetings-list.png)
 
@@ -11,7 +11,7 @@ El asistente recorre seis pasos; *Atrás/Siguiente* son libres y tus cambios se
 conservan al cambiar de serie.
 
 1. **Serie** — elige una, o déjala vacía para una reunión independiente. El botón
-   *Use series defaults* carga duración y asistentes.
+   *Usar valores de la serie* carga duración y asistentes.
 2. **Cuándo** — fecha/hora de inicio, título (pre-rellenado con el patrón
    `{date} {series}`) y duración. La hora de fin se calcula.
 3. **Personas** — asistentes (pre-rellenados desde la serie).
@@ -20,51 +20,51 @@ conservan al cambiar de serie.
    incluir, **Posponer** para ofrecerlos más adelante, **Descartar** para perderlos
    definitivamente. Con política *Automática* ya vienen incluidos.
 5. **Agenda** — añade puntos ahora (o después). Reutiliza un punto existente de la
-   serie con *More options → Existing point*.
-6. **Revisión** — resumen de todo; **Create Meeting** termina.
+   serie con *Más opciones → Punto existente*.
+6. **Revisión** — resumen de todo; **Crear reunión** termina.
 
 > **Consejo:** el asistente copia los valores de la serie; no los enlaza. Cambiar
 > la serie después no reescribe la reunión.
 
 ## Leer una reunión (itinerario lector)
 
-Los lectores abren las reuniones desde **Meetings → Meetings** (o el calendario).
+Los lectores abren las reuniones desde **Meetings → Reuniones** (o el calendario).
 Ven la agenda con resultados, notas de discusión, discrepancias publicadas,
 acuerdos, seguimientos y — una vez aprobada — el acta con botón de **PDF** en la
-pestaña *Approved Revisions*. Todo en solo lectura.
+pestaña *Revisiones aprobadas*. Todo en solo lectura.
 
 ## Añadir puntos
 
-En el formulario de la reunión, **Add Point** abre un diálogo centrado:
+En el formulario de la reunión, **Añadir punto** abre un diálogo centrado:
 
 - **Título** — una línea clara: es lo que leerán los asistentes.
 - **Tipo de punto** — decide el comportamiento en vivo (ver
   [catálogos](../admin/catalogs.md#tipos-de-punto-de-agenda)).
 - **Descripción** — texto enriquecido: contexto, enlaces, documentos.
 - **Planificación** (prioridad, plazo, minutos estimados) y **Responsable**.
-- **More options** — reutilizar un punto existente, relacionar puntos, reglas de
+- **Más opciones** — reutilizar un punto existente, relacionar puntos, reglas de
   seguimiento.
 
 Los **minutos estimados** vienen pre-rellenados con el valor de la serie (o de la
-compañía). El botón **Add and continue** encadena varios puntos rápido.
+compañía). El botón **Añadir y continuar** encadena varios puntos rápido.
 
-> **Nota:** la disponibilidad de *Add Point* depende del estado de la reunión y de
+> **Nota:** la disponibilidad de *Añadir punto* depende del estado de la reunión y de
 > la **política de añadir puntos** de su serie — desaparece al vencer el plazo y el
 > servidor también lo impide.
 
-El aviso **estimated agenda over budget** aparece cuando la suma de estimaciones
+El aviso el aviso de agenda sobre duración aparece cuando la suma de estimaciones
 supera la duración prevista. Amplía la duración o recorta la agenda.
 
 ![Asistente de punto](img/point-wizard.png)
 
 ## Programación y cambios de serie
 
-- **Schedule** confirma la reunión (exige fecha de inicio) y publica el evento de
+- **Programar** confirma la reunión (exige fecha de inicio) y publica el evento de
   calendario.
 - La serie puede cambiarse mientras la reunión esté *en borrador o programada* y no
   haya comenzado la ejecución en vivo. Los puntos compartidos con otras reuniones
   limitan el cambio.
-- **Cancel** está disponible en borrador/programada.
+- **Cancelar** está disponible en borrador/programada.
 
 ## Pestaña Access
 

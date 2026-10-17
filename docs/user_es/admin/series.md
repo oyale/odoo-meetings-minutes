@@ -14,7 +14,7 @@ revisión.
 
 | Campo | Significado |
 |---|---|
-| **Tipo** | Clase de reuniones que celebra esta serie (del catálogo Meeting Kinds). |
+| **Tipo** | Clase de reuniones que celebra esta serie (del catálogo Tipos de reunión). |
 | **Compañía** | Compañía propietaria (solo multicompañía). |
 | **Activo** | Las series archivadas conservan sus reuniones pero desaparecen de listas y menús. |
 | **Coordinadores** | Usuarios responsables de preparar las reuniones de la serie. |
@@ -98,10 +98,10 @@ ver [Project](../integrations/project.md#política-de-tareas).
 
 ## Botones y propuestas
 
-- **New Meeting** — abre el asistente de creación de reuniones con esta serie
+- **Nueva reunión** — abre el asistente de creación de reuniones con esta serie
   preseleccionada.
 - **Proponer un punto** — abre el asistente de propuestas dirigido a esta serie.
-- El aviso **Proposals to review** (solo editores) aparece bajo el título cuando
+- El aviso **Propuestas por revisar** (solo editores) aparece bajo el título cuando
   hay propuestas pendientes, con botones Aceptar/Rechazar — ver
   [Proponer un punto](../user/propose-a-point.md).
 

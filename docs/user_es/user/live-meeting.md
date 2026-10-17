@@ -9,7 +9,7 @@ Meeting** en el formulario.
 
 ## Barra superior
 
-- **Back to Meetings** — salida segura (avisa de ediciones pendientes).
+- **Volver a reuniones** — salida segura (avisa de ediciones pendientes).
 - **Botones de flujo** — dependen del estado y la política:
   - *Iniciar reunión / Pausar / Reanudar* — solo con seguimiento de tiempo **on**.
   - *Finalizar reunión* — cierra la reunión (con tiempo de tiempo desactivado está
@@ -17,7 +17,7 @@ Meeting** en el formulario.
     protege la vía retroactiva *Registrar como celebrada*).
   - *Preparar el acta* — una vez celebrada.
   - *Aprobar el acta* — aprobadores, con el acta en borrador.
-- **Estado de guardado** — *Saving… / All changes saved / Changes pending*: todo se
+- **Estado de guardado** — *Guardando… / Todos los cambios están guardados / Cambios pendientes*: todo se
   guarda automáticamente mientras escribes; el indicador dice cuándo puedes salir.
 - **Insignia de estado** — estado actual de la reunión (Programada / En curso / …).
 
@@ -26,12 +26,12 @@ Meeting** en el formulario.
 Nombre (editable en línea), inicio/fin/duración previstos frente a **reales**
 (solo con seguimiento de tiempo activado), coordinación y secretaría (editables en
 línea), lugar, enlace de la reunión y asistentes — con un diálogo de búsqueda
-*Edit attendees*.
+*Editar asistentes*.
 
 ## Puntos que continúan
 
 Si esta reunión hereda puntos arrastrados (política *Revisión*), un aviso los lista
-con **Accept** / **Dismiss** antes de la agenda.
+con **Aceptar** / **Descartar** antes de la agenda.
 
 ## Tarjetas de agenda
 
@@ -39,9 +39,9 @@ Cada punto es una tarjeta: título, avatar del ponente, bandera de prioridad, in
 de tipo, **insignia de resultado** y — con seguimiento de tiempo — sus controles de
 cronómetro (*Iniciar/Pausar punto*, *Punto en curso / en pausa*).
 
-Herramientas sobre la lista: **Add Point** (según la
+Herramientas sobre la lista: **Añadir punto** (según la
 [política de añadir puntos](../admin/configuration.md#añadir-puntos)), flechas
-anterior/siguiente, filtro **Pending only**, **Expand/Collapse all**.
+anterior/siguiente, filtro **Solo pendientes**, **Expandir/Contraer todo**.
 
 ### Dirigir un punto
 
@@ -51,16 +51,16 @@ anterior/siguiente, filtro **Pending only**, **Expand/Collapse all**.
    se editan con el cronómetro del punto en marcha (o tras la reunión, redactando el
    acta). Sin cronómetros, siempre editables hasta que la reunión termine.
 3. **Registrar resultados**:
-   - *Information* — marca **Done**.
-   - *Discussion* — **Done** al resolverse, o **Posponer**.
-   - *Decision* — registra un **Acuerdo** con resultado *aprobado/rechazado*; el
+   - *Información* — marca **Hecho**.
+   - *Discusión* — **Hecho** al resolverse, o **Posponer**.
+   - *Decisión* — registra un **Acuerdo** con resultado *aprobado/rechazado*; el
      punto solo se completa con acuerdo. Los acuerdos pueden retirarse.
    - *TODO* — añade un **seguimiento** asignado; el punto no puede resolverse sin él
      (ver [Seguimientos](followups.md)).
-4. **Done** completa el punto; **Undo result** lo reabre (motivo opcional).
+4. **Hecho** completa el punto; **Deshacer resultado** lo reabre (motivo opcional).
 5. **Posponer** — elige un motivo rápido (bloqueado por punto/tarea/actividad, falta
-   de tiempo, otro…), un enlace opcional de "bloqueado por", y *Leave postponed* o
-   *Move to another meeting* (asistente de arrastre). Los puntos pospuestos quedan
+   de tiempo, otro…), un enlace opcional de "bloqueado por", y *Dejar pospuesto* o
+   *Mover a otra reunión* (asistente de arrastre). Los puntos pospuestos quedan
    marcados **Revisar en la próxima reunión** automáticamente.
 
 ### Registros dentro de un punto
@@ -79,17 +79,17 @@ anterior/siguiente, filtro **Pending only**, **Expand/Collapse all**.
 
 - **Próxima reunión** — campo de fecha y hora (zona horaria de la serie visible) para
   fijar la siguiente fecha.
-- **Aprobación del acta** — lista las actas pendientes con atajo *Review* y el
+- **Aprobación del acta** — lista las actas pendientes con atajo *Revisar* y el
   historial de las ya aprobadas.
 
 ### Opciones del punto
 
-*Point options → Edit point details* abre el registro completo del punto;
-**Reopen** con motivo reabre un punto completado.
+*Opciones del punto → Editar detalles del punto* abre el registro completo del punto;
+**Reabrir** con motivo reabre un punto completado.
 
 ## Después de la reunión
 
-**Finish Meeting** cierra los tiempos reales, pausa los cronómetros abiertos, marca
+**Finalizar reunión** cierra los tiempos reales, pausa los cronómetros abiertos, marca
 los puntos sin terminar para revisión y promueve los seguimientos finalizados a
 puntos de la próxima reunión. Después toca redactar el acta →
 [Actas y aprobación](minutes-and-approval.md).

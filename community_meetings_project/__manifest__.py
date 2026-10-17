@@ -4,6 +4,10 @@
     "version": "18.0.3.1.0",
     "category": "Services/Project",
     "license": "AGPL-3",
+    "author": "Pelayo García",
+    "website": "https://github.com/oyale/meeting-minutes/tree/18.0/community_meetings_project",
+    "maintainers": ["oyale"],
+    "development_status": "Beta",
     "depends": ["community_meetings", "project"],
     "data": [
         "security/ir.model.access.csv",

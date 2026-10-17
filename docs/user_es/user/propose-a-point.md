@@ -18,7 +18,7 @@ deciden qué entra. Dos accesos:
 5. **Planificación** — prioridad, plazo, minutos estimados (pre-rellenados).
 6. **Responsable** — la persona que lo presenta (por defecto, tú).
 
-**Add point** envía. La propuesta pasa a ser un punto en estado *propuesto*.
+**Añadir punto** envía. La propuesta pasa a ser un punto en estado *propuesto*.
 
 > **Nota:** si tu organización restringe las propuestas a grupos concretos y no
 > perteneces a ellos, el asistente rechazará el guardado. Ver
@@ -26,12 +26,12 @@ deciden qué entra. Dos accesos:
 
 ## Qué pasa después
 
-Los editores ven el aviso **Proposals to review** en el formulario de la serie (y
-en la preparación) con las propuestas pendientes y botones **Accept** / **Reject**:
+Los editores ven el aviso **Propuestas por revisar** en el formulario de la serie (y
+en la preparación) con las propuestas pendientes y botones **Aceptar** / **Rechazar**:
 
-- **Accept** — el punto pasa a ser un punto normal de la serie y puede añadirse a
+- **Aceptar** — el punto pasa a ser un punto normal de la serie y puede añadirse a
   reuniones.
-- **Reject** — descartada con respuesta; el proponente ve la decisión en el
+- **Rechazar** — descartada con respuesta; el proponente ve la decisión en el
   historial del punto.
 
 Los proponentes pueden seguir el recorrido de su punto: los aceptados aparecen en

@@ -67,6 +67,3 @@ flowchart LR
 | Usar Calendario / Project | [Calendario](integrations/calendar.md) · [Project](integrations/project.md) |
 | Resolver un problema | [FAQ](faq.md) |
 
-> **Nota:** las capturas referenciadas como `img/*.png` provienen de una
-> instancia real. Coloca los PNG dentro de la carpeta `img/` junto a esta guía
-> antes de renderizar a HTML.

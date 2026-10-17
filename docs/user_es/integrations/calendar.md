@@ -31,7 +31,7 @@ categorías y los botones de envío/invitaciones están deshabilitados.
 ## Preguntas frecuentes
 
 **¿Por qué no puedo invitar a más gente desde el evento?** Los asistentes se
-gestionan en la reunión (cabecera → *Edit attendees*), que mantiene la reunión como
+gestionan en la reunión (cabecera → *Editar asistentes*), que mantiene la reunión como
 única fuente de verdad.
 
 **¿Sigo recibiendo recordatorios de Odoo?** Sí — el evento es un evento real de

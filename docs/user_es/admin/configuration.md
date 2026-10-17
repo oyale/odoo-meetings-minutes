@@ -13,7 +13,7 @@ afectan a los puntos (ver [Series](series.md)).
 
 | Ajuste | Significado |
 |---|---|
-| **Default point estimate (minutes)** | Minutos pre-rellenados para los puntos nuevos que no indiquen duración. |
+| **Duración estimada predeterminada por punto (minutos)** | Minutos pre-rellenados para los puntos nuevos que no indiquen duración. |
 
 *Cómo se resuelve:* la estimación de un punto es el valor que escriba el usuario,
 si no la **serie**, si no este valor de la **compañía**.
@@ -22,8 +22,8 @@ si no la **serie**, si no este valor de la **compañía**.
 
 | Ajuste | Significado |
 |---|---|
-| **Coordination role name** | Etiqueta mostrada para el rol de coordinación (p. ej. "Organizer", "Presidencia"). |
-| **Secretary role name** | Etiqueta mostrada para el rol de secretaría de actas. |
+| **Nombre del rol de coordinación** | Etiqueta mostrada para el rol de coordinación (p. ej. "Organizer", "Presidencia"). |
+| **Nombre del rol de secretaría** | Etiqueta mostrada para el rol de secretaría de actas. |
 
 Son ajustes cosméticos: cada organización habla su propio idioma en formularios
 e informes.
@@ -32,7 +32,7 @@ e informes.
 
 | Ajuste | Significado |
 |---|---|
-| **Track meeting and point time** (sí/no) | **Activado** (por defecto): la reunión en vivo muestra *Iniciar / Pausar / Reanudar reunión*, los puntos tienen cronómetro, las notas de discusión solo se editan con el cronómetro del punto en marcha y se registran las duraciones reales. **Desactivado**: sin cronómetros — la reunión en vivo es editable desde el principio y simplemente se *finaliza* la reunión. |
+| **Registrar el tiempo de reuniones y puntos** (sí/no) | **Activado** (por defecto): la reunión en vivo muestra *Iniciar / Pausar / Reanudar reunión*, los puntos tienen cronómetro, las notas de discusión solo se editan con el cronómetro del punto en marcha y se registran las duraciones reales. **Desactivado**: sin cronómetros — la reunión en vivo es editable desde el principio y simplemente se *finaliza* la reunión. |
 
 > **Consejo:** desactiva el seguimiento de tiempo en organizaciones que no quieran
 > cronómetros. El flujo de agenda (acuerdos, discrepancias, seguimientos, actas)
@@ -42,7 +42,7 @@ e informes.
 
 | Ajuste | Significado |
 |---|---|
-| **Add points until** | El último momento en que se pueden añadir puntos nuevos a una reunión: |
+| **Añadir puntos hasta** | El último momento en que se pueden añadir puntos nuevos a una reunión: |
 
 | Valor | Los puntos se pueden añadir… |
 |---|---|
@@ -62,12 +62,11 @@ impide. Cada serie puede sobrescribirlo (ver
 
 | Ajuste | Significado |
 |---|---|
-| **Allowed follow-up types** | Mecanismos de ejecución que pueden usar los puntos (actividad de Odoo, TODO nativo…). |
-| **Default follow-up type** | Tipo preseleccionado al crear un seguimiento. |
-| **Default activity type** | Tipo de actividad usado cuando el seguimiento es una actividad de Odoo. |
+| **Tipos de seguimiento permitidos** | Mecanismos de ejecución que pueden usar los puntos (actividad de Odoo, TODO nativo…). |
+| **Tipo de seguimiento predeterminado** | Tipo preseleccionado al crear un seguimiento. |
+| **Tipo de actividad de Odoo por defecto** | Tipo de actividad usado cuando el seguimiento es una actividad de Odoo. |
 
-Con el módulo **Project** instalado aparece aquí también el bloque *Project task
-policy* — ver [Integración con Project](../integrations/project.md#política-de-tareas).
+Con el módulo **Project** instalado aparece aquí también el bloque *política de tareas de Project* — ver [Integración con Project](../integrations/project.md#política-de-tareas).
 
 ## Dónde encajan las series
 

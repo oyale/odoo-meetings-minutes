@@ -61,7 +61,7 @@ Series can override this per series (see [Series → Policies](series.md#policie
 |---|---|
 | **Allowed follow-up types** | Which execution mechanisms points may use (Odoo activity, native To-do…). |
 | **Default follow-up type** | Pre-selected when creating a follow-up. |
-| **Default activity type** | Activity type used when a follow-up is an Odoo activity. |
+| **Default Odoo activity type** | Activity type used when a follow-up is an Odoo activity. |
 
 With the **Project** addon installed, a *Project task policy* block appears
 here too — see [Project integration](../integrations/project.md#task-policy).

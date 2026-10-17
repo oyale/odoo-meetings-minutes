@@ -3,7 +3,7 @@
 
 Run with ODOO_BASE_URL, ODOO_LOGIN and ODOO_PASSWORD set to an existing meeting
 editor account, and Python Playwright installed. Example:
-    ODOO_BASE_URL=http://meeting-minutes.local:8069 \\
+    ODOO_BASE_URL=http://localhost:8069 \\
     ODOO_LOGIN=dev ODOO_PASSWORD=... python3 live_meeting_playwright.py
 The suite creates and removes one scheduled meeting per case.
 """
@@ -15,7 +15,7 @@ from urllib.parse import urljoin
 
 from playwright.sync_api import expect, sync_playwright
 
-BASE_URL = os.environ.get("ODOO_BASE_URL", "http://meeting-minutes.local:8069").rstrip("/")
+BASE_URL = os.environ.get("ODOO_BASE_URL", "http://localhost:8069").rstrip("/")
 DB = os.environ.get("ODOO_DB", "")
 LOGIN = os.environ.get("ODOO_LOGIN")
 PASSWORD = os.environ.get("ODOO_PASSWORD")

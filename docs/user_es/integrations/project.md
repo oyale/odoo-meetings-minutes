@@ -8,7 +8,7 @@ Módulo opcional que conecta los seguimientos de las reuniones con las tareas de
 ## Crear una tarea desde un seguimiento
 
 En cualquier acción de seguimiento (tarjeta de la reunión en vivo, pestaña del
-formulario o el propio formulario del seguimiento) pulsa **Create Task**:
+formulario o el propio formulario del seguimiento) pulsa **Crear tarea**:
 
 1. Elige **vincular una tarea existente** o **crear una nueva**.
 2. Para una nueva: elige el proyecto (pre-rellenado según la política, ver abajo) y

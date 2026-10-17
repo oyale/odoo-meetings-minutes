@@ -28,10 +28,10 @@ registro muestra la reunión de origen, el contexto y quién respondió.
 
 ## Aceptar / descartar
 
-- **Accept** — el punto entra en la agenda de destino como una nueva participación
+- **Aceptar** — el punto entra en la agenda de destino como una nueva participación
   del mismo punto (la identidad se conserva).
-- **Dismiss** — se rechaza la oferta; con política *Revisión* puede ofrecerse de
-  nuevo más adelante, y *Discard* en el asistente de creación la descarta para
+- **Descartar** — se rechaza la oferta; con política *Revisión* puede ofrecerse de
+  nuevo más adelante, y *Descartar* en el asistente de creación la descarta para
   siempre.
 
 ## Documentación relacionada

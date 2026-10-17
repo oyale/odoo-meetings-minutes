@@ -1,28 +1,19 @@
 # Community Meetings - Project Tasks
 
-This optional addon links existing Odoo Project tasks to meeting agenda items, resolutions, and follow-up actions. It depends on `community_meetings` and Odoo's `project` addon; installing the core addon does not install either dependency automatically.
+[![Odoo 18.0](https://img.shields.io/badge/Odoo-18.0-714B67.svg)](https://github.com/oyale/meeting-minutes/tree/18.0)
+[![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](../../LICENSE)
+[![Maturity: Beta](https://img.shields.io/badge/maturity-Beta-yellow.svg)](https://odoo-community.org/page/development-status)
 
-Task links require Project task read and write access and enforce company compatibility. The carryover wizard only carries tasks an editor explicitly selects. Task details are not included in approved minute snapshots, so later task changes cannot rewrite historical minutes. A task's “Meeting Agenda Links” action searches only meeting records the current user can access.
+This optional addon connects Community Meetings follow-ups with Odoo Project.
+It lets users associate existing Project tasks with agenda points and create
+tasks from a meeting. Company settings and meeting series can define default
+project scope and task requirements for resolving TODO agenda points.
 
-Creating a task is optional and available from a meeting follow-up action when the user has Project task creation access.
+## Usage
 
-## Task policies
+Install this addon with Odoo Project. From an agenda point, link an existing
+task or create a task in an available project. Configure project selection and
+task requirements in the company or meeting series settings. Project task
+access and company compatibility are checked when linking and resolving points.
 
-Installing this addon keeps assigned core follow-ups sufficient for TODOs by
-default. Company settings and the series **Task Policy** tab configure three
-independent choices:
-
-- No default project, one company project, or one project per series.
-- Core follow-up or a linked Project task required to resolve a TODO.
-- Any accessible project or only the configured project for task selection.
-
-A series project is created on first task creation, with standard Project
-creation permissions; otherwise select an existing project. Project tasks must
-be assigned, active, non-cancelled and company-compatible to satisfy a required
-TODO. Existing tasks can be linked through **Create Project task** without
-creating a duplicate. Project and core follow-up execution states remain
-separate; the core follow-up is completed through its activity or status.
-
-Closure captures the applicable requirement and project scope. Later policy
-changes apply to subsequent resolutions. Removing the last valid task or moving
-it outside that historical scope is rejected while the TODO remains resolved.
+See the [Project integration guide](https://oyale.github.io/meeting-minutes/html-en/integrations/project.html).

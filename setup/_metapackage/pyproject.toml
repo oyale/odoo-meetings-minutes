@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "odoo-addons-oyale-meeting-minutes"
+version = "18.0.20261018.0"
+description = "Metapackage for the Meeting Minutes Odoo addons"
+license = { text = "AGPL-3.0-or-later" }
+requires-python = ">=3.10"
+dependencies = [
+    "odoo-addon-community_meetings==18.0.*",
+    "odoo-addon-community_meetings-project==18.0.*",
+    "odoo-addon-community_meetings-calendar==18.0.*",
+    "odoo-addon-community_meetings-extension-demo==18.0.*",
+]
+classifiers = [
+    "Programming Language :: Python",
+    "Framework :: Odoo",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+]

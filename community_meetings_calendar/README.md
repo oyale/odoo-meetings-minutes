@@ -1,38 +1,19 @@
 # Community Meetings - Calendar Integration
 
-This optional addon creates one private Odoo Calendar event when a community
-meeting is scheduled. Install it alongside `community_meetings` and Odoo's
-`calendar` addon; the core meeting addon remains independent of Calendar.
+[![Odoo 18.0](https://img.shields.io/badge/Odoo-18.0-714B67.svg)](https://github.com/oyale/meeting-minutes/tree/18.0)
+[![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](../../LICENSE)
+[![Maturity: Beta](https://img.shields.io/badge/maturity-Beta-yellow.svg)](https://odoo-community.org/page/development-status)
 
-The meeting remains the source of truth for event title, time, location,
-organizer, secretary and internal-user attendees. Changes update the same event
-while the meeting remains scheduled. Holding the meeting freezes the event
-mirror, preserving the invitation history. Cancelling the meeting removes the
-event and queues iCalendar cancellation notices; removing an attendee queues a
-cancellation for that attendee. Odoo's native invitation and date-change
-notifications are used for additions and rescheduling.
+This optional addon mirrors scheduled Community Meetings as private Odoo
+Calendar events. It synchronizes event details and internal-user attendees,
+and uses Odoo's native invitation and cancellation notifications. Meeting
+minutes and private notes are not copied to Calendar.
 
-Calendar invitees see the event metadata in their calendar. The event does not
-copy the meeting description, agenda, minutes or private notes. Its document
-link uses normal meeting access rules: an invitee must separately have read
-access to open the meeting. Calendar attendee responses remain in Calendar and
-do not change meeting attendance. Event alarms are not enabled by this
-integration.
+## Usage
 
-Only active internal users in the meeting company can be invitees. A missing
-email address does not prevent the user from appearing as a Calendar
-participant, but Odoo cannot send that participant an invitation email. The
-standard `calendar.block_mail` setting and outbound-mail configuration still
-control delivery.
+Install this addon with Odoo Calendar. Scheduled meetings with eligible
+internal-user attendees create or update a linked Calendar event. Event links
+open the meeting subject to the user's normal access rights. Calendar attendee
+responses do not change meeting attendance.
 
-## Browser checks
-
-The Calendar browser runner reuses the full core Playwright suite and adds
-Calendar-specific checks. Run it against a dedicated test database with the
-addon installed; it sets `calendar.block_mail` in that database before creating
-fixtures so no invitation or cancellation mail leaves the test run:
-
-```sh
-python3 addons/community_meetings_calendar/tests/browser/run_development_suite.py \
-  --development --database community_meetings_calendar_test
-```
+See the [Calendar integration guide](https://oyale.github.io/meeting-minutes/html-en/integrations/calendar.html).

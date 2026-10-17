@@ -7,7 +7,7 @@ desaparecen de los nuevos).
 
 ## Tipos de reunión
 
-*Configuration → Meeting Kinds*
+*Configuración → Tipos de reunión*
 
 Una clasificación breve para series y reuniones (p. ej. *Operational*, *Board*,
 *Assembly*). El **código** queda fijo una vez usado. Cada serie y reunión exige
@@ -15,7 +15,7 @@ un tipo; las reuniones independientes usan por defecto *Operational*.
 
 ## Tipos de punto de agenda
 
-*Configuration → Agenda Point Types*
+*Configuración → Tipos de punto de agenda*
 
 El **comportamiento** de un tipo decide cómo se trata el punto en la reunión en vivo:
 
@@ -40,7 +40,7 @@ fijo (archivar es la vía de escape).
 
 ## Motivos de discrepancia
 
-*Configuration → Dissent Reasons*
+*Configuración → Motivos de discrepancia*
 
 Catálogo de motivos para los registros de discrepancia/reserva (p. ej. "Objeción
 procesal", "Conflicto de interés"). Archivar un motivo mantiene legibles las
@@ -48,7 +48,7 @@ discrepancias existentes.
 
 ## Grupos de proponentes autorizados
 
-*Configuration → Authorized Proposer Groups*
+*Configuración → Grupos de proponentes autorizados*
 
 Por defecto **cualquier usuario interno** puede proponer puntos. Añade aquí grupos
 para restringir la propuesta a sus miembros (los gestores siempre conservan el

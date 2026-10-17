@@ -8,7 +8,7 @@ origen.
 
 ## Crear uno
 
-En la reunión en vivo, dentro de un punto: **Add follow-up** →
+En la reunión en vivo, dentro de un punto: **Añadir seguimiento** →
 
 - **Título** — la acción en sí ("Enviar el acta a legal").
 - **Tipo** — *actividad de Odoo* o *TODO nativo* (con el módulo Project: también
@@ -37,7 +37,7 @@ Un punto **TODO** no puede resolverse hasta que tenga un seguimiento asignado
 ## Vivir con un seguimiento
 
 - **Estado** — Abierto / En curso / Hecho / Cancelado, editable desde la reunión en
-  vivo, la pestaña *Follow-up Actions* del formulario o el propio formulario del
+  vivo, la pestaña *Acciones de seguimiento* del formulario o el propio formulario del
   seguimiento.
 - **Cambios de responsable** — editar la lista de responsables re-sincroniza las
   actividades.
@@ -48,18 +48,18 @@ Un punto **TODO** no puede resolverse hasta que tenga un seguimiento asignado
 
 ## Revisar en la próxima reunión
 
-Marca **Review at next meeting** (o pospone el punto) y el seguimiento se convierte
+Marca **Revisar en la próxima reunión** (o pospone el punto) y el seguimiento se convierte
 en un punto de *revisión* en la próxima reunión de la serie: misma identidad del
 punto, espacio de discusión fresco y enlace de origen **Desde un seguimiento** en la
 tarjeta.
 
 ## Tareas de Project
 
-Con `community_meetings_project` instalado, *Create Task* convierte un seguimiento
+Con `community_meetings_project` instalado, *Crear tarea* convierte un seguimiento
 en una tarea de Project (o vincula una existente). Ver
 [Integración con Project](../integrations/project.md).
 
 ## Los responsables necesitan acceso
 
 Un responsable del seguimiento que no es lector de la reunión no puede ver su
-contexto. Los editores deberían añadirlo en la pestaña **Access** de la reunión.
+contexto. Los editores deberían añadirlo en la pestaña **Acceso** de la reunión.
