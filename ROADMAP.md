@@ -37,6 +37,14 @@ people fairly and still allows the organizer to make changes.
 Use the meeting and agenda-point time records to show where actual durations
 differ from estimates and help organizers plan future meetings.
 
+### Domain-specific addons
+
+Explore optional addons for specialized meeting contexts, starting with a
+possible legal-meetings addon. Its scope could cover needs such as formal
+notices, quorum, voting and a stronger audit trail, while keeping those rules
+out of the general meeting workflow. The actual requirements and applicable
+jurisdictions must be defined before committing to implementation.
+
 ---
 
 # Hoja de ruta de Community Meetings
@@ -77,3 +85,11 @@ que sugiera personas elegibles de forma equilibrada y permita cambios manuales.
 
 Usar los tiempos registrados de reuniones y puntos para mostrar las diferencias
 entre estimaciones y duración real, y ayudar a planificar futuras reuniones.
+
+### Módulos para ámbitos específicos
+
+Explorar módulos opcionales para contextos de reunión especializados, empezando
+por un posible módulo de reuniones legales. Podría cubrir necesidades como
+convocatorias formales, quórum, votaciones y una trazabilidad reforzada, dejando
+esas reglas fuera del flujo general. Antes de implementarlo habría que definir
+los requisitos y las jurisdicciones aplicables.
