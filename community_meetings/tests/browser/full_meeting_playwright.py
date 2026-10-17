@@ -69,6 +69,16 @@ ACTIONS = {
         "previous point",
         "filter pending",
     ],
+    "test_focus_mode_presents_one_point_at_a_time": [
+        "switch to one-point focus mode",
+        "navigate between focused points",
+        "return to full agenda",
+    ],
+    "test_discussion_notes_can_expand_and_description_stays_visible": [
+        "read point description without another disclosure",
+        "enlarge discussion notes editor",
+        "restore compact notes editor",
+    ],
     "test_notes_autosave_and_reload": [
         "edit discussion notes",
         "edit meeting notes",
@@ -711,6 +721,10 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
 
         outside_related = make_outside_point("Outside related point")
         outside_origin = make_outside_point("Outside origin point")
+        self.rpc(
+            "community.meeting.topic", "write",
+            [[outside_related], {"description": "Background from the related point, with its own decision history."}],
+        )
         discussion_topic = self.record(
             "community.meeting.agenda.item", discussion_item, ["topic_id"]
         )["topic_id"][0]
@@ -767,11 +781,15 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         outside_chip = relations.locator(
             ".o_live_related_point", has_text="Outside related point"
         )
-        expect(outside_chip.first).to_have_js_property("tagName", "SPAN")
+        expect(outside_chip.first).to_have_js_property("tagName", "BUTTON")
+        outside_chip.first.click()
+        preview = relations.get_by_role("region", name="Related: Outside related point")
+        expect(preview).to_be_visible()
+        expect(preview).to_contain_text("Background from the related point")
         origin_chip = relations.locator(
             ".o_live_related_point", has_text="Outside origin point"
         )
-        expect(origin_chip.first).to_have_js_property("tagName", "SPAN")
+        expect(origin_chip.first).to_have_js_property("tagName", "BUTTON")
         relations.locator(
             ".o_live_related_point", has_text="Browser Decision case"
         ).first.click()
@@ -779,6 +797,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         expect(decision_card.locator(".o_live_expand")).to_have_attribute(
             "aria-expanded", "true"
         )
+        expect(relations.get_by_role("region")).to_have_count(0)
         expect(decision_card.locator(".o_live_presenter_badge")).to_have_count(0)
         expect(decision_card.locator(".o_live_related_points")).to_have_count(0)
 
@@ -792,6 +811,45 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             expect(self.outcome("information")).to_have_text("Done")
         finally:
             self.page.set_viewport_size({"width": 1440, "height": 1000})
+
+    def test_focus_mode_presents_one_point_at_a_time(self):
+        cards = self.page.locator(".o_live_agenda_card")
+        expect(cards).to_have_count(4)
+        focus = self.page.get_by_role("button", name="Focus on one point")
+        focus.click()
+        agenda = self.page.locator(".o_live_agenda")
+        expect(agenda).to_have_class(re.compile("o_live_focus_mode"))
+        expect(cards).to_have_count(1)
+        expect(cards.first).to_contain_text("Browser Information case")
+        self.page.get_by_role("button", name="Next agenda point").click()
+        expect(cards).to_have_count(1)
+        expect(cards.first).to_contain_text("Browser Discussion case")
+        self.page.get_by_role("button", name="Show full agenda").click()
+        expect(agenda).not_to_have_class(re.compile("o_live_focus_mode"))
+        expect(cards).to_have_count(4)
+
+    def test_discussion_notes_can_expand_and_description_stays_visible(self):
+        discussion_id = self.item_ids["discussion"]
+        self.rpc("community.meeting.agenda.item", "write", [[discussion_id], {
+            "description": "<p>Background everyone should read before the discussion.</p>",
+        }])
+        self.page.reload(wait_until="domcontentloaded")
+        card = self.card("discussion")
+        description = card.locator(".o_live_planned")
+        expect(description).to_be_visible()
+        expect(description).to_contain_text("Background everyone should read")
+        self.assertEqual(description.locator("details, summary").count(), 0)
+        card.locator(".o_live_expand").click()
+        expect(card.locator(".o_live_expand")).to_have_attribute("aria-expanded", "false")
+        expect(description).to_be_visible()
+        card.locator(".o_live_expand").click()
+        editor = card.locator(".o_live_richtext")
+        expect(editor.locator('[contenteditable="true"]')).to_be_visible()
+        card.get_by_role("button", name="Enlarge editor").click()
+        expect(editor).to_have_class(re.compile("o_live_richtext_expanded"))
+        self.assertGreaterEqual(editor.bounding_box()["height"], 300)
+        card.get_by_role("button", name="Reduce editor").click()
+        expect(editor).not_to_have_class(re.compile("o_live_richtext_expanded"))
 
     def test_form_edit_and_schedule(self):
         # Separate draft fixture: the standard case is already scheduled.

@@ -82,19 +82,20 @@
                         <button class="btn btn-outline-secondary" t-on-click="() => this.reviewCarryover(transfer, false)">Dismiss</button>
                     </div>
                 </section>
-                <section class="o_live_agenda">
+                <section t-att-class="'o_live_agenda ' + (state.focusMode ? 'o_live_focus_mode' : '')">
                     <div class="o_live_section_title">
-                        <div><h2>Agenda</h2><span class="text-muted"><t t-out="completedCount"/> of <t t-out="state.items.length"/> points completed</span></div>
+                        <div><h2>Agenda</h2><span class="text-muted"><t t-if="state.focusMode">Point <t t-out="activeItemPosition"/> of <t t-out="visibleItems.length"/> · </t><t t-out="completedCount"/> of <t t-out="state.items.length"/> points completed</span></div>
                         <div class="o_live_agenda_tools"><button t-if="!locked" class="btn btn-primary" t-on-click="addPoint">Add Point</button>
                             <button class="btn btn-outline-secondary" t-att-disabled="!visibleItems.length" t-on-click="() => this.navigateItem(-1)" title="Previous point" aria-label="Previous agenda point"><i class="fa fa-arrow-up" aria-hidden="true"/></button>
                             <button class="btn btn-outline-secondary" t-att-disabled="!visibleItems.length" t-on-click="() => this.navigateItem(1)" title="Next point" aria-label="Next agenda point"><i class="fa fa-arrow-down" aria-hidden="true"/></button>
                             <button class="btn btn-outline-secondary" t-att-aria-pressed="state.showPendingOnly" t-on-click="togglePending">Pending only</button>
-                            <button class="btn btn-outline-secondary" t-att-disabled="!visibleItems.length" t-on-click="toggleAll">Expand / Collapse all</button>
+                            <button class="btn btn-outline-secondary" t-att-aria-pressed="state.focusMode" t-on-click="toggleFocusMode"><i t-att-class="state.focusMode ? 'fa fa-th-list' : 'fa fa-bullseye'" aria-hidden="true"/> <t t-if="state.focusMode">Show full agenda</t><t t-else="">Focus on one point</t></button>
+                            <button t-if="!state.focusMode" class="btn btn-outline-secondary" t-att-disabled="!visibleItems.length" t-on-click="toggleAll">Expand / Collapse all</button>
                         </div>
                     </div>
                     <t t-if="!state.items.length"><p class="text-muted">There are no agenda points in this meeting.</p></t>
                     <t t-elif="!visibleItems.length"><p class="text-muted">There are no pending agenda points.</p></t>
-                    <article t-foreach="visibleItems" t-as="item" t-key="item.id" t-att-id="'agenda-card-' + item.id" t-att-class="'o_live_agenda_card ' + (state.activeItemId === item.id ? 'o_live_current' : '')">
+                    <article t-foreach="displayedItems" t-as="item" t-key="item.id" t-att-id="'agenda-card-' + item.id" t-att-class="'o_live_agenda_card ' + (state.activeItemId === item.id ? 'o_live_current' : '')">
                         <div class="o_live_card_header">
                             <button class="o_live_expand" t-on-click="() => this.toggle(item)" t-att-aria-expanded="state.expanded[item.id] ? 'true' : 'false'" t-att-aria-controls="'agenda-panel-' + item.id">
                                 <i t-att-class="state.expanded[item.id] ? 'fa fa-chevron-down' : 'fa fa-chevron-right'" aria-hidden="true"/>
@@ -116,11 +117,14 @@
                                 <button t-if="item.actual_started_at" class="btn btn-sm btn-outline-secondary" t-on-click="(ev) => { ev.stopPropagation(); this.pausePoint(item); }">Pause point</button>
                             </div>
                         </div>
+                        <section t-if="item.description" class="o_live_planned" aria-label="Point description"><h3>Point description</h3><div t-out="safeHtml(item.description)"/></section>
                         <div t-att-id="'agenda-panel-' + item.id" t-att-class="'o_live_card_body ' + (state.expanded[item.id] ? '' : 'd-none')">
-                            <details t-if="item.description" class="o_live_planned" open="open"><summary>Planned topic</summary><div t-out="safeHtml(item.description)"/></details>
                             <div t-if="item.has_started or draftingMinutes" class="o_live_subsection o_live_discussion_notes">
-                                <label class="form-label" t-att-for="'discussion-' + item.id">Discussion notes</label>
-                                <t t-if="canEditDiscussion(item)"><div class="o_live_richtext"><t t-component="Wysiwyg" t-props="{ options: richTextOptions(item.discussion_notes, 'discussion_notes:' + item.id, 'community.meeting.agenda.item', item.id, 'discussion_notes'), editingValue: item.discussion_notes || '', startWysiwyg: richTextStarter('discussion_notes:' + item.id, item.id, 'community.meeting.agenda.item', 'discussion_notes') }"/></div></t>
+                                <div class="o_live_notes_heading">
+                                    <label class="form-label" t-att-for="'discussion-' + item.id"><i class="fa fa-pencil-square-o" aria-hidden="true"/> Discussion notes</label>
+                                    <button t-if="canEditDiscussion(item)" class="btn btn-sm btn-link" t-att-aria-expanded="state.expandedNotes[item.id] ? 'true' : 'false'" t-on-click="() => this.toggleNotesExpanded(item)"><i t-att-class="state.expandedNotes[item.id] ? 'fa fa-compress' : 'fa fa-expand'" aria-hidden="true"/> <t t-if="state.expandedNotes[item.id]">Reduce editor</t><t t-else="">Enlarge editor</t></button>
+                                </div>
+                                <t t-if="canEditDiscussion(item)"><div t-att-class="'o_live_richtext ' + (state.expandedNotes[item.id] ? 'o_live_richtext_expanded' : '')"><t t-component="Wysiwyg" t-props="{ options: richTextOptions(item.discussion_notes, 'discussion_notes:' + item.id, 'community.meeting.agenda.item', item.id, 'discussion_notes'), editingValue: item.discussion_notes || '', startWysiwyg: richTextStarter('discussion_notes:' + item.id, item.id, 'community.meeting.agenda.item', 'discussion_notes') }"/></div></t>
                                 <t t-else=""><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></t>
                             </div>
                             <div t-if="typeBehavior(item) === 'next_meeting'" class="o_live_subsection o_live_next_meeting">
@@ -149,16 +153,18 @@
                             </div>
                             <div class="text-muted o_live_point_meta"><span t-if="item.deadline">Due <t t-out="item.deadline"/> · </span><span t-if="item.estimated_minutes">Estimated <t t-out="item.estimated_minutes"/> min</span></div>
                             <div t-if="hasPointRelations(item)" class="o_live_related_points">
-                                <span class="o_live_related_group" t-if="relatedTopics(item).length"><span class="text-muted">Related:</span>
-                                    <t t-foreach="relatedTopics(item)" t-as="related" t-key="related.id">
-                                        <button t-if="itemForTopic(related.id)" class="btn btn-sm btn-link p-0 o_live_related_point" t-on-click="() => this.jumpToItem(this.itemForTopic(related.id).id)" t-out="related.name"/>
-                                        <span t-else="" class="badge text-bg-light o_live_related_point" t-out="related.name"/>
-                                    </t>
-                                </span>
-                                <span class="o_live_related_group" t-if="originTopic(item)"><span class="text-muted">Origin:</span>
-                                    <button t-if="itemForTopic(originTopic(item).id)" class="btn btn-sm btn-link p-0 o_live_related_point" t-on-click="() => this.jumpToItem(this.itemForTopic(originTopic(item).id).id)" t-out="originTopic(item).name"/>
-                                    <span t-else="" class="badge text-bg-light o_live_related_point" t-out="originTopic(item).name"/>
-                                </span>
+                                <h3>Related items</h3>
+                                <div class="o_live_related_list">
+                                    <span class="o_live_relation" t-foreach="relationTopics(item)" t-as="related" t-key="related.id">
+                                        <button t-if="itemForTopic(related.id)" class="o_live_related_point" t-on-click="() => this.jumpToItem(this.itemForTopic(related.id).id)" t-att-aria-label="related.relationLabel + ': ' + related.name"><i class="fa fa-link" aria-hidden="true"/> <span t-out="related.relationLabel"/> <strong t-out="related.name"/><span class="badge text-bg-light" t-out="topicStateLabel(related)"/></button>
+                                        <button t-else="" class="o_live_related_point" t-att-aria-expanded="state.relatedTopicOpenId === related.id ? 'true' : 'false'" t-on-click="() => this.toggleRelatedTopic(related.id)" t-att-aria-label="related.relationLabel + ': ' + related.name"><i class="fa fa-external-link" aria-hidden="true"/> <span t-out="related.relationLabel"/> <strong t-out="related.name"/><span class="badge text-bg-light" t-out="topicStateLabel(related)"/></button>
+                                        <div t-if="state.relatedTopicOpenId === related.id" class="o_live_relation_preview" role="region" t-att-aria-label="related.relationLabel + ': ' + related.name">
+                                            <div class="o_live_relation_preview_header"><strong t-out="related.name"/><button class="btn-close" type="button" aria-label="Close related point details" t-on-click="() => this.toggleRelatedTopic(related.id)"/></div>
+                                            <div class="o_live_relation_facts"><span class="badge text-bg-light" t-out="topicStateLabel(related)"/><span t-if="related.series_id" class="text-muted">Series: <t t-out="label(related.series_id)"/></span><span t-if="related.presenter_partner_id" class="text-muted">Responsible: <t t-out="label(related.presenter_partner_id)"/></span><span t-if="related.deadline" class="text-muted">Due <t t-out="related.deadline"/></span><span t-if="related.estimated_minutes" class="text-muted">Estimated <t t-out="related.estimated_minutes"/> min</span></div>
+                                            <div t-if="related.description" class="o_live_relation_description" t-out="safeHtml(related.description)"/>
+                                        </div>
+                                    </span>
+                                </div>
                                 <span class="o_live_related_group" t-if="originActionName(item)"><span class="text-muted">From follow-up:</span>
                                     <span class="badge text-bg-light o_live_related_point" t-out="originActionName(item)"/>
                                 </span>

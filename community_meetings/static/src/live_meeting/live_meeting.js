@@ -41,7 +41,7 @@ export class LiveMeeting extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
-        this.state = useState({ loading: true, saving: 0, saveError: false, saveErrorDetail: "", unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, headerDraft: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissentReasons: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "activity", activity_type_id: false }, expanded: {}, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], pendingMinutes: [], minutesApprovals: [], defaultOwner: false });
+        this.state = useState({ loading: true, saving: 0, saveError: false, saveErrorDetail: "", unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, headerDraft: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissentReasons: [], dissents: [], actions: [], resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "activity", activity_type_id: false }, expanded: {}, expandedNotes: {}, relatedTopicOpenId: false, focusMode: false, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], pendingMinutes: [], minutesApprovals: [], defaultOwner: false });
         this.pendingWrites = new Map();
         this.editors = new Map();
         this.editorTimers = new Map();
@@ -121,7 +121,7 @@ export class LiveMeeting extends Component {
         const meetingTopics = await this.orm.searchRead(
             "community.meeting.topic",
             [["id", "in", topicIds]],
-            ["name", "related_topic_ids", "origin_topic_id", "origin_action_id"],
+            ["name", "description", "state", "outcome", "priority", "deadline", "estimated_minutes", "presenter_partner_id", "series_id", "related_topic_ids", "origin_topic_id", "origin_action_id"],
         );
         const extraTopicIds = meetingTopics
             .flatMap((topic) => [
@@ -131,7 +131,7 @@ export class LiveMeeting extends Component {
             .filter((id) => !topicIds.includes(id));
         const extraTopics = extraTopicIds.length
             ? await this.orm.searchRead(
-                  "community.meeting.topic", [["id", "in", extraTopicIds]], ["name"]
+                  "community.meeting.topic", [["id", "in", extraTopicIds]], ["name", "description", "state", "outcome", "priority", "deadline", "estimated_minutes", "presenter_partner_id", "series_id"]
               )
             : [];
         this.state.topicsById = Object.fromEntries(
@@ -144,6 +144,8 @@ export class LiveMeeting extends Component {
         this.state.privateNotes = privateNotes;
         this.state.users = users;
         this.state.expanded = Object.fromEntries(items.map((item, index) => [item.id, index === 0]));
+        this.state.expandedNotes = {};
+        this.state.relatedTopicOpenId = false;
         this.state.activeItemId = items[0]?.id || false;
         this.state.loading = false;
     }
@@ -180,9 +182,23 @@ export class LiveMeeting extends Component {
             this.relatedTopics(item).length || this.originTopic(item) || this.originActionName(item)
         );
     }
+    relationTopics(item) {
+        const related = this.relatedTopics(item).map((topic) => ({ ...topic, relationLabel: _t("Related") }));
+        const origin = this.originTopic(item);
+        if (origin) related.push({ ...origin, relationLabel: _t("Origin") });
+        return related;
+    }
+    topicStateLabel(topic) {
+        if (topic.state === "closed") return topic.outcome || _t("Closed");
+        return topic.state === "proposed" ? _t("Proposed") : _t("Open");
+    }
+    toggleRelatedTopic(topicId) {
+        this.state.relatedTopicOpenId = this.state.relatedTopicOpenId === topicId ? false : topicId;
+    }
     jumpToItem(itemId) {
         const item = this.state.items.find((row) => row.id === itemId);
         if (!item) return;
+        this.state.relatedTopicOpenId = false;
         this.state.activeItemId = item.id;
         this.state.expanded[item.id] = true;
         document.getElementById(`agenda-card-${item.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -409,6 +425,14 @@ export class LiveMeeting extends Component {
             ? this.state.items.filter((item) => !["closed", "discussed"].includes(item.disposition) || (this.typeBehavior(item) === "decision" && item.decision_result === "pending"))
             : this.state.items;
     }
+    get displayedItems() {
+        if (!this.state.focusMode) return this.visibleItems;
+        return this.visibleItems.filter((item) => item.id === this.state.activeItemId);
+    }
+    get activeItemPosition() {
+        const index = this.visibleItems.findIndex((item) => item.id === this.state.activeItemId);
+        return index < 0 ? 0 : index + 1;
+    }
     get completedCount() { return this.state.items.filter((item) => ["discussed", "closed"].includes(item.disposition)).length; }
     canStartPoint(item) {
         return item.disposition !== "closed"
@@ -451,15 +475,32 @@ export class LiveMeeting extends Component {
         });
     }
     toggle(item) {
-        this.state.activeItemId = item.id;
         this.state.expanded[item.id] = !this.state.expanded[item.id];
+        if (this.state.expanded[item.id]) this.state.activeItemId = item.id;
     }
     toggleTypeEditor(item) { this.state.editingTypes[item.id] = !this.state.editingTypes[item.id]; }
     toggleAll() {
         const expand = this.visibleItems.some((item) => !this.state.expanded[item.id]);
         for (const item of this.visibleItems) this.state.expanded[item.id] = expand;
     }
-    togglePending() { this.state.showPendingOnly = !this.state.showPendingOnly; }
+    togglePending() {
+        this.state.showPendingOnly = !this.state.showPendingOnly;
+        if (!this.visibleItems.some((item) => item.id === this.state.activeItemId)) {
+            this.state.activeItemId = this.visibleItems[0]?.id || false;
+            if (this.state.activeItemId) this.state.expanded[this.state.activeItemId] = true;
+        }
+    }
+    toggleFocusMode() {
+        this.state.focusMode = !this.state.focusMode;
+        if (this.state.focusMode) {
+            const active = this.visibleItems.find((item) => item.id === this.state.activeItemId) || this.visibleItems[0];
+            this.state.activeItemId = active?.id || false;
+            for (const item of this.state.items) this.state.expanded[item.id] = item.id === this.state.activeItemId;
+        }
+    }
+    toggleNotesExpanded(item) {
+        this.state.expandedNotes[item.id] = !this.state.expandedNotes[item.id];
+    }
     async navigateItem(offset) {
         const items = this.visibleItems;
         const index = items.findIndex((item) => item.id === this.state.activeItemId);

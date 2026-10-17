@@ -272,8 +272,8 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         card.get_by_role("button", name="Begin point").click()
         expect(card.locator('[contenteditable="true"][aria-label="Discussion notes"]')).to_be_visible()
         self.assertTrue(
-            card.locator(".o_live_discussion_notes").evaluate(
-                "el => el.previousElementSibling?.classList.contains('o_live_planned')"
+            card.locator(".o_live_planned").evaluate(
+                "el => el.nextElementSibling?.querySelector('.o_live_discussion_notes') !== null"
             ),
             "Discussion notes should sit directly below the point description.",
         )

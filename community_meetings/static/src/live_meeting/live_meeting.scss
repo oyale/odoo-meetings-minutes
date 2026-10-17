@@ -46,11 +46,34 @@
     .o_live_point_footer { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color, #ddd); }
     details.o_live_subsection > summary { cursor: pointer; font-weight: 600; padding: 8px 0; }
     .o_live_card_body { padding: 4px 18px 18px 42px; }
-    .o_live_planned { margin-bottom: 16px; }
-    .o_live_planned > div { margin-top: 6px; }
+    .o_live_planned { margin-bottom: 18px; padding: 14px 16px; border-left: 3px solid var(--o-brand-primary, #714B67); border-radius: 0 6px 6px 0; background: var(--table-bg, #f8f9fa); }
+    .o_live_card_header + .o_live_planned { margin: 0 18px 14px 42px; }
+    .o_live_planned h3 { margin: 0 0 8px; color: var(--body-color, #495057); font-size: .875rem; font-weight: 600; }
+    .o_live_planned > div { line-height: 1.6; }
     .o_live_rich_readonly { min-height: 2rem; padding: 8px 10px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; }
     .o_live_subsection { margin-top: 20px; }
     .o_live_subsection h3 { font-size: 1rem; }
+    .o_live_discussion_notes { padding: 14px 16px 16px; border: 1px solid var(--border-color, #ddd); border-radius: 8px; background: var(--table-bg, #f8f9fa); }
+    .o_live_notes_heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+    .o_live_notes_heading .form-label { margin: 0; font-size: 1.05rem; font-weight: 600; }
+    .o_live_richtext { min-height: 160px; overflow: auto; border: 1px solid var(--border-color, #ddd); border-radius: 6px; background: var(--body-bg, #fff); }
+    .o_live_richtext [contenteditable="true"], .o_live_richtext .odoo-editor-editable, .o_live_richtext .note-editable { min-height: 150px; padding: 12px; outline-color: var(--o-brand-primary, #714B67); }
+    .o_live_richtext_expanded { min-height: clamp(320px, 55vh, 680px); }
+    .o_live_richtext_expanded [contenteditable="true"], .o_live_richtext_expanded .odoo-editor-editable, .o_live_richtext_expanded .note-editable { min-height: clamp(300px, 53vh, 660px); }
+    .o_live_related_points { margin-top: 18px; }
+    .o_live_related_points > h3 { margin-bottom: 8px; color: var(--body-color, #495057); font-size: .875rem; font-weight: 600; }
+    .o_live_related_list { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .o_live_relation { position: relative; display: inline-flex; max-width: 100%; }
+    .o_live_related_point { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 6px 9px; border: 1px solid var(--border-color, #ddd); border-radius: 6px; background: var(--body-bg, #fff); color: var(--body-color, #495057); font-size: .875rem; text-align: left; }
+    button.o_live_related_point { cursor: pointer; }
+    button.o_live_related_point:hover, button.o_live_related_point:focus-visible { border-color: var(--o-brand-primary, #714B67); color: var(--o-brand-primary, #714B67); }
+    .o_live_related_point strong { font-weight: 600; }
+    .o_live_related_point .badge { max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
+    .o_live_relation_preview { position: absolute; top: calc(100% + 6px); left: 0; z-index: 8; width: 420px; max-width: calc(100vw - 48px); padding: 14px; border: 1px solid var(--border-color, #ddd); border-radius: 8px; background: var(--body-bg, #fff); box-shadow: var(--box-shadow, 0 6px 20px rgba(0, 0, 0, .16)); }
+    .o_live_relation_preview_header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; font-size: 1rem; }
+    .o_live_relation_facts { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 8px; font-size: .8125rem; }
+    .o_live_relation_description { max-height: 220px; margin-top: 10px; overflow: auto; line-height: 1.5; }
+    .o_live_related_group { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; }
     .o_live_inline_records { list-style: none; padding: 0; margin: 0 0 8px; }
     .o_live_inline_records li { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; padding: 7px 0; }
     .o_live_inline_records li.o_live_followup_task { display: block; padding: 14px 16px; margin: 10px 0; border: 1px solid var(--border-color, #ddd); border-radius: 8px; background: var(--body-bg, #fff); }
@@ -90,6 +113,7 @@
         .o_live_card_header { flex-wrap: wrap; }
         .o_live_type, .o_live_outcome_badge { width: auto; flex: 1 1 145px; }
         .o_live_card_body { padding-left: 16px; }
+        .o_live_card_header + .o_live_planned { margin-right: 16px; margin-left: 16px; }
         .o_live_add_row { align-items: stretch; flex-direction: column; }
         .o_live_record_editor, .o_live_resolution_editor, .o_live_resolution_form, .o_live_dissent_form { grid-template-columns: minmax(0, 1fr); }
         .o_live_general_task { align-items: stretch; flex-direction: column; }
@@ -98,6 +122,13 @@
         .o_live_followup_task_title { grid-template-columns: minmax(0, 1fr); }
         .o_live_followup_task_title .form-label { grid-column: auto; }
         .o_live_followup_task_title .badge { justify-self: start; }
+        .o_live_discussion_notes { padding: 12px; }
+        .o_live_related_list { align-items: stretch; flex-direction: column; }
+        .o_live_relation { display: flex; width: 100%; }
+        .o_live_related_point { justify-content: flex-start; width: 100%; flex-wrap: wrap; }
+        .o_live_relation_preview { position: fixed; top: 50%; left: 50%; width: calc(100vw - 32px); max-height: 70vh; transform: translate(-50%, -50%); overflow: auto; box-shadow: 0 0 0 100vmax rgba(0, 0, 0, .32), 0 8px 28px rgba(0, 0, 0, .22); }
+        .o_live_focus_mode .o_live_agenda_card { height: auto; min-height: auto; }
+        .o_live_focus_mode .o_live_richtext, .o_live_focus_mode .o_live_richtext [contenteditable="true"], .o_live_focus_mode .o_live_richtext .odoo-editor-editable, .o_live_focus_mode .o_live_richtext .note-editable { min-height: 40vh; }
     }
     @media (max-width: 480px) {
         padding: 12px;
@@ -123,7 +154,14 @@
         .o_live_type_badge, .o_live_type, .o_live_type_edit { grid-column: 1; grid-row: 3; justify-self: start; width: auto; flex: none; }
         .o_live_outcome_badge { grid-column: 2; grid-row: 3; justify-self: end; width: auto; flex: none; }
         .o_live_point_timer { grid-column: 1 / -1; grid-row: 4; margin-left: 0; flex-wrap: wrap; }
+        .o_live_notes_heading { align-items: flex-start; flex-direction: column; gap: 4px; }
+        .o_live_related_point .badge { max-width: none; }
     }
+    .o_live_focus_mode .o_live_agenda_card { display: flex; height: calc(100vh - 330px); min-height: 560px; flex-direction: column; }
+    .o_live_focus_mode .o_live_card_body { display: flex; flex: 1; flex-direction: column; }
+    .o_live_focus_mode .o_live_discussion_notes { display: flex; flex: 1; flex-direction: column; }
+    .o_live_focus_mode .o_live_richtext { flex: 1; min-height: 36vh; }
+    .o_live_focus_mode .o_live_richtext [contenteditable="true"], .o_live_focus_mode .o_live_richtext .odoo-editor-editable, .o_live_focus_mode .o_live_richtext .note-editable { min-height: 36vh; }
 }
 
 .o_live_priority { font-size: .85rem; padding: .2rem; }
