@@ -97,8 +97,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             return
         state = self.record("community.meeting", self.meeting_id, ["state"])["state"]
         if state not in ("draft", "scheduled"):
-            # held/minutes_draft/approved cannot be cancelled via RPC; the
-            # disposable-user cleanup in run_development_suite removes them.
+            # The standard workflow does not allow deleting terminal meetings.
             return
         self.rpc("community.meeting", "action_cancel", [[self.meeting_id]])
         resolutions = self.rpc("community.meeting.resolution", "search", [[("meeting_id", "=", self.meeting_id)]])

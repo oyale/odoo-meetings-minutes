@@ -22,6 +22,10 @@ and `community_meetings_calendar` directories contain optional suites for their
 integrations; run those against a database with the corresponding addon installed.
 The integration suites import the core browser helpers from this addon.
 
+Meetings moved into terminal states and their approved revisions cannot always
+be deleted through normal Odoo access. The full suite reports retained records;
+reset or discard the disposable database after the run.
+
 Set `PLAYWRIGHT_HEADFUL=1` to display Chromium. Artifacts are written under
 `/tmp/meeting-playwright/` by default; set `PLAYWRIGHT_ARTIFACTS` to change the
 location. Never commit credentials, browser traces or test artifacts.

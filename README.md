@@ -57,14 +57,17 @@ pip install odoo-addons-oyale-meeting-minutes
 Read the [English guide](https://oyale.github.io/meeting-minutes/html-en/index.html)
 or [guía en español](https://oyale.github.io/meeting-minutes/html-es/index.html).
 GitHub Pages builds the bilingual user and administrator documentation from
-`docs/user/` and `docs/user_es/` on every push to `18.0`.
+`docs/user/` and `docs/user_es/` on every push to `18.0`. The
+[technical domain model](docs/MODELO_TECNICO.md) describes the entities,
+lifecycles and access boundaries.
 
 ## Development
 
 The addons follow OCA repository conventions for manifests, packaging and
 continuous integration. Run the Odoo test suite with the standard OCA CI tools
-or use the reusable Playwright checks in each addon's `tests/browser/` directory
-against a disposable test database. See each generated addon README for details.
+or use the reusable Playwright checks in the core and optional integration addons'
+`tests/browser/` directories against a disposable test database. See each addon
+README for details.
 
 ## License
 

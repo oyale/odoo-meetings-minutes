@@ -23,6 +23,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - uses: actions/configure-pages@v5
       - run: pip install -r docs/requirements.txt
       - run: python docs/render_docs.py
       - uses: actions/upload-pages-artifact@v3
