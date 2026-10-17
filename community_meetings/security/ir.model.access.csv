@@ -11,6 +11,9 @@ access_agenda_editor,community.meeting.agenda.item editor,model_community_meetin
 access_agenda_manager,community.meeting.agenda.item manager,model_community_meeting_agenda_item,group_meeting_manager,1,1,1,1
 access_agenda_type_reader,community.meeting.agenda type reader,model_community_meeting_agenda_type,group_meeting_reader,1,0,0,0
 access_agenda_type_manager,community.meeting.agenda type manager,model_community_meeting_agenda_type,group_meeting_manager,1,1,1,1
+access_meeting_kind_reader,Meeting kind reader,model_community_meeting_kind,group_meeting_reader,1,0,0,0
+access_meeting_kind_proposer,Meeting kind proposer,model_community_meeting_kind,group_agenda_proposer,1,0,0,0
+access_meeting_kind_manager,Meeting kind manager,model_community_meeting_kind,group_meeting_manager,1,1,1,1
 access_resolution_reader,community.meeting.resolution reader,model_community_meeting_resolution,group_meeting_reader,1,0,0,0
 access_resolution_editor,community.meeting.resolution editor,model_community_meeting_resolution,group_meeting_editor,1,1,1,1
 access_resolution_manager,community.meeting.resolution manager,model_community_meeting_resolution,group_meeting_manager,1,1,1,1

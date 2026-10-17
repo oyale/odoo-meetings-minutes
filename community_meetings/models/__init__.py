@@ -1,3 +1,4 @@
+from . import meeting_kind
 from . import meeting
 from . import series
 from . import agenda_item

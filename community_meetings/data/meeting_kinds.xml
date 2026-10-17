@@ -1,0 +1,7 @@
+<odoo noupdate="1">
+    <record id="kind_operational" model="community.meeting.kind">
+        <field name="name">Operational</field>
+        <field name="code">operational</field>
+        <field name="sequence">10</field>
+    </record>
+</odoo>

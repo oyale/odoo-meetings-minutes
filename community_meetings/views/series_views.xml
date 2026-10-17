@@ -33,7 +33,7 @@
                     <group>
                         <group>
                             <field name="company_id" groups="base.group_multi_company"/>
-                            <field name="meeting_kind"/>
+                            <field name="meeting_kind_id"/>
                             <field name="active"/>
                         </group>
                         <group>
@@ -55,6 +55,9 @@
                             <field name="next_meeting_day_of_month" invisible="next_meeting_rule != 'day_of_month'"/>
                             <field name="next_meeting_interval_days" invisible="next_meeting_rule != 'interval_days'"/>
                         </group>
+                    </group>
+                    <group string="Purpose">
+                        <field name="description" nolabel="1" placeholder="What kind of series is this?"/>
                     </group>
                     <notebook>
                         <page string="Meetings">

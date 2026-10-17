@@ -19,9 +19,11 @@ class CommunityMeetingSeries(models.Model):
     company_id = fields.Many2one(
         "res.company", required=True, default=lambda self: self.env.company, index=True,
     )
-    meeting_kind = fields.Selection(
-        [("operational", "Operational")], default="operational", required=True,
+    meeting_kind_id = fields.Many2one(
+        "community.meeting.kind", string="Kind", required=True, ondelete="restrict",
+        default=lambda self: self.env.ref("community_meetings.kind_operational", raise_if_not_found=False),
     )
+    description = fields.Html(translate=True)
     coordinator_user_ids = fields.Many2many(
         "res.users", "community_meeting_series_coordinator_rel",
         "series_id", "user_id", string="Coordinators", check_company=True,
@@ -135,7 +137,7 @@ class CommunityMeetingSeries(models.Model):
                 **self.env.context,
                 "default_series_id": self.id,
                 "default_company_id": self.company_id.id,
-                "default_meeting_kind": self.meeting_kind,
+                "default_meeting_kind_id": self.meeting_kind_id.id,
             },
         }
 
@@ -160,6 +162,10 @@ class CommunityMeetingSeries(models.Model):
         if not self.env.user.has_group("community_meetings.group_meeting_manager"):
             if any(self.env.user not in series.coordinator_user_ids for series in self):
                 raise UserError(_("Only a series coordinator or meeting manager can edit this series."))
+        if "meeting_kind_id" in vals and self.env["community.meeting"].sudo().search_count(
+            [("series_id", "in", self.ids)]
+        ):
+            raise UserError(_("The kind of a series with meetings cannot be changed."))
         return super().write(vals)
 
     def unlink(self):

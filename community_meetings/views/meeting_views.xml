@@ -72,11 +72,12 @@
                             <field name="attendee_partner_ids" widget="many2many_tags"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="approved_revision_id" invisible="1"/>
-                            <field name="series_id" readonly="state not in ['draft', 'scheduled'] or actual_start_datetime or approved_revision_id" domain="[('company_id', '=', company_id), ('meeting_kind', '=', meeting_kind)]"/>
+                            <field name="meeting_kind_id" invisible="1"/>
+                            <field name="series_id" readonly="state not in ['draft', 'scheduled'] or actual_start_datetime or approved_revision_id" domain="[('company_id', '=', company_id), ('meeting_kind_id', '=', meeting_kind_id)]"/>
                             <field name="series_carryover_policy" invisible="not series_id" readonly="1"/>
                         </group>
                     </group>
-                    <group string="Purpose"><field name="description" nolabel="1" placeholder="What is this meeting for?"/></group>
+                    <group string="Purpose"><field name="description" nolabel="1" placeholder="What is this meeting for?"/><field name="series_description" nolabel="1" readonly="1" invisible="not series_id"/></group>
                     <notebook>
                         <page string="Agenda">
                             <field name="agenda_item_ids" readonly="state in ['approved', 'cancelled']">

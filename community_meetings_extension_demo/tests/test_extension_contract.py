@@ -3,12 +3,13 @@ from odoo.tests.common import TransactionCase
 
 class TestExtensionContract(TransactionCase):
     def test_kind_and_deterministic_snapshot_payload(self):
+        demo_kind = self.env.ref("community_meetings_extension_demo.kind_demonstration")
         meeting = self.env["community.meeting"].new({
             "name": "Synthetic extension",
-            "meeting_kind": "demo",
+            "meeting_kind_id": demo_kind.id,
             "demo_reference": "DEMO-1",
         })
-        self.assertEqual(meeting.meeting_kind, "demo")
+        self.assertEqual(meeting.meeting_kind_id, demo_kind)
         extension = self.env["community.meeting.revision"]._get_snapshot_extensions(
             meeting, self.env.user, "2026-01-01 00:00:00",
         )

@@ -4,10 +4,6 @@ from odoo import fields, models
 class CommunityMeeting(models.Model):
     _inherit = "community.meeting"
 
-    meeting_kind = fields.Selection(
-        selection_add=[("demo", "Demonstration")],
-        ondelete={"demo": "set default"},
-    )
     demo_reference = fields.Char()
 
 
@@ -18,6 +14,6 @@ class CommunityMeetingRevision(models.Model):
         payload = super()._get_snapshot_extensions(meeting, approver, approved_at)
         payload["community_meetings_extension_demo"] = {
             "reference": meeting.demo_reference or "",
-            "kind": meeting.meeting_kind,
+            "kind": meeting.meeting_kind_id.code or "",
         }
         return payload

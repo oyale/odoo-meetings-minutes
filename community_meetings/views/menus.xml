@@ -3,4 +3,5 @@
     <delete model="ir.ui.menu" id="menu_community_meetings"/>
     <menuitem id="menu_community_meeting_configuration" name="Configuration" parent="menu_community_meetings_root" sequence="90" groups="community_meetings.group_meeting_manager"/>
     <menuitem id="menu_community_meeting_agenda_types" name="Agenda Point Types" parent="menu_community_meeting_configuration" action="action_community_meeting_agenda_types" sequence="10" groups="community_meetings.group_meeting_manager"/>
+    <menuitem id="menu_community_meeting_kinds" name="Meeting Kinds" parent="menu_community_meeting_configuration" action="action_community_meeting_kinds" sequence="20" groups="community_meetings.group_meeting_manager"/>
 </odoo>

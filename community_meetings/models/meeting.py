@@ -45,13 +45,15 @@ class CommunityMeeting(models.Model):
     meeting_url = fields.Char()
     description = fields.Html()
     minutes_notes = fields.Html()
-    meeting_kind = fields.Selection(
-        [("operational", "Operational")], default="operational", required=True,
+    meeting_kind_id = fields.Many2one(
+        "community.meeting.kind", string="Kind", required=True, ondelete="restrict",
+        default=lambda self: self.env.ref("community_meetings.kind_operational", raise_if_not_found=False),
     )
     series_id = fields.Many2one(
         "community.meeting.series", check_company=True, ondelete="restrict",
     )
     series_carryover_policy = fields.Selection(related="series_id.carryover_policy", readonly=True)
+    series_description = fields.Html(related="series_id.description", readonly=True, string="Series description")
     state = fields.Selection(
         [
             ("draft", "Draft"),
@@ -110,12 +112,18 @@ class CommunityMeeting(models.Model):
             if meeting.start_datetime and not meeting.end_datetime:
                 meeting.end_datetime = fields.Datetime.add(meeting.start_datetime, hours=1)
 
-    @api.constrains("series_id", "company_id", "meeting_kind")
+    @api.onchange("series_id")
+    def _onchange_series_id(self):
+        for meeting in self:
+            if meeting.series_id:
+                meeting.meeting_kind_id = meeting.series_id.meeting_kind_id
+
+    @api.constrains("series_id", "company_id", "meeting_kind_id")
     def _check_series_scope(self):
         for meeting in self:
             if meeting.series_id and (
                 meeting.series_id.company_id != meeting.company_id
-                or meeting.series_id.meeting_kind != meeting.meeting_kind
+                or meeting.series_id.meeting_kind_id != meeting.meeting_kind_id
                 or not meeting.series_id.active
             ):
                 raise ValidationError(_("The meeting series must be active and match the meeting company and kind."))
@@ -157,6 +165,10 @@ class CommunityMeeting(models.Model):
                 "community_meetings.group_meeting_manager"
             ):
                 raise UserError(_("Only a meeting manager can create a meeting for another organizer."))
+            if vals.get("series_id") and "meeting_kind_id" not in vals:
+                series = self.env["community.meeting.series"].browse(vals["series_id"])
+                if series:
+                    vals["meeting_kind_id"] = series.meeting_kind_id.id
         meetings = super().create(vals_list)
         self.env["community.meeting.carryover"]._process_new_meetings(meetings)
         return meetings
@@ -174,6 +186,8 @@ class CommunityMeeting(models.Model):
             self._lock_live_workflow()
             self.invalidate_recordset(["series_id", "approved_revision_id"])
             destination = self.env["community.meeting.series"].browse(vals["series_id"]).exists()
+            if destination and "meeting_kind_id" not in vals:
+                vals["meeting_kind_id"] = destination.meeting_kind_id.id
             for meeting in self:
                 if destination and (
                     destination.company_id != meeting.company_id or not destination.active

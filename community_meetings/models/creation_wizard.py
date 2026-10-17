@@ -205,20 +205,21 @@ class MeetingCreateWizard(models.TransientModel):
                 raise ValidationError(
                     _("Enter a title, start time and positive duration.")
                 )
+            values = {
+                "name": self.name,
+                "series_id": self.series_id.id,
+                "company_id": self.company_id.id,
+                "start_datetime": self.start_datetime,
+                "duration_hours": self.duration_hours,
+                "attendee_partner_ids": [(6, 0, self.attendee_partner_ids.ids)],
+                "creation_token": self.token,
+            }
+            if self.series_id:
+                values["meeting_kind_id"] = self.series_id.meeting_kind_id.id
             meeting = (
                 self.env["community.meeting"]
                 .with_context(review_carryovers_in_wizard=True, defer_carryover_processing=True)
-                .create(
-                    {
-                        "name": self.name,
-                        "series_id": self.series_id.id,
-                        "company_id": self.company_id.id,
-                        "start_datetime": self.start_datetime,
-                        "duration_hours": self.duration_hours,
-                        "attendee_partner_ids": [(6, 0, self.attendee_partner_ids.ids)],
-                        "creation_token": self.token,
-                    }
-                )
+                .create(values)
             )
             for line in self.line_ids.filtered("included"):
                 item = self.env["community.meeting.agenda.item"].create(
