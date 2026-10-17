@@ -1,0 +1,98 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+#. module: community_meetings_calendar
+#: model:ir.model.constraint,message:community_meetings_calendar.constraint_calendar_event_community_meeting_calendar_event_unique
+msgid "A community meeting can have only one Calendar event."
+msgstr ""
+
+#. module: community_meetings_calendar
+#: model:ir.model.constraint,message:community_meetings_calendar.constraint_calendar_event_community_calendar_uid_unique
+msgid "A managed Calendar event UID must be unique."
+msgstr ""
+
+#. module: community_meetings_calendar
+#: model:ir.model,name:community_meetings_calendar.model_calendar_event
+#: model:ir.model.fields,field_description:community_meetings_calendar.field_community_meeting__calendar_event_ids
+msgid "Calendar Event"
+msgstr ""
+
+#. module: community_meetings_calendar
+#. odoo-python
+#: code:addons/community_meetings_calendar/models/meeting.py:0
+msgid "Calendar invitees must be active internal users in the meeting company."
+msgstr ""
+
+#. module: community_meetings_calendar
+#. odoo-python
+#: code:addons/community_meetings_calendar/models/calendar_event.py:0
+msgid "Cancel the meeting to remove its Calendar event."
+msgstr ""
+
+#. module: community_meetings_calendar
+#. odoo-python
+#: code:addons/community_meetings_calendar/models/calendar_event.py:0
+msgid "Cancelled: %s"
+msgstr ""
+
+#. module: community_meetings_calendar
+#: model:ir.model.fields,field_description:community_meetings_calendar.field_calendar_event__community_calendar_uid
+msgid "Community Calendar Uid"
+msgstr ""
+
+#. module: community_meetings_calendar
+#: model:ir.model,name:community_meetings_calendar.model_community_meeting
+#: model:ir.model.fields,field_description:community_meetings_calendar.field_calendar_event__community_meeting_id
+msgid "Community Meeting"
+msgstr ""
+
+#. module: community_meetings_calendar
+#. odoo-python
+#: code:addons/community_meetings_calendar/models/calendar_event.py:0
+msgid "Meeting Calendar events are managed from the meeting."
+msgstr ""
+
+#. module: community_meetings_calendar
+#: model_terms:ir.ui.view,arch_db:community_meetings_calendar.view_community_meeting_form_calendar
+msgid "Open Calendar Event"
+msgstr ""
+
+#. module: community_meetings_calendar
+#: model_terms:ir.ui.view,arch_db:community_meetings_calendar.view_calendar_event_form_community_meeting
+msgid "Open Meeting"
+msgstr "Abrir reunión"
+
+#. module: community_meetings_calendar
+#. odoo-python
+#: code:addons/community_meetings_calendar/models/calendar_event.py:0
+msgid "The meeting %(meeting)s was cancelled."
+msgstr ""
+
+#. module: community_meetings_calendar
+#. odoo-python
+#: code:addons/community_meetings_calendar/models/meeting.py:0
+msgid "The meeting end must be after its start before scheduling."
+msgstr ""
+
+#. module: community_meetings_calendar
+#. odoo-python
+#: code:addons/community_meetings_calendar/models/calendar_event.py:0
+msgid "This Calendar event is not linked to a community meeting."
+msgstr ""
+
+#. module: community_meetings_calendar
+#: model_terms:ir.ui.view,arch_db:community_meetings_calendar.view_calendar_event_form_community_meeting
+msgid "This event is managed by its community meeting. Open the meeting to view or edit meeting details."
+msgstr "Este evento lo gestiona su reunión comunitaria. Abre la reunión para ver o editar sus detalles."
+
+#. module: community_meetings_calendar
+#. odoo-python
+#: code:addons/community_meetings_calendar/models/meeting.py:0
+msgid "This meeting has no Calendar event."
+msgstr ""
+
+#. module: community_meetings_calendar
+#. odoo-python
+#: code:addons/community_meetings_calendar/models/meeting.py:0
+msgid "You are not allowed to schedule meetings."
+msgstr ""
