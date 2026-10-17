@@ -58,6 +58,7 @@ Read the [English guide](https://oyale.github.io/meeting-minutes/html-en/index.h
 or [guía en español](https://oyale.github.io/meeting-minutes/html-es/index.html).
 GitHub Pages builds the bilingual user and administrator documentation from
 `docs/user/` and `docs/user_es/` on every push to `18.0`.
+See [ROADMAP.md](ROADMAP.md) for planned user-facing improvements.
 
 ## License
 
