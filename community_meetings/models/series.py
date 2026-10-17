@@ -27,11 +27,15 @@ class CommunityMeetingSeries(models.Model):
     coordinator_user_ids = fields.Many2many(
         "res.users", "community_meeting_series_coordinator_rel",
         "series_id", "user_id", string="Coordinators", check_company=True,
+        help="People responsible for preparing the meetings of this series.",
     )
     meeting_ids = fields.One2many("community.meeting", "series_id", string="Meetings")
     carryover_policy = fields.Selection(
         [("review", "Review"), ("automatic", "Automatic"), ("manual", "Manual")],
         default="review", required=True,
+        help="Review: unfinished points are offered to the next meeting, which accepts or "
+             "discards them. Automatic: unfinished points are carried into the next meeting "
+             "without asking. Manual: someone moves each point explicitly.",
     )
     has_minutes_approval_point = fields.Boolean(
         string="Minutes approval point",

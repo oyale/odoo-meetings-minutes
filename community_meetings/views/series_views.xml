@@ -31,36 +31,21 @@
                         <h1><field name="name" placeholder="Series name"/></h1>
                     </div>
                     <group>
-                        <group>
+                        <group name="identity" string="What">
+                            <field name="meeting_kind_id" help="Type of meetings this series holds."/>
                             <field name="company_id" groups="base.group_multi_company"/>
-                            <field name="meeting_kind_id"/>
-                            <field name="active"/>
+                            <field name="active" widget="boolean_toggle" help="Archived series keep their meetings but disappear from lists and menus."/>
                         </group>
-                        <group>
-                            <field name="coordinator_user_ids" widget="many2many_tags"/>
-                            <field name="coordinator_label"/>
-                            <field name="secretary_label"/>
-                            <field name="carryover_policy"/>
-                        </group>
-                    </group>
-                    <group string="Agenda structure">
-                        <group>
-                            <field name="has_minutes_approval_point"/>
-                            <field name="has_next_meeting_point"/>
-                        </group>
-                        <group>
-                            <field name="next_meeting_rule"/>
-                            <field name="timezone"/>
-                            <field name="next_meeting_weekday" invisible="next_meeting_rule != 'weekday'"/>
-                            <field name="next_meeting_day_of_month" invisible="next_meeting_rule != 'day_of_month'"/>
-                            <field name="next_meeting_interval_days" invisible="next_meeting_rule != 'interval_days'"/>
+                        <group name="people" string="People">
+                            <field name="coordinator_user_ids" widget="many2many_tags" help="People responsible for preparing the meetings of this series."/>
+                            <field name="attendee_partner_ids" widget="many2many_tags" help="People invited to every new meeting of this series; you can still change attendees per meeting."/>
                         </group>
                     </group>
                     <group string="Purpose">
                         <field name="description" nolabel="1" placeholder="What kind of series is this?"/>
                     </group>
                     <notebook>
-                        <page string="Meetings">
+                        <page string="Meetings" name="meetings">
                             <field name="meeting_ids" readonly="1">
                                 <list create="0" edit="0" delete="0" default_order="start_datetime desc">
                                     <field name="code"/>
@@ -69,6 +54,89 @@
                                     <field name="state" widget="badge"/>
                                 </list>
                             </field>
+                        </page>
+                        <page string="Scheduling" name="scheduling">
+                            <group>
+                                <group>
+                                    <field name="duration_hours" widget="float_time" help="Planned length of each meeting of this series."/>
+                                    <field name="timezone" help="Timezone used to propose the next meeting date."/>
+                                </group>
+                                <group>
+                                    <field name="meeting_name_pattern" placeholder="{date} {series}" help="New meetings are named with this pattern. Use {date} for the meeting date and {series} for the series name."/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Agenda structure" name="structure">
+                            <group>
+                                <group>
+                                    <field name="has_minutes_approval_point"/>
+                                    <field name="has_next_meeting_point"/>
+                                </group>
+                                <group>
+                                    <field name="next_meeting_rule" invisible="not has_next_meeting_point"/>
+                                    <field name="next_meeting_weekday" invisible="next_meeting_rule != 'weekday'"/>
+                                    <field name="next_meeting_day_of_month" invisible="next_meeting_rule != 'day_of_month'"/>
+                                    <field name="next_meeting_interval_days" invisible="next_meeting_rule != 'interval_days'"/>
+                                </group>
+                            </group>
+                            <div class="text-muted" invisible="not has_next_meeting_point">
+                                Every meeting of this series starts with a minutes-approval point (if enabled) and ends with a next-meeting point. The default rule above pre-fills its proposed date: next weekday (e.g. always Tuesday), a fixed day of the month, or a fixed number of days after this meeting.
+                            </div>
+                        </page>
+                        <page string="Policies" name="policies">
+                            <group>
+                                <group string="Unfinished points" name="carryover">
+                                    <field name="carryover_policy" widget="radio" options="{'horizontal': true}"/>
+                                    <div class="text-muted">
+                                        Review: the next meeting decides which points to continue. Automatic: unfinished points continue without asking. Manual: someone moves each point explicitly.
+                                    </div>
+                                </group>
+                                <group string="Adding points" name="add_point_group">
+                                    <field name="add_point_policy" widget="radio" options="{'horizontal': true}"/>
+                                    <div class="text-muted" invisible="add_point_policy == 'draft'">
+                                        Draft only: points can be added while preparing the meeting. Before it starts: also once it is scheduled, until it begins. While it runs: also while the meeting is in progress, until it finishes.
+                                    </div>
+                                    <div class="text-muted" invisible="add_point_policy != 'draft'">
+                                        Points can only be added while the meeting is a draft.
+                                    </div>
+                                </group>
+                                <group string="Time tracking" name="time_tracking_group">
+                                    <field name="time_tracking" widget="radio" options="{'horizontal': true}"/>
+                                    <div class="text-muted" invisible="time_tracking != 'inherit'">
+                                        Company default: <field name="company_meeting_time_tracking" widget="boolean_toggle" readonly="1"/> (change it in Settings → Meetings → Time tracking).
+                                    </div>
+                                    <div class="text-muted" invisible="time_tracking == 'inherit'">
+                                        When off, meetings of this series have no start/pause timers: the live meeting is editable from the start and only the actual finish is recorded.
+                                    </div>
+                                </group>
+                                <group string="Point estimates" name="point_estimates" colspan="2">
+                                    <group>
+                                        <field name="default_estimated_minutes" help="Estimated minutes pre-filled for new points of this series; leave empty to use the company default."/>
+                                        <field name="company_point_estimated_minutes" readonly="1"/>
+                                    </group>
+                                    <div class="text-muted">
+                                        Minutes-approval points reserve 5 minutes per pending acta and next-meeting points 5 minutes, regardless of this value.
+                                    </div>
+                                </group>
+                                <group string="Role names" name="role_labels" colspan="2">
+                                    <group>
+                                        <field name="coordinator_label"/>
+                                        <field name="secretary_label"/>
+                                    </group>
+                                    <div class="text-muted">
+                                        Optional overrides of the default role names shown on meetings (Settings → Meetings → Role names). Leave empty to use those.
+                                    </div>
+                                </group>
+                                <group string="Follow-ups" name="followups" colspan="2">
+                                    <group>
+                                        <field name="followup_allowed_kinds" widget="many2many_tags" help="Follow-up types new points of this series may use."/>
+                                        <field name="followup_default_kind" help="Follow-up type pre-selected when adding a point to a meeting of this series."/>
+                                    </group>
+                                    <group>
+                                        <field name="default_activity_type_id" help="Activity type used when a follow-up is recorded as an Odoo activity."/>
+                                    </group>
+                                </group>
+                            </group>
                         </page>
                     </notebook>
                 </sheet>
@@ -96,6 +164,9 @@
                     <field name="meeting_name_pattern" placeholder="{date} {series}"/>
                 </group>
                 <group invisible="step != 'structure'">
+                    <field name="time_tracking"/>
+                    <field name="add_point_policy"/>
+                    <field name="default_estimated_minutes"/>
                     <field name="has_minutes_approval_point"/>
                     <field name="has_next_meeting_point"/>
                     <field name="next_meeting_rule"/>
@@ -113,6 +184,9 @@
                     <field name="attendee_partner_ids" widget="many2many_tags" readonly="1"/>
                     <field name="meeting_name_pattern" readonly="1"/>
                     <field name="has_minutes_approval_point" readonly="1"/>
+                    <field name="time_tracking" readonly="1"/>
+                    <field name="add_point_policy" readonly="1"/>
+                    <field name="default_estimated_minutes" readonly="1"/>
                     <field name="has_next_meeting_point" readonly="1"/>
                     <field name="next_meeting_rule" readonly="1"/>
                 </group>
