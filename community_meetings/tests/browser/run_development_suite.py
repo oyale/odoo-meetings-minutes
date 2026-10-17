@@ -114,6 +114,7 @@ if user:
         env = dict(
             os.environ,
             ODOO_BASE_URL=args.base_url,
+            ODOO_DB=args.database,
             ODOO_LOGIN=login,
             ODOO_PASSWORD=password,
             ODOO_PROPOSER_LOGIN=proposer_login,

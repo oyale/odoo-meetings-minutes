@@ -57,6 +57,10 @@ patch(LiveMeeting.prototype, {
         return super.pointOutcomeLabel(item);
     },
 
+    async convertFollowup(action, kind) {
+        await super.convertFollowup(action, kind);
+        await this.refreshProjectTaskLinks();
+    },
     async createProjectTask(action) {
         try {
             const actionWindow = await this.orm.call(

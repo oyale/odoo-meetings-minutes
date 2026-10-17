@@ -762,6 +762,16 @@ export class LiveMeeting extends Component {
             Object.assign(action, saved);
         });
     }
+    convertChoices(action) {
+        return this.followupChoices({ id: action.agenda_item_id[0] }).filter(choice => choice.kind !== action.followup_kind);
+    }
+    async convertFollowup(action, kind) {
+        await this.write(`action:${action.id}`, "community.meeting.action", [action.id], {}, async () => {
+            await this.orm.call("community.meeting.action", "action_convert_followup_kind", [[action.id], kind]);
+            const [saved] = await this.orm.read("community.meeting.action", [action.id], ["followup_kind", "followup_activity_id", "followup_activity_completed_on"]);
+            Object.assign(action, saved);
+        });
+    }
     async addResolution(item) {
         const form = this.state.newResolution[item.id] || {};
         if (!form.title?.trim() || !await this.flushEditors()) return;

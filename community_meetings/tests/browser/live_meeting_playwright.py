@@ -16,6 +16,7 @@ from urllib.parse import urljoin
 from playwright.sync_api import expect, sync_playwright
 
 BASE_URL = os.environ.get("ODOO_BASE_URL", "http://meeting-minutes.local:8069").rstrip("/")
+DB = os.environ.get("ODOO_DB", "")
 LOGIN = os.environ.get("ODOO_LOGIN")
 PASSWORD = os.environ.get("ODOO_PASSWORD")
 
@@ -35,7 +36,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         cls.console_errors = []
         cls.page.on("pageerror", lambda error: cls.console_errors.append(str(error)))
         cls.page.on("console", lambda msg: cls.console_errors.append(msg.text) if msg.type == "error" else None)
-        cls.page.goto(urljoin(BASE_URL + "/", "web/login"), wait_until="domcontentloaded")
+        cls.page.goto(urljoin(BASE_URL + "/", "web/login" + (("?db=%s" % DB) if DB else "")), wait_until="domcontentloaded")
         cls.page.locator('input[name="login"]').fill(LOGIN)
         cls.page.locator('input[name="password"]').fill(PASSWORD)
         cls.page.locator('button[type="submit"]').click()
@@ -458,7 +459,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         context = self.browser.new_context()
         try:
             page = context.new_page()
-            page.goto(BASE_URL + "/web/login")
+            page.goto(BASE_URL + "/web/login" + (("?db=%s" % DB) if DB else ""))
             page.locator('input[name="login"]').fill(login)
             page.locator('input[name="password"]').fill(PASSWORD)
             page.locator('button[type="submit"]').click()
@@ -504,6 +505,15 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         row.get_by_text("Several responsible people", exact=True).click()
         row.get_by_label("Responsible people").select_option([str(owner)])
         expect(row.get_by_label("Responsible people").locator("option:checked")).to_have_count(1)
+
+    def test_convert_menu_hidden_when_only_one_container(self):
+        card = self.card("discussion")
+        card.get_by_role("button", name="Add follow-up", exact=True).click()
+        form = card.locator(".o_live_task_form")
+        form.get_by_label("Task name").fill("Single container follow-up")
+        form.get_by_role("button", name="Add follow-up").click()
+        expect(card.locator(".o_live_followup_task").last).to_be_visible()
+        expect(card.locator(".o_live_followup_convert")).to_have_count(0)
 
     def test_header_details_and_add_point_remain_available_while_paused(self):
         self.page.get_by_role("button", name="Start Meeting").click()
