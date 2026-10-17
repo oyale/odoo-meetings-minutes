@@ -153,7 +153,10 @@ class MeetingTopic(models.Model):
             raise UserError(
                 _("Use the meeting workflow to change point state or scope.")
             )
-        # Content is shared only by deliberate reuse. Never rewrite past sessions.
+        # Content is shared only by deliberate reuse. Propagation stops at the
+        # editable frontier: only participations on draft/scheduled meetings that
+        # have not started follow the point. Held/minutes_draft minutes keep their
+        # own snapshot, so minutes under review cannot shift under approvers.
         if "agenda_type_id" in vals and any(t.state == "closed" for t in self):
             raise UserError(_("Reopen the point before changing its type."))
         result = super().write(vals)

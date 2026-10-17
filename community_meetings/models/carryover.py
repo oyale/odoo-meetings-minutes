@@ -247,6 +247,11 @@ class CommunityMeetingCarryover(models.Model):
         promoted = self.env["community.meeting.topic"].search([
             ("origin_action_id", "=", self.origin_action_id.id), ("series_id", "=", destination.series_id.id),
         ], limit=1) if self.origin_action_id else self.env["community.meeting.topic"]
+        # Continuity rule: reuse the origin point only when it lives in the
+        # destination series (points are series-scoped). An unanchored origin
+        # (action/resolution with no agenda item) or a cross-series transfer has
+        # no reusable point, so a fresh point is minted and the carryover record
+        # itself (carryover_id + "Carried forward from ..." text) is the link back.
         item = self.env["community.meeting.agenda.item"].create({
             "topic_id": promoted.id or (source.topic_id.id if source and source.meeting_id.series_id == destination.series_id else False),
             "meeting_id": destination.id,

@@ -39,6 +39,15 @@ class TestMeetingDomain(TransactionCase):
         with self.assertRaises(ValidationError):
             series._propose_next_meeting_datetime("2026-10-23 00:30:00")
 
+    def test_point_edits_do_not_rewrite_held_minutes(self):
+        meeting = self.env["community.meeting"].create({"name": "Frozen minutes", "start_datetime": "2026-11-02 10:00:00"})
+        point = self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Frozen point"})
+        meeting.action_schedule()
+        meeting.action_mark_held()
+        point.topic_id.write({"name": "Edited after the session"})
+        self.assertEqual(point.name, "Frozen point")
+        self.assertEqual(point.topic_id.name, "Edited after the session")
+
     def test_pauses_reject_editorial_rpc_writes_and_allow_minutes_drafting(self):
         meeting = self.env["community.meeting"].create({"name": "Pause policy", "start_datetime": "2026-11-01 10:00:00"})
         point = self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Notes"})

@@ -59,6 +59,14 @@ class ProjectTaskLinkChecks(models.AbstractModel):
         return list(result)
 
     def read(self, fields=None, load="_classic_read"):
+        """Strip linked tasks the reader cannot see.
+
+        Read-time policy only: the stored relation keeps every linked task, so a
+        manager still sees the full set. This deliberately trades read-back
+        fidelity (``read()`` differs from the stored value) for not leaking
+        inaccessible tasks; write-path integrity is enforced by
+        ``_check_task_links``.
+        """
         records = super().read(fields=fields, load=load)
         link_fields = {"project_task_ids", "selected_project_task_ids"}
         if fields is not None and not link_fields.intersection(fields):
