@@ -10,7 +10,8 @@
             </field>
             <sheet position="before">
                 <div class="alert alert-info" role="status" invisible="not community_meeting_id">
-                    <p>This event is managed by its community meeting. Use the meeting link to view or edit meeting details.</p>
+                    <p>This event is managed by its community meeting. Open the meeting to view or edit meeting details.</p>
+                    <button name="action_open_community_meeting" type="object" string="Open Meeting" class="btn btn-link" icon="fa-external-link"/>
                 </div>
             </sheet>
             <field name="name" position="attributes">

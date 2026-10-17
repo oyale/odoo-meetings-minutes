@@ -41,7 +41,7 @@ class CalendarMeetingBrowserChecks(FullMeetingBrowserChecks):
         self.assertEqual(subject.locator("input, textarea, [contenteditable=true]").count(), 0)
         self.assertFalse(self.page.locator('div[name="send_buttons"]').is_visible())
 
-        self.page.locator('button[name="action_open_calendar_event"]').click()
+        self.page.locator('button[name="action_open_community_meeting"]').click()
         meeting_name = self.record("community.meeting", self.meeting_id, ["name"])["name"]
         meeting_dialog = self.page.locator(".o_dialog .o_form_view")
         for _ in range(40):
@@ -54,6 +54,20 @@ class CalendarMeetingBrowserChecks(FullMeetingBrowserChecks):
             meeting_dialog.count() and meeting_name in meeting_dialog.inner_text()
         )
         self.assertTrue(opened_record, "Calendar document link did not open its meeting")
+
+        self.page.locator('button[name="action_open_calendar_event"]').click()
+        event_name = self.record("calendar.event", event_id, ["name"])["name"]
+        event_form = self.page.locator(".o_form_view")
+        for _ in range(40):
+            if "calendar.event" in self.page.url:
+                break
+            if event_form.count() and event_name in event_form.inner_text():
+                break
+            self.page.wait_for_timeout(250)
+        opened_event = "calendar.event" in self.page.url or (
+            event_form.count() and event_name in event_form.inner_text()
+        )
+        self.assertTrue(opened_event, "Meeting link did not open its Calendar event")
 
     def test_reschedule_and_attendee_change_are_mirrored_in_calendar(self):
         reviewer_login = os.environ["ODOO_REVIEWER_LOGIN"]

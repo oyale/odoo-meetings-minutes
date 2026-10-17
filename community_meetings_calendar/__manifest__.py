@@ -5,7 +5,7 @@
     "category": "Productivity/Calendar",
     "license": "AGPL-3",
     "depends": ["community_meetings", "calendar"],
-    "data": ["views/calendar_event_views.xml"],
+    "data": ["views/calendar_event_views.xml", "views/meeting_views.xml"],
     "uninstall_hook": "uninstall_hook",
     "installable": True,
     "application": False,

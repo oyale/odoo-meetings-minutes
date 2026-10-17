@@ -1,7 +1,7 @@
 import uuid
 
 from odoo import _, Command, api, fields, models
-from odoo.exceptions import AccessError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 
 
 class CommunityMeeting(models.Model):
@@ -137,6 +137,15 @@ class CommunityMeeting(models.Model):
                 continue
             event._community_meetings_calendar_cancel_mail(event.partner_ids)
             event._community_meetings_calendar_unlink()
+
+    def action_open_calendar_event(self):
+        self.ensure_one()
+        self.check_access("read")
+        event = self.calendar_event_ids
+        if not event:
+            raise UserError(_("This meeting has no Calendar event."))
+        event.check_access("read")
+        return event.get_formview_action()
 
     def write(self, values):
         changed = self._calendar_managed_fields().intersection(values)

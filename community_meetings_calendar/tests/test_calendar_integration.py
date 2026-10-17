@@ -88,6 +88,12 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
         action = event.action_open_calendar_event()
         self.assertEqual(action["res_model"], "community.meeting")
         self.assertEqual(action["res_id"], meeting.id)
+        meeting_action = meeting.action_open_calendar_event()
+        self.assertEqual(meeting_action["res_model"], "calendar.event")
+        self.assertEqual(meeting_action["res_id"], event.id)
+        event_meeting_action = event.action_open_community_meeting()
+        self.assertEqual(event_meeting_action["res_model"], "community.meeting")
+        self.assertEqual(event_meeting_action["res_id"], meeting.id)
         self.assertEqual(
             set(event.partner_ids.ids),
             {
@@ -120,7 +126,13 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
             readable_event.action_open_calendar_event()["res_id"],
             readable.id,
         )
+        self.assertEqual(
+            readable_event.action_open_community_meeting()["res_id"],
+            readable.id,
+        )
         readable.with_user(self.reader).check_access("read")
+        with self.assertRaises(AccessError):
+            readable_event.with_user(self.other).action_open_community_meeting()
 
     def test_schedule_fills_end_from_series_and_rejects_invalid_duration(self):
         series = self.env["community.meeting.series"].with_user(self.editor).create({

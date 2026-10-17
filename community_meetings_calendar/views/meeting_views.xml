@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_community_meeting_form_calendar" model="ir.ui.view">
+        <field name="name">community.meeting.form.calendar</field>
+        <field name="model">community.meeting</field>
+        <field name="inherit_id" ref="community_meetings.view_community_meeting_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form/header" position="inside">
+                <button name="action_open_calendar_event" type="object"
+                    string="Open Calendar Event" icon="fa-calendar"
+                    invisible="not calendar_event_ids"/>
+            </xpath>
+            <xpath expr="//form/sheet" position="inside">
+                <field name="calendar_event_ids" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

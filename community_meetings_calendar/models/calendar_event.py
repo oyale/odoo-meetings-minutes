@@ -58,6 +58,14 @@ class CalendarEvent(models.Model):
             raise AccessError(_("Cancel the meeting to remove its Calendar event."))
         return super().unlink()
 
+    def action_open_community_meeting(self):
+        self.ensure_one()
+        meeting = self.community_meeting_id
+        if not meeting:
+            raise AccessError(_("This Calendar event is not linked to a community meeting."))
+        meeting.check_access("read")
+        return meeting.get_formview_action()
+
     @api.model_create_multi
     def _community_meetings_calendar_create(self, vals_list):
         """Create integration-owned events through a non-RPC server path."""
