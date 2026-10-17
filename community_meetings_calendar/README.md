@@ -1,7 +1,7 @@
 # Community Meetings - Calendar Integration
 
 [![Odoo 18.0](https://img.shields.io/badge/Odoo-18.0-714B67.svg)](https://github.com/oyale/meeting-minutes/tree/18.0)
-[![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](../../LICENSE)
+[![License: AGPL-3](https://img.shields.io/badge/License-AGPL--3-blue.svg)](../../LICENSE)
 [![Maturity: Beta](https://img.shields.io/badge/maturity-Beta-yellow.svg)](https://odoo-community.org/page/development-status)
 
 This optional addon mirrors scheduled Community Meetings as private Odoo

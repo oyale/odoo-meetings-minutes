@@ -22,7 +22,9 @@ repos:
     hooks:
       - id: ruff
         args: [--fix]
+        exclude: ^(community_meetings.*/tests/browser/|docs/)
       - id: ruff-format
+        exclude: ^(community_meetings.*/tests/browser/|docs/)
   - repo: https://github.com/OCA/maintainer-tools
     rev: bf9ecb9938b6a5deca0ff3d870fbd3f33341fded
     hooks:
@@ -30,3 +32,5 @@ repos:
         args:
           [--addons-dir=., --repo-name=meeting-minutes, --branch=18.0, --org-name=oyale, --convert-fragments-to-markdown]
       - id: oca-gen-metapackage
+      - id: oca-gen-addons-table
+        stages: [manual]

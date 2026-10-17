@@ -1,7 +1,7 @@
 # Reuniones: modelo técnico y reglas de negocio
 
-Modelo para Odoo 18. Describe lo implementado;
-las divergencias y decisiones abiertas figuran en **Concerns**. Los diagramas son Mermaid.
+Modelo de dominio para Odoo 18. Describe las entidades y flujos principales.
+Los diagramas son Mermaid.
 
 ## 1. Límites del sistema
 
@@ -10,16 +10,15 @@ flowchart LR
     O[Odoo: usuarios, contactos, mail y editor] --> C[community_meetings]
     C --> P[community_meetings_project]
     T[Odoo Project] --> P
-    C --> E[community_meetings_extension_demo]
+    C --> E[Extensiones opcionales]
     C --> UI[Formularios, asistentes y vista live]
     C --> R[Actas versionadas y PDF]
 ```
 
 Core gobierna reuniones, agenda, propuestas, decisiones, seguimientos y actas.
 Project añade enlaces a tareas, selección/creación de proyectos y requisitos de
-cierre adicionales. El módulo demo ejemplifica extensiones; no es un requisito
-del negocio. Las extensiones usan herencia Odoo y hooks para preparar avisos,
-validar aprobación, completar snapshots y preparar solicitudes de arrastre.
+cierre adicionales. Las extensiones usan herencia Odoo y hooks para preparar
+avisos, validar aprobación, completar snapshots y preparar solicitudes de arrastre.
 
 ## 2. Entidades e identidad
 
@@ -200,29 +199,15 @@ cambio incompatible. La revisión aprobada y su PDF no se reescriben.
   Manager implica Editor y Approver. Proposer es una capacidad separada.
   La empresa y el ámbito de reunión/serie limitan el acceso de cada rol.
 
-## 7. Concerns y resolución
+## 7. Extensión y límites
 
-Los siete hallazgos originales se han abordado con el siguiente diseño. El
-desglose de implementación y validación se mantiene en [PLAN_CONCERNS.md](PLAN_CONCERNS.md).
+Core no depende de Project ni Calendar. Cada integración vive en un addon
+separado y declara explícitamente sus dependencias. Los módulos pueden ampliar
+modelos y flujos por herencia estándar de Odoo; las restricciones de acceso y
+las validaciones de negocio se aplican en servidor, además de en la interfaz.
 
-| Prioridad original | Hallazgo | Solución |
-|---|---|---|
-| Alta | Aprobador sin Editor no podía entrar en live. | Capacidades separadas de lectura, edición y aprobación; proyección pública del disenso; sin carga de notas privadas ni editores en modo lectura. |
-| Media | La pausa sólo bloqueaba la UI. | Validación editorial en servidor y bloqueo común de reunión para guardados y cronómetros; redacción posterior y progreso operativo permitidos. |
-| Media | El snapshot omitía la serie destino. | Esquema v2 con identificador/nombre de serie y representación en PDF; revisiones anteriores conservadas. |
-| Media | Asistente y solicitudes seguían circuitos diferentes. | Servicio común de candidatos y materialización, revalidado al confirmar; excluir una reunión no descarta la solicitud. |
-| Media | Puntos promovidos sin conexión con la próxima agenda. | Candidatos identificados por seguimiento original, con primera participación en el punto promovido y deduplicación. |
-| Media | Dos significados de tarea. | Actividades/To-dos nativos configurables en core; task pertenece a Project; varios responsables con trazabilidad y evidencia de cierre. |
-| Media | Fecha sin hora ni zona explícita. | Fecha y hora locales en live, zona por serie, UTC en almacenamiento; recurrencia local y rechazo de horas ambiguas/inexistentes. |
-
-### Pendientes de comprobación
-
-La validación completa de navegador, incluida la separación de core y Project,
-está pendiente en el ticket local 48 del plan de ejecución.
-Los resultados antiguos de Playwright y cobertura son evidencia fechada, no
-validación de los cambios de este ciclo. La posible eliminación de registros
-generales de reunión, los puntos recurrentes y el flujo de adjuntos siguen como
-decisiones futuras independientes.
+La guía para usuarios y administradores está publicada en
+`https://oyale.github.io/meeting-minutes/`.
 
 Fuentes principales: [modelo de reunión](../community_meetings/models/meeting.py),
 [puntos y participaciones](../community_meetings/models/topic.py),
