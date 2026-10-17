@@ -283,6 +283,7 @@ class CommunityMeeting(models.Model):
                 default_type = self.env["community.meeting.agenda.type"].search(
                     [("behavior", "=", "followup"), ("active", "=", True)], limit=1
                 )
+                responsible = action.responsible_user_id.partner_id
                 self.env["community.meeting.topic"].create({
                     "name": action.name,
                     "agenda_type_id": default_type.id,
@@ -290,6 +291,9 @@ class CommunityMeeting(models.Model):
                     "origin_action_id": action.id,
                     "company_id": meeting.company_id.id,
                     "series_id": meeting.series_id.id,
+                    "presenter_partner_id": (
+                        responsible.id if responsible else self.env.user.partner_id.id
+                    ),
                 })
 
     def get_pending_minutes_for_approval(self):

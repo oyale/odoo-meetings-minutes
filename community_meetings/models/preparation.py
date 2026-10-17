@@ -264,6 +264,7 @@ class Meeting(models.Model):
                     "name": _("Approve previous minutes"),
                     "kind": "minutes_approval",
                     "sequence": -1,
+                    "presenter_partner_id": False,
                 })
             if series.has_next_meeting_point and not meeting.agenda_item_ids.filtered(
                 lambda item: item.agenda_type_id.behavior == "next_meeting"
@@ -278,6 +279,7 @@ class Meeting(models.Model):
                     "kind": "next_meeting",
                     "sequence": 1000,
                     "next_meeting_datetime": proposed,
+                    "presenter_partner_id": False,
                 })
 
     def write(self, vals):

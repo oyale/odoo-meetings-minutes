@@ -336,6 +336,7 @@ class MeetingTopic(models.Model):
             "proposal_status", "submitted_by_user_id", "submitted_at", "proposal_response",
         ):
             values.pop(guarded, None)
+        values.setdefault("presenter_partner_id", proposer_partner.id)
         values.update({
             "state": "proposed",
             "proposal_status": "submitted",
