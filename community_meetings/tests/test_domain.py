@@ -219,6 +219,42 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(history[0]["meeting_id"], previous.id)
         self.assertEqual(point.minutes_approval_ids.meeting_id, previous)
 
+    def test_meeting_code_falls_back_without_colliding(self):
+        sequence = self.env["ir.sequence"].search([("code", "=", "community.meeting")])
+        self.assertTrue(sequence, "The meeting sequence should exist after install.")
+        sequence.sudo().unlink()
+        with self.assertRaises(ValidationError):
+            self.env["community.meeting"].create({
+                "name": "No sequence meeting", "start_datetime": "2026-11-02 10:00:00",
+            })
+
+    def test_approver_without_editor_can_approve_minutes(self):
+        # Pins the sudo() write in _set_approved_revision: approvers are
+        # read-only on the meeting, yet must be able to approve.
+        approver = self.env["res.users"].sudo().create({
+            "name": "Domain approver",
+            "login": "domain-approver-test",
+            "email": "domain-approver@example.test",
+            "groups_id": [(6, 0, [
+                self.env.ref("base.group_user").id,
+                self.env.ref("community_meetings.group_meeting_approver").id,
+            ])],
+        })
+        self.assertFalse(approver.has_group("community_meetings.group_meeting_editor"))
+        meeting = self.env["community.meeting"].create({
+            "name": "Approval pin", "start_datetime": "2026-11-03 10:00:00",
+            "reader_user_ids": [(4, approver.id)],
+        })
+        self.env["community.meeting.agenda.item"].create({
+            "meeting_id": meeting.id, "name": "Topic", "kind": "discussion",
+        })
+        meeting.action_schedule()
+        meeting.action_mark_held()
+        meeting.action_draft_minutes()
+        revision = meeting.with_user(approver).action_approve_minutes()
+        self.assertEqual(meeting.state, "approved")
+        self.assertEqual(revision.approved_by_id, approver)
+
     def test_series_next_meeting_rule_proposes_date(self):
         series = self.env["community.meeting.series"].create({"name": "Recurrence"})
         series.write({"next_meeting_rule": "interval_days", "next_meeting_interval_days": 7})

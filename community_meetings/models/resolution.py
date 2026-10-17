@@ -39,6 +39,14 @@ class CommunityMeetingResolution(models.Model):
     )
 
     def init(self):
+        # Guard the raw index: pre-existing duplicate active decisions would
+        # otherwise fail module load with a cryptic IntegrityError.
+        self.env.cr.execute("""SELECT agenda_item_id FROM community_meeting_resolution
+            WHERE status='active' AND decision_outcome IS NOT NULL
+            GROUP BY agenda_item_id HAVING count(*) > 1""")
+        duplicates = [row[0] for row in self.env.cr.fetchall()]
+        if duplicates:
+            raise UserError(_("Agenda points %s have more than one active decision; resolve them before upgrading.", duplicates))
         self.env.cr.execute("""CREATE UNIQUE INDEX IF NOT EXISTS community_meeting_one_active_decision
             ON community_meeting_resolution(agenda_item_id)
             WHERE status='active' AND decision_outcome IS NOT NULL""")

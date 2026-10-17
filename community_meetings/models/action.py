@@ -57,6 +57,9 @@ class CommunityMeetingAction(models.Model):
     def write(self, vals):
         if "meeting_id" in vals and any(record.meeting_id.id != vals["meeting_id"] for record in self):
             raise UserError(_("An action cannot be moved to another meeting."))
+        # Only meeting-bound actions freeze when the meeting is cancelled; an
+        # action linked to a persistent point stays maintainable because the
+        # point outlives the cancelled session.
         if any(record.meeting_id.state == "cancelled" and not record.topic_id for record in self):
             raise UserError(_("Actions in cancelled meetings cannot be edited."))
         agenda_items = self.mapped("agenda_item_id")

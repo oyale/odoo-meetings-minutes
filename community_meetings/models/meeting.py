@@ -143,6 +143,8 @@ class CommunityMeeting(models.Model):
         return True
 
     def _lock_live_workflow(self):
+        # A row update also serializes repeatable-read snapshots, so concurrent
+        # live writes are retried by Odoo instead of validating stale state.
         for meeting in self.sorted("id"):
             self.env.cr.execute("UPDATE community_meeting SET write_date=clock_timestamp() WHERE id=%s", [meeting.id])
         self.invalidate_recordset(["state", "actual_start_datetime", "actual_paused_at", "actual_end_datetime"])
@@ -158,7 +160,10 @@ class CommunityMeeting(models.Model):
                 raise ValidationError(_("Approved revisions cannot be assigned during meeting creation."))
             if vals.get("code", "New") == "New":
                 # Editors may create meetings but should not gain general sequence access.
-                vals["code"] = self.env["ir.sequence"].sudo().next_by_code("community.meeting") or "New"
+                code = self.env["ir.sequence"].sudo().next_by_code("community.meeting")
+                if not code:
+                    raise ValidationError(_("The meeting reference sequence is not configured."))
+                vals["code"] = code
             if vals.get("state", "draft") != "draft":
                 raise ValidationError(_("Meetings must be created as drafts."))
             if vals.get("organizer_id", self.env.uid) != self.env.uid and not self.env.user.has_group(
@@ -490,6 +495,9 @@ class CommunityMeeting(models.Model):
         return super(CommunityMeeting, self).write({"state": "minutes_draft"})
 
     def _set_approved_revision(self, revision):
+        # Approvers have read-only meeting access, so the approved state and
+        # revision link are written with sudo. Keep the payload to exactly
+        # these two fields; pinned by the approver approval test.
         self.ensure_one()
         return super(CommunityMeeting, self.sudo()).write({
             "state": "approved", "approved_revision_id": revision.id,

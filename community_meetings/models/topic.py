@@ -95,6 +95,9 @@ class MeetingTopic(models.Model):
     @api.depends("all_participation_ids", "all_action_ids")
     @api.depends_context("uid", "allowed_company_ids")
     def _compute_visible_links(self):
+        # compute_sudo=False with uid/allowed_company_ids in depends_context:
+        # the visible links are access-filtered per user, so the cache must
+        # invalidate when those change.
         for topic in self:
             topic.participation_ids = self.env["community.meeting.agenda.item"].search(
                 [("topic_id", "=", topic.id)]

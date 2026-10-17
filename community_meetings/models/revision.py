@@ -163,6 +163,8 @@ class CommunityMeetingRevision(models.Model):
         digest = hashlib.sha256(snapshot_json.encode("utf-8")).hexdigest()
         previous = meeting.revision_ids.sorted("revision_number")[-1:] or self.browse()
         revision_number = previous.revision_number + 1 if previous else 1
+        # Approvers are read-only on the meeting; sudo is required to mint the
+        # immutable revision record. Keep the payload fixed (no live fields).
         revision = self.sudo().create({
             "meeting_id": meeting.id,
             "revision_number": revision_number,
