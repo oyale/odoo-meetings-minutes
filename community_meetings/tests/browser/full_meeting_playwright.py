@@ -176,6 +176,10 @@ ACTIONS = {
         "open draft meeting workspace",
         "respect series point-add policy",
     ],
+    "test_live_header_shows_coordinator_before_minutes_secretary": [
+        "show meeting coordinator in live header",
+        "place coordinator before minutes secretary",
+    ],
     "test_meetings_root_opens_list_and_preserves_submenus": [
         "open meeting list from root menu",
         "open new meeting wizard from its submenu",
@@ -1491,6 +1495,19 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         self.page.get_by_role("button", name="Open Meeting").click()
         expect(self.page.locator('.o_live_header input[aria-label="Meeting name"]')).to_have_value(re.compile("Draft workspace"))
         expect(self.page.get_by_role("button", name="Add Point", exact=True)).to_be_visible()
+
+    def test_live_header_shows_coordinator_before_minutes_secretary(self):
+        self.open_live(self.meeting_id)
+        header = self.page.locator(".o_live_header_primary")
+        coordinator = header.locator(".o_live_header_coordinator")
+        secretary = header.locator(".o_live_header_secretary")
+        expect(coordinator).to_be_visible()
+        expect(secretary).to_be_visible()
+        self.assertLess(
+            coordinator.evaluate("element => [...element.parentElement.children].indexOf(element)"),
+            secretary.evaluate("element => [...element.parentElement.children].indexOf(element)"),
+        )
+        self.assertTrue(coordinator.inner_text().strip())
 
     def test_meetings_root_opens_list_and_preserves_submenus(self):
         self.page.goto(BASE_URL + "/web")

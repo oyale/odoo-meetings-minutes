@@ -390,7 +390,7 @@ export class LiveMeeting extends Component {
     }
     async saveHeaderField(field, value) {
         if (this.locked) return;
-        value = field === "secretary_id" ? (Number(value) || false) : value.trim();
+        value = ["organizer_id", "secretary_id"].includes(field) ? (Number(value) || false) : value.trim();
         if (field === "name" && !value) return;
         await this.write(`meeting:${this.meetingId}`, "community.meeting", [this.meetingId], {
             [field]: value || false,

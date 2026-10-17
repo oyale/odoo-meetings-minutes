@@ -20,7 +20,7 @@
     .o_live_workflow_buttons { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
     .o_live_header { padding: 28px 0 20px; border-bottom: 1px solid var(--border-color, #ddd); }
     .o_live_header h1 { margin: 4px 0 18px; }
-    .o_live_header_primary { display: grid; grid-template-columns: minmax(250px, auto) minmax(230px, auto) auto minmax(0, 1fr); align-items: center; gap: 8px; margin-top: 14px; }
+    .o_live_header_primary { display: grid; grid-template-columns: repeat(2, minmax(220px, auto)) auto auto minmax(0, 1fr); align-items: center; gap: 8px; margin-top: 14px; }
     .o_live_header_chip { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 7px 11px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 999px; background: var(--table-bg, #f8f9fa); color: var(--body-color, #495057); font-size: .875rem; }
     .o_live_header_chip > i { flex: none; color: var(--o-brand-primary, #714B67); }
     .o_live_header_chip_label { flex: none; color: var(--text-muted, #6c757d); font-size: .75rem; }
