@@ -34,6 +34,35 @@ PAGE_ORDER = [
 ]
 MD_EXTENSIONS = ["tables", "fenced_code", "sane_lists", "smarty"]
 
+NAV_LABELS = {
+    "en": {
+        "index.md": "Overview", "concepts.md": "Concepts",
+        "roles-and-permissions.md": "Roles & permissions",
+        "admin/configuration.md": "General configuration", "admin/series.md": "Series",
+        "admin/catalogs.md": "Catalogs",
+        "user/prepare-meeting.md": "Prepare a meeting", "user/propose-a-point.md": "Propose a point",
+        "user/live-meeting.md": "Live meeting", "user/minutes-and-approval.md": "Minutes & approval",
+        "user/followups.md": "Follow-ups", "user/carryovers.md": "Carryovers",
+        "integrations/calendar.md": "Calendar", "integrations/project.md": "Project",
+        "faq.md": "FAQ",
+    },
+    "es": {
+        "index.md": "Inicio", "concepts.md": "Conceptos",
+        "roles-and-permissions.md": "Roles y permisos",
+        "admin/configuration.md": "Configuración general", "admin/series.md": "Series",
+        "admin/catalogs.md": "Catálogos",
+        "user/prepare-meeting.md": "Preparar una reunión", "user/propose-a-point.md": "Proponer un punto",
+        "user/live-meeting.md": "Reunión en vivo", "user/minutes-and-approval.md": "Actas y aprobación",
+        "user/followups.md": "Seguimientos", "user/carryovers.md": "Arrastres",
+        "integrations/calendar.md": "Calendario", "integrations/project.md": "Project",
+        "faq.md": "Preguntas frecuentes",
+    },
+}
+GROUP_NAMES = {
+    "en": [("Guide", 0, 3), ("Administer", 3, 6), ("Use", 6, 12), ("Integrations", 12, 14), ("More", 14, None)],
+    "es": [("Guía", 0, 3), ("Administrar", 3, 6), ("Uso", 6, 12), ("Integraciones", 12, 14), ("Más", 14, None)],
+}
+
 MERMAID_JS = """<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
 <script>document.addEventListener("DOMContentLoaded", function () {
   var blocks = document.querySelectorAll("pre code.language-mermaid");
@@ -152,19 +181,15 @@ def build_multi(lang):
         if (other_src / rel).exists():
             counterpart = depth + "../html-%s/%s.html" % (LANGS[lang]["switch_to"], rel[:-3])
         depth = "../" * (rel.count("/") )
+        labels = NAV_LABELS.get(lang, {})
         nav_items = []
         for other_rel in pages:
             cls = ' class="current"' if other_rel == rel else ""
-            label = ("— " if "/" in other_rel else "") + Path(other_rel).stem.replace("-", " ").replace("_", " ")
+            label = labels.get(other_rel, Path(other_rel).stem.replace("-", " ").replace("_", " ").title())
             nav_items.append(f'<a{cls} href="{depth}{other_rel[:-3]}.html">{label}</a>')
-        groups = [
-            ("Guide", [i for i in nav_items[:3]]),
-            ("Administer", nav_items[3:6]),
-            ("Use", nav_items[6:12]),
-            ("Integrations", nav_items[12:14]),
-            ("More", nav_items[14:]),
-        ]
-        side = "".join(f'<h3>{t}</h3>{"".join(items)}' for t, items in groups if items)
+        side = "".join(
+            f'<h3>{t}</h3>{"".join(nav_items[a:b if b is not None else len(nav_items)])}'
+            for t, a, b in GROUP_NAMES.get(lang, [("Menu", 0, None)]))
         doc = f"""<!doctype html><html lang="{lang}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{Path(rel).stem.replace('-', ' ').title()} — {cfg['title']}</title>{MERMAID_JS}<style>{CSS}</style></head>
@@ -191,7 +216,7 @@ def build_single(lang):
                       lambda m: 'href="#slug-%s%s"' % (single_slugs.get((Path(rel).parent / m.group(1)).as_posix(),
                                                                        single_slugs["index.md"]), m.group(2) or ""), html)
         chunks.append(f'<div id="slug-{single_slugs[rel]}">{html}<hr></div>')
-        label = ("— " if "/" in rel else "") + Path(rel).stem.replace("-", " ")
+        label = NAV_LABELS.get(lang, {}).get(rel, Path(rel).stem.replace("-", " ").title())
         toc.append(f'<a href="#slug-{single_slugs[rel]}">{label}</a>')
     other = "es" if lang == "en" else "en"
     counterpart = "../html-%s/single-%s.html" % (other, other)
