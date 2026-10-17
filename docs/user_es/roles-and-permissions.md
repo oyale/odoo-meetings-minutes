@@ -25,13 +25,13 @@ Una reunión es visible para:
 
 - su **organizador** (coordinación),
 - su **secretaria o secretario de actas**,
-- los **lectores** y **editores** asignados expresamente en la pestaña *Access*
+- los **lectores** y **editores** asignados expresamente en la pestaña *Acceso*
   de la reunión,
 - cualquier **gestor** de la compañía.
 
 Estar listado como *asistente* (contacto) **no** da acceso — los asistentes son
 contactos, no necesariamente usuarios. Concede el acceso por usuario en la
-pestaña **Access**.
+pestaña **Acceso**.
 
 ## Contenido restringido
 

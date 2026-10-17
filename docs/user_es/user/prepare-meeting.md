@@ -66,7 +66,7 @@ supera la duración prevista. Amplía la duración o recorta la agenda.
   limitan el cambio.
 - **Cancelar** está disponible en borrador/programada.
 
-## Pestaña Access
+## Pestaña Acceso
 
 Los editores pueden conceder acceso de **lector**/**editor** en las reuniones que
 organizan; los gestores también pueden cambiar organizador, secretaría y acceso de

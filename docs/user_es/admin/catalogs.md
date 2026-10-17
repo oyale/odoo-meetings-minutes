@@ -1,13 +1,13 @@
 # Catálogos (gestor)
 
 Listas breves que alimentan los desplegables de toda la aplicación. Ubicación:
-**Meetings → Configuration**. Todas las listas admiten ordenación por arrastre y
+**Reuniones → Configuración**. Todas las listas admiten ordenación por arrastre y
 archivado (los elementos archivados siguen legibles en registros antiguos pero
 desaparecen de los nuevos).
 
 ## Tipos de reunión
 
-*Configuración → Tipos de reunión*
+*Reuniones → Configuración → Tipos de reunión*
 
 Una clasificación breve para series y reuniones (p. ej. *Operational*, *Board*,
 *Assembly*). El **código** queda fijo una vez usado. Cada serie y reunión exige

@@ -26,6 +26,21 @@ Los editores de la reunión de destino las reciben como *Puntos que continúan*
 (política Revisión) o las encuentran ya en la agenda (política Automática). El
 registro muestra la reunión de origen, el contexto y quién respondió.
 
+## Moverlo a otra serie
+
+Un punto puede quedarse fuera del alcance de su serie (p. ej. un punto operativo
+que necesita un debate de reflexión). El asistente de arrastre acepta una **serie
+de destino**:
+
+- **Puntos y seguimientos** — elige la serie de destino y, opcionalmente, una
+  reunión concreta de esa serie; si dejas la reunión vacía, el punto se ofrece en
+  la próxima reunión de esa serie.
+- **Acuerdos (actas)** — la serie de destino es obligatoria (se tratan a nivel de
+  serie).
+
+La serie de destino puede ser cualquier serie activa de la misma compañía, así
+que esta es la vía para mover un punto fuera de su ámbito original.
+
 ## Aceptar / descartar
 
 - **Aceptar** — el punto entra en la agenda de destino como una nueva participación

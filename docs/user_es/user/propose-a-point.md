@@ -3,7 +3,7 @@
 Cualquier persona de la organización puede sugerir puntos de agenda — los editores
 deciden qué entra. Dos accesos:
 
-- Menú **Meetings → Propose a point**: elige la serie de destino.
+- Menú **Reuniones → Proponer un punto**: elige la serie de destino.
 - Formulario de serie → botón **Proponer un punto** (serie preseleccionada).
 
 ![Proponer un punto](img/propose-point.png)

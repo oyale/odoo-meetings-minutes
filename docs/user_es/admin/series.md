@@ -4,7 +4,7 @@ Una **serie** es la plantilla de una reunión recurrente. Todo lo configurado aq
 se copia en las reuniones nuevas al crearse — las ediciones posteriores no afectan
 a las reuniones existentes.
 
-Ubicación: **Meetings → Meeting Series**. El asistente de creación (*Nuevo* en la
+Ubicación: **Reuniones → Series de reuniones**. El asistente de creación (*Nuevo* en la
 lista de series) pide lo mismo por pasos: básicos → programación → estructura →
 revisión.
 

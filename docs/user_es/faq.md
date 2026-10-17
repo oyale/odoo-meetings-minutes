@@ -7,7 +7,7 @@ Situaciones habituales, en la voz de quien las sufre.
 **"Abro Odoo y no veo el menú Meetings."**
 El menú raíz exige el grupo de usuario interno; si aun así no ves las reuniones
 esperadas, no eres organizador/secretario/lector de ellas. Pide a un editor que te
-añada en la pestaña **Access** de la reunión, o a un gestor que te conceda el rol de
+añada en la pestaña **Acceso** de la reunión, o a un gestor que te conceda el rol de
 Lector.
 
 **"Soy asistente — ¿por qué no puedo abrir la reunión?"**
@@ -79,7 +79,7 @@ actividad/tarea), no trabajo terminado.
 como evidencia. Cancela la tarea en lugar de borrarla, o reabre el punto.
 
 **"El responsable de la tarea no ve la reunión."** Añádelo como lector en la pestaña
-**Access** de la reunión — los vínculos de tarea no conceden acceso a la reunión.
+**Acceso** de la reunión — los vínculos de tarea no conceden acceso a la reunión.
 
 ## Calendario
 

@@ -27,6 +27,20 @@ The destination meeting's editors receive it as *Points to continue* (policy
 Review) or find it already in the agenda (policy Automatic). The record shows
 origin meeting, context and who answered.
 
+## Move it to another series
+
+A point can outgrow its series (e.g. an operational point that needs a
+reflective debate). The carryover wizard accepts a **destination series**:
+
+- **Points and follow-ups** — pick the destination series, and optionally a
+  concrete meeting of that series; leave the meeting empty and the point is
+  offered at that series' next meeting.
+- **Agreements (resolutions)** — the destination series is mandatory (they are
+  treated at the series level).
+
+The destination series can be any active series of the same company, so this is
+the way to move a point out of its original scope.
+
 ## Accepting / dismissing
 
 - **Accept** — the point joins the destination agenda as a new participation of

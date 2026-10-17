@@ -22,7 +22,7 @@ proyecto de compañía compatible. Una tarea existente se vincula, nunca se dupl
 ## Política de tareas
 
 Dos niveles configuran cómo tratan los puntos TODO las tareas — ajustes de compañía
-(*Settings → Meetings → Project task policy*) y la página **Follow-up and Task
+(*Ajustes → Reuniones → Política de tareas de Project*) y la página **Follow-up and Task
 Policy** de la serie:
 
 | Ajuste | Opciones |
