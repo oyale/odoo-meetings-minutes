@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "odoo-addons-oyale-meeting-minutes"
 version = "18.0.20261018.0"
 description = "Metapackage for the Meeting Minutes Odoo addons"
+readme = { text = "Install the complete Odoo 18 Meeting Minutes addon suite.", content-type = "text/plain" }
 license = { text = "AGPL-3.0" }
 requires-python = ">=3.10"
 dependencies = [
