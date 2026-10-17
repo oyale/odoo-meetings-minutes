@@ -22,6 +22,7 @@ access_resolution_editor,community.meeting.resolution editor,model_community_mee
 access_resolution_manager,community.meeting.resolution manager,model_community_meeting_resolution,group_meeting_manager,1,1,1,1
 access_followup_kind_reader,Follow-up kind reader,model_community_meeting_followup_kind,group_meeting_reader,1,0,0,0
 access_followup_kind_editor,Follow-up kind editor,model_community_meeting_followup_kind,group_meeting_editor,1,1,1,1
+access_followup_kind_system,System reader,model_community_meeting_followup_kind,base.group_system,1,0,0,0
 access_action_reader,community.meeting.action reader,model_community_meeting_action,group_meeting_reader,1,0,0,0
 access_action_editor,community.meeting.action editor,model_community_meeting_action,group_meeting_editor,1,1,1,1
 access_action_manager,community.meeting.action manager,model_community_meeting_action,group_meeting_manager,1,1,1,1
