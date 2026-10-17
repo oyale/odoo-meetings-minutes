@@ -1,14 +1,21 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# 	* community_meetings
+#	* community_meetings
 #
+#. module: community_meetings
 msgid ""
-
-
 msgstr ""
-
-msgid "Project-Id-Version: Odoo Server 18.0\nReport-Msgid-Bugs-To: \nPOT-Creation-Date: 2026-10-17 23:12+0000\nPO-Revision-Date: 2026-10-17 23:12+0000\nLast-Translator: \nLanguage-Team: \nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: \nPlural-Forms: \n"
-msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-17 23:12+0000\n"
+"PO-Revision-Date: 2026-10-18 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -41,18 +48,18 @@ msgstr "(opcional)"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
-msgid "<i class=\\"fa fa-calendar-o\\" aria-hidden=\\"true\\"/> Adding to"
-msgstr "<i class=\\"fa fa-calendar-o\\" aria-hidden=\\"true\\"/> Añadiendo a"
+msgid "<i class=\"fa fa-calendar-o\" aria-hidden=\"true\"/> Adding to"
+msgstr "<i class=\"fa fa-calendar-o\" aria-hidden=\"true\"/> Añadiendo a"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
-msgid "<span class=\\"o_stat_text\\">New Meeting</span>"
-msgstr "<span class=\\"o_stat_text\\">Nueva reunión</span>"
+msgid "<span class=\"o_stat_text\">New Meeting</span>"
+msgstr "<span class=\"o_stat_text\">Nueva reunión</span>"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
-msgid "<span class=\\"o_stat_text\\">Propose a point</span>"
-msgstr "<span class=\\"o_stat_text\\">Proponer un punto</span>"
+msgid "<span class=\"o_stat_text\">Propose a point</span>"
+msgstr "<span class=\"o_stat_text\">Proponer un punto</span>"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_document

@@ -20,7 +20,7 @@ org_slug: oyale
 rebel_module_groups: []
 repo_description: Odoo addons for community meeting agendas, minutes and follow-ups
 repo_name: Meeting Minutes
-repo_slug: meeting-minutes
+repo_slug: odoo-meetings-minutes
 repo_website: https://github.com/oyale/odoo-meetings-minutes
 use_pyproject_toml: true
 use_ruff: true
