@@ -1,0 +1,553 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* community_meetings_project
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-17 14:46+0000\n"
+"PO-Revision-Date: 2026-10-17 14:46+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_policy.py:0
+msgid "A project per series requires a meeting series."
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+msgid "A selected task does not belong to the destination company."
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_links
+msgid "Accessible Meeting Links"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model,name:community_meetings_project.model_community_meeting_project_task_links
+msgid "Accessible Meeting Links for a Project Task"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_links__action_ids
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__action_id
+msgid "Action"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_links__agenda_item_ids
+msgid "Agenda Item"
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_links
+msgid "Agenda Items"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_agenda_item__allowed_project_snapshot_id
+msgid "Allowed Project Snapshot"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_agenda_item__task_scope_snapshot__any
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_task_scope__any
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_task_scope__any
+msgid "Any accessible project"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_agenda_item__project_requirement_snapshot__project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_todo_requirement__project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_todo_requirement__project
+msgid "Assigned follow-up with linked Project task"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_agenda_item__project_requirement_snapshot__core
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_todo_requirement__core
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_todo_requirement__core
+msgid "Assigned meeting task or Odoo activity"
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
+msgid "Cancel"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__choose_another_project
+msgid "Choose a different project"
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/series_wizard.py:0
+msgid "Choose a project or create a new one."
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+msgid "Choose a project or select an existing task."
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+msgid "Choose the project for this task."
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_links
+msgid "Close"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model,name:community_meetings_project.model_community_meeting
+msgid "Community Meeting"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model,name:community_meetings_project.model_community_meeting_project_task_mixin
+msgid "Community Meeting Project Task Link Checks"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model,name:community_meetings_project.model_community_meeting_series
+msgid "Community Meeting Series"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model,name:community_meetings_project.model_res_company
+msgid "Companies"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_project_mode__inherit
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_task_scope__inherit
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_todo_requirement__inherit
+msgid "Company default"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_project_mode__global
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_project_mode__global
+msgid "Company project"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model,name:community_meetings_project.model_res_config_settings
+msgid "Config Settings"
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_policy.py:0
+msgid "Configure the company meeting project first."
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_agenda_item__task_scope_snapshot__configured
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_task_scope__configured
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_task_scope__configured
+msgid "Configured project only"
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.js:0
+msgid "Could not open the Project task form."
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
+msgid "Create Project Task"
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
+msgid "Create Project task"
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_form_project
+msgid "Create Task"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model,name:community_meetings_project.model_community_meeting_series_wizard
+msgid "Create a Meeting Series"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series_wizard__new_project
+msgid "Create a new project"
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
+msgid "Create and Link"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model,name:community_meetings_project.model_community_meeting_project_task_wizard
+msgid "Create and Link a Project Task"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_links__create_uid
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_links__create_date
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_res_company__followup_default_kind
+msgid "Default follow-up type"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_links__display_name
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/series_wizard.py:0
+msgid "Enter a name for the new project."
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series__meeting_todo_requirement
+#: model:ir.model.fields,field_description:community_meetings_project.field_res_company__meeting_todo_requirement
+#: model:ir.model.fields,field_description:community_meetings_project.field_res_config_settings__meeting_todo_requirement
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_meeting_settings
+msgid "Evidence required to close a TODO"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__existing_task_id
+msgid "Existing task"
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_meeting_settings
+msgid "Existing tasks"
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_links
+msgid "Follow-up Actions"
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_project_policy
+msgid "Follow-up and Task Policy"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_action__followup_kind
+msgid "Follow-up type"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_agenda_item__followup_default_kind
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series__followup_default_kind
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_topic__followup_default_kind
+msgid "Followup Default Kind"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__has_default_project
+msgid "Has Default Project"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_links__id
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__id
+msgid "ID"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_links__write_uid
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_links__write_date
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series_wizard__link_project
+msgid "Link a Project"
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+msgid "Link a Project task to a follow-up action before resolving this TODO."
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+msgid "Linked tasks must belong to the meeting company."
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model,name:community_meetings_project.model_community_meeting_carryover
+msgid "Meeting Agenda Carryover"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model,name:community_meetings_project.model_community_meeting_agenda_item
+msgid "Meeting Agenda Item"
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_task_form_community_meeting_links
+msgid "Meeting Agenda Links"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model,name:community_meetings_project.model_community_meeting_action
+msgid "Meeting Follow-up Action"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model,name:community_meetings_project.model_community_meeting_topic
+msgid "Meeting Point"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_res_company__meeting_project_id
+#: model:ir.model.fields,field_description:community_meetings_project.field_res_config_settings__meeting_project_id
+msgid "Meeting Project"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model,name:community_meetings_project.model_community_meeting_resolution
+msgid "Meeting Resolution"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__name
+msgid "Name"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series_wizard__new_project_name
+msgid "New project name"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_project_mode__none
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_project_mode__none
+msgid "No default project"
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+msgid "One or more linked tasks are unavailable."
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__project_id
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series_wizard__project_id
+msgid "Project"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_agenda_item__project_requirement_snapshot
+msgid "Project Requirement Snapshot"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_action__project_task_ids
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_agenda_item__project_task_ids
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_resolution__project_task_ids
+msgid "Project Tasks"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_carryover_wizard__selected_project_task_ids
+msgid "Project Tasks to Carry Forward"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series__meeting_project_mode
+#: model:ir.model.fields,field_description:community_meetings_project.field_res_company__meeting_project_mode
+#: model:ir.model.fields,field_description:community_meetings_project.field_res_config_settings__meeting_project_mode
+msgid "Project destination"
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
+msgid "Project name"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_project_mode__series
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_project_mode__series
+msgid "Project per series"
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.js:0
+#: model:community.meeting.followup.kind,name:community_meetings_project.followup_kind_project_task
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_action__followup_kind__project_task
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_agenda_item__followup_default_kind__project_task
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__followup_default_kind__project_task
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_topic__followup_default_kind__project_task
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__followup_default_kind__project_task
+msgid "Project task"
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_meeting_settings
+msgid "Project task policy"
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.js:0
+msgid "Project task required"
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+msgid "Project tasks can only be linked to Project task follow-ups."
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model,name:community_meetings_project.model_community_meeting_carryover_wizard
+msgid "Request Meeting Follow-up"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_agenda_item__requires_project_task
+msgid "Requires Project Task"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_links__resolution_ids
+msgid "Resolution"
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_links
+msgid "Resolutions"
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+msgid "Select a task from the configured meeting project."
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series__meeting_task_scope
+#: model:ir.model.fields,field_description:community_meetings_project.field_res_company__meeting_task_scope
+#: model:ir.model.fields,field_description:community_meetings_project.field_res_config_settings__meeting_task_scope
+msgid "Selectable tasks"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_carryover__selected_project_task_ids
+msgid "Selected Project Tasks"
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+msgid "Selected tasks must belong to the meeting company."
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series__meeting_project_id
+msgid "Series project"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model,name:community_meetings_project.model_project_task
+msgid "Task"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_agenda_item__task_scope_snapshot
+msgid "Task Scope Snapshot"
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_meeting_settings
+msgid "Task project"
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+msgid "Tasks on a closed carryover cannot be changed."
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_links.py:0
+msgid "The project must belong to the meeting company."
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/series_wizard.py:0
+msgid "The project must belong to the series company."
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-python
+#: code:addons/community_meetings_project/models/project_policy.py:0
+msgid "The task requirement is recorded by the point workflow."
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
+msgid "This meeting policy requires a Project task linked to the follow-up."
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.js:0
+#: model:community.meeting.followup.kind,name:community_meetings_project.followup_kind_project_todo
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_action__followup_kind__project_todo
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_agenda_item__followup_default_kind__project_todo
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__followup_default_kind__project_todo
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_topic__followup_default_kind__project_todo
+#: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__followup_default_kind__project_todo
+msgid "To-do"
+msgstr ""
