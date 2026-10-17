@@ -119,7 +119,7 @@ export class LiveMeeting extends Component {
         this.state.dissents = dissents;
         this.state.defaultOwner = (await this.orm.call("community.meeting.action", "default_get", [["responsible_user_id"]])).responsible_user_id;
         const topicIds = items.map((i) => i.topic_id?.[0]).filter(Boolean);
-        this.state.actions = await this.orm.searchRead("community.meeting.action", [["topic_id", "in", topicIds]], ["agenda_item_id", "topic_id", "meeting_id", "name", "description", "responsible_user_id", "responsible_user_ids", "deadline", "state", "followup_kind", "followup_activity_type_id", "followup_activity_id", "followup_activity_completed_on"], { order: "deadline, id" });
+        this.state.actions = await this.orm.searchRead("community.meeting.action", [["topic_id", "in", topicIds]], ["agenda_item_id", "topic_id", "meeting_id", "name", "description", "responsible_user_id", "responsible_user_ids", "deadline", "state", "followup_kind", "followup_activity_type_id", "followup_activity_id", "followup_activity_ids", "followup_activity_completed_on"], { order: "deadline, id" });
         const meetingTopics = await this.orm.searchRead(
             "community.meeting.topic",
             [["id", "in", topicIds]],
@@ -141,7 +141,7 @@ export class LiveMeeting extends Component {
         const relatedActions = originActionIds.length
             ? await this.orm.searchRead(
                   "community.meeting.action", [["id", "in", originActionIds]],
-                  ["name", "description", "meeting_id", "deadline", "state", "followup_kind", "followup_activity_type_id", "responsible_user_id", "responsible_user_ids"],
+                  ["name", "description", "meeting_id", "deadline", "state", "followup_kind", "followup_activity_type_id", "followup_activity_id", "followup_activity_ids", "followup_activity_completed_on", "responsible_user_id", "responsible_user_ids"],
               )
             : [];
         const participations = topicRecords.length
@@ -176,6 +176,20 @@ export class LiveMeeting extends Component {
         );
         for (const action of Object.values(actionById)) {
             action.sourceMeeting = meetingById[action.meeting_id?.[0]] || false;
+        }
+        const activityIds = [...new Set(Object.values(actionById).flatMap((action) => [
+            ...(action.followup_activity_ids || []),
+            ...(action.followup_activity_id ? [action.followup_activity_id[0]] : []),
+        ]))];
+        const activities = activityIds.length
+            ? await this.orm.searchRead("mail.activity", [["id", "in", activityIds]], ["activity_type_id", "summary", "user_id", "date_deadline", "note"])
+            : [];
+        const activitiesById = Object.fromEntries(activities.map((activity) => [activity.id, activity]));
+        for (const action of Object.values(actionById)) {
+            action.linkedActivities = [...new Set([
+                ...(action.followup_activity_ids || []),
+                ...(action.followup_activity_id ? [action.followup_activity_id[0]] : []),
+            ])].map((id) => activitiesById[id]).filter(Boolean);
         }
         this.state.relatedActionsById = actionById;
         this.state.topicsById = Object.fromEntries(
@@ -731,6 +745,16 @@ export class LiveMeeting extends Component {
         if (!await this.flushEditors()) return;
         const action = await this.orm.call("community.meeting", "action_open_live_meeting", [[id]]);
         return this.actionService.doAction(action);
+    }
+    async openFollowupActivity(id) {
+        if (!await this.flushEditors()) return;
+        return this.actionService.doAction({
+            type: "ir.actions.act_window",
+            res_model: "mail.activity",
+            res_id: id,
+            views: [[false, "form"]],
+            target: "new",
+        }, { onClose: () => this.load() });
     }
     async approveMinutes() {
         if (!await this.flushEditors()) return;

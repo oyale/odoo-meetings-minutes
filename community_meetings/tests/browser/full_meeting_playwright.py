@@ -95,6 +95,8 @@ ACTIONS = {
     "test_point_presenter_badge_and_related_points": [
         "see the point responsible badge",
         "see and follow related points",
+        "inspect linked Odoo activity details",
+        "open a linked Odoo activity",
     ],
     "test_task_editing": [
         "add follow-up task",
@@ -764,6 +766,14 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
                 "description": "Prior follow-up discussion and owner context.",
             }],
         )
+        activity_type = self.rpc(
+            "mail.activity.type", "search",
+            [[("active", "=", True)]], {"limit": 1, "order": "sequence, id"},
+        )[0]
+        self.rpc(
+            "community.meeting.action", "write",
+            [[action], {"followup_kind": "activity", "followup_activity_type_id": activity_type}],
+        )
         self.rpc(
             "community.meeting.agenda.item", "write",
             [[discussion_item], {"presenter_partner_id": partner_id}],
@@ -830,8 +840,20 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "region", name="Follow-up details: Promoted origin follow-up"
         )
         expect(followup_preview).to_contain_text("Prior follow-up discussion and owner context")
+        expect(followup_preview.locator(".o_live_activity_preview")).to_contain_text("Odoo activities")
+        expect(followup_preview.locator(".o_live_activity_entry")).to_contain_text("Promoted origin follow-up")
+        expect(followup_preview.locator(".o_live_activity_entry")).to_contain_text(
+            self.rpc("mail.activity.type", "read", [[activity_type], ["name"]])[0]["name"]
+        )
+        expect(followup_preview.get_by_role("button", name="Open activity")).to_be_visible()
+        followup_preview.get_by_role("button", name="Open activity").click()
+        activity_dialog = self.page.locator(".o_dialog").last
+        expect(activity_dialog.locator('.o_field_widget[name="summary"] input')).to_have_value(
+            "Promoted origin follow-up"
+        )
+        activity_dialog.get_by_role("button", name="Close").click()
         expect(followup_preview).to_contain_text("From meeting")
-        expect(followup_preview.locator(".o_live_relation_source_heading")).to_contain_text("From meeting")
+        expect(followup_preview.locator(".o_live_relation_source_heading").filter(has_text="From meeting")).to_be_visible()
         expect(followup_preview.get_by_role("button", name="Open minutes")).to_be_visible()
         relations.locator(
             ".o_live_related_point", has_text="Browser Decision case"

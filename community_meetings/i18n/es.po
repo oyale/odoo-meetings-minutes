@@ -14026,3 +14026,33 @@ msgstr "· <strong>Organizador:</strong>"
 
 msgid "· Approved by"
 msgstr "· Aprobada por"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Completed"
+msgstr "Completada"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "No linked activity is available."
+msgstr "No hay ninguna actividad vinculada disponible."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Odoo activities"
+msgstr "Actividades de Odoo"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Open activity"
+msgstr "Abrir actividad"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "The linked activity has been completed."
+msgstr "La actividad vinculada se ha completado."
