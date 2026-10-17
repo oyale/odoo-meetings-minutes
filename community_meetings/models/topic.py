@@ -549,6 +549,8 @@ class AgendaParticipation(models.Model):
             meeting = item.meeting_id
             meeting.check_access("write")
             meeting._lock_live_workflow()
+            if not meeting.time_tracking_enabled:
+                raise UserError(_("Time tracking is disabled for this meeting."))
             item.invalidate_recordset(["disposition", "actual_started_at", "actual_seconds", "actual_minutes"])
             if not self.env.user.has_group("community_meetings.group_meeting_editor"):
                 raise UserError(_("Only meeting editors can start a point timer."))
@@ -578,6 +580,8 @@ class AgendaParticipation(models.Model):
             item.check_access("write")
             if not self.env.user.has_group("community_meetings.group_meeting_editor"):
                 raise UserError(_("Only meeting editors can pause a point timer."))
+        if any(not item.meeting_id.time_tracking_enabled for item in self):
+            raise UserError(_("Time tracking is disabled for this meeting."))
         self._pause_timing()
         return True
 

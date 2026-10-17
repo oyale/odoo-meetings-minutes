@@ -64,7 +64,38 @@ class CommunityMeeting(models.Model):
             ("cancelled", "Cancelled"),
         ], default="draft", required=True, copy=False, tracking=True, index=True,
     )
+    time_tracking_enabled = fields.Boolean(
+        string="Time tracking", compute="_compute_time_tracking_enabled",
+        help="Series override of the company setting; standalone meetings follow the company.",
+    )
+    add_point_policy = fields.Selection(
+        [
+            ("draft", "Draft only"),
+            ("scheduled", "Before it starts"),
+            ("ongoing", "While it runs"),
+        ],
+        string="Add points until", compute="_compute_add_point_policy",
+        help="Series override of the company setting; standalone meetings follow the company.",
+    )
+    add_point_allowed = fields.Boolean(
+        string="Can add points", compute="_compute_add_point_allowed",
+        help="Whether new points can still be added to this meeting under the current policy.",
+    )
     agenda_item_ids = fields.One2many("community.meeting.agenda.item", "meeting_id")
+    # ponytail: display-only "In Progress" derived from scheduled + actual_start;
+    # upgrade path: real 'in_progress' state if workflows/filters need to target it.
+    display_state = fields.Selection(
+        [
+            ("draft", "Draft"),
+            ("scheduled", "Scheduled"),
+            ("in_progress", "In Progress"),
+            ("held", "Held"),
+            ("minutes_draft", "Minutes Draft"),
+            ("approved", "Approved"),
+            ("cancelled", "Cancelled"),
+        ],
+        string="Status", compute="_compute_display_state",
+    )
     resolution_ids = fields.One2many("community.meeting.resolution", "meeting_id")
     action_ids = fields.One2many("community.meeting.action", "meeting_id")
     incoming_carryover_ids = fields.One2many(
@@ -89,6 +120,49 @@ class CommunityMeeting(models.Model):
     _sql_constraints = [
         ("code_company_unique", "unique(company_id, code)", "Meeting references must be unique per company."),
     ]
+
+    @api.depends("series_id.time_tracking", "company_id.meeting_time_tracking")
+    def _compute_time_tracking_enabled(self):
+        for meeting in self:
+            series_mode = meeting.series_id.time_tracking or "inherit"
+            meeting.time_tracking_enabled = (
+                meeting.company_id.meeting_time_tracking
+                if series_mode == "inherit"
+                else series_mode == "on"
+            )
+
+    @api.depends("series_id.add_point_policy", "company_id.meeting_add_point_policy")
+    def _compute_add_point_policy(self):
+        for meeting in self:
+            series_mode = meeting.series_id.add_point_policy or "inherit"
+            meeting.add_point_policy = (
+                meeting.company_id.meeting_add_point_policy
+                if series_mode == "inherit"
+                else series_mode
+            )
+
+    @api.depends("state", "actual_start_datetime", "add_point_policy")
+    def _compute_add_point_allowed(self):
+        for meeting in self:
+            if meeting.state in ("held", "minutes_draft", "approved", "cancelled"):
+                meeting.add_point_allowed = False
+            elif meeting.state == "draft":
+                meeting.add_point_allowed = True
+            elif meeting.add_point_policy == "draft":
+                meeting.add_point_allowed = False
+            else:  # scheduled or ongoing
+                meeting.add_point_allowed = (
+                    meeting.add_point_policy == "ongoing" or not meeting.actual_start_datetime
+                )
+
+    @api.depends("state", "actual_start_datetime")
+    def _compute_display_state(self):
+        for meeting in self:
+            meeting.display_state = (
+                "in_progress"
+                if meeting.state == "scheduled" and meeting.actual_start_datetime
+                else meeting.state
+            )
 
     @api.depends("actual_start_datetime", "actual_end_datetime", "actual_paused_seconds")
     def _compute_actual_duration_minutes(self):
@@ -355,6 +429,8 @@ class CommunityMeeting(models.Model):
         for meeting in self:
             meeting.check_access_rights("write")
             meeting.check_access_rule("write")
+            if not meeting.time_tracking_enabled:
+                raise UserError(_("Time tracking is disabled for this meeting."))
             if not self.env.user.has_group("community_meetings.group_meeting_editor"):
                 raise AccessError(_("Only meeting editors can start a meeting."))
             self.env.cr.execute(
@@ -371,6 +447,8 @@ class CommunityMeeting(models.Model):
         for meeting in self:
             meeting.check_access_rights("write")
             meeting.check_access_rule("write")
+            if not meeting.time_tracking_enabled:
+                raise UserError(_("Time tracking is disabled for this meeting."))
             if not self.env.user.has_group("community_meetings.group_meeting_editor"):
                 raise AccessError(_("Only meeting editors can pause a meeting."))
             self.env.cr.execute("SELECT id FROM community_meeting WHERE id = %s FOR UPDATE", [meeting.id])
@@ -387,6 +465,8 @@ class CommunityMeeting(models.Model):
         for meeting in self:
             meeting.check_access_rights("write")
             meeting.check_access_rule("write")
+            if not meeting.time_tracking_enabled:
+                raise UserError(_("Time tracking is disabled for this meeting."))
             if not self.env.user.has_group("community_meetings.group_meeting_editor"):
                 raise AccessError(_("Only meeting editors can resume a meeting."))
             self.env.cr.execute("SELECT id FROM community_meeting WHERE id = %s FOR UPDATE", [meeting.id])
@@ -409,10 +489,8 @@ class CommunityMeeting(models.Model):
         self.ensure_one()
         self.check_access_rights("read")
         self.check_access_rule("read")
-        if self.state not in ("scheduled", "held", "minutes_draft", "approved"):
-            raise UserError(_("The live meeting view is available for scheduled, ongoing or approved meetings."))
         return {"type": "ir.actions.client", "tag": "community_meetings.live_meeting",
-                "name": _("Live Meeting"), "target": "main",
+                "name": _("Meeting"), "target": "main",
                 "context": {"active_model": self._name, "active_id": self.id, "active_ids": self.ids},
                 "params": {"meeting_id": self.id}}
 
@@ -425,6 +503,8 @@ class CommunityMeeting(models.Model):
             "can_edit": editorial and self.has_access("write") and self.state not in ("approved", "cancelled"),
             "can_view_editorial": editorial and self.has_access("write"),
             "can_approve": self.env.user.has_group("community_meetings.group_meeting_approver"),
+            "time_tracking": self.time_tracking_enabled,
+            "can_add_point": self.add_point_allowed,
         }
 
     def get_live_published_dissents(self):

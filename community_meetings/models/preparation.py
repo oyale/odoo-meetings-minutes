@@ -17,6 +17,21 @@ class Company(models.Model):
     meeting_secretary_label = fields.Char(
         string="Secretary role name", default="Minutes secretary",
     )
+    meeting_time_tracking = fields.Boolean(
+        string="Track meeting and point time", default=True,
+        help="Show start/pause controls and point timers in the live meeting; "
+             "records actual durations. A series can override it.",
+    )
+    meeting_add_point_policy = fields.Selection(
+        [
+            ("draft", "Draft only"),
+            ("scheduled", "Before it starts"),
+            ("ongoing", "While it runs"),
+        ],
+        string="Add points until", default="ongoing", required=True,
+        help="Last moment when new points can be added to a meeting: only while it is a "
+             "draft, until it starts, or while it runs. A series can override it.",
+    )
 
 
 class Settings(models.TransientModel):
@@ -31,6 +46,12 @@ class Settings(models.TransientModel):
     meeting_secretary_label = fields.Char(
         related="company_id.meeting_secretary_label", readonly=False
     )
+    meeting_time_tracking = fields.Boolean(
+        related="company_id.meeting_time_tracking", readonly=False
+    )
+    meeting_add_point_policy = fields.Selection(
+        related="company_id.meeting_add_point_policy", readonly=False
+    )
 
 
 class MeetingSeries(models.Model):
@@ -42,17 +63,40 @@ class MeetingSeries(models.Model):
         string="Default point estimate (minutes)",
         help="Overrides the company default for points of this series.",
     )
+    company_point_estimated_minutes = fields.Integer(
+        related="company_id.meeting_estimated_minutes", string="Company point estimate",
+    )
     coordinator_label = fields.Char(
-        string="Coordination role name", help="Overrides the company role name for this series.",
+        string="Coordination role name",
+        help="Optional. Overrides the default role name from Settings → Meetings for the meetings of this series.",
     )
     secretary_label = fields.Char(
-        string="Secretary role name", help="Overrides the company role name for this series.",
+        string="Secretary role name",
+        help="Optional. Overrides the default role name from Settings → Meetings for the meetings of this series.",
     )
     meeting_name_pattern = fields.Char(
         string="New meeting name pattern",
         default="{date} {series}",
         required=True,
         help="Use {date} for the meeting date (YYYY-MM-DD) and {series} for this series name.",
+    )
+    time_tracking = fields.Selection(
+        [("inherit", "Company default"), ("on", "On"), ("off", "Off")],
+        default="inherit", required=True,
+        help="Overrides the company time-tracking setting for meetings of this series.",
+    )
+    company_meeting_time_tracking = fields.Boolean(
+        related="company_id.meeting_time_tracking", string="Company time tracking",
+    )
+    add_point_policy = fields.Selection(
+        [
+            ("inherit", "Company default"),
+            ("draft", "Draft only"),
+            ("scheduled", "Before it starts"),
+            ("ongoing", "While it runs"),
+        ],
+        default="inherit", required=True,
+        help="Overrides the company rule for when new points can be added to the meetings of this series.",
     )
 
     def _point_estimated_minutes_default(self):
@@ -254,7 +298,7 @@ class Meeting(models.Model):
                 continue
             if (
                 series.has_minutes_approval_point
-                and meeting.get_pending_minutes_for_approval()
+                and (pending := meeting.get_pending_minutes_for_approval())
                 and not meeting.agenda_item_ids.filtered(
                     lambda item: item.agenda_type_id.behavior == "minutes_approval"
                 )
@@ -264,6 +308,7 @@ class Meeting(models.Model):
                     "name": _("Approve previous minutes"),
                     "kind": "minutes_approval",
                     "sequence": -1,
+                    "estimated_minutes": 5 * len(pending),
                     "presenter_partner_id": False,
                 })
             if series.has_next_meeting_point and not meeting.agenda_item_ids.filtered(
@@ -278,6 +323,7 @@ class Meeting(models.Model):
                     "name": _("Next meeting"),
                     "kind": "next_meeting",
                     "sequence": 1000,
+                    "estimated_minutes": 5,
                     "next_meeting_datetime": proposed,
                     "presenter_partner_id": False,
                 })
@@ -355,12 +401,16 @@ class Meeting(models.Model):
 
     def action_add_point(self):
         self.ensure_one()
+        if not self.add_point_allowed:
+            raise ValidationError(_("New points cannot be added to this meeting anymore."))
         return self.env["community.meeting.point.wizard"]._open(
             {"default_meeting_id": self.id}
         )
 
     def action_add_point_live(self):
         self.ensure_one()
+        if not self.add_point_allowed:
+            raise ValidationError(_("New points cannot be added to this meeting anymore."))
         return self.env["community.meeting.point.wizard"]._open(
             {"default_meeting_id": self.id, "from_live": True}
         )
