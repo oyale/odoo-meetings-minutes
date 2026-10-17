@@ -28,21 +28,26 @@
                         <div class="text-muted"><t t-out="state.meeting.code"/></div>
                         <h1><t t-if="locked" t-out="state.meeting.name"/><input t-else="" class="form-control fs-2" aria-label="Meeting name" t-att-value="state.headerDraft.name ?? (state.meeting.name || '')" t-on-input="(ev) => { state.headerDraft.name = ev.target.value; }" t-on-change="(ev) => this.saveHeaderField('name', ev.target.value)"/></h1>
                     </div>
-                    <div class="o_live_header_details">
-                        <div><strong>Estimated start</strong><span><t t-out="dateTime(state.meeting.start_datetime)"/></span></div>
+                    <div class="o_live_header_summary">
+                        <div><strong><t t-if="state.meeting.actual_start_datetime">Actual start</t><t t-else="">Estimated start</t></strong><span><t t-out="dateTime(state.meeting.actual_start_datetime || state.meeting.start_datetime)"/></span></div>
                         <div><strong>Estimated end</strong><span><t t-out="dateTime(state.meeting.end_datetime)"/></span></div>
                         <div><strong>Estimated duration</strong><span t-out="durationLabel(state.meeting.duration_minutes)"/></div>
-                        <div><strong>Actual start</strong><span><t t-out="dateTime(state.meeting.actual_start_datetime)"/></span></div>
-                        <div><strong>Actual end</strong><span><t t-out="dateTime(state.meeting.actual_end_datetime)"/></span></div>
-                        <div t-if="state.meeting.actual_end_datetime"><strong>Actual duration</strong><span t-out="durationLabel(state.meeting.actual_duration_minutes)"/></div>
-                        <div><strong t-out="state.meeting.coordinator_role_label || 'Organizer'"/><span><t t-out="label(state.meeting.organizer_id)"/></span></div>
-                        <div><strong t-out="state.meeting.secretary_role_label || 'Minutes secretary'"/><span t-if="locked" t-out="label(state.meeting.secretary_id)"/><select t-else="" class="form-select" aria-label="Minutes secretary" t-on-change="(ev) => this.saveHeaderField('secretary_id', ev.target.value)"><option value="">Not set</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id" t-att-selected="state.meeting.secretary_id?.[0] === user.id"><t t-out="user.name"/></option></select></div>
-                        <div><strong>Location</strong><span t-if="locked" t-out="state.meeting.location || 'Not set'"/><input t-else="" class="form-control" aria-label="Location" t-att-value="state.headerDraft.location ?? (state.meeting.location || '')" t-on-input="(ev) => { state.headerDraft.location = ev.target.value; }" t-on-change="(ev) => this.saveHeaderField('location', ev.target.value)"/></div>
-                        <div><strong>Meeting link</strong><a t-if="locked" t-att-href="state.meeting.meeting_url" t-out="state.meeting.meeting_url"/><input t-else="" class="form-control" type="url" aria-label="Meeting link" t-att-value="state.headerDraft.meeting_url ?? (state.meeting.meeting_url || '')" t-on-input="(ev) => { state.headerDraft.meeting_url = ev.target.value; }" t-on-change="(ev) => this.saveHeaderField('meeting_url', ev.target.value)"/></div>
                         <div class="o_live_attendees"><strong>Attendees</strong><span><t t-out="attendees()"/></span>
                             <button t-if="!locked and !state.attendeeEditorOpen" class="btn btn-link btn-sm" t-on-click="toggleAttendeeEditor">Edit attendees</button>
                         </div>
                     </div>
+                    <details class="o_live_more_details">
+                        <summary>More meeting details</summary>
+                        <div class="o_live_header_details">
+                            <div><strong>Actual end</strong><span><t t-out="dateTime(state.meeting.actual_end_datetime)"/></span></div>
+                            <div t-if="state.meeting.actual_end_datetime"><strong>Actual duration</strong><span t-out="durationLabel(state.meeting.actual_duration_minutes)"/></div>
+                            <div><strong t-out="state.meeting.coordinator_role_label || 'Organizer'"/><span><t t-out="label(state.meeting.organizer_id)"/></span></div>
+                            <div><strong t-out="state.meeting.secretary_role_label || 'Minutes secretary'"/><span t-if="locked" t-out="label(state.meeting.secretary_id)"/><select t-else="" class="form-select" aria-label="Minutes secretary" t-on-change="(ev) => this.saveHeaderField('secretary_id', ev.target.value)"><option value="">Not set</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id" t-att-selected="state.meeting.secretary_id?.[0] === user.id"><t t-out="user.name"/></option></select></div>
+                            <div><strong>Location</strong><span t-if="locked" t-out="state.meeting.location || 'Not set'"/><input t-else="" class="form-control" aria-label="Location" t-att-value="state.headerDraft.location ?? (state.meeting.location || '')" t-on-input="(ev) => { state.headerDraft.location = ev.target.value; }" t-on-change="(ev) => this.saveHeaderField('location', ev.target.value)"/></div>
+                            <div><strong>Meeting link</strong><a t-if="locked" t-att-href="state.meeting.meeting_url" t-out="state.meeting.meeting_url"/><input t-else="" class="form-control" type="url" aria-label="Meeting link" t-att-value="state.headerDraft.meeting_url ?? (state.meeting.meeting_url || '')" t-on-input="(ev) => { state.headerDraft.meeting_url = ev.target.value; }" t-on-change="(ev) => this.saveHeaderField('meeting_url', ev.target.value)"/></div>
+                        </div>
+                    </details>
+                    <a t-if="state.meeting.meeting_url" class="btn btn-link btn-sm px-0" t-att-href="state.meeting.meeting_url" target="_blank" rel="noreferrer">Open meeting link</a>
                     <div t-if="state.attendeeEditorOpen" class="o_live_attendee_editor">
                         <fieldset t-if="state.attendees.length" class="o_live_selected_attendees">
                             <legend>Selected attendees</legend>
