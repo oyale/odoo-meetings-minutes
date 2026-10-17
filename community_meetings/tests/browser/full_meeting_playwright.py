@@ -75,6 +75,10 @@ ACTIONS = {
         "persist after reload",
     ],
     "test_private_note_create_and_edit": ["save private note", "edit private note"],
+    "test_point_presenter_badge_and_related_points": [
+        "see the point responsible badge",
+        "see and follow related points",
+    ],
     "test_task_editing": [
         "add follow-up task",
         "rename task",
@@ -664,6 +668,92 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             self.item_ids["information"],
             "kind",
             "discussion",
+        )
+
+    def test_point_presenter_badge_and_related_points(self):
+        discussion_item = self.item_ids["discussion"]
+        decision_item = self.item_ids["decision"]
+        decision_topic = self.record(
+            "community.meeting.agenda.item", decision_item, ["topic_id"]
+        )["topic_id"][0]
+        user = self.rpc("res.users", "read", [[self.current_user()], ["partner_id"]])[0]
+        partner_id, partner_name = user["partner_id"]
+
+        def make_outside_point(name):
+            meeting = self.rpc(
+                "community.meeting", "create",
+                [{"name": "Outside relation %s" % uuid.uuid4().hex[:6]}],
+            )
+            self.addCleanup(self.rpc, "community.meeting", "unlink", [[meeting]])
+            self.addCleanup(self.rpc, "community.meeting", "action_cancel", [[meeting]])
+            item = self.rpc(
+                "community.meeting.agenda.item", "create",
+                [{
+                    "meeting_id": meeting,
+                    "name": name,
+                    "kind": "discussion",
+                    "agenda_type_id": self.rpc(
+                        "community.meeting.agenda.type", "search",
+                        [[("behavior", "=", "discussion"), ("active", "=", True)]],
+                        {"limit": 1},
+                    )[0],
+                }],
+            )
+            return self.record("community.meeting.agenda.item", item, ["topic_id"])["topic_id"][0]
+
+        outside_related = make_outside_point("Outside related point")
+        outside_origin = make_outside_point("Outside origin point")
+        discussion_topic = self.record(
+            "community.meeting.agenda.item", discussion_item, ["topic_id"]
+        )["topic_id"][0]
+        action = self.rpc(
+            "community.meeting.action", "create",
+            [{
+                "meeting_id": self.meeting_id,
+                "agenda_item_id": discussion_item,
+                "name": "Promoted origin follow-up",
+            }],
+        )
+        self.rpc(
+            "community.meeting.agenda.item", "write",
+            [[discussion_item], {"presenter_partner_id": partner_id}],
+        )
+        self.rpc(
+            "community.meeting.topic", "write",
+            [[discussion_topic], {
+                "related_topic_ids": [(6, 0, [decision_topic, outside_related])],
+                "origin_topic_id": outside_origin,
+                "origin_action_id": action,
+            }],
+        )
+
+        self.page.reload(wait_until="domcontentloaded")
+        self.page.locator(".o_live_agenda_card").first.wait_for()
+        card = self.page.locator(".o_live_agenda_card").filter(
+            has_text="Browser Discussion case"
+        )
+        expect(card.locator(".o_live_presenter_badge")).to_contain_text(partner_name)
+
+        expand = card.locator(".o_live_expand")
+        if expand.get_attribute("aria-expanded") == "false":
+            expand.click()
+        relations = card.locator(".o_live_related_points")
+        expect(relations).to_be_visible()
+        expect(relations).to_contain_text("Browser Decision case")
+        expect(relations).to_contain_text("Outside related point")
+        expect(relations).to_contain_text("Outside origin point")
+        expect(relations).to_contain_text("Promoted origin follow-up")
+
+        outside_chip = relations.locator(
+            ".o_live_related_point", has_text="Outside related point"
+        )
+        expect(outside_chip.first).to_have_js_property("tagName", "SPAN")
+        relations.locator(
+            ".o_live_related_point", has_text="Browser Decision case"
+        ).first.click()
+        decision_card = self.page.locator("#agenda-card-%s" % decision_item)
+        expect(decision_card.locator(".o_live_expand")).to_have_attribute(
+            "aria-expanded", "true"
         )
 
     def test_mobile_layout(self):

@@ -118,6 +118,25 @@ export class LiveMeeting extends Component {
         this.state.defaultOwner = (await this.orm.call("community.meeting.action", "default_get", [["responsible_user_id"]])).responsible_user_id;
         const topicIds = items.map((i) => i.topic_id?.[0]).filter(Boolean);
         this.state.actions = await this.orm.searchRead("community.meeting.action", [["topic_id", "in", topicIds]], ["agenda_item_id", "topic_id", "name", "description", "responsible_user_id", "responsible_user_ids", "deadline", "state", "followup_kind", "followup_activity_type_id", "followup_activity_id", "followup_activity_completed_on"], { order: "deadline, id" });
+        const meetingTopics = await this.orm.searchRead(
+            "community.meeting.topic",
+            [["id", "in", topicIds]],
+            ["name", "related_topic_ids", "origin_topic_id", "origin_action_id"],
+        );
+        const extraTopicIds = meetingTopics
+            .flatMap((topic) => [
+                ...(topic.related_topic_ids || []),
+                ...(topic.origin_topic_id ? [topic.origin_topic_id[0]] : []),
+            ])
+            .filter((id) => !topicIds.includes(id));
+        const extraTopics = extraTopicIds.length
+            ? await this.orm.searchRead(
+                  "community.meeting.topic", [["id", "in", extraTopicIds]], ["name"]
+              )
+            : [];
+        this.state.topicsById = Object.fromEntries(
+            [...meetingTopics, ...extraTopics].map((topic) => [topic.id, topic])
+        );
         this.state.incoming = this.state.capabilities.can_edit ? await this.orm.searchRead("community.meeting.carryover", [["destination_meeting_id", "=", this.meetingId], ["status", "in", ["pending", "proposed"]]], ["origin_name", "origin_meeting_id", "reason"]) : [];
         this.state.pendingMinutes = await this.orm.call("community.meeting", "get_pending_minutes_for_approval", [[this.meetingId]]);
         this.state.minutesApprovals = await this.orm.call("community.meeting", "get_minutes_approval_history", [[this.meetingId]]);
@@ -139,6 +158,40 @@ export class LiveMeeting extends Component {
         }[action.followup_kind] || _t("Follow-up");
     }
     followupDefaults(item) { return this.state.followupByItem?.[item.id] || this.state.followupDefaults; }
+    topicById(topicId) { return this.state.topicsById?.[topicId] || false; }
+    itemForTopic(topicId) {
+        return this.state.items.find((item) => item.topic_id?.[0] === topicId) || false;
+    }
+    relatedTopics(item) {
+        const topic = this.topicById(item.topic_id?.[0]);
+        return (topic?.related_topic_ids || [])
+            .map((id) => this.topicById(id))
+            .filter((row) => row && row.id !== item.topic_id?.[0]);
+    }
+    originTopic(item) {
+        const topic = this.topicById(item.topic_id?.[0]);
+        return topic?.origin_topic_id ? this.topicById(topic.origin_topic_id[0]) : false;
+    }
+    originActionName(item) {
+        const topic = this.topicById(item.topic_id?.[0]);
+        if (!topic?.origin_action_id) return "";
+        return (
+            this.state.actions.find((action) => action.id === topic.origin_action_id[0])?.name
+            || _t("Follow-up")
+        );
+    }
+    hasPointRelations(item) {
+        return Boolean(
+            this.relatedTopics(item).length || this.originTopic(item) || this.originActionName(item)
+        );
+    }
+    async jumpToItem(itemId) {
+        const item = this.state.items.find((row) => row.id === itemId);
+        if (!item) return;
+        this.state.activeItemId = item.id;
+        this.state.expanded[item.id] = true;
+        document.getElementById(`agenda-card-${item.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
     followupChoices(item) { return (this.followupDefaults(item).allowed_kinds || []).map(kind => ({ kind, label: this.followupKindLabel({followup_kind: kind}) })); }
     actionActivityType(action) {
         return this.state.activityTypes.find(
