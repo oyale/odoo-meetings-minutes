@@ -27,7 +27,11 @@ class CommunityMeetingAgendaItem(models.Model):
     )
     description = fields.Html()
     discussion_notes = fields.Html()
-    presenter_partner_id = fields.Many2one("res.partner")
+    presenter_partner_id = fields.Many2one(
+        "res.partner",
+        related="topic_id.presenter_partner_id",
+        readonly=False,
+    )
     disposition = fields.Selection(
         [("open", "Open"), ("discussed", "Treated / Discussed"),
          ("deferred", "Postponed"), ("closed", "Resolved")],

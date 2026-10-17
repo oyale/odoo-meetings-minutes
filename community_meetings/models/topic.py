@@ -40,6 +40,11 @@ class MeetingTopic(models.Model):
     priority = fields.Selection(PRIORITIES, default="1", required=True, tracking=True)
     deadline = fields.Date(tracking=True)
     estimated_minutes = fields.Integer()
+    presenter_partner_id = fields.Many2one(
+        "res.partner",
+        string="Responsible",
+        default=lambda self: self.env.user.partner_id,
+    )
     related_topic_ids = fields.Many2many(
         "community.meeting.topic",
         "community_meeting_topic_related_rel",

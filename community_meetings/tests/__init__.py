@@ -10,3 +10,4 @@ from . import test_configuration
 from . import test_meeting_kinds
 from . import test_point_wizard
 from . import test_proposals_convergence
+from . import test_presenter_partner

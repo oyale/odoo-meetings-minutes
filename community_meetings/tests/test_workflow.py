@@ -117,7 +117,7 @@ class TestMeetingWorkflow(TransactionCase):
         })
         self.assertEqual(item.kind, "information")
         self.assertEqual(item.agenda_type_id, self.env.ref("community_meetings.agenda_type_information"))
-        self.assertFalse(item.presenter_partner_id)
+        self.assertEqual(item.presenter_partner_id, self.editor.partner_id)
         meeting.with_user(self.editor).action_schedule()
         meeting.with_user(self.editor).action_mark_held()
         meeting.with_user(self.editor).action_draft_minutes()
