@@ -12,6 +12,10 @@ sys.path.insert(0, str(CORE_BROWSER))
 from full_meeting_playwright import ACTIONS as CORE_ACTIONS, FullMeetingBrowserChecks, run_suite
 
 PROJECT_ACTIONS = {
+    "test_related_followup_preview_links_project_task": [
+        "open a promoted follow-up preview",
+        "see linked Project task details and open the task",
+    ],
     "test_project_task_can_use_alternate_project": [
         "configure Project requirement",
         "choose a different project for a new task",
@@ -24,6 +28,85 @@ PROJECT_ACTIONS = {
 
 
 class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
+    def test_related_followup_preview_links_project_task(self):
+        discussion_item = self.item_ids["discussion"]
+        topic_id = self.record(
+            "community.meeting.agenda.item", discussion_item, ["topic_id"]
+        )["topic_id"][0]
+        user_id = self.current_user()
+        company_id = self.record(
+            "community.meeting", self.meeting_id, ["company_id"]
+        )["company_id"][0]
+        project_name = "Related follow-up project " + uuid.uuid4().hex[:6]
+        project_id = self.rpc(
+            "project.project", "create",
+            [{"name": project_name, "company_id": company_id}],
+        )
+        self.addCleanup(self.rpc, "project.project", "unlink", [[project_id]])
+        task_name = "Linked source task " + uuid.uuid4().hex[:6]
+        task_id = self.rpc(
+            "project.task", "create",
+            [{
+                "name": task_name,
+                "project_id": project_id,
+                "user_ids": [(6, 0, [user_id])],
+            }],
+        )
+        self.addCleanup(self.rpc, "project.task", "unlink", [[task_id]])
+        outside_meeting_id = self.rpc(
+            "community.meeting", "create",
+            [{"name": "Follow-up destination " + uuid.uuid4().hex[:6]}],
+        )
+        self.addCleanup(
+            self.rpc, "community.meeting", "action_cancel", [[outside_meeting_id]]
+        )
+        outside_type = self.rpc(
+            "community.meeting.agenda.type", "search",
+            [[("behavior", "=", "discussion"), ("active", "=", True)]],
+            {"limit": 1},
+        )[0]
+        outside_item = self.rpc(
+            "community.meeting.agenda.item", "create",
+            [{
+                "meeting_id": outside_meeting_id,
+                "name": "Promoted task point",
+                "kind": "discussion",
+                "agenda_type_id": outside_type,
+            }],
+        )
+        action_id = self.rpc(
+            "community.meeting.action", "create",
+            [{
+                "meeting_id": outside_meeting_id,
+                "agenda_item_id": outside_item,
+                "name": "Promoted task follow-up",
+                "description": "Context from the original follow-up.",
+                "followup_kind": "project_task",
+                "responsible_user_ids": [(6, 0, [user_id])],
+                "project_task_ids": [(6, 0, [task_id])],
+            }],
+        )
+        self.rpc(
+            "community.meeting.topic", "write",
+            [[topic_id], {"origin_action_id": action_id}],
+        )
+
+        self.open_live(self.meeting_id)
+        card = self.card("discussion")
+        chip = card.locator(
+            ".o_live_related_point", has_text="Promoted task follow-up"
+        )
+        chip.click()
+        preview = card.get_by_role(
+            "region", name="Follow-up details: Promoted task follow-up"
+        )
+        expect(preview).to_contain_text(task_name)
+        expect(preview).to_contain_text(project_name)
+        expect(preview.get_by_role("button", name="Open Project task")).to_be_visible()
+        preview.get_by_role("button", name="Open Project task").click()
+        dialog = self.page.locator(".o_dialog .o_form_view")
+        expect(self.page.get_by_text(task_name, exact=True)).to_be_visible()
+
     def test_project_task_can_use_alternate_project(self):
         fields = self.rpc(
             "community.meeting.series", "fields_get", [], {"attributes": ["type"]}

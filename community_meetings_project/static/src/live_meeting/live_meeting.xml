@@ -8,6 +8,25 @@
             <button t-if="!locked and task.followup_kind === 'project_task' and !(state.projectTasksByAction[task.id] || []).length" class="btn btn-sm btn-outline-primary o_live_create_project_task"
                     t-on-click="() => this.createProjectTask(task)">Create Project task</button>
         </xpath>
+        <xpath expr="//div[@t-att-aria-label=&quot;'Follow-up details: ' + originActionName(item)&quot;]/div[contains(@class, 'o_live_relation_source')]" position="before">
+            <div t-if="(state.projectTasksByAction[originAction(item).id] || []).length" class="o_live_relation_tasks">
+                <h4>Linked Project tasks</h4>
+                <ul class="list-unstyled mb-0">
+                    <li t-foreach="state.projectTasksByAction[originAction(item).id] || []" t-as="projectTask" t-key="projectTask.id" class="o_live_relation_task">
+                        <button type="button" class="btn btn-link p-0 text-start" t-on-click="() => this.openProjectTask(projectTask.id)">
+                            <i class="fa fa-external-link me-1" aria-hidden="true"/><strong t-out="projectTask.display_name"/><span class="visually-hidden">Open Project task</span>
+                        </button>
+                        <div class="o_live_relation_facts">
+                            <span t-if="projectTask.project_id" class="text-muted">Project: <t t-out="label(projectTask.project_id)"/></span>
+                            <span t-if="projectTask.stage_id" class="badge text-bg-light" t-out="label(projectTask.stage_id)"/>
+                            <span t-if="projectTask.user_ids?.length" class="text-muted">Assigned to: <t t-out="state.users.filter(person => projectTask.user_ids.includes(person.id)).map(person => person.name).join(', ')"/></span>
+                            <span t-if="projectTask.date_deadline" class="text-muted">Due <t t-out="projectTask.date_deadline"/></span>
+                            <span t-if="!projectTask.active" class="badge text-bg-secondary">Archived</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </xpath>
         <xpath expr="//p[contains(., 'A follow-up task must be recorded before this TODO can be resolved.')]" position="after">
             <p t-if="typeBehavior(item) === 'todo' and item.requires_project_task and item.disposition !== 'closed' and !hasTodoAction(item)"
                class="text-muted">This meeting policy requires a Project task linked to the follow-up.</p>

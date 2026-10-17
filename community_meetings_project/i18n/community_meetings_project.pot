@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 14:46+0000\n"
-"PO-Revision-Date: 2026-10-17 14:46+0000\n"
+"POT-Creation-Date: 2026-10-17 18:37+0000\n"
+"PO-Revision-Date: 2026-10-17 18:37+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -66,6 +66,12 @@ msgid "Any accessible project"
 msgstr ""
 
 #. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
+msgid "Archived"
+msgstr ""
+
+#. module: community_meetings_project
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_agenda_item__project_requirement_snapshot__project
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_todo_requirement__project
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_todo_requirement__project
@@ -77,6 +83,12 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_todo_requirement__core
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_todo_requirement__core
 msgid "Assigned meeting task or Odoo activity"
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
+msgid "Assigned to:"
 msgstr ""
 
 #. module: community_meetings_project
@@ -231,6 +243,12 @@ msgid "Display Name"
 msgstr ""
 
 #. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
+msgid "Due"
+msgstr ""
+
+#. module: community_meetings_project
 #. odoo-python
 #: code:addons/community_meetings_project/models/series_wizard.py:0
 msgid "Enter a name for the new project."
@@ -311,6 +329,12 @@ msgid "Link a Project task to a follow-up action before resolving this TODO."
 msgstr ""
 
 #. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
+msgid "Linked Project tasks"
+msgstr ""
+
+#. module: community_meetings_project
 #. odoo-python
 #: code:addons/community_meetings_project/models/project_links.py:0
 msgid "Linked tasks must belong to the meeting company."
@@ -374,6 +398,12 @@ msgstr ""
 #. odoo-python
 #: code:addons/community_meetings_project/models/project_links.py:0
 msgid "One or more linked tasks are unavailable."
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
+msgid "Open Project task"
 msgstr ""
 
 #. module: community_meetings_project
@@ -444,6 +474,12 @@ msgstr ""
 #. odoo-python
 #: code:addons/community_meetings_project/models/project_links.py:0
 msgid "Project tasks can only be linked to Project task follow-ups."
+msgstr ""
+
+#. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
+msgid "Project:"
 msgstr ""
 
 #. module: community_meetings_project

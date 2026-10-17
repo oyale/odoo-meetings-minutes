@@ -24,20 +24,37 @@ patch(LiveMeeting.prototype, {
 
     async refreshProjectTaskLinks() {
         this.state.projectTasksByAction = {};
+        const actionIds = [...new Set([
+            ...this.state.actions.map((action) => action.id),
+            ...Object.keys(this.state.relatedActionsById || {}).map(Number),
+        ])];
+        if (!actionIds.length) return;
         const actions = await this.orm.searchRead(
             "community.meeting.action",
-            [["id", "in", this.state.actions.map(a => a.id)]],
+            [["id", "in", actionIds]],
             ["project_task_ids"]
         );
         const taskIds = [...new Set(actions.flatMap((action) => action.project_task_ids))];
         if (!taskIds.length) return;
-        const tasks = await this.orm.searchRead("project.task", [["id", "in", taskIds]], ["display_name", "user_ids", "state", "active"]);
+        const tasks = await this.orm.searchRead("project.task", [["id", "in", taskIds]], ["display_name", "project_id", "user_ids", "stage_id", "state", "date_deadline", "active"]);
         const validTasks = new Set(tasks.filter(t => t.active && t.state !== "1_canceled" && t.user_ids.length).map(t => t.id));
-        const taskNames = Object.fromEntries(tasks.map((task) => [task.id, task.display_name]));
+        const taskById = Object.fromEntries(tasks.map((task) => [task.id, task]));
         this.state.projectTasksByAction = Object.fromEntries(actions.map((action) => [
             action.id,
-            action.project_task_ids.filter((id) => taskNames[id]).map((id) => ({ id, name: taskNames[id], valid: validTasks.has(id) })),
+            action.project_task_ids.filter((id) => taskById[id]).map((id) => ({ ...taskById[id], valid: validTasks.has(id) })),
         ]));
+    },
+
+    async openProjectTask(taskId) {
+        if (!await this.flushEditors()) return;
+        await this.actionService.doAction({
+            type: "ir.actions.act_window",
+            name: _t("Project task"),
+            res_model: "project.task",
+            res_id: taskId,
+            views: [[false, "form"]],
+            target: "new",
+        });
     },
 
     hasTodoAction(item) {
