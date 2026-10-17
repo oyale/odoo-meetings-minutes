@@ -52,6 +52,7 @@
 <field name="description" widget="html" invisible="topic_id"/>
 <group invisible="topic_id"><group string="Planning"><field name="priority"/><field name="deadline"/><field name="estimated_minutes"/></group></group>
 <group><field name="presenter_partner_id"/></group>
+<field name="presenter_loaded" invisible="1"/>
 <group invisible="topic_id"><field name="more_options" widget="boolean_toggle"/></group>
 <group string="More options" invisible="not more_options and not topic_id">
     <field name="topic_id" options="{'no_create': True}" domain="[('company_id', '=', company_id), ('series_id', '=', series_id)]"/>

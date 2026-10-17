@@ -299,6 +299,7 @@ class PointWizard(models.TransientModel):
     deadline = fields.Date()
     estimated_minutes = fields.Integer()
     presenter_partner_id = fields.Many2one("res.partner", string="Responsible")
+    presenter_loaded = fields.Boolean(default=False, copy=False, readonly=True)
     included = fields.Boolean(readonly=True)
     created_item_id = fields.Many2one("community.meeting.agenda.item", readonly=True)
     propose = fields.Boolean()
@@ -319,18 +320,30 @@ class PointWizard(models.TransientModel):
             self.related_topic_ids = self.topic_id.related_topic_ids
             self.related_loaded = True
             self.presenter_partner_id = self.topic_id.presenter_partner_id
+            self.presenter_loaded = True
+        else:
+            self.presenter_partner_id = False
+            self.presenter_loaded = False
 
     @api.model_create_multi
     def create(self, vals_list):
-        prepared = [
-            dict(vals, related_loaded=True) if "related_topic_ids" in vals else vals
-            for vals in vals_list
-        ]
+        prepared = []
+        for original in vals_list:
+            vals = dict(original)
+            if "related_topic_ids" in vals:
+                vals["related_loaded"] = True
+            if "presenter_partner_id" in vals:
+                vals["presenter_loaded"] = True
+            prepared.append(vals)
         return super().create(prepared)
 
     def write(self, vals):
-        if "related_topic_ids" in vals:
-            vals = dict(vals, related_loaded=True)
+        if {"related_topic_ids", "presenter_partner_id"}.intersection(vals):
+            vals = dict(vals)
+            if "related_topic_ids" in vals:
+                vals["related_loaded"] = True
+            if "presenter_partner_id" in vals:
+                vals["presenter_loaded"] = True
         return super().write(vals)
 
     @api.model
@@ -350,11 +363,8 @@ class PointWizard(models.TransientModel):
         self.ensure_one()
         if self.topic_id:
             vals = {"meeting_id": meeting.id, "topic_id": self.topic_id.id}
-            if (
-                self.presenter_partner_id
-                and self.presenter_partner_id != self.topic_id.presenter_partner_id
-            ):
-                vals["presenter_partner_id"] = self.presenter_partner_id.id
+            if self.presenter_loaded and self.presenter_partner_id != self.topic_id.presenter_partner_id:
+                vals["presenter_partner_id"] = self.presenter_partner_id.id or False
             return vals
         if not self.name or not self.agenda_type_id:
             raise ValidationError(_("Enter a title and select a point type."))

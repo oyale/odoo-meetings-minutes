@@ -141,6 +141,25 @@ class TestPresenterPartner(TransactionCase):
         wizard.action_save()
         self.assertEqual(original.topic_id.presenter_partner_id, owner)
 
+    def test_wizard_can_clear_responsible_on_reused_point(self):
+        source = self.env["community.meeting"].with_user(self.editor).create({"name": "Clear source"})
+        original = self._point("Point with responsible", meeting=source)
+        self.assertEqual(original.topic_id.presenter_partner_id, self.editor.partner_id)
+        wizard = self._wizard(topic_id=original.topic_id.id)
+        wizard._onchange_topic_id()
+        wizard.presenter_partner_id = False
+        wizard.action_save()
+        self.assertFalse(original.topic_id.presenter_partner_id)
+
+    def test_wizard_reuse_without_loading_responsible_preserves_it(self):
+        source = self.env["community.meeting"].with_user(self.editor).create({"name": "Untouched source"})
+        original = self._point("Untouched point", meeting=source)
+        owner = self.env["res.partner"].create({"name": "Existing owner"})
+        original.topic_id.presenter_partner_id = owner
+        wizard = self._wizard(topic_id=original.topic_id.id)
+        wizard.action_save()
+        self.assertEqual(original.topic_id.presenter_partner_id, owner)
+
     def test_wizard_proposal_carries_the_chosen_responsible(self):
         series = self.env["community.meeting.series"].with_user(self.editor).create({
             "name": "Wizard proposal series",
