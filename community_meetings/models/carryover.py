@@ -252,13 +252,25 @@ class CommunityMeetingCarryover(models.Model):
         # (action/resolution with no agenda item) or a cross-series transfer has
         # no reusable point, so a fresh point is minted and the carryover record
         # itself (carryover_id + "Carried forward from ..." text) is the link back.
-        item = self.env["community.meeting.agenda.item"].create({
-            "topic_id": promoted.id or (source.topic_id.id if source and source.meeting_id.series_id == destination.series_id else False),
+        topic = promoted or (
+            source.topic_id
+            if source and source.meeting_id.series_id == destination.series_id
+            else self.env["community.meeting.topic"]
+        )
+        item_values = {
+            "topic_id": topic.id,
             "meeting_id": destination.id,
             "name": f"{labels[self.origin_model]}: {self.origin_name}",
             "description": _("Carried forward from %(meeting)s.", meeting=self.origin_meeting_id.code),
             "carryover_id": self.id,
-        })
+        }
+        if not topic:
+            item_values["estimated_minutes"] = (
+                destination.series_id._point_estimated_minutes_default()
+                if destination.series_id
+                else destination.company_id.meeting_estimated_minutes
+            )
+        item = self.env["community.meeting.agenda.item"].create(item_values)
         write_values = {"destination_meeting_id": destination.id, "destination_item_id": item.id, "status": "accepted"}
         if not automatic:
             write_values.update({"responded_by_id": self.env.uid, "responded_at": fields.Datetime.now()})

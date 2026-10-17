@@ -311,6 +311,74 @@ class TestMeetingDomain(TransactionCase):
             "2026-10-15 10:00:00",
         )
 
+    def test_guided_wizard_uses_agreed_date_after_series_selection(self):
+        series = self.env["community.meeting.series"].create({
+            "name": "Guided agreed date", "has_next_meeting_point": True,
+        })
+        meeting = self.env["community.meeting"].create({
+            "name": "Previous meeting", "series_id": series.id,
+            "start_datetime": "2026-10-01 10:00:00",
+        })
+        agreed = fields.Datetime.to_datetime("2026-10-15 17:30:00")
+        meeting.agenda_item_ids.filtered(lambda item: item.kind == "next_meeting").write({
+            "next_meeting_datetime": agreed,
+        })
+
+        wizard_model = self.env["community.meeting.create.wizard"]
+        defaults = wizard_model.default_get([
+            "series_id", "start_datetime", "last_default_start",
+        ])
+        self.assertEqual(defaults["last_default_start"], defaults["start_datetime"])
+        wizard = wizard_model.new(defaults)
+        wizard.series_id = series
+        wizard._onchange_series()
+        self.assertEqual(wizard.start_datetime, agreed)
+
+    def test_next_meeting_point_keeps_current_meeting_local_hour(self):
+        series = self.env["community.meeting.series"].create({
+            "name": "Next point hour", "timezone": "Europe/Madrid",
+            "has_next_meeting_point": True, "next_meeting_rule": "interval_days",
+            "next_meeting_interval_days": 7,
+        })
+        meeting = self.env["community.meeting"].create({
+            "name": "Before daylight saving ends", "series_id": series.id,
+            "start_datetime": "2026-10-23 08:00:00",
+        })
+        next_point = meeting.agenda_item_ids.filtered(lambda item: item.kind == "next_meeting")
+        self.assertEqual(
+            str(next_point.next_meeting_datetime), "2026-10-30 09:00:00",
+            "The next meeting point should preserve the 10:00 Madrid meeting hour across DST.",
+        )
+
+    def test_cross_series_carryover_uses_destination_point_estimate(self):
+        source_series = self.env["community.meeting.series"].create({
+            "name": "Source estimate series", "default_estimated_minutes": 12,
+        })
+        destination_series = self.env["community.meeting.series"].create({
+            "name": "Destination estimate series", "default_estimated_minutes": 35,
+        })
+        origin = self.env["community.meeting"].create({
+            "name": "Origin", "series_id": source_series.id,
+            "start_datetime": "2026-10-01 10:00:00",
+        })
+        source = self.env["community.meeting.agenda.item"].create({
+            "meeting_id": origin.id, "name": "Cross-series point",
+            "estimated_minutes": 12,
+        })
+        destination = self.env["community.meeting"].create({
+            "name": "Destination", "series_id": destination_series.id,
+            "start_datetime": "2026-10-08 10:00:00",
+        })
+        transfer = self.env["community.meeting.carryover"].create({
+            "origin_model": "agenda_item", "origin_record_id": source.id,
+            "destination_series_id": destination_series.id,
+            "destination_meeting_id": destination.id,
+        })
+
+        transfer.action_accept(destination.id)
+
+        self.assertEqual(transfer.destination_item_id.estimated_minutes, 35)
+
     def test_followup_promotes_to_point_when_origin_closes(self):
         meeting = self.env["community.meeting"].create({
             "name": "Promotion",

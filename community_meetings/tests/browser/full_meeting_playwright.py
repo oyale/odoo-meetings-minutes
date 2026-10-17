@@ -157,6 +157,10 @@ ACTIONS = {
         "suggest series meeting name",
         "allow meeting name override",
     ],
+    "test_guided_meeting_uses_agreed_date_when_selecting_series": [
+        "select a series in the guided meeting wizard",
+        "use the date agreed in the previous meeting",
+    ],
     "test_followup_points_are_offered_in_new_meeting_wizard": [
         "carry completed follow-up point into next meeting",
     ],
@@ -1282,6 +1286,46 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
         expect(self.page.locator(".o_live_estimate_badge")).to_contain_text("Est. 20 min")
         expect(self.page.locator(".o_live_planned")).to_contain_text("Background")
+
+    def test_guided_meeting_uses_agreed_date_when_selecting_series(self):
+        series_name = "Agreed guided date " + uuid.uuid4().hex[:8]
+        series = self.rpc("community.meeting.series", "create", [{
+            "name": series_name, "has_next_meeting_point": True,
+        }])
+        self.retained.append({"model": "community.meeting.series", "id": series})
+        previous = self.rpc("community.meeting", "create", [{
+            "name": series_name + " previous", "series_id": series,
+            "start_datetime": "2030-04-01 10:00:00",
+        }])
+        self.retained.append({"model": "community.meeting", "id": previous})
+        next_point = self.rpc("community.meeting.agenda.item", "search", [[
+            ("meeting_id", "=", previous), ("kind", "=", "next_meeting"),
+        ]])[0]
+        self.rpc("community.meeting.agenda.item", "write", [[next_point], {
+            "next_meeting_datetime": "2030-04-15 17:30:00",
+        }])
+
+        self.page.goto(BASE_URL + "/web")
+        self.page.locator(".o_navbar_apps_menu").click()
+        self.page.locator(
+            'a[data-menu-xmlid="community_meetings.menu_community_meetings_root"]'
+        ).click()
+        self.page.locator(
+            'a[data-menu-xmlid="community_meetings.menu_prepare_meeting"]'
+        ).click()
+        wizard = self.page.get_by_role("dialog").last
+        series_input = wizard.locator('.o_field_widget[name="series_id"] input')
+        series_input.fill(series_name)
+        option = self.page.locator(".o-autocomplete--dropdown-item").filter(
+            has_text=series_name
+        ).first
+        expect(option).to_be_visible()
+        option.click()
+        expect(series_input).to_have_value(series_name)
+        wizard.locator('button[name="action_next"]').click()
+        expect(
+            wizard.locator('.o_field_widget[name="start_datetime"] input')
+        ).to_have_value(re.compile(r"04/15/2030"))
 
     def test_followup_points_are_offered_in_new_meeting_wizard(self):
         name = "Follow-up carryover " + uuid.uuid4().hex[:8]

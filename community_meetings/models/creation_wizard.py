@@ -63,6 +63,13 @@ class MeetingCreateWizard(models.TransientModel):
     def _reload(self):
         return {**self._open({}), "res_id": self.id}
 
+    @api.model
+    def default_get(self, fields_list):
+        defaults = super().default_get(fields_list)
+        if "last_default_start" in fields_list and not defaults.get("last_default_start"):
+            defaults["last_default_start"] = defaults.get("start_datetime")
+        return defaults
+
     @api.onchange("series_id", "start_datetime")
     def _onchange_series(self):
         if self.series_id:
