@@ -5,7 +5,7 @@
         <xpath expr="//li[@t-foreach='pointActions(item)']//div[contains(@class, 'o_live_followup_badges')]/span[last()]" position="after">
             <span t-foreach="state.projectTasksByAction[task.id] || []" t-as="projectTask" t-key="projectTask.id"
                   class="badge text-bg-info o_live_project_task"><t t-out="projectTask.name"/></span>
-            <button t-if="!locked and task.followup_kind === 'task' and !(state.projectTasksByAction[task.id] || []).length" class="btn btn-sm btn-outline-primary o_live_create_project_task"
+            <button t-if="!locked and task.followup_kind === 'project_task' and !(state.projectTasksByAction[task.id] || []).length" class="btn btn-sm btn-outline-primary o_live_create_project_task"
                     t-on-click="() => this.createProjectTask(task)">Create Project task</button>
         </xpath>
         <xpath expr="//p[contains(., 'A follow-up task must be recorded before this TODO can be resolved.')]" position="after">

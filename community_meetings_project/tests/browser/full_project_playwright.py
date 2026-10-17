@@ -16,6 +16,10 @@ PROJECT_ACTIONS = {
         "configure Project requirement",
         "choose a different project for a new task",
     ],
+    "test_convert_project_todo_to_project_task": [
+        "create a private to-do follow-up",
+        "convert it to a Project task container",
+    ],
 }
 
 
@@ -105,6 +109,39 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         expect(card.get_by_role("button", name="Done")).to_be_enabled()
         card.get_by_role("button", name="Done").click()
         expect(self.outcome("todo")).to_have_text("Resolved")
+
+    def test_convert_project_todo_to_project_task(self):
+        self.open_live(self.meeting_id)
+        card = self.card("discussion")
+        card.get_by_role("button", name="Add follow-up", exact=True).click()
+        form = card.locator(".o_live_task_form")
+        form.get_by_label("Task name").fill("Private to-do follow-up")
+        form.get_by_label("Follow-up type").select_option("project_todo")
+        form.get_by_role("button", name="Add follow-up").click()
+        row = card.locator(".o_live_followup_task").last
+        expect(row).to_be_visible()
+        todo = self.wait_action_record("Private to-do follow-up")
+        self.assertEqual(todo["followup_kind"], "project_todo")
+        before = self.record(
+            "community.meeting.action", todo["id"],
+            ["project_task_ids", "followup_activity_id"],
+        )
+        self.assertEqual(len(before["project_task_ids"]), 1)
+        self.assertFalse(before["followup_activity_id"])
+
+        convert = row.locator(".o_live_followup_convert")
+        expect(convert).to_have_count(1)
+        convert.get_by_role("button", name="Convert follow-up").click()
+        self.page.get_by_role("button", name="Project task", exact=True).click()
+        expect(row.locator(".o_live_followup_badges .badge").first).to_have_text("Project task")
+        converted = self.wait_action_record("Private to-do follow-up")
+        self.assertEqual(converted["followup_kind"], "project_task")
+        after = self.record(
+            "community.meeting.action", todo["id"],
+            ["project_task_ids", "followup_activity_id"],
+        )
+        self.assertEqual(after["project_task_ids"], [])
+        self.assertFalse(after["followup_activity_id"])
 
 
 

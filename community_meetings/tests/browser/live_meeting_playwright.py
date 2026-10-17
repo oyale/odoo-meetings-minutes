@@ -506,14 +506,19 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         row.get_by_label("Responsible people").select_option([str(owner)])
         expect(row.get_by_label("Responsible people").locator("option:checked")).to_have_count(1)
 
-    def test_convert_menu_hidden_when_only_one_container(self):
+    def test_convert_menu_matches_available_containers(self):
         card = self.card("discussion")
         card.get_by_role("button", name="Add follow-up", exact=True).click()
         form = card.locator(".o_live_task_form")
         form.get_by_label("Task name").fill("Single container follow-up")
         form.get_by_role("button", name="Add follow-up").click()
-        expect(card.locator(".o_live_followup_task").last).to_be_visible()
-        expect(card.locator(".o_live_followup_convert")).to_have_count(0)
+        row = card.locator(".o_live_followup_task").last
+        expect(row).to_be_visible()
+        allowed = self.rpc(
+            "community.meeting", "get_followup_defaults",
+            [[self.meeting_id], self.item_ids["discussion"]],
+        )["allowed_kinds"]
+        expect(row.locator(".o_live_followup_convert")).to_have_count(1 if len(allowed) > 1 else 0)
 
     def test_header_details_and_add_point_remain_available_while_paused(self):
         self.page.get_by_role("button", name="Start Meeting").click()
