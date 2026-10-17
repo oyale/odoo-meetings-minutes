@@ -1,6 +1,6 @@
 # Community Meetings - Calendar Integration
 
-[![Odoo 18.0](https://img.shields.io/badge/Odoo-18.0-714B67.svg)](https://github.com/oyale/meeting-minutes/tree/18.0)
+[![Odoo 18.0](https://img.shields.io/badge/Odoo-18.0-714B67.svg)](https://github.com/oyale/odoo-meetings-minutes/tree/18.0)
 [![License: AGPL-3](https://img.shields.io/badge/License-AGPL--3-blue.svg)](../../LICENSE)
 [![Maturity: Beta](https://img.shields.io/badge/maturity-Beta-yellow.svg)](https://odoo-community.org/page/development-status)
 
@@ -16,4 +16,4 @@ internal-user attendees create or update a linked Calendar event. Event links
 open the meeting subject to the user's normal access rights. Calendar attendee
 responses do not change meeting attendance.
 
-See the [Calendar integration guide](https://oyale.github.io/meeting-minutes/html-en/integrations/calendar.html).
+See the [Calendar integration guide](https://oyale.github.io/odoo-meetings-minutes/html-en/integrations/calendar.html).

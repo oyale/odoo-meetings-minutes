@@ -4,7 +4,7 @@
     "version": "18.0.1.0.0",
     "license": "AGPL-3",
     "author": "Pelayo García",
-    "website": "https://github.com/oyale/meeting-minutes/tree/18.0/community_meetings_extension_demo",
+    "website": "https://github.com/oyale/odoo-meetings-minutes/tree/18.0/community_meetings_extension_demo",
     "maintainers": ["oyale"],
     "development_status": "Beta",
     "depends": ["community_meetings"],

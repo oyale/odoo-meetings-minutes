@@ -1,6 +1,6 @@
 # Community Meetings - Project Tasks
 
-[![Odoo 18.0](https://img.shields.io/badge/Odoo-18.0-714B67.svg)](https://github.com/oyale/meeting-minutes/tree/18.0)
+[![Odoo 18.0](https://img.shields.io/badge/Odoo-18.0-714B67.svg)](https://github.com/oyale/odoo-meetings-minutes/tree/18.0)
 [![License: AGPL-3](https://img.shields.io/badge/License-AGPL--3-blue.svg)](../../LICENSE)
 [![Maturity: Beta](https://img.shields.io/badge/maturity-Beta-yellow.svg)](https://odoo-community.org/page/development-status)
 
@@ -16,4 +16,4 @@ task or create a task in an available project. Configure project selection and
 task requirements in the company or meeting series settings. Project task
 access and company compatibility are checked when linking and resolving points.
 
-See the [Project integration guide](https://oyale.github.io/meeting-minutes/html-en/integrations/project.html).
+See the [Project integration guide](https://oyale.github.io/odoo-meetings-minutes/html-en/integrations/project.html).

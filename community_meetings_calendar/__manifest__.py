@@ -5,7 +5,7 @@
     "category": "Productivity/Calendar",
     "license": "AGPL-3",
     "author": "Pelayo García",
-    "website": "https://github.com/oyale/meeting-minutes/tree/18.0/community_meetings_calendar",
+    "website": "https://github.com/oyale/odoo-meetings-minutes/tree/18.0/community_meetings_calendar",
     "maintainers": ["oyale"],
     "development_status": "Beta",
     "depends": ["community_meetings", "calendar"],

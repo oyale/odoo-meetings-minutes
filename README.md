@@ -1,6 +1,6 @@
-[![Odoo 18.0](https://img.shields.io/badge/Odoo-18.0-714B67.svg)](https://github.com/oyale/meeting-minutes/tree/18.0)
-[![Tests](https://github.com/oyale/meeting-minutes/actions/workflows/test.yml/badge.svg?branch=18.0)](https://github.com/oyale/meeting-minutes/actions/workflows/test.yml?query=branch%3A18.0)
-[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-2f6f9f)](https://oyale.github.io/meeting-minutes/)
+[![Odoo 18.0](https://img.shields.io/badge/Odoo-18.0-714B67.svg)](https://github.com/oyale/odoo-meetings-minutes/tree/18.0)
+[![Tests](https://github.com/oyale/odoo-meetings-minutes/actions/workflows/test.yml/badge.svg?branch=18.0)](https://github.com/oyale/odoo-meetings-minutes/actions/workflows/test.yml?query=branch%3A18.0)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-2f6f9f)](https://oyale.github.io/odoo-meetings-minutes/)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0.html)
 <!-- /!\ do not modify above this line -->
 
@@ -54,8 +54,8 @@ pip install odoo-addons-oyale-meeting-minutes
 
 ## Documentation
 
-Read the [English guide](https://oyale.github.io/meeting-minutes/html-en/index.html)
-or [guía en español](https://oyale.github.io/meeting-minutes/html-es/index.html).
+Read the [English guide](https://oyale.github.io/odoo-meetings-minutes/html-en/index.html)
+or [guía en español](https://oyale.github.io/odoo-meetings-minutes/html-es/index.html).
 GitHub Pages builds the bilingual user and administrator documentation from
 `docs/user/` and `docs/user_es/` on every push to `18.0`.
 See [ROADMAP.md](ROADMAP.md) for planned user-facing improvements.

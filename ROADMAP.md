@@ -2,7 +2,7 @@
 
 This roadmap lists ideas being considered for future releases. It has no
 release dates, and priorities may change as the project evolves. The current
-features are documented in the [user guide](https://oyale.github.io/meeting-minutes/).
+features are documented in the [user guide](https://oyale.github.io/odoo-meetings-minutes/).
 
 ## Planned
 
@@ -51,7 +51,7 @@ jurisdictions must be defined before committing to implementation.
 
 Esta hoja recoge ideas para próximas versiones. No fija fechas de entrega y las
 prioridades pueden cambiar. Las funciones actuales están descritas en la
-[guía de usuario](https://oyale.github.io/meeting-minutes/html-es/index.html).
+[guía de usuario](https://oyale.github.io/odoo-meetings-minutes/html-es/index.html).
 
 ## Previsto
 
