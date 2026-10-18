@@ -1,13 +1,12 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-#	* community_meetings
+# 	* community_meetings
 #
-#. module: community_meetings
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 23:12+0000\n"
+"POT-Creation-Date: 2026-10-18 05:11+0000\n"
 "PO-Revision-Date: 2026-10-18 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
@@ -20,14 +19,26 @@ msgstr ""
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
-msgid "\n…and %(count)s more."
-msgstr "\n…y %(count)s más."
+msgid ""
+"\n"
+"…and %(count)s more."
+msgstr ""
+"\n"
+"…y %(count)s más."
 
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
-msgid "%(count)s agenda point(s) are not resolved:\n%(points)s%(more)s\n\nFinish the meeting anyway?"
-msgstr "%(count)s punto(s) de la agenda no están resueltos:\n%(points)s%(more)s\n\n¿Terminar la reunión de todos modos?"
+msgid ""
+"%(count)s agenda point(s) are not resolved:\n"
+"%(points)s%(more)s\n"
+"\n"
+"Finish the meeting anyway?"
+msgstr ""
+"%(count)s punto(s) de la agenda no están resueltos:\n"
+"%(points)s%(more)s\n"
+"\n"
+"¿Terminar la reunión de todos modos?"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -52,6 +63,13 @@ msgid "<i class=\"fa fa-calendar-o\" aria-hidden=\"true\"/> Adding to"
 msgstr "<i class=\"fa fa-calendar-o\" aria-hidden=\"true\"/> Añadiendo a"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid ""
+"<i class=\"fa fa-lightbulb-o\" aria-hidden=\"true\"/> A rough estimate helps "
+"the group keep the meeting on track."
+msgstr "<i class=\"fa fa-lightbulb-o\" aria-hidden=\"true\"/> Una estimación aproximada ayuda al grupo a mantener la reunión en tiempo."
+
+#. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 msgid "<span class=\"o_stat_text\">New Meeting</span>"
 msgstr "<span class=\"o_stat_text\">Nueva reunión</span>"
@@ -62,9 +80,30 @@ msgid "<span class=\"o_stat_text\">Propose a point</span>"
 msgstr "<span class=\"o_stat_text\">Proponer un punto</span>"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid ""
+"<strong>A few extra details</strong><small>Make this point easier to pick up "
+"and follow through.</small>"
+msgstr "<strong>Algunos detalles más</strong><small>Facilita que el grupo retome el punto y complete su seguimiento.</small>"
+
+#. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_document
 msgid "<strong>Company:</strong>"
 msgstr "<strong>Compañía:</strong>"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid ""
+"<strong>Give it a little shape</strong><small>Set the urgency and a "
+"realistic timebox.</small>"
+msgstr "<strong>Dale forma</strong><small>Define su prioridad y una duración aproximada.</small>"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid ""
+"<strong>More options</strong><small>Reuse a point and tune follow-ups.</"
+"small>"
+msgstr "<strong>Más opciones</strong><small>Reutiliza un punto y configura sus seguimientos.</small>"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_preparation
@@ -126,13 +165,15 @@ msgstr "El resultado requiere un punto de tipo decisión."
 #. odoo-python
 #: code:addons/community_meetings/models/editorial.py:0
 msgid "A dissent must be linked to an agenda point or an agreement."
-msgstr "Un disenso debe estar vinculado a un punto del orden del día o a un acuerdo."
+msgstr ""
+"Un disenso debe estar vinculado a un punto del orden del día o a un acuerdo."
 
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/editorial.py:0
 msgid "A dissent's agenda item must belong to the same meeting."
-msgstr "El punto del orden del día de un disenso debe pertenecer a la misma reunión."
+msgstr ""
+"El punto del orden del día de un disenso debe pertenecer a la misma reunión."
 
 #. module: community_meetings
 #. odoo-python
@@ -144,13 +185,16 @@ msgstr "El acuerdo de un disenso debe pertenecer a la misma reunión."
 #. odoo-python
 #: code:addons/community_meetings/models/editorial.py:0
 msgid "A dissent's resolution must belong to the selected agenda item."
-msgstr "El acuerdo de un disenso debe pertenecer al punto del orden del día seleccionado."
+msgstr ""
+"El acuerdo de un disenso debe pertenecer al punto del orden del día "
+"seleccionado."
 
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/action.py:0
 msgid "A follow-up action must be linked to an agenda point."
-msgstr "Una acción de seguimiento debe estar vinculada a un punto del orden del día."
+msgstr ""
+"Una acción de seguimiento debe estar vinculada a un punto del orden del día."
 
 #. module: community_meetings
 #: model:ir.model.constraint,message:community_meetings.constraint_community_meeting_followup_kind_community_meeting_followup_kind_code_uniq
@@ -161,7 +205,9 @@ msgstr "Ya existe un tipo de seguimiento con este código."
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "A follow-up task must be recorded before this TODO can be resolved."
-msgstr "Debes registrar una tarea de seguimiento antes de resolver esta tarea pendiente."
+msgstr ""
+"Debes registrar una tarea de seguimiento antes de resolver esta tarea "
+"pendiente."
 
 #. module: community_meetings
 #. odoo-python
@@ -227,7 +273,8 @@ msgstr "Un acuerdo debe estar vinculado a un punto del orden del día."
 #. odoo-python
 #: code:addons/community_meetings/models/resolution.py:0
 msgid "A resolution's agenda item must belong to the same meeting."
-msgstr "El punto del orden del día de un acuerdo debe pertenecer a la misma reunión."
+msgstr ""
+"El punto del orden del día de un acuerdo debe pertenecer a la misma reunión."
 
 #. module: community_meetings
 #. odoo-python
@@ -235,19 +282,27 @@ msgstr "El punto del orden del día de un acuerdo debe pertenecer a la misma reu
 #: code:addons/community_meetings/models/agenda_item.py:0
 #: code:addons/community_meetings/models/topic.py:0
 msgid "A resolved TODO must keep at least one non-cancelled follow-up task."
-msgstr "Una tarea pendiente resuelta debe conservar al menos una tarea de seguimiento no cancelada."
+msgstr ""
+"Una tarea pendiente resuelta debe conservar al menos una tarea de "
+"seguimiento no cancelada."
 
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/followup_activity.py:0
-msgid "A resolved TODO must keep at least one non-cancelled follow-up task. Reopen the point before removing its last activity."
-msgstr "Un TODO resuelto debe conservar al menos una tarea de seguimiento no cancelada. Reabre el punto antes de eliminar su última actividad."
+msgid ""
+"A resolved TODO must keep at least one non-cancelled follow-up task. Reopen "
+"the point before removing its last activity."
+msgstr ""
+"Un TODO resuelto debe conservar al menos una tarea de seguimiento no "
+"cancelada. Reabre el punto antes de eliminar su última actividad."
 
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/agenda_preparation.py:0
 msgid "A selected point is no longer eligible. Review the points to continue."
-msgstr "Uno de los puntos seleccionados ya no es válido. Revisa los puntos para continuar."
+msgstr ""
+"Uno de los puntos seleccionados ya no es válido. Revisa los puntos para "
+"continuar."
 
 #. module: community_meetings
 #. odoo-python
@@ -389,7 +444,8 @@ msgstr "Icono del tipo de actividad"
 #. odoo-python
 #: code:addons/community_meetings/models/followup_activity.py:0
 msgid "Activity bookkeeping is managed by the follow-up workflow."
-msgstr "El registro de actividades se gestiona mediante el flujo de seguimiento."
+msgstr ""
+"El registro de actividades se gestiona mediante el flujo de seguimiento."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -400,7 +456,9 @@ msgstr "Tipo de actividad"
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 msgid "Activity type used when a follow-up is recorded as an Odoo activity."
-msgstr "Tipo de actividad usado cuando un seguimiento se registra como actividad de Odoo."
+msgstr ""
+"Tipo de actividad usado cuando un seguimiento se registra como actividad de "
+"Odoo."
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__actual_end_datetime
@@ -453,7 +511,9 @@ msgstr "Fin real"
 #. odoo-python
 #: code:addons/community_meetings/models/meeting.py:0
 msgid "Actual meeting times are recorded through the meeting workflow."
-msgstr "Los tiempos reales de la reunión se registran mediante el flujo de la reunión."
+msgstr ""
+"Los tiempos reales de la reunión se registran mediante el flujo de la "
+"reunión."
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__actual_minutes
@@ -478,13 +538,23 @@ msgstr "Política de añadir puntos"
 
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_series__has_minutes_approval_point
-msgid "Add a 'Minutes Approval' point as the first agenda item of each meeting."
-msgstr "Añade un punto de 'Aprobación del acta' como primer elemento de la agenda de cada reunión."
+msgid ""
+"Add a 'Minutes Approval' point as the first agenda item of each meeting."
+msgstr ""
+"Añade un punto de 'Aprobación del acta' como primer elemento de la agenda de "
+"cada reunión."
 
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_series__has_next_meeting_point
 msgid "Add a 'Next Meeting' point as the last agenda item of each meeting."
-msgstr "Añade un punto de «Próxima reunión» como último punto del orden del día de cada reunión."
+msgstr ""
+"Añade un punto de «Próxima reunión» como último punto del orden del día de "
+"cada reunión."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "Add a deadline"
+msgstr "Añadir una fecha límite"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -517,8 +587,12 @@ msgstr "Añadir un punto del orden del día"
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-msgid "Add an agreement and select approved or rejected before completing this point."
-msgstr "Añade un acuerdo y selecciona aprobado o rechazado antes de completar este punto."
+msgid ""
+"Add an agreement and select approved or rejected before completing this "
+"point."
+msgstr ""
+"Añade un acuerdo y selecciona aprobado o rechazado antes de completar este "
+"punto."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -992,25 +1066,33 @@ msgstr "Orden del día y debate"
 #. odoo-python
 #: code:addons/community_meetings/models/agenda_item.py:0
 msgid "Agenda items can only be deleted from draft meetings."
-msgstr "Los puntos del orden del día solo se pueden eliminar en reuniones en borrador."
+msgstr ""
+"Los puntos del orden del día solo se pueden eliminar en reuniones en "
+"borrador."
 
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/agenda_item.py:0
 msgid "Agenda items cannot be added to approved or cancelled meetings."
-msgstr "No se pueden añadir puntos del orden del día a reuniones aprobadas o canceladas."
+msgstr ""
+"No se pueden añadir puntos del orden del día a reuniones aprobadas o "
+"canceladas."
 
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/agenda_item.py:0
 msgid "Agenda items cannot be deferred after approval or cancellation."
-msgstr "No se pueden aplazar puntos del orden del día tras la aprobación o cancelación."
+msgstr ""
+"No se pueden aplazar puntos del orden del día tras la aprobación o "
+"cancelación."
 
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/agenda_item.py:0
 msgid "Agenda items in approved or cancelled meetings cannot be edited."
-msgstr "No se pueden editar los puntos del orden del día de reuniones aprobadas o canceladas."
+msgstr ""
+"No se pueden editar los puntos del orden del día de reuniones aprobadas o "
+"canceladas."
 
 #. module: community_meetings
 #: model:ir.model.constraint,message:community_meetings.constraint_community_meeting_agenda_type_name_unique
@@ -1020,14 +1102,22 @@ msgstr "Los nombres de los tipos de punto del orden del día deben ser únicos."
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/agenda_type.py:0
-msgid "Agenda point types are shared configuration and cannot be deleted. Archive unused types instead."
-msgstr "Los tipos de punto de agenda son configuración compartida y no se pueden eliminar. Archiva los tipos que no uses."
+msgid ""
+"Agenda point types are shared configuration and cannot be deleted. Archive "
+"unused types instead."
+msgstr ""
+"Los tipos de punto de agenda son configuración compartida y no se pueden "
+"eliminar. Archiva los tipos que no uses."
 
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/resolution.py:0
-msgid "Agenda points %s have more than one active decision; resolve them before upgrading."
-msgstr "Los puntos de agenda %s tienen más de una decisión activa; resuélvelas antes de actualizar."
+msgid ""
+"Agenda points %s have more than one active decision; resolve them before "
+"upgrading."
+msgstr ""
+"Los puntos de agenda %s tienen más de una decisión activa; resuélvelas antes "
+"de actualizar."
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
@@ -2115,7 +2205,9 @@ msgstr ""
 #. odoo-python
 #: code:addons/community_meetings/models/agenda_item.py:0
 msgid "An accepted carryover agenda item cannot be deleted."
-msgstr "No se puede eliminar un punto del orden del día procedente de un traspaso aceptado."
+msgstr ""
+"No se puede eliminar un punto del orden del día procedente de un traspaso "
+"aceptado."
 
 #. module: community_meetings
 #. odoo-python
@@ -2127,7 +2219,8 @@ msgstr "Una acción no se puede mover a otra reunión."
 #. odoo-python
 #: code:addons/community_meetings/models/action.py:0
 msgid "An action's agenda point must belong to the same meeting."
-msgstr "El punto del orden del día de una acción debe pertenecer a la misma reunión."
+msgstr ""
+"El punto del orden del día de una acción debe pertenecer a la misma reunión."
 
 #. module: community_meetings
 #. odoo-python
@@ -2150,7 +2243,8 @@ msgstr "Un punto del orden del día no se puede mover a otra reunión."
 #. odoo-python
 #: code:addons/community_meetings/models/agenda_item.py:0
 msgid "An agenda item's carryover link cannot be changed."
-msgstr "El vínculo de traspaso de un punto del orden del día no se puede cambiar."
+msgstr ""
+"El vínculo de traspaso de un punto del orden del día no se puede cambiar."
 
 #. module: community_meetings
 #. odoo-python
@@ -2162,7 +2256,9 @@ msgstr "Una decisión aprobada o rechazada debe marcarse como resuelta."
 #. odoo-python
 #: code:addons/community_meetings/models/editorial.py:0
 msgid "An editorial note's agenda item must belong to the same meeting."
-msgstr "El punto del orden del día de una nota de edición debe pertenecer a la misma reunión."
+msgstr ""
+"El punto del orden del día de una nota de edición debe pertenecer a la misma "
+"reunión."
 
 #. module: community_meetings
 #. odoo-python
@@ -2347,7 +2443,8 @@ msgstr "Las revisiones aprobadas son registros permanentes."
 #. odoo-python
 #: code:addons/community_meetings/models/meeting.py:0
 msgid "Approved revisions cannot be assigned during meeting creation."
-msgstr "No se pueden asignar revisiones aprobadas durante la creación de la reunión."
+msgstr ""
+"No se pueden asignar revisiones aprobadas durante la creación de la reunión."
 
 #. module: community_meetings
 #. odoo-python
@@ -2369,7 +2466,9 @@ msgstr "Archivo"
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 msgid "Archived series keep their meetings but disappear from lists and menus."
-msgstr "Las series archivadas conservan sus reuniones pero desaparecen de las listas y los menús."
+msgstr ""
+"Las series archivadas conservan sus reuniones pero desaparecen de las listas "
+"y los menús."
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_dissent_reason_form
@@ -3464,7 +3563,8 @@ msgstr "Cancelada"
 #. odoo-python
 #: code:addons/community_meetings/models/carryover.py:0
 msgid "Cancelled meetings cannot start agenda carryovers."
-msgstr "Las reuniones canceladas no pueden iniciar traspasos del orden del día."
+msgstr ""
+"Las reuniones canceladas no pueden iniciar traspasos del orden del día."
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carry_review_line__candidate_key
@@ -3520,7 +3620,9 @@ msgstr "Política de traspaso"
 #. odoo-python
 #: code:addons/community_meetings/models/carryover.py:0
 msgid "Carryovers can only target a future draft or scheduled meeting."
-msgstr "Los traspasos solo pueden dirigirse a una reunión futura en borrador o programada."
+msgstr ""
+"Los traspasos solo pueden dirigirse a una reunión futura en borrador o "
+"programada."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -3596,8 +3698,12 @@ msgstr "Elige una serie de la misma compañía."
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
-msgid "Choose a series, or leave it empty for a standalone meeting. Your edits are kept when changing series."
-msgstr "Elige una serie, o déjala vacía para una reunión independiente. Tus cambios se conservan al cambiar de serie."
+msgid ""
+"Choose a series, or leave it empty for a standalone meeting. Your edits are "
+"kept when changing series."
+msgstr ""
+"Elige una serie, o déjala vacía para una reunión independiente. Tus cambios "
+"se conservan al cambiar de serie."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -3643,8 +3749,12 @@ msgstr "Elige una fecha y hora no ambiguas en la zona horaria de la reunión."
 
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_res_users__community_meeting_role_ids
-msgid "Choose any combination of meeting access roles. Higher roles include their implied roles."
-msgstr "Elige cualquier combinación de roles de acceso a reuniones. Los roles superiores incluyen los implícitos."
+msgid ""
+"Choose any combination of meeting access roles. Higher roles include their "
+"implied roles."
+msgstr ""
+"Elige cualquier combinación de roles de acceso a reuniones. Los roles "
+"superiores incluyen los implícitos."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -3799,7 +3909,9 @@ msgstr "Tema continuado"
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_agenda_type__behavior
 msgid "Controls which meeting workflow fields apply to points using this type."
-msgstr "Controla qué campos del flujo de reunión se aplican a los puntos de este tipo."
+msgstr ""
+"Controla qué campos del flujo de reunión se aplican a los puntos de este "
+"tipo."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -3871,8 +3983,12 @@ msgstr "Copiar a otra serie"
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
-msgid "Could not identify the meeting to open. Return to the Meetings list and open it again."
-msgstr "No se pudo identificar la reunión que abrir. Vuelve a la lista de reuniones y ábrela de nuevo."
+msgid ""
+"Could not identify the meeting to open. Return to the Meetings list and open "
+"it again."
+msgstr ""
+"No se pudo identificar la reunión que abrir. Vuelve a la lista de reuniones "
+"y ábrela de nuevo."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -3889,8 +4005,12 @@ msgstr "No se pudo revisar este punto continuado."
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
-msgid "Could not save this change. Your text is still available; retry by editing the field again."
-msgstr "No se pudo guardar este cambio. Tu texto sigue disponible; reinténtalo editando el campo de nuevo."
+msgid ""
+"Could not save this change. Your text is still available; retry by editing "
+"the field again."
+msgstr ""
+"No se pudo guardar este cambio. Tu texto sigue disponible; reinténtalo "
+"editando el campo de nuevo."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -3901,8 +4021,11 @@ msgstr "No se pudo guardar este cambio: %(message)s"
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
-msgid "Could not save this record. Your entry is still available; retry when ready."
-msgstr "No se pudo guardar este registro. Tu texto sigue disponible; reinténtalo cuando quieras."
+msgid ""
+"Could not save this record. Your entry is still available; retry when ready."
+msgstr ""
+"No se pudo guardar este registro. Tu texto sigue disponible; reinténtalo "
+"cuando quieras."
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_editor_note__create_date
@@ -3934,7 +4057,8 @@ msgstr "Crear un seguimiento"
 #. odoo-python
 #: code:addons/community_meetings/models/agenda_item.py:0
 msgid "Create a follow-up task for this TODO before resolving it."
-msgstr "Crea una tarea de seguimiento para esta tarea pendiente antes de resolverla."
+msgstr ""
+"Crea una tarea de seguimiento para esta tarea pendiente antes de resolverla."
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_revision__created_at
@@ -4027,6 +4151,7 @@ msgstr "Asistente de creación"
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_item__priority__3
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_point_wizard__priority__3
@@ -4047,6 +4172,12 @@ msgid "Current agenda point"
 msgstr "Punto actual del orden del día"
 
 #. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
+msgid "Custom estimate in minutes"
+msgstr "Estimación personalizada en minutos"
+
+#. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover__cycle_key
 msgid "Cycle Key"
 msgstr "Clave de ciclo"
@@ -4054,7 +4185,8 @@ msgstr "Clave de ciclo"
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_agenda_item__next_meeting_datetime
 msgid "Date chosen for the next meeting by a 'Next Meeting' point."
-msgstr "Fecha elegida para la próxima reunión en un punto de «Próxima reunión»."
+msgstr ""
+"Fecha elegida para la próxima reunión en un punto de «Próxima reunión»."
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__next_meeting_day_of_month
@@ -4135,8 +4267,16 @@ msgstr "Duración predeterminada"
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_series__company_point_estimated_minutes
 #: model:ir.model.fields,help:community_meetings.field_res_company__meeting_estimated_minutes
 #: model:ir.model.fields,help:community_meetings.field_res_config_settings__meeting_estimated_minutes
-msgid "Default estimated duration applied to new points; a series can override it."
-msgstr "Duración estimada por defecto para los puntos nuevos; una serie puede sobrescribirla."
+msgid ""
+"Default estimated duration applied to new points; a series can override it."
+msgstr ""
+"Duración estimada por defecto para los puntos nuevos; una serie puede "
+"sobrescribirla."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "Default follow-up"
+msgstr "Seguimiento predeterminado"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_res_company__followup_default_kind
@@ -4156,8 +4296,11 @@ msgstr "Duración estimada predeterminada por punto (minutos)"
 
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_series__next_meeting_rule
-msgid "Default rule used to propose the next meeting date for 'Next Meeting' points."
-msgstr "Regla por defecto para proponer la fecha de la próxima reunión en los puntos de 'Próxima reunión'."
+msgid ""
+"Default rule used to propose the next meeting date for 'Next Meeting' points."
+msgstr ""
+"Regla por defecto para proponer la fecha de la próxima reunión en los puntos "
+"de 'Próxima reunión'."
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_create_wizard__defaults_applied
@@ -4434,8 +4577,20 @@ msgstr "Solo borrador"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
-msgid "Draft only: points can be added while preparing the meeting. Before it starts: also once it is scheduled, until it begins. While it runs: also while the meeting is in progress, until it finishes."
-msgstr "Solo borrador: los puntos se añaden mientras se prepara la reunión. Antes de empezar: también una vez programada, hasta que comience. Mientras se realiza: también mientras la reunión está en curso, hasta que termine."
+msgid ""
+"Draft only: points can be added while preparing the meeting. Before it "
+"starts: also once it is scheduled, until it begins. While it runs: also "
+"while the meeting is in progress, until it finishes."
+msgstr ""
+"Solo borrador: los puntos se añaden mientras se prepara la reunión. Antes de "
+"empezar: también una vez programada, hasta que comience. Mientras se "
+"realiza: también mientras la reunión está en curso, hasta que termine."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
+msgid "Drop everything"
+msgstr "Prioridad máxima"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -4488,7 +4643,8 @@ msgstr ""
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/followup_activity.py:0
-msgid "Each responsible person must have access to the meeting. Share it first."
+msgid ""
+"Each responsible person must have access to the meeting. Share it first."
 msgstr "Cada responsable debe tener acceso a la reunión. Compártela primero."
 
 #. module: community_meetings
@@ -4542,7 +4698,8 @@ msgstr "Notas de edición"
 #. odoo-python
 #: code:addons/community_meetings/models/editorial.py:0
 msgid "Editorial notes are locked after approval or cancellation."
-msgstr "Las notas de edición quedan bloqueadas tras la aprobación o cancelación."
+msgstr ""
+"Las notas de edición quedan bloqueadas tras la aprobación o cancelación."
 
 #. module: community_meetings
 #. odoo-python
@@ -4648,6 +4805,7 @@ msgstr "Los minutos estimados y reales no pueden ser negativos."
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Estimated duration"
 msgstr "Duración estimada"
@@ -4673,8 +4831,12 @@ msgstr "Los minutos estimados no pueden ser negativos."
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
-msgid "Estimated minutes pre-filled for new points of this series; leave empty to use the company default."
-msgstr "Minutos estimados pre-rellenados para los puntos nuevos de esta serie; déjalo vacío para usar el valor de la compañía."
+msgid ""
+"Estimated minutes pre-filled for new points of this series; leave empty to "
+"use the company default."
+msgstr ""
+"Minutos estimados pre-rellenados para los puntos nuevos de esta serie; "
+"déjalo vacío para usar el valor de la compañía."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -5278,8 +5440,17 @@ msgstr ""
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
-msgid "Every meeting of this series starts with a minutes-approval point (if enabled) and ends with a next-meeting point. The default rule above pre-fills its proposed date: next weekday (e.g. always Tuesday), a fixed day of the month, or a fixed number of days after this meeting."
-msgstr "Cada reunión de esta serie empieza con un punto de aprobación de actas (si está activado) y termina con un punto de próxima reunión. La regla predeterminada de arriba rellena la fecha propuesta: siguiente día de la semana (p. ej., siempre martes), un día fijo del mes o un número fijo de días tras esta reunión."
+msgid ""
+"Every meeting of this series starts with a minutes-approval point (if "
+"enabled) and ends with a next-meeting point. The default rule above pre-"
+"fills its proposed date: next weekday (e.g. always Tuesday), a fixed day of "
+"the month, or a fixed number of days after this meeting."
+msgstr ""
+"Cada reunión de esta serie empieza con un punto de aprobación de actas (si "
+"está activado) y termina con un punto de próxima reunión. La regla "
+"predeterminada de arriba rellena la fecha propuesta: siguiente día de la "
+"semana (p. ej., siempre martes), un día fijo del mes o un número fijo de "
+"días tras esta reunión."
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__topic_id
@@ -5294,8 +5465,12 @@ msgstr "Desplegar / plegar todo"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
-msgid "Explain the subject so any attendee can follow it. Add the links or documents needed to act on it."
-msgstr "Explica el asunto para que cualquier asistente pueda seguirlo. Añade los enlaces o documentos necesarios para actuar."
+msgid ""
+"Explain the subject so any attendee can follow it. Add the links or "
+"documents needed to act on it."
+msgstr ""
+"Explica el asunto para que cualquier asistente pueda seguirlo. Añade los "
+"enlaces o documentos necesarios para actuar."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -5354,6 +5529,16 @@ msgid "Follow-up Actions"
 msgstr "Acciones de seguimiento"
 
 #. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_activity_ids
+msgid "Follow-up Activities"
+msgstr "Actividades de seguimiento"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__responsible_user_id
+msgid "Follow-up Responsible"
+msgstr "Responsable del seguimiento"
+
+#. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_document
 msgid "Follow-up actions"
 msgstr "Acciones de seguimiento"
@@ -5397,8 +5582,16 @@ msgstr "Tipo de seguimiento"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
-msgid "Follow-up type pre-selected when adding a point to a meeting of this series."
-msgstr "Tipo de seguimiento preseleccionado al añadir un punto a una reunión de esta serie."
+msgid ""
+"Follow-up type pre-selected when adding a point to a meeting of this series."
+msgstr ""
+"Tipo de seguimiento preseleccionado al añadir un punto a una reunión de esta "
+"serie."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "Follow-up types"
+msgstr "Tipos de seguimiento"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
@@ -5415,13 +5608,16 @@ msgstr "Seguimientos"
 #. odoo-python
 #: code:addons/community_meetings/models/action.py:0
 msgid "Follow-ups can only be deleted while their agenda point is open."
-msgstr "Los seguimientos solo se pueden eliminar mientras su punto del orden del día esté abierto."
+msgstr ""
+"Los seguimientos solo se pueden eliminar mientras su punto del orden del día "
+"esté abierto."
 
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/followup_activity.py:0
 msgid "Follow-ups in approved or cancelled meetings cannot be converted."
-msgstr "Los seguimientos de reuniones aprobadas o canceladas no se pueden convertir."
+msgstr ""
+"Los seguimientos de reuniones aprobadas o canceladas no se pueden convertir."
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__message_follower_ids
@@ -5440,16 +5636,6 @@ msgid "Followers (Partners)"
 msgstr "Seguidores (contactos)"
 
 #. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_activity_ids
-msgid "Follow-up Activities"
-msgstr "Actividades de seguimiento"
-
-#. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_activity_id
-msgid "Primary Follow-up Activity"
-msgstr "Actividad de seguimiento principal"
-
-#. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_activity_completed_on
 msgid "Followup Activity Completed On"
 msgstr "Actividad de seguimiento completada el"
@@ -5465,7 +5651,9 @@ msgstr "Tipo de seguimiento predeterminado"
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_agenda_type__icon
 msgid "Font Awesome icon class shown for this type (e.g. fa-comments-o)."
-msgstr "Clase de icono de Font Awesome mostrada para este tipo (p. ej., fa-comments-o)."
+msgstr ""
+"Clase de icono de Font Awesome mostrada para este tipo (p. ej., fa-comments-"
+"o)."
 
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting__activity_type_icon
@@ -5530,8 +5718,11 @@ msgstr ""
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/proposal_eligibility.py:0
-msgid "Grant identity and scope cannot be changed; revoke it and create a new grant."
-msgstr "La identidad y el ámbito de la autorización no se pueden cambiar; revócala y crea una nueva."
+msgid ""
+"Grant identity and scope cannot be changed; revoke it and create a new grant."
+msgstr ""
+"La identidad y el ámbito de la autorización no se pueden cambiar; revócala y "
+"crea una nueva."
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_proposal_grant__granted_by_id
@@ -5593,6 +5784,7 @@ msgstr "Celebrada"
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_item__priority__2
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_point_wizard__priority__2
@@ -5605,6 +5797,16 @@ msgstr "Alta"
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__timezone__hongkong
 msgid "Hongkong"
 msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "How long should we give it?"
+msgstr "¿Cuánto tiempo le dedicamos?"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "How urgent is it?"
+msgstr "¿Qué prioridad tiene?"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__id
@@ -5864,8 +6066,11 @@ msgstr "Tipo"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_kind_form
-msgid "Kinds are shared across all meetings. Once a kind is used, its code is fixed."
-msgstr "Los tipos se comparten entre todas las reuniones. Una vez usado un tipo, su código queda fijo."
+msgid ""
+"Kinds are shared across all meetings. Once a kind is used, its code is fixed."
+msgstr ""
+"Los tipos se comparten entre todas las reuniones. Una vez usado un tipo, su "
+"código queda fijo."
 
 #. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__timezone__kwajalein
@@ -5957,8 +6162,13 @@ msgstr "Última actualización el"
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_res_company__meeting_add_point_policy
 #: model:ir.model.fields,help:community_meetings.field_res_config_settings__meeting_add_point_policy
-msgid "Last moment when new points can be added to a meeting: only while it is a draft, until it starts, or while it runs. A series can override it."
-msgstr "Último momento en el que se pueden añadir puntos nuevos a una reunión: solo mientras es borrador, hasta que empiece, o mientras se realiza. Una serie puede sobrescribirlo."
+msgid ""
+"Last moment when new points can be added to a meeting: only while it is a "
+"draft, until it starts, or while it runs. A series can override it."
+msgstr ""
+"Último momento en el que se pueden añadir puntos nuevos a una reunión: solo "
+"mientras es borrador, hasta que empiece, o mientras se realiza. Una serie "
+"puede sobrescribirlo."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -5978,6 +6188,11 @@ msgid "Line"
 msgstr "Línea"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "Link useful context"
+msgstr "Vincular puntos relacionados"
+
+#. module: community_meetings
 #: model:ir.actions.client,name:community_meetings.action_community_meeting_live_client
 msgid "Live Meeting"
 msgstr "Reunión en curso"
@@ -5986,7 +6201,8 @@ msgstr "Reunión en curso"
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Live notes are saved. Resume this point to continue editing."
-msgstr "Las notas en vivo están guardadas. Reanuda este punto para seguir editando."
+msgstr ""
+"Las notas en vivo están guardadas. Reanuda este punto para seguir editando."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -6008,6 +6224,12 @@ msgstr "Ubicación"
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_point_wizard__priority__0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_topic__priority__0
 msgid "Low"
+msgstr "Baja"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
+msgid "Low-key"
 msgstr "Baja"
 
 #. module: community_meetings
@@ -6163,8 +6385,12 @@ msgstr "Los nombres de los tipos de reunión deben ser únicos."
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/meeting_kind.py:0
-msgid "Meeting kinds are shared configuration and cannot be deleted. Archive unused kinds instead."
-msgstr "Los tipos de reunión son configuración compartida y no se pueden eliminar. Archiva los que no uses."
+msgid ""
+"Meeting kinds are shared configuration and cannot be deleted. Archive unused "
+"kinds instead."
+msgstr ""
+"Los tipos de reunión son configuración compartida y no se pueden eliminar. "
+"Archiva los que no uses."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -6189,6 +6415,18 @@ msgstr "Nombre de la reunión"
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Meeting notes"
 msgstr "Notas de la reunión"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
+msgid "Meeting point estimate"
+msgstr "Estimación de duración del punto"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
+msgid "Meeting point priority"
+msgstr "Prioridad del punto"
 
 #. module: community_meetings
 #. odoo-python
@@ -6332,8 +6570,12 @@ msgstr "Acta pendiente de preparar"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
-msgid "Minutes-approval points reserve 5 minutes per pending acta and next-meeting points 5 minutes, regardless of this value."
-msgstr "Los puntos de aprobación de actas reservan 5 minutos por acta pendiente y los puntos de próxima reunión 5 minutos, independientemente de este valor."
+msgid ""
+"Minutes-approval points reserve 5 minutes per pending acta and next-meeting "
+"points 5 minutes, regardless of this value."
+msgstr ""
+"Los puntos de aprobación de actas reservan 5 minutos por acta pendiente y "
+"los puntos de próxima reunión 5 minutos, independientemente de este valor."
 
 #. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__next_meeting_weekday__0
@@ -6349,7 +6591,6 @@ msgstr "Más detalles de la reunión"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__more_options
-#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
 msgid "More options"
 msgstr "Más opciones"
 
@@ -6429,6 +6670,12 @@ msgid "Navajo"
 msgstr ""
 
 #. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
+msgid "Needs attention"
+msgstr "Requiere atención"
+
+#. module: community_meetings
 #: model:ir.actions.act_window,name:community_meetings.action_prepare_meeting
 #: model:ir.ui.menu,name:community_meetings.menu_prepare_meeting
 msgid "New Meeting"
@@ -6460,8 +6707,12 @@ msgstr "Patrón de nombre para nuevas reuniones"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
-msgid "New meetings are named with this pattern. Use {date} for the meeting date and {series} for the series name."
-msgstr "Las reuniones nuevas se nombran con este patrón. Usa {date} para la fecha de la reunión y {series} para el nombre de la serie."
+msgid ""
+"New meetings are named with this pattern. Use {date} for the meeting date "
+"and {series} for the series name."
+msgstr ""
+"Las reuniones nuevas se nombran con este patrón. Usa {date} para la fecha de "
+"la reunión y {series} para el nombre de la serie."
 
 #. module: community_meetings
 #. odoo-python
@@ -6583,6 +6834,11 @@ msgid "No attendees listed"
 msgstr "No hay asistentes indicados"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "No deadline yet"
+msgstr "Sin fecha límite"
+
+#. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "No dissent recorded."
@@ -6620,6 +6876,7 @@ msgstr "Ninguno"
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_item__priority__1
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_point_wizard__priority__1
@@ -6718,13 +6975,17 @@ msgstr "Activado"
 #. odoo-python
 #: code:addons/community_meetings/models/topic.py:0
 msgid "Only a meeting editor can record a proposal on behalf of a contact."
-msgstr "Solo un editor de reuniones puede registrar una propuesta en nombre de un contacto."
+msgstr ""
+"Solo un editor de reuniones puede registrar una propuesta en nombre de un "
+"contacto."
 
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/meeting.py:0
 msgid "Only a meeting manager can create a meeting for another organizer."
-msgstr "Solo un responsable de reuniones puede crear una reunión para otro organizador."
+msgstr ""
+"Solo un responsable de reuniones puede crear una reunión para otro "
+"organizador."
 
 #. module: community_meetings
 #. odoo-python
@@ -6736,13 +6997,17 @@ msgstr "Solo un responsable de reuniones puede iniciar una modificación."
 #. odoo-python
 #: code:addons/community_meetings/models/proposal_eligibility.py:0
 msgid "Only a meeting manager or series coordinator can change this grant."
-msgstr "Solo un responsable de reuniones o un coordinador de la serie puede cambiar este permiso."
+msgstr ""
+"Solo un responsable de reuniones o un coordinador de la serie puede cambiar "
+"este permiso."
 
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/proposal_eligibility.py:0
 msgid "Only a meeting manager or series coordinator can grant proposal access."
-msgstr "Solo un gestor de reuniones o el coordinador de la serie puede conceder acceso de propuesta."
+msgstr ""
+"Solo un gestor de reuniones o el coordinador de la serie puede conceder "
+"acceso de propuesta."
 
 #. module: community_meetings
 #. odoo-python
@@ -6766,7 +7031,9 @@ msgstr "Solo se puede iniciar una reunión programada."
 #. odoo-python
 #: code:addons/community_meetings/models/series.py:0
 msgid "Only a series coordinator or meeting manager can edit this series."
-msgstr "Solo un coordinador de la serie o un responsable de reuniones puede editar esta serie."
+msgstr ""
+"Solo un coordinador de la serie o un responsable de reuniones puede editar "
+"esta serie."
 
 #. module: community_meetings
 #. odoo-python
@@ -6802,7 +7069,9 @@ msgstr "Solo las acciones completadas pueden tener fecha de finalización."
 #. odoo-python
 #: code:addons/community_meetings/models/agenda_item.py:0
 msgid "Only decision agenda items can have a decision outcome."
-msgstr "Solo los puntos del orden del día de tipo decisión pueden tener un resultado de decisión."
+msgstr ""
+"Solo los puntos del orden del día de tipo decisión pueden tener un resultado "
+"de decisión."
 
 #. module: community_meetings
 #. odoo-python
@@ -6851,7 +7120,8 @@ msgstr "Solo los editores de reuniones pueden pausar una reunión."
 #. odoo-python
 #: code:addons/community_meetings/models/topic.py:0
 msgid "Only meeting editors can pause a point timer."
-msgstr "Solo los editores de reuniones pueden pausar el cronómetro de un punto."
+msgstr ""
+"Solo los editores de reuniones pueden pausar el cronómetro de un punto."
 
 #. module: community_meetings
 #. odoo-python
@@ -6863,7 +7133,9 @@ msgstr "Solo los editores de reuniones pueden registrar disensos."
 #. odoo-python
 #: code:addons/community_meetings/models/carryover.py:0
 msgid "Only meeting editors can request agenda carryover."
-msgstr "Solo los editores de reuniones pueden solicitar un traspaso del orden del día."
+msgstr ""
+"Solo los editores de reuniones pueden solicitar un traspaso del orden del "
+"día."
 
 #. module: community_meetings
 #. odoo-python
@@ -6875,13 +7147,15 @@ msgstr "Solo los editores de reuniones pueden reanudar una reunión."
 #. odoo-python
 #: code:addons/community_meetings/models/carryover.py:0
 msgid "Only meeting editors can retarget a carryover."
-msgstr "Solo los editores de reuniones pueden cambiar el destino de un traspaso."
+msgstr ""
+"Solo los editores de reuniones pueden cambiar el destino de un traspaso."
 
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/topic.py:0
 msgid "Only meeting editors can review agenda proposals."
-msgstr "Solo los editores de reuniones pueden revisar propuestas del orden del día."
+msgstr ""
+"Solo los editores de reuniones pueden revisar propuestas del orden del día."
 
 #. module: community_meetings
 #. odoo-python
@@ -6893,7 +7167,8 @@ msgstr "Solo los editores de reuniones pueden iniciar una reunión."
 #. odoo-python
 #: code:addons/community_meetings/models/topic.py:0
 msgid "Only meeting editors can start a point timer."
-msgstr "Solo los editores de reuniones pueden iniciar el cronómetro de un punto."
+msgstr ""
+"Solo los editores de reuniones pueden iniciar el cronómetro de un punto."
 
 #. module: community_meetings
 #. odoo-python
@@ -6904,8 +7179,12 @@ msgstr "Solo un acuerdo activo puede determinar la decisión de un punto."
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/resolution.py:0
-msgid "Only one active agreement can determine a point's decision. Edit or withdraw the existing agreement first."
-msgstr "Solo un acuerdo activo puede determinar la decisión de un punto. Edita o retira el acuerdo existente primero."
+msgid ""
+"Only one active agreement can determine a point's decision. Edit or withdraw "
+"the existing agreement first."
+msgstr ""
+"Solo un acuerdo activo puede determinar la decisión de un punto. Edita o "
+"retira el acuerdo existente primero."
 
 #. module: community_meetings
 #. odoo-python
@@ -6917,7 +7196,8 @@ msgstr "Solo se pueden convertir los seguimientos abiertos."
 #. odoo-python
 #: code:addons/community_meetings/models/carryover.py:0
 msgid "Only pending or proposed carryovers can be retargeted."
-msgstr "Solo se puede cambiar el destino de los traspasos pendientes o propuestos."
+msgstr ""
+"Solo se puede cambiar el destino de los traspasos pendientes o propuestos."
 
 #. module: community_meetings
 #. odoo-python
@@ -6941,7 +7221,9 @@ msgstr "Solo se pueden rechazar las propuestas enviadas."
 #. odoo-python
 #: code:addons/community_meetings/models/meeting.py:0
 msgid "Only the organizer or a meeting manager can change meeting access."
-msgstr "Solo el organizador o un responsable de reuniones puede cambiar el acceso a la reunión."
+msgstr ""
+"Solo el organizador o un responsable de reuniones puede cambiar el acceso a "
+"la reunión."
 
 #. module: community_meetings
 #. odoo-python
@@ -7000,14 +7282,23 @@ msgstr "Vínculo opcional al punto o seguimiento que bloquea este punto."
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
-msgid "Optional overrides of the default role names shown on meetings (Settings → Meetings → Role names). Leave empty to use those."
-msgstr "Sobrescribe opcionalmente los nombres de rol por defecto que se muestran en las reuniones (Ajustes → Reuniones → Nombres de rol). Déjalos vacíos para usarlos."
+msgid ""
+"Optional overrides of the default role names shown on meetings (Settings → "
+"Meetings → Role names). Leave empty to use those."
+msgstr ""
+"Sobrescribe opcionalmente los nombres de rol por defecto que se muestran en "
+"las reuniones (Ajustes → Reuniones → Nombres de rol). Déjalos vacíos para "
+"usarlos."
 
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_series__coordinator_label
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_series__secretary_label
-msgid "Optional. Overrides the default role name from Settings → Meetings for the meetings of this series."
-msgstr "Opcional. Sobrescribe el nombre de rol por defecto de Ajustes → Reuniones en las reuniones de esta serie."
+msgid ""
+"Optional. Overrides the default role name from Settings → Meetings for the "
+"meetings of this series."
+msgstr ""
+"Opcional. Sobrescribe el nombre de rol por defecto de Ajustes → Reuniones en "
+"las reuniones de esta serie."
 
 #. module: community_meetings
 #. odoo-python
@@ -7094,17 +7385,26 @@ msgstr "Traspasos salientes"
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_series__default_estimated_minutes
 msgid "Overrides the company default for points of this series."
-msgstr "Sustituye el valor predeterminado de la compañía para los puntos de esta serie."
+msgstr ""
+"Sustituye el valor predeterminado de la compañía para los puntos de esta "
+"serie."
 
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_series__add_point_policy
-msgid "Overrides the company rule for when new points can be added to the meetings of this series."
-msgstr "Sobrescribe la regla de la compañía sobre cuándo se pueden añadir puntos nuevos a las reuniones de esta serie."
+msgid ""
+"Overrides the company rule for when new points can be added to the meetings "
+"of this series."
+msgstr ""
+"Sobrescribe la regla de la compañía sobre cuándo se pueden añadir puntos "
+"nuevos a las reuniones de esta serie."
 
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_series__time_tracking
-msgid "Overrides the company time-tracking setting for meetings of this series."
-msgstr "Sobrescribe el ajuste de seguimiento de tiempo de la compañía para las reuniones de esta serie."
+msgid ""
+"Overrides the company time-tracking setting for meetings of this series."
+msgstr ""
+"Sobrescribe el ajuste de seguimiento de tiempo de la compañía para las "
+"reuniones de esta serie."
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
@@ -7470,8 +7770,12 @@ msgstr "Personas y serie"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
-msgid "People invited to every new meeting of this series; you can still change attendees per meeting."
-msgstr "Personas invitadas a cada reunión nueva de esta serie; puedes cambiar los asistentes en cada reunión."
+msgid ""
+"People invited to every new meeting of this series; you can still change "
+"attendees per meeting."
+msgstr ""
+"Personas invitadas a cada reunión nueva de esta serie; puedes cambiar los "
+"asistentes en cada reunión."
 
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_series__coordinator_user_ids
@@ -7488,11 +7792,6 @@ msgstr "Tema previsto"
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 msgid "Planned length of each meeting of this series."
 msgstr "Duración prevista de cada reunión de esta serie."
-
-#. module: community_meetings
-#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
-msgid "Planning"
-msgstr "Planificación"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -7659,6 +7958,13 @@ msgid "Previous point"
 msgstr "Punto anterior"
 
 #. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_activity_id
+msgid "Primary Follow-up Activity"
+msgstr "Actividad de seguimiento principal"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__priority
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__priority
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__priority
@@ -7771,8 +8077,14 @@ msgstr ""
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_users_form_meeting_roles
-msgid "Reader grants read access. Editor and Approver are independent and each includes Reader. Manager includes Editor and Approver. Internal users already receive the proposal capability."
-msgstr "El Lector da acceso de lectura. Editor y Aprobador son independientes y cada uno incluye Lector. El Gestor incluye Editor y Aprobador. Los usuarios internos ya reciben la capacidad de propuesta."
+msgid ""
+"Reader grants read access. Editor and Approver are independent and each "
+"includes Reader. Manager includes Editor and Approver. Internal users "
+"already receive the proposal capability."
+msgstr ""
+"El Lector da acceso de lectura. Editor y Aprobador son independientes y cada "
+"uno incluye Lector. El Gestor incluye Editor y Aprobador. Los usuarios "
+"internos ya reciben la capacidad de propuesta."
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__reader_user_ids
@@ -7804,8 +8116,12 @@ msgstr "Registrar una discrepancia"
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/agenda_item.py:0
-msgid "Record an active agreement approving or rejecting this decision before closing it. The point's result must match that agreement."
-msgstr "Registra un acuerdo activo que apruebe o rechace esta decisión antes de cerrarla. El resultado del punto debe coincidir con ese acuerdo."
+msgid ""
+"Record an active agreement approving or rejecting this decision before "
+"closing it. The point's result must match that agreement."
+msgstr ""
+"Registra un acuerdo activo que apruebe o rechace esta decisión antes de "
+"cerrarla. El resultado del punto debe coincidir con ese acuerdo."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -7888,6 +8204,7 @@ msgstr "Elementos relacionados"
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__related_topic_ids
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__related_topic_ids
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
 msgid "Related points"
 msgstr "Puntos relacionados"
 
@@ -8035,14 +8352,10 @@ msgid "Responsible"
 msgstr "Responsable"
 
 #. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting__activity_user_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__activity_user_id
 msgid "Responsible User"
 msgstr "Usuario responsable"
-
-#. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__responsible_user_id
-msgid "Follow-up Responsible"
-msgstr "Responsable del seguimiento"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -8118,19 +8431,37 @@ msgstr "Revisar en la próxima reunión"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
-msgid "Review the points to continue. Accept to include a point, Postpone to keep it for a later meeting, or Discard to drop it (it will not be offered again)."
-msgstr "Revisa los puntos que continúan. Acepta para incluir un punto, Posponer para dejarlo para una reunión posterior, o Descartar para perderlo (no se volverá a ofrecer)."
+msgid ""
+"Review the points to continue. Accept to include a point, Postpone to keep "
+"it for a later meeting, or Discard to drop it (it will not be offered again)."
+msgstr ""
+"Revisa los puntos que continúan. Acepta para incluir un punto, Posponer para "
+"dejarlo para una reunión posterior, o Descartar para perderlo (no se volverá "
+"a ofrecer)."
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
-msgid "Review: the next meeting decides which points to continue. Automatic: unfinished points continue without asking. Manual: someone moves each point explicitly."
-msgstr "Revisión: la siguiente reunión decide qué puntos continuar. Automática: los puntos sin terminar continúan sin preguntar. Manual: alguien mueve cada punto explícitamente."
+msgid ""
+"Review: the next meeting decides which points to continue. Automatic: "
+"unfinished points continue without asking. Manual: someone moves each point "
+"explicitly."
+msgstr ""
+"Revisión: la siguiente reunión decide qué puntos continuar. Automática: los "
+"puntos sin terminar continúan sin preguntar. Manual: alguien mueve cada "
+"punto explícitamente."
 
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting__series_carryover_policy
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_series__carryover_policy
-msgid "Review: unfinished points are offered to the next meeting, which accepts or discards them. Automatic: unfinished points are carried into the next meeting without asking. Manual: someone moves each point explicitly."
-msgstr "Revisión: los puntos sin terminar se ofrecen a la siguiente reunión, que los acepta o descarta. Automática: los puntos sin terminar se arrastran a la siguiente reunión sin preguntar. Manual: alguien mueve cada punto explícitamente."
+msgid ""
+"Review: unfinished points are offered to the next meeting, which accepts or "
+"discards them. Automatic: unfinished points are carried into the next "
+"meeting without asking. Manual: someone moves each point explicitly."
+msgstr ""
+"Revisión: los puntos sin terminar se ofrecen a la siguiente reunión, que los "
+"acepta o descarta. Automática: los puntos sin terminar se arrastran a la "
+"siguiente reunión sin preguntar. Manual: alguien mueve cada punto "
+"explícitamente."
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__revision_ids
@@ -8204,6 +8535,11 @@ msgid "Scheduling"
 msgstr "Programación"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "Search this series"
+msgstr "Buscar en esta serie"
+
+#. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__secretary_role_label
 msgid "Secretary Role Label"
 msgstr "Etiqueta del rol de secretaría"
@@ -8264,8 +8600,12 @@ msgstr "Los nombres de serie deben ser únicos por compañía."
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting__add_point_policy
 #: model:ir.model.fields,help:community_meetings.field_community_meeting__time_tracking_enabled
-msgid "Series override of the company setting; standalone meetings follow the company."
-msgstr "Sobrescribe el ajuste de la compañía; las reuniones sin serie siguen el ajuste de la compañía."
+msgid ""
+"Series override of the company setting; standalone meetings follow the "
+"company."
+msgstr ""
+"Sobrescribe el ajuste de la compañía; las reuniones sin serie siguen el "
+"ajuste de la compañía."
 
 #. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_item__followup_default_kind__inherit
@@ -8303,8 +8643,13 @@ msgstr "Mostrar la agenda completa"
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_series__company_meeting_time_tracking
 #: model:ir.model.fields,help:community_meetings.field_res_company__meeting_time_tracking
 #: model:ir.model.fields,help:community_meetings.field_res_config_settings__meeting_time_tracking
-msgid "Show start/pause controls and point timers in the live meeting; records actual durations. A series can override it."
-msgstr "Muestra los controles de inicio/pausa y los cronómetros de puntos en la reunión en vivo; registra las duraciones reales. Una serie puede sobrescribirlo."
+msgid ""
+"Show start/pause controls and point timers in the live meeting; records "
+"actual durations. A series can override it."
+msgstr ""
+"Muestra los controles de inicio/pausa y los cronómetros de puntos en la "
+"reunión en vivo; registra las duraciones reales. Una serie puede "
+"sobrescribirlo."
 
 #. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__timezone__singapore
@@ -8346,8 +8691,12 @@ msgstr "Interviniente"
 
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_kind__code
-msgid "Stable identifier used by extensions and revision snapshots. Avoid changing it once in use."
-msgstr "Identificador estable usado por extensiones e instantáneas de revisiones. Evita cambiarlo una vez en uso."
+msgid ""
+"Stable identifier used by extensions and revision snapshots. Avoid changing "
+"it once in use."
+msgstr ""
+"Identificador estable usado por extensiones e instantáneas de revisiones. "
+"Evita cambiarlo una vez en uso."
 
 #. module: community_meetings
 #. odoo-python
@@ -8373,10 +8722,16 @@ msgid "Start Meeting"
 msgstr "Iniciar reunión"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "Start from an existing point"
+msgstr "Partir de un punto existente"
+
+#. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/topic.py:0
 msgid "Start the live meeting before timing an agenda point."
-msgstr "Inicia la reunión en curso antes de cronometrar un punto del orden del día."
+msgstr ""
+"Inicia la reunión en curso antes de cronometrar un punto del orden del día."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -8418,8 +8773,18 @@ msgstr "Estado"
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting__activity_state
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_action__activity_state
-msgid "Status based on activities\nOverdue: Due date is already passed\nToday: Activity date is today\nPlanned: Future activities."
+msgid ""
+"Status based on activities\n"
+"Overdue: Due date is already passed\n"
+"Today: Activity date is today\n"
+"Planned: Future activities."
 msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
+msgid "Steady pace"
+msgstr "Ritmo normal"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_create_wizard__step
@@ -8435,7 +8800,8 @@ msgstr "Estructura"
 #. module: community_meetings
 #: model:res.groups,comment:community_meetings.group_agenda_proposer
 msgid "Submit scoped agenda proposals without meeting access."
-msgstr "Enviar propuestas de puntos del orden del día sin acceso a las reuniones."
+msgstr ""
+"Enviar propuestas de puntos del orden del día sin acceso a las reuniones."
 
 #. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_topic__proposal_status__submitted
@@ -8564,13 +8930,16 @@ msgstr "El tipo y la referencia del origen del traspaso deben coincidir."
 #. odoo-python
 #: code:addons/community_meetings/models/meeting_kind.py:0
 msgid "The code of a meeting kind already in use cannot be changed."
-msgstr "No se puede cambiar el código de un tipo de reunión que ya está en uso."
+msgstr ""
+"No se puede cambiar el código de un tipo de reunión que ya está en uso."
 
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 msgid "The decision is pending again. Record a new agreement to resolve it."
-msgstr "La decisión vuelve a estar pendiente. Registra un nuevo acuerdo para resolverla."
+msgstr ""
+"La decisión vuelve a estar pendiente. Registra un nuevo acuerdo para "
+"resolverla."
 
 #. module: community_meetings
 #. odoo-python
@@ -8593,7 +8962,8 @@ msgstr "La reunión de destino debe tener un inicio programado posterior."
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_preparation
 msgid "The estimated agenda exceeds the planned meeting duration."
-msgstr "La duración estimada del orden del día supera la prevista para la reunión."
+msgstr ""
+"La duración estimada del orden del día supera la prevista para la reunión."
 
 #. module: community_meetings
 #. odoo-python
@@ -8652,8 +9022,11 @@ msgstr "La secuencia de referencia de reuniones no está configurada."
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/meeting.py:0
-msgid "The meeting series must be active and match the meeting company and kind."
-msgstr "La serie debe estar activa y coincidir con la compañía y el tipo de la reunión."
+msgid ""
+"The meeting series must be active and match the meeting company and kind."
+msgstr ""
+"La serie debe estar activa y coincidir con la compañía y el tipo de la "
+"reunión."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -8664,8 +9037,10 @@ msgstr "No se pudo cambiar el estado de la reunión. Inténtalo de nuevo."
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
-msgid "The point could not be reopened. Retry after checking its current status."
-msgstr "No se pudo reabrir el punto. Reinténtalo tras comprobar su estado actual."
+msgid ""
+"The point could not be reopened. Retry after checking its current status."
+msgstr ""
+"No se pudo reabrir el punto. Reinténtalo tras comprobar su estado actual."
 
 #. module: community_meetings
 #. odoo-python
@@ -8694,8 +9069,12 @@ msgstr "El contacto propuesto no está disponible."
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/series.py:0
-msgid "The proposed meeting time is ambiguous or does not exist in the series timezone. Choose another time."
-msgstr "La hora propuesta es ambigua o no existe en la zona horaria de la serie. Elige otra."
+msgid ""
+"The proposed meeting time is ambiguous or does not exist in the series "
+"timezone. Choose another time."
+msgstr ""
+"La hora propuesta es ambigua o no existe en la zona horaria de la serie. "
+"Elige otra."
 
 #. module: community_meetings
 #. odoo-python
@@ -8718,8 +9097,12 @@ msgstr "El ámbito seleccionado para la propuesta no está disponible."
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/meeting.py:0
-msgid "The series can only change before the meeting starts and before its minutes are approved."
-msgstr "La serie solo puede cambiarse antes de que la reunión comience y antes de aprobar su acta."
+msgid ""
+"The series can only change before the meeting starts and before its minutes "
+"are approved."
+msgstr ""
+"La serie solo puede cambiarse antes de que la reunión comience y antes de "
+"aprobar su acta."
 
 #. module: community_meetings
 #. odoo-python
@@ -8754,7 +9137,9 @@ msgstr "Este traspaso ya está cerrado."
 #. odoo-python
 #: code:addons/community_meetings/models/topic.py:0
 msgid "This contact is not eligible to propose topics in the selected scope."
-msgstr "Este contacto no tiene permiso para proponer puntos en el ámbito seleccionado."
+msgstr ""
+"Este contacto no tiene permiso para proponer puntos en el ámbito "
+"seleccionado."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -8771,8 +9156,12 @@ msgstr "Este tipo de seguimiento no está permitido para este punto."
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/preparation.py:0
-msgid "This meeting contains tasks for points used elsewhere. Keep their origin for task history."
-msgstr "Esta reunión contiene tareas de puntos usados en otros sitios. Conserva su origen para el historial de tareas."
+msgid ""
+"This meeting contains tasks for points used elsewhere. Keep their origin for "
+"task history."
+msgstr ""
+"Esta reunión contiene tareas de puntos usados en otros sitios. Conserva su "
+"origen para el historial de tareas."
 
 #. module: community_meetings
 #: model:ir.model.constraint,message:community_meetings.constraint_community_meeting_creation_token_unique
@@ -8923,8 +9312,12 @@ msgstr "Tipo de actividad con excepción en el registro."
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_agenda_type_form
-msgid "Types are shared across all meetings. Once a type is used, its workflow behavior is fixed."
-msgstr "Los tipos se comparten entre todas las reuniones. Una vez usado un tipo, su comportamiento queda fijo."
+msgid ""
+"Types are shared across all meetings. Once a type is used, its workflow "
+"behavior is fixed."
+msgstr ""
+"Los tipos se comparten entre todas las reuniones. Una vez usado un tipo, su "
+"comportamiento queda fijo."
 
 #. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__timezone__uct
@@ -9048,7 +9441,8 @@ msgstr "Próximas"
 #. odoo-python
 #: code:addons/community_meetings/models/carryover.py:0
 msgid "Use a carryover workflow action to review or change a transfer."
-msgstr "Usa una acción del flujo de traspaso para revisar o modificar un traspaso."
+msgstr ""
+"Usa una acción del flujo de traspaso para revisar o modificar un traspaso."
 
 #. module: community_meetings
 #. odoo-python
@@ -9071,13 +9465,15 @@ msgstr "Usar valores de la serie"
 #. odoo-python
 #: code:addons/community_meetings/models/meeting.py:0
 msgid "Use the approval workflow to manage meeting revisions."
-msgstr "Usa el flujo de aprobación para gestionar las revisiones de la reunión."
+msgstr ""
+"Usa el flujo de aprobación para gestionar las revisiones de la reunión."
 
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/topic.py:0
 msgid "Use the meeting workflow to change point state or scope."
-msgstr "Usa el flujo de la reunión para cambiar el estado o el ámbito del punto."
+msgstr ""
+"Usa el flujo de la reunión para cambiar el estado o el ámbito del punto."
 
 #. module: community_meetings
 #. odoo-python
@@ -9087,8 +9483,12 @@ msgstr "Usa el flujo de la reunión para resolver un punto."
 
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_series__meeting_name_pattern
-msgid "Use {date} for the meeting date (YYYY-MM-DD) and {series} for this series name."
-msgstr "Usa {date} para la fecha de la reunión (AAAA-MM-DD) y {series} para el nombre de la serie."
+msgid ""
+"Use {date} for the meeting date (YYYY-MM-DD) and {series} for this series "
+"name."
+msgstr ""
+"Usa {date} para la fecha de la reunión (AAAA-MM-DD) y {series} para el "
+"nombre de la serie."
 
 #. module: community_meetings
 #: model:ir.model,name:community_meetings.model_res_users
@@ -9162,13 +9562,30 @@ msgstr "Cuándo y dónde"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_proposal_group_policy_form
-msgid "When any authorized group is listed, only members of these groups (and meeting managers) may propose points. Leave empty so every internal user can propose."
-msgstr "Cuando hay grupos autorizados, solo sus miembros (y los gestores de reuniones) pueden proponer puntos. Déjalo vacío para que pueda proponer cualquier usuario interno."
+msgid ""
+"When any authorized group is listed, only members of these groups (and "
+"meeting managers) may propose points. Leave empty so every internal user can "
+"propose."
+msgstr ""
+"Cuando hay grupos autorizados, solo sus miembros (y los gestores de "
+"reuniones) pueden proponer puntos. Déjalo vacío para que pueda proponer "
+"cualquier usuario interno."
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
-msgid "When off, meetings of this series have no start/pause timers: the live meeting is editable from the start and only the actual finish is recorded."
-msgstr "Cuando está desactivado, las reuniones de esta serie no tienen cronómetros de inicio/pausa: la reunión en vivo es editable desde el principio y solo se registra la finalización real."
+msgid ""
+"When off, meetings of this series have no start/pause timers: the live "
+"meeting is editable from the start and only the actual finish is recorded."
+msgstr ""
+"Cuando está desactivado, las reuniones de esta serie no tienen cronómetros "
+"de inicio/pausa: la reunión en vivo es editable desde el principio y solo se "
+"registra la finalización real."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
+msgid "When there's room"
+msgstr "Cuando haya tiempo"
 
 #. module: community_meetings
 #. odoo-python
@@ -9178,8 +9595,12 @@ msgstr "Cuándo: %s (%sh)"
 
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting__add_point_allowed
-msgid "Whether new points can still be added to this meeting under the current policy."
-msgstr "Indica si aún se pueden añadir puntos nuevos a esta reunión según la política actual."
+msgid ""
+"Whether new points can still be added to this meeting under the current "
+"policy."
+msgstr ""
+"Indica si aún se pueden añadir puntos nuevos a esta reunión según la "
+"política actual."
 
 #. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting__add_point_policy__ongoing
@@ -9309,9 +9730,16 @@ msgstr "fa-comments-o"
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "min"
 msgstr "min"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
+msgid "minutes"
+msgstr "minutos"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -9350,3 +9778,6 @@ msgstr "· <strong>Organizador:</strong>"
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_document
 msgid "· Approved by"
 msgstr "· Aprobada por"
+
+#~ msgid "Planning"
+#~ msgstr "Planificación"

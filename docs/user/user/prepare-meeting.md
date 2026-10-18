@@ -41,11 +41,14 @@ On the meeting form, **Add Point** opens a focused dialog:
 - **Title** — one clear line, this is what attendees read.
 - **Point type** — decides the live behavior (see [catalogs](../admin/catalogs.md#agenda-point-types)).
 - **Description** — rich text: context, links, documents.
-- **Planning** (priority, deadline, estimated minutes) and **Responsible**.
-- **More options** — reuse an existing point, relate points, follow-up rules.
+- **Planning** — choose a priority (Low-key, Normal, High or Critical), use a
+  minute preset or enter a custom estimate, and optionally set a deadline. The
+  estimate is pre-filled from the series or company default.
+- **Responsible** — choose who will present the point. You can also link
+  related points in the main form.
+- **More options** — reuse an existing point and adjust its follow-up rules.
 
-The **estimated minutes** field comes pre-filled with the series (or company)
-default. The **Add and continue** button chains several points quickly.
+The **Add and continue** button chains several points quickly.
 
 > **Note:** Whether *Add Point* is available depends on the meeting state and the
 > **adding-points policy** of its series — it disappears after the deadline and
@@ -54,7 +57,7 @@ default. The **Add and continue** button chains several points quickly.
 The **estimated agenda over budget** warning appears when the sum of point
 estimates exceeds the meeting duration. Plan or trim.
 
-![Add point wizard](img/point-wizard.png)
+![Add point wizard with priority, estimated time and optional deadline](img/point-wizard.png)
 
 ## Scheduling and series changes
 

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_meetings.MeetingPriorityField">
+        <div class="o_meeting_point_priority_choices" role="radiogroup" aria-label="Priority">
+            <button t-foreach="choices" t-as="choice" t-key="choice.value" type="button"
+                    t-att-class="'o_meeting_priority_choice ' + (value === choice.value ? 'is-selected priority-' + choice.value : '')"
+                    role="radio" t-att-aria-checked="value === choice.value" t-att-disabled="props.readonly"
+                    t-on-click="() => this.select(choice.value)">
+                <i t-attf-class="fa {{ choice.icon }}" aria-hidden="true"/>
+                <span class="o_meeting_priority_copy"><strong t-out="choice.label"/><small t-out="choice.hint"/></span>
+                <i t-if="value === choice.value" class="fa fa-check-circle o_meeting_priority_check" aria-hidden="true"/>
+            </button>
+        </div>
+    </t>
+
+    <t t-name="community_meetings.MeetingMinutesField">
+        <div class="o_meeting_minutes_picker">
+            <div class="o_meeting_minute_presets" role="group" aria-label="Estimated duration">
+                <button t-foreach="[5, 10, 15, 20, 30, 45]" t-as="minutes" t-key="minutes" type="button"
+                        t-att-class="'btn btn-sm ' + (value === minutes ? 'btn-primary' : 'btn-light')"
+                        t-att-aria-pressed="value === minutes" t-att-disabled="props.readonly"
+                        t-on-click="() => this.setValue(minutes)"><t t-out="minutes"/> min</button>
+            </div>
+            <div class="o_meeting_minute_custom">
+                <i class="fa fa-hourglass-half" aria-hidden="true"/>
+                <input type="number" min="0" step="1" inputmode="numeric" aria-label="Custom estimate in minutes"
+                       t-att-value="value" t-att-disabled="props.readonly"
+                       t-on-change="(ev) => this.setValue(ev.target.value)"/>
+                <span>minutes</span>
+            </div>
+        </div>
+    </t>
+</templates>

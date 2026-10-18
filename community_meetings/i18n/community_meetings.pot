@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 23:12+0000\n"
-"PO-Revision-Date: 2026-10-17 23:12+0000\n"
+"POT-Creation-Date: 2026-10-18 05:11+0000\n"
+"PO-Revision-Date: 2026-10-18 05:11+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -56,6 +56,13 @@ msgid "<i class=\"fa fa-calendar-o\" aria-hidden=\"true\"/> Adding to"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid ""
+"<i class=\"fa fa-lightbulb-o\" aria-hidden=\"true\"/> A rough estimate helps"
+" the group keep the meeting on track."
+msgstr ""
+
+#. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 msgid "<span class=\"o_stat_text\">New Meeting</span>"
 msgstr ""
@@ -66,8 +73,29 @@ msgid "<span class=\"o_stat_text\">Propose a point</span>"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid ""
+"<strong>A few extra details</strong><small>Make this point easier to pick up"
+" and follow through.</small>"
+msgstr ""
+
+#. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_document
 msgid "<strong>Company:</strong>"
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid ""
+"<strong>Give it a little shape</strong><small>Set the urgency and a "
+"realistic timebox.</small>"
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid ""
+"<strong>More options</strong><small>Reuse a point and tune follow-"
+"ups.</small>"
 msgstr ""
 
 #. module: community_meetings
@@ -491,6 +519,11 @@ msgstr ""
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_series__has_next_meeting_point
 msgid "Add a 'Next Meeting' point as the last agenda item of each meeting."
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "Add a deadline"
 msgstr ""
 
 #. module: community_meetings
@@ -4051,6 +4084,7 @@ msgstr ""
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_item__priority__3
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_point_wizard__priority__3
@@ -4068,6 +4102,12 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Current agenda point"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
+msgid "Custom estimate in minutes"
 msgstr ""
 
 #. module: community_meetings
@@ -4161,6 +4201,11 @@ msgstr ""
 #: model:ir.model.fields,help:community_meetings.field_res_config_settings__meeting_estimated_minutes
 msgid ""
 "Default estimated duration applied to new points; a series can override it."
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "Default follow-up"
 msgstr ""
 
 #. module: community_meetings
@@ -4469,6 +4514,12 @@ msgstr ""
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
+msgid "Drop everything"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Due"
 msgstr ""
@@ -4679,6 +4730,7 @@ msgstr ""
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Estimated duration"
 msgstr ""
@@ -5393,6 +5445,16 @@ msgid "Follow-up Actions"
 msgstr ""
 
 #. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_activity_ids
+msgid "Follow-up Activities"
+msgstr ""
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__responsible_user_id
+msgid "Follow-up Responsible"
+msgstr ""
+
+#. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_document
 msgid "Follow-up actions"
 msgstr ""
@@ -5441,6 +5503,11 @@ msgid ""
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "Follow-up types"
+msgstr ""
+
+#. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 msgid "Follow-up types new points of this series may use."
 msgstr ""
@@ -5477,16 +5544,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_proposal_grant__message_partner_ids
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__message_partner_ids
 msgid "Followers (Partners)"
-msgstr ""
-
-#. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_activity_ids
-msgid "Follow-up Activities"
-msgstr ""
-
-#. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_activity_id
-msgid "Primary Follow-up Activity"
 msgstr ""
 
 #. module: community_meetings
@@ -5635,6 +5692,7 @@ msgstr ""
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_item__priority__2
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_point_wizard__priority__2
@@ -5646,6 +5704,16 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__timezone__hongkong
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__timezone__hongkong
 msgid "Hongkong"
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "How long should we give it?"
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "How urgent is it?"
 msgstr ""
 
 #. module: community_meetings
@@ -6024,6 +6092,11 @@ msgid "Line"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "Link useful context"
+msgstr ""
+
+#. module: community_meetings
 #: model:ir.actions.client,name:community_meetings.action_community_meeting_live_client
 msgid "Live Meeting"
 msgstr ""
@@ -6054,6 +6127,12 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_point_wizard__priority__0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_topic__priority__0
 msgid "Low"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
+msgid "Low-key"
 msgstr ""
 
 #. module: community_meetings
@@ -6239,6 +6318,18 @@ msgid "Meeting notes"
 msgstr ""
 
 #. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
+msgid "Meeting point estimate"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
+msgid "Meeting point priority"
+msgstr ""
+
+#. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/meeting.py:0
 msgid "Meeting references are assigned by the system."
@@ -6399,7 +6490,6 @@ msgstr ""
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__more_options
-#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
 msgid "More options"
 msgstr ""
 
@@ -6476,6 +6566,12 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__timezone__navajo
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__timezone__navajo
 msgid "Navajo"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
+msgid "Needs attention"
 msgstr ""
 
 #. module: community_meetings
@@ -6635,6 +6731,11 @@ msgid "No attendees listed"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "No deadline yet"
+msgstr ""
+
+#. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "No dissent recorded."
@@ -6672,6 +6773,7 @@ msgstr ""
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_item__priority__1
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_point_wizard__priority__1
@@ -7554,11 +7656,6 @@ msgid "Planned length of each meeting of this series."
 msgstr ""
 
 #. module: community_meetings
-#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
-msgid "Planning"
-msgstr ""
-
-#. module: community_meetings
 #. odoo-javascript
 #. odoo-python
 #: code:addons/community_meetings/models/topic.py:0
@@ -7723,6 +7820,13 @@ msgid "Previous point"
 msgstr ""
 
 #. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_activity_id
+msgid "Primary Follow-up Activity"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__priority
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__priority
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__priority
@@ -7957,6 +8061,7 @@ msgstr ""
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__related_topic_ids
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__related_topic_ids
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
 msgid "Related points"
 msgstr ""
 
@@ -8104,13 +8209,9 @@ msgid "Responsible"
 msgstr ""
 
 #. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting__activity_user_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__activity_user_id
 msgid "Responsible User"
-msgstr ""
-
-#. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__responsible_user_id
-msgid "Follow-up Responsible"
 msgstr ""
 
 #. module: community_meetings
@@ -8279,6 +8380,11 @@ msgstr ""
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 msgid "Scheduling"
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "Search this series"
 msgstr ""
 
 #. module: community_meetings
@@ -8457,6 +8563,11 @@ msgid "Start Meeting"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "Start from an existing point"
+msgstr ""
+
+#. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/topic.py:0
 msgid "Start the live meeting before timing an agenda point."
@@ -8507,6 +8618,12 @@ msgid ""
 "Overdue: Due date is already passed\n"
 "Today: Activity date is today\n"
 "Planned: Future activities."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
+msgid "Steady pace"
 msgstr ""
 
 #. module: community_meetings
@@ -9276,6 +9393,12 @@ msgid ""
 msgstr ""
 
 #. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
+msgid "When there's room"
+msgstr ""
+
+#. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/creation_wizard.py:0
 msgid "When: %s (%sh)"
@@ -9416,8 +9539,15 @@ msgstr ""
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "min"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
+msgid "minutes"
 msgstr ""
 
 #. module: community_meetings

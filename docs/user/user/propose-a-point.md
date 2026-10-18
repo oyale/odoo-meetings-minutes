@@ -16,8 +16,12 @@ in. Two entries:
 3. **Point type** — information, discussion, decision, TODO…
 4. **Description** — rich text: explain the subject so any attendee can follow
    it; add the links or documents needed to act on it.
-5. **Planning** — priority, deadline, estimated minutes (pre-filled).
-6. **Responsible** — the person presenting it (defaults to you).
+5. **Planning** — choose a priority (Low-key, Normal, High or Critical), use a
+   minute preset or enter a custom estimate, and optionally set a deadline.
+   The estimate starts from the series or company default.
+6. **Responsible** — the person presenting it (defaults to you). You can link
+   related points in the main form.
+7. **More options** — reuse an existing point and adjust its follow-up rules.
 
 **Add point** submits. The proposal becomes a point in state *proposed*.
 
