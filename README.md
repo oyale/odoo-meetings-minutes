@@ -49,7 +49,7 @@ pip install 'odoo-addon-community_meetings-extension-demo==18.0.*'
 The repository metapackage installs the full suite:
 
 ```console
-pip install odoo-addons-oyale-meeting-minutes
+pip install odoo-meetings-minutes
 ```
 
 ## Documentation

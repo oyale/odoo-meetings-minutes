@@ -80,9 +80,23 @@ jobs:
   publish:
     needs: [build, test]
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: odoo-meetings-minutes
+            wheel: odoo_meetings_minutes-*.whl
+          - project: odoo-addon-community-meetings
+            wheel: odoo_addon_community_meetings-*.whl
+          - project: odoo-addon-community-meetings-calendar
+            wheel: odoo_addon_community_meetings_calendar-*.whl
+          - project: odoo-addon-community-meetings-extension-demo
+            wheel: odoo_addon_community_meetings_extension_demo-*.whl
+          - project: odoo-addon-community-meetings-project
+            wheel: odoo_addon_community_meetings_project-*.whl
     environment:
       name: pypi
-      url: https://pypi.org/
+      url: https://pypi.org/project/${{ matrix.project }}/
     permissions:
       id-token: write
     steps:
@@ -90,7 +104,18 @@ jobs:
         with:
           name: pypi-distributions
           path: dist
+      - name: Select this project's wheel
+        env:
+          WHEEL_PATTERN: ${{ matrix.wheel }}
+        run: |
+          mkdir selected-dist
+          set -- dist/$WHEEL_PATTERN
+          if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
+            echo "Expected exactly one wheel matching $WHEEL_PATTERN"
+            exit 1
+          fi
+          cp "$1" selected-dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: dist/
+          packages-dir: selected-dist/
           skip-existing: true
