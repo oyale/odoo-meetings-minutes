@@ -692,7 +692,7 @@ class TopicCopyWizard(models.TransientModel):
     def action_copy(self):
         self.ensure_one()
         source = self.topic_id
-        self.env["community.meeting.topic"].check_access_rights("create")
+        self.env["community.meeting.topic"].check_access("create")
         self.destination_series_id.check_access("read")
         if self.destination_series_id.company_id != source.company_id:
             raise ValidationError(_("Choose a series in the same company."))

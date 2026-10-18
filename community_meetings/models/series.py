@@ -1,5 +1,6 @@
 import calendar
 from datetime import timedelta
+
 import pytz
 
 from odoo import _, api, fields, models
@@ -128,8 +129,7 @@ class CommunityMeetingSeries(models.Model):
 
     def action_new_meeting(self):
         self.ensure_one()
-        self.check_access_rights("read")
-        self.check_access_rule("read")
+        self.check_access("read")
         return {
             "type": "ir.actions.act_window",
             "name": _("New Meeting in %(series)s", series=self.name),

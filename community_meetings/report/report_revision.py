@@ -2,8 +2,7 @@ import json
 
 from markupsafe import Markup
 
-from odoo import _, models
-from odoo.exceptions import AccessError
+from odoo import models
 
 
 class MeetingRevisionReport(models.AbstractModel):
@@ -12,11 +11,9 @@ class MeetingRevisionReport(models.AbstractModel):
 
     def _get_report_values(self, docids, data=None):
         revisions = self.env["community.meeting.revision"].browse(docids)
-        revisions.check_access_rights("read")
-        revisions.check_access_rule("read")
+        revisions.check_access("read")
         for revision in revisions:
-            revision.meeting_id.check_access_rights("read")
-            revision.meeting_id.check_access_rule("read")
+            revision.meeting_id.check_access("read")
         docs = []
         for revision in revisions:
             snapshot = json.loads(revision.snapshot_json)

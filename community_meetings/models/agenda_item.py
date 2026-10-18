@@ -229,8 +229,7 @@ class CommunityMeetingAgendaItem(models.Model):
 
     def action_request_followup(self):
         self.ensure_one()
-        self.check_access_rights("write")
-        self.check_access_rule("write")
+        self.check_access("write")
         if self.meeting_id.state in ("approved", "cancelled"):
             raise UserError(_("Agenda items cannot be deferred after approval or cancellation."))
         return self.env["community.meeting.carryover.wizard"].action_open_for(self, "agenda_item")

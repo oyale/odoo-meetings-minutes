@@ -31,10 +31,8 @@ class ProjectTaskLinkChecks(models.AbstractModel):
         tasks = self.env["project.task"].browse(task_ids).exists()
         if set(tasks.ids) != set(task_ids):
             raise ValidationError(_("One or more linked tasks are unavailable."))
-        tasks.check_access_rights("read")
-        tasks.check_access_rule("read")
-        tasks.check_access_rights("write")
-        tasks.check_access_rule("write")
+        tasks.check_access("read")
+        tasks.check_access("write")
         if any(task.company_id and task.company_id != meeting.company_id for task in tasks):
             raise ValidationError(_("Linked tasks must belong to the meeting company."))
         if meeting._project_policy()['meeting_task_scope'] == 'configured':
@@ -278,8 +276,7 @@ class CommunityMeetingAction(models.Model):
         self.ensure_one()
         if self.followup_kind != "project_task":
             raise ValidationError(_("Project tasks can only be linked to Project task follow-ups."))
-        self.check_access_rights("write")
-        self.check_access_rule("write")
+        self.check_access("write")
         return {
             "type": "ir.actions.act_window",
             "name": _("Create Project Task"),
@@ -321,11 +318,10 @@ class CommunityMeetingProjectTaskWizard(models.TransientModel):
 
     def action_create(self):
         self.ensure_one()
-        self.action_id.check_access_rights("write")
-        self.action_id.check_access_rule("write")
+        self.action_id.check_access("write")
         if self.action_id.followup_kind != "project_task":
             raise ValidationError(_("Project tasks can only be linked to Project task follow-ups."))
-        self.env["project.task"].check_access_rights("create")
+        self.env["project.task"].check_access("create")
         if (
             self.choose_another_project
             and not self.project_id
@@ -445,10 +441,8 @@ class CommunityMeetingCarryover(models.Model):
         item = super()._materialize(destination, automatic=automatic)
         if self.selected_project_task_ids:
             tasks = self.selected_project_task_ids
-            tasks.check_access_rights("read")
-            tasks.check_access_rule("read")
-            tasks.check_access_rights("write")
-            tasks.check_access_rule("write")
+            tasks.check_access("read")
+            tasks.check_access("write")
             if any(task.company_id and task.company_id != destination.company_id for task in tasks):
                 raise ValidationError(_("A selected task does not belong to the destination company."))
             item.write({"project_task_ids": [(6, 0, tasks.ids)]})
@@ -465,8 +459,7 @@ class CommunityMeetingCarryoverWizard(models.TransientModel):
     def _prepare_carryover_values(self):
         values = super()._prepare_carryover_values()
         tasks = self.selected_project_task_ids
-        tasks.check_access_rights("read")
-        tasks.check_access_rule("read")
+        tasks.check_access("read")
         if any(task.company_id and task.company_id != self.company_id for task in tasks):
             raise ValidationError(_("Selected tasks must belong to the meeting company."))
         values["selected_project_task_ids"] = [(6, 0, tasks.ids)]

@@ -147,8 +147,7 @@ class CommunityMeetingRevision(models.Model):
     def _create_approved_revision(self, meeting):
         if not self.env.user.has_group("community_meetings.group_meeting_approver"):
             raise AccessError(_("Only an authorized approver can create a minutes revision."))
-        meeting.check_access_rights("read")
-        meeting.check_access_rule("read")
+        meeting.check_access("read")
         self.env.cr.execute(
             "SELECT id FROM community_meeting WHERE id = %s FOR UPDATE", [meeting.id],
         )

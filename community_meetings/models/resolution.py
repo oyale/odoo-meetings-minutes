@@ -126,6 +126,5 @@ class CommunityMeetingResolution(models.Model):
 
     def action_request_followup(self):
         self.ensure_one()
-        self.check_access_rights("read")
-        self.check_access_rule("read")
+        self.check_access("read")
         return self.env["community.meeting.carryover.wizard"].action_open_for(self, "resolution")

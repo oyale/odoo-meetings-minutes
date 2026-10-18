@@ -301,8 +301,7 @@ class CommunityMeeting(models.Model):
 
     def _transition(self, allowed, target):
         for meeting in self:
-            meeting.check_access_rights("write")
-            meeting.check_access_rule("write")
+            meeting.check_access("write")
             if meeting.state not in allowed:
                 raise UserError(_("This workflow action is not allowed from the current state."))
             if not (
@@ -427,8 +426,7 @@ class CommunityMeeting(models.Model):
 
     def action_start_meeting(self):
         for meeting in self:
-            meeting.check_access_rights("write")
-            meeting.check_access_rule("write")
+            meeting.check_access("write")
             if not meeting.time_tracking_enabled:
                 raise UserError(_("Time tracking is disabled for this meeting."))
             if not self.env.user.has_group("community_meetings.group_meeting_editor"):
@@ -445,8 +443,7 @@ class CommunityMeeting(models.Model):
 
     def action_pause_meeting(self):
         for meeting in self:
-            meeting.check_access_rights("write")
-            meeting.check_access_rule("write")
+            meeting.check_access("write")
             if not meeting.time_tracking_enabled:
                 raise UserError(_("Time tracking is disabled for this meeting."))
             if not self.env.user.has_group("community_meetings.group_meeting_editor"):
@@ -463,8 +460,7 @@ class CommunityMeeting(models.Model):
 
     def action_resume_meeting(self):
         for meeting in self:
-            meeting.check_access_rights("write")
-            meeting.check_access_rule("write")
+            meeting.check_access("write")
             if not meeting.time_tracking_enabled:
                 raise UserError(_("Time tracking is disabled for this meeting."))
             if not self.env.user.has_group("community_meetings.group_meeting_editor"):
@@ -487,8 +483,7 @@ class CommunityMeeting(models.Model):
 
     def action_open_live_meeting(self):
         self.ensure_one()
-        self.check_access_rights("read")
-        self.check_access_rule("read")
+        self.check_access("read")
         return {"type": "ir.actions.client", "tag": "community_meetings.live_meeting",
                 "name": _("Meeting"), "target": "main",
                 "context": {"active_model": self._name, "active_id": self.id, "active_ids": self.ids},
@@ -555,8 +550,7 @@ class CommunityMeeting(models.Model):
         for meeting in self:
             if not self.env.user.has_group("community_meetings.group_meeting_approver"):
                 raise AccessError(_("Only an authorized meeting approver can approve minutes."))
-            meeting.check_access_rights("read")
-            meeting.check_access_rule("read")
+            meeting.check_access("read")
             if meeting.state != "minutes_draft":
                 raise UserError(_("Only draft minutes can be approved."))
             if not meeting.agenda_item_ids:
@@ -572,8 +566,7 @@ class CommunityMeeting(models.Model):
         if not self.env.user.has_group("community_meetings.group_meeting_manager"):
             raise AccessError(_("Only a meeting manager can start an amendment."))
         for meeting in self:
-            meeting.check_access_rights("write")
-            meeting.check_access_rule("write")
+            meeting.check_access("write")
             if meeting.state != "approved":
                 raise UserError(_("Only approved minutes can be amended."))
         return super(CommunityMeeting, self).write({"state": "minutes_draft"})

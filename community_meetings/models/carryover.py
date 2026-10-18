@@ -121,17 +121,14 @@ class CommunityMeetingCarryover(models.Model):
             source = self.env[model].browse(vals.get("origin_record_id")).exists()
             if not source:
                 raise ValidationError(_("The carryover source is unavailable."))
-            source.check_access_rights("read")
-            source.check_access_rule("read")
+            source.check_access("read")
             origin_meeting = source.meeting_id
-            origin_meeting.check_access_rights("write")
-            origin_meeting.check_access_rule("write")
+            origin_meeting.check_access("write")
             if origin_meeting.state == "cancelled":
                 raise UserError(_("Cancelled meetings cannot start agenda carryovers."))
             destination = self.env["community.meeting"].browse(vals.get("destination_meeting_id")).exists()
             if destination:
-                destination.check_access_rights("write")
-                destination.check_access_rule("write")
+                destination.check_access("write")
             vals.update({
                 "origin_meeting_id": origin_meeting.id,
                 source_field: source.id,
@@ -174,8 +171,7 @@ class CommunityMeetingCarryover(models.Model):
                 if candidate:
                     destination = candidate.with_env(self.env)
                     try:
-                        destination.check_access_rights("write")
-                        destination.check_access_rule("write")
+                        destination.check_access("write")
                     except AccessError:
                         destination = self.env["community.meeting"]
             if destination:
@@ -290,8 +286,7 @@ class CommunityMeetingCarryover(models.Model):
         self.ensure_one()
         if not self.env.user.has_group("community_meetings.group_meeting_editor"):
             raise AccessError(_("Only meeting editors can accept carryovers."))
-        self.check_access_rights("write")
-        self.check_access_rule("write")
+        self.check_access("write")
         self.env.cr.execute(
             "SELECT id FROM community_meeting_carryover WHERE id = %s FOR UPDATE", [self.id],
         )
@@ -301,16 +296,14 @@ class CommunityMeetingCarryover(models.Model):
         if self.status in ("dismissed", "cancelled"):
             raise UserError(_("This carryover has already been closed."))
         source = self.origin_meeting_id
-        source.check_access_rights("write")
-        source.check_access_rule("write")
+        source.check_access("write")
         destination = self.env["community.meeting"].browse(destination_meeting_id or self.destination_meeting_id.id)
         if not destination and (self.destination_series_id or self.series_id):
             candidate = self._find_next_meeting(source, self.destination_series_id or self.series_id)
             destination = candidate.with_env(self.env) if candidate else self.env["community.meeting"]
         if not destination:
             return False
-        destination.check_access_rights("write")
-        destination.check_access_rule("write")
+        destination.check_access("write")
         self._validate_destination(destination)
         self._materialize(destination)
         return True
@@ -319,15 +312,12 @@ class CommunityMeetingCarryover(models.Model):
         self.ensure_one()
         if not self.env.user.has_group("community_meetings.group_meeting_editor"):
             raise AccessError(_("Only meeting editors can retarget a carryover."))
-        self.check_access_rights("write")
-        self.check_access_rule("write")
+        self.check_access("write")
         if self.status not in ("pending", "proposed"):
             raise UserError(_("Only pending or proposed carryovers can be retargeted."))
-        self.origin_meeting_id.check_access_rights("write")
-        self.origin_meeting_id.check_access_rule("write")
+        self.origin_meeting_id.check_access("write")
         destination = self.env["community.meeting"].browse(destination_meeting_id)
-        destination.check_access_rights("write")
-        destination.check_access_rule("write")
+        destination.check_access("write")
         self._validate_destination(destination)
         series = self.destination_series_id or self.series_id
         policy = series.carryover_policy if series else "manual"
@@ -351,8 +341,7 @@ class CommunityMeetingCarryover(models.Model):
         self.ensure_one()
         if not self.env.user.has_group("community_meetings.group_meeting_editor"):
             raise AccessError(_("Only meeting editors can dismiss carryovers."))
-        self.check_access_rights("write")
-        self.check_access_rule("write")
+        self.check_access("write")
         self.env.cr.execute(
             "SELECT id FROM community_meeting_carryover WHERE id = %s FOR UPDATE", [self.id],
         )
