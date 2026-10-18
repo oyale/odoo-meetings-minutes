@@ -5440,10 +5440,14 @@ msgid "Followers (Partners)"
 msgstr "Seguidores (contactos)"
 
 #. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_activity_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_activity_ids
-msgid "Followup Activity"
-msgstr "Actividad de seguimiento"
+msgid "Follow-up Activities"
+msgstr "Actividades de seguimiento"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_activity_id
+msgid "Primary Follow-up Activity"
+msgstr "Actividad de seguimiento principal"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_activity_completed_on
@@ -8031,11 +8035,14 @@ msgid "Responsible"
 msgstr "Responsable"
 
 #. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting__activity_user_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__activity_user_id
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__responsible_user_id
 msgid "Responsible User"
 msgstr "Usuario responsable"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__responsible_user_id
+msgid "Follow-up Responsible"
+msgstr "Responsable del seguimiento"
 
 #. module: community_meetings
 #. odoo-javascript

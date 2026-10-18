@@ -21,7 +21,10 @@ class CommunityMeetingAction(models.Model):
     topic_id = fields.Many2one(related="agenda_item_id.topic_id", store=True, index=True)
     name = fields.Char(required=True)
     description = fields.Html()
-    responsible_user_id = fields.Many2one("res.users", default=lambda self: self.env.user, check_company=True, tracking=True)
+    responsible_user_id = fields.Many2one(
+        "res.users", string="Follow-up Responsible", default=lambda self: self.env.user,
+        check_company=True, tracking=True,
+    )
     deadline = fields.Date(tracking=True)
     state = fields.Selection(
         [("open", "Open"), ("in_progress", "In Progress"), ("done", "Done"), ("cancelled", "Cancelled")],

@@ -5480,9 +5480,13 @@ msgid "Followers (Partners)"
 msgstr ""
 
 #. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_activity_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_activity_ids
-msgid "Followup Activity"
+msgid "Follow-up Activities"
+msgstr ""
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__followup_activity_id
+msgid "Primary Follow-up Activity"
 msgstr ""
 
 #. module: community_meetings
@@ -8100,10 +8104,13 @@ msgid "Responsible"
 msgstr ""
 
 #. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting__activity_user_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__activity_user_id
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__responsible_user_id
 msgid "Responsible User"
+msgstr ""
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__responsible_user_id
+msgid "Follow-up Responsible"
 msgstr ""
 
 #. module: community_meetings

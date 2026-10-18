@@ -132,13 +132,19 @@ class FollowupActivity(models.Model):
         FOLLOWUP_KIND_CODES, string="Follow-up type", default="activity", required=True,
     )
     responsible_user_ids = fields.Many2many("res.users", "meeting_followup_responsible_rel", string="Responsible people", check_company=True)
-    followup_activity_ids = fields.Many2many("mail.activity", "meeting_followup_activity_rel", readonly=True, copy=False)
+    followup_activity_ids = fields.Many2many(
+        "mail.activity", "meeting_followup_activity_rel", string="Follow-up Activities",
+        readonly=True, copy=False,
+    )
     completed_user_ids = fields.Many2many("res.users", "meeting_followup_completed_rel", readonly=True, copy=False)
     followup_activity_type_id = fields.Many2one(
         "mail.activity.type", string="Odoo activity type",
         default=lambda self: self.env.ref("mail.mail_activity_data_todo", raise_if_not_found=False),
     )
-    followup_activity_id = fields.Many2one("mail.activity", readonly=True, ondelete="set null", copy=False)
+    followup_activity_id = fields.Many2one(
+        "mail.activity", string="Primary Follow-up Activity", readonly=True,
+        ondelete="set null", copy=False,
+    )
     followup_activity_completed_on = fields.Datetime(readonly=True, copy=False)
 
     def _has_execution_evidence(self):
