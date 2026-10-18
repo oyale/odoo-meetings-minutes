@@ -4,12 +4,13 @@
 import subprocess
 import sys
 
-
 ADDONS = {
     "community_meetings": "towncrier-check/community_meetings.toml",
     "community_meetings_calendar": "towncrier-check/community_meetings_calendar.toml",
     "community_meetings_project": "towncrier-check/community_meetings_project.toml",
-    "community_meetings_extension_demo": "towncrier-check/community_meetings_extension_demo.toml",
+    "community_meetings_extension_demo": (
+        "towncrier-check/community_meetings_extension_demo.toml"
+    ),
 }
 
 
