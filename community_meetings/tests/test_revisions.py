@@ -205,7 +205,7 @@ class TestMeetingRevisions(TransactionCase):
         )
         snapshot = json.loads(before_json)
         self.assertEqual(report_type, "html")
-        self.assertIn("Review open actions", rendered_html)
+        self.assertIn(b"Review open actions", rendered_html)
         self.assertEqual(
             snapshot["agenda"][0]["discussion"], "<p>Initial discussion</p>"
         )
