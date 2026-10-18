@@ -67,4 +67,3 @@ flowchart LR
 | Usar Calendario / Project | [Calendario](integrations/calendar.md) · [Project](integrations/project.md) |
 | Consultar los cambios entre versiones | [Notas de versión](release-notes.md) |
 | Resolver un problema | [FAQ](faq.md) |
-

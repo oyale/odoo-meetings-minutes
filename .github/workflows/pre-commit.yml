@@ -16,13 +16,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install pre-commit
-        run: python -m pip install pre-commit
+      - name: Install pre-commit and Towncrier
+        run: python -m pip install pre-commit towncrier==23.11.0
       - uses: actions/cache@v4
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
-      - name: Check changed files
+      - name: Determine change base
+        id: changes
         shell: bash
         env:
           PR_BASE: ${{ github.event.pull_request.base.sha }}
@@ -35,5 +36,16 @@ jobs:
           else
             base="$(git rev-parse HEAD^)"
           fi
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+      - name: Require a Towncrier fragment for each changed addon
+        env:
+          BASE: ${{ steps.changes.outputs.base }}
+        run: python .github/scripts/check_towncrier_fragments.py "$BASE" "$GITHUB_SHA"
+      - name: Check changed files
+        env:
+          BASE: ${{ steps.changes.outputs.base }}
+        shell: bash
+        run: |
+          base="$BASE"
           git diff --name-only -z --diff-filter=ACMRT "$base" "$GITHUB_SHA" \
             | xargs -0 -r pre-commit run --files
