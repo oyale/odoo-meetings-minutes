@@ -1,1 +1,0 @@
-The point preparation form keeps priority, estimated duration and deadline together, makes related points available in the main flow, and reserves advanced options for reusing a point and configuring follow-ups. The description editor is highlighted so its purpose is clear while drafting.
