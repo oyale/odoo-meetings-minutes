@@ -30,7 +30,7 @@ PAGE_ORDER = [
     "user/prepare-meeting.md", "user/propose-a-point.md", "user/live-meeting.md",
     "user/minutes-and-approval.md", "user/followups.md", "user/carryovers.md",
     "integrations/calendar.md", "integrations/project.md",
-    "faq.md",
+    "release-notes.md", "faq.md",
 ]
 MD_EXTENSIONS = ["tables", "fenced_code", "sane_lists", "smarty"]
 
@@ -44,7 +44,7 @@ NAV_LABELS = {
         "user/live-meeting.md": "Live meeting", "user/minutes-and-approval.md": "Minutes & approval",
         "user/followups.md": "Follow-ups", "user/carryovers.md": "Carryovers",
         "integrations/calendar.md": "Calendar", "integrations/project.md": "Project",
-        "faq.md": "FAQ",
+        "release-notes.md": "Release notes", "faq.md": "FAQ",
     },
     "es": {
         "index.md": "Inicio", "concepts.md": "Conceptos",
@@ -55,7 +55,7 @@ NAV_LABELS = {
         "user/live-meeting.md": "Reunión en vivo", "user/minutes-and-approval.md": "Actas y aprobación",
         "user/followups.md": "Seguimientos", "user/carryovers.md": "Arrastres",
         "integrations/calendar.md": "Calendario", "integrations/project.md": "Project",
-        "faq.md": "Preguntas frecuentes",
+        "release-notes.md": "Notas de versión", "faq.md": "Preguntas frecuentes",
     },
 }
 GROUP_NAMES = {

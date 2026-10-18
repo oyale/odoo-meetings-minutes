@@ -65,4 +65,5 @@ flowchart LR
 | Track who does what after the meeting | [Follow-ups](user/followups.md) |
 | Move points to another meeting | [Carryovers](user/carryovers.md) |
 | Use Calendar / Project | [Calendar](integrations/calendar.md) · [Project](integrations/project.md) |
+| See what changed between releases | [Release notes](release-notes.md) |
 | Solve a problem | [FAQ](faq.md) |

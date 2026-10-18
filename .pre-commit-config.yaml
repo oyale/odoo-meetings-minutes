@@ -1,4 +1,11 @@
 repos:
+  - repo: https://github.com/twisted/towncrier
+    rev: 23.11.0
+    hooks:
+      - id: towncrier-check
+        args: [--config=towncrier.toml, --compare-with=origin/18.0]
+        files: ^(community_meetings|community_meetings_calendar|community_meetings_project|community_meetings_extension_demo)/
+        pass_filenames: false
   - repo: https://github.com/sbidoul/whool
     rev: v1.3
     hooks:
@@ -29,6 +36,7 @@ repos:
     rev: bf9ecb9938b6a5deca0ff3d870fbd3f33341fded
     hooks:
       - id: oca-gen-addon-readme
+        exclude: ^(community_meetings|community_meetings_project|community_meetings_calendar|community_meetings_extension_demo)/readme/newsfragments/
         args:
           [--addons-dir=., --repo-name=odoo-meetings-minutes, --branch=18.0, --org-name=oyale, --convert-fragments-to-markdown]
         always_run: false

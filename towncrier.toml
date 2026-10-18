@@ -1,0 +1,24 @@
+[tool.towncrier]
+# Follow OCA's per-addon `readme/newsfragments` convention. Write fragments in
+# Markdown; the generated changelog is part of the bilingual HTML user guide.
+name = "Odoo Meetings Minutes"
+directory = "."
+filename = "docs/user/release-notes.md"
+start_string = "<!-- towncrier release notes start -->"
+issue_format = "[#{issue}](https://github.com/oyale/odoo-meetings-minutes/issues/{issue})"
+
+[[tool.towncrier.section]]
+name = "Community Meetings"
+path = "community_meetings/readme/newsfragments"
+
+[[tool.towncrier.section]]
+name = "Calendar Integration"
+path = "community_meetings_calendar/readme/newsfragments"
+
+[[tool.towncrier.section]]
+name = "Project Integration"
+path = "community_meetings_project/readme/newsfragments"
+
+[[tool.towncrier.section]]
+name = "Extension Demo"
+path = "community_meetings_extension_demo/readme/newsfragments"

@@ -56,6 +56,8 @@ pip install odoo-meetings-minutes
 
 Read the [English guide](https://oyale.github.io/odoo-meetings-minutes/html-en/index.html)
 or [guía en español](https://oyale.github.io/odoo-meetings-minutes/html-es/index.html).
+See the [release notes](https://oyale.github.io/odoo-meetings-minutes/html-en/release-notes.html)
+for user-facing changes between releases.
 GitHub Pages builds the bilingual user and administrator documentation from
 `docs/user/` and `docs/user_es/` on every push to `18.0`.
 See [ROADMAP.md](ROADMAP.md) for planned user-facing improvements.
