@@ -29,10 +29,16 @@ class MeetingTopic(models.Model):
         "community.meeting.series", check_company=True, ondelete="restrict"
     )
     origin_topic_id = fields.Many2one(
-        "community.meeting.topic", ondelete="set null", string="Origin point", copy=False,
+        "community.meeting.topic",
+        ondelete="set null",
+        string="Origin point",
+        copy=False,
     )
     origin_action_id = fields.Many2one(
-        "community.meeting.action", ondelete="set null", string="Promoted from follow-up", copy=False,
+        "community.meeting.action",
+        ondelete="set null",
+        string="Promoted from follow-up",
+        copy=False,
     )
     agenda_type_id = fields.Many2one(
         "community.meeting.agenda.type", required=True, ondelete="restrict"
@@ -53,13 +59,20 @@ class MeetingTopic(models.Model):
         string="Related points",
         check_company=True,
     )
-    proposer_partner_id = fields.Many2one("res.partner", ondelete="restrict", index=True)
+    proposer_partner_id = fields.Many2one(
+        "res.partner", ondelete="restrict", index=True
+    )
     submitted_by_user_id = fields.Many2one("res.users", readonly=True, index=True)
     submitted_at = fields.Datetime(readonly=True)
     proposal_status = fields.Selection(
-        [("submitted", "Submitted"), ("accepted", "Accepted"),
-         ("rejected", "Rejected"), ("withdrawn", "Withdrawn")],
-        copy=False, index=True,
+        [
+            ("submitted", "Submitted"),
+            ("accepted", "Accepted"),
+            ("rejected", "Rejected"),
+            ("withdrawn", "Withdrawn"),
+        ],
+        copy=False,
+        index=True,
     )
     proposal_response = fields.Text()
     responded_by_id = fields.Many2one("res.users", readonly=True)
@@ -126,11 +139,17 @@ class MeetingTopic(models.Model):
     def create(self, vals_list):
         for vals in vals_list:
             if vals.get("proposal_status") in ("accepted", "rejected", "withdrawn"):
-                raise ValidationError(_("Use a proposal workflow action to change its status."))
+                raise ValidationError(
+                    _("Use a proposal workflow action to change its status.")
+                )
             vals.pop("responded_by_id", None)
             vals.pop("responded_at", None)
             if not self.env.context.get("meeting_proposal_create"):
-                for server_field in ("proposer_partner_id", "submitted_by_user_id", "submitted_at"):
+                for server_field in (
+                    "proposer_partner_id",
+                    "submitted_by_user_id",
+                    "submitted_at",
+                ):
                     vals.pop(server_field, None)
             if (
                 vals.get("state", "open") not in ("open", "proposed")
@@ -142,9 +161,13 @@ class MeetingTopic(models.Model):
 
     def write(self, vals):
         if {
-            "proposal_status", "responded_by_id", "responded_at",
-            "submitted_by_user_id", "submitted_at",
-            "proposer_partner_id", "proposal_response",
+            "proposal_status",
+            "responded_by_id",
+            "responded_at",
+            "submitted_by_user_id",
+            "submitted_at",
+            "proposer_partner_id",
+            "proposal_response",
         }.intersection(vals):
             raise UserError(_("Use a proposal workflow action to change its status."))
         if {
@@ -184,7 +207,8 @@ class MeetingTopic(models.Model):
         # requests are retried by Odoo instead of validating against old task rows.
         for topic in self.sorted("id"):
             self.env.cr.execute(
-                "UPDATE community_meeting_topic SET write_date=clock_timestamp() WHERE id=%s",
+                "UPDATE community_meeting_topic SET write_date=clock_timestamp() "
+                "WHERE id=%s",
                 [topic.id],
             )
         self.invalidate_recordset(["write_date"])
@@ -263,10 +287,14 @@ class MeetingTopic(models.Model):
         if any(t.state != "proposed" or t.proposal_status != "submitted" for t in self):
             raise UserError(_("Only submitted proposals can be accepted."))
         for topic in self:
-            super(MeetingTopic, topic.sudo()).write({
-                "state": "open", "proposal_status": "accepted",
-                "responded_by_id": self.env.uid, "responded_at": fields.Datetime.now(),
-            })
+            super(MeetingTopic, topic.sudo()).write(
+                {
+                    "state": "open",
+                    "proposal_status": "accepted",
+                    "responded_by_id": self.env.uid,
+                    "responded_at": fields.Datetime.now(),
+                }
+            )
         return True
 
     def action_reject_proposal(self, response=False):
@@ -275,21 +303,33 @@ class MeetingTopic(models.Model):
         if any(t.proposal_status != "submitted" for t in self):
             raise UserError(_("Only submitted proposals can be rejected."))
         for topic in self:
-            super(MeetingTopic, topic.sudo()).write({
-                "proposal_status": "rejected", "proposal_response": response,
-                "responded_by_id": self.env.uid, "responded_at": fields.Datetime.now(),
-            })
+            super(MeetingTopic, topic.sudo()).write(
+                {
+                    "proposal_status": "rejected",
+                    "proposal_response": response,
+                    "responded_by_id": self.env.uid,
+                    "responded_at": fields.Datetime.now(),
+                }
+            )
         return True
 
     def action_withdraw_proposal(self):
         self.check_access("write")
         for topic in self:
-            if topic.proposal_status != "submitted" or topic.submitted_by_user_id != self.env.user:
-                raise AccessError(_("You can withdraw only your own submitted proposal."))
-            super(MeetingTopic, topic.sudo()).write({
-                "proposal_status": "withdrawn",
-                "responded_by_id": self.env.uid, "responded_at": fields.Datetime.now(),
-            })
+            if (
+                topic.proposal_status != "submitted"
+                or topic.submitted_by_user_id != self.env.user
+            ):
+                raise AccessError(
+                    _("You can withdraw only your own submitted proposal.")
+                )
+            super(MeetingTopic, topic.sudo()).write(
+                {
+                    "proposal_status": "withdrawn",
+                    "responded_by_id": self.env.uid,
+                    "responded_at": fields.Datetime.now(),
+                }
+            )
         return True
 
     @api.model
@@ -299,14 +339,16 @@ class MeetingTopic(models.Model):
         # list authorized proposer groups; when any exist, only their members
         # (and meeting managers) may propose.
         user = self.env.user
-        policy_groups = self.env["community.meeting.proposal.group.policy"].sudo().search(
-            [("active", "=", True)]
-        ).group_id
+        policy_groups = (
+            self.env["community.meeting.proposal.group.policy"]
+            .sudo()
+            .search([("active", "=", True)])
+            .group_id
+        )
         if not policy_groups:
             return user.has_group("community_meetings.group_agenda_proposer")
-        return (
-            user.has_group("community_meetings.group_meeting_manager")
-            or bool(user.groups_id & policy_groups)
+        return user.has_group("community_meetings.group_meeting_manager") or bool(
+            user.groups_id & policy_groups
         )
 
     @api.model
@@ -333,17 +375,24 @@ class MeetingTopic(models.Model):
             raise AccessError(_("You are not authorized to submit agenda proposals."))
         values = dict(values)
         for guarded in (
-            "proposal_status", "submitted_by_user_id", "submitted_at", "proposal_response",
+            "proposal_status",
+            "submitted_by_user_id",
+            "submitted_at",
+            "proposal_response",
         ):
             values.pop(guarded, None)
         values.setdefault("presenter_partner_id", proposer_partner.id)
-        values.update({
-            "state": "proposed",
-            "proposal_status": "submitted",
-            "proposer_partner_id": proposer_partner.id,
-            "submitted_by_user_id": submitted_by.id if hasattr(submitted_by, "id") else submitted_by,
-            "submitted_at": fields.Datetime.now(),
-        })
+        values.update(
+            {
+                "state": "proposed",
+                "proposal_status": "submitted",
+                "proposer_partner_id": proposer_partner.id,
+                "submitted_by_user_id": submitted_by.id
+                if hasattr(submitted_by, "id")
+                else submitted_by,
+                "submitted_at": fields.Datetime.now(),
+            }
+        )
         return self.with_context(meeting_proposal_create=True).sudo().create(values)
 
     @api.model
@@ -352,21 +401,43 @@ class MeetingTopic(models.Model):
             self.env.user.has_group("community_meetings.group_meeting_editor")
             or self.env.user.has_group("community_meetings.group_meeting_manager")
         ):
-            raise AccessError(_("Only a meeting editor can record a proposal on behalf of a contact."))
+            raise AccessError(
+                _("Only a meeting editor can record a proposal on behalf of a contact.")
+            )
         partner = self.env["res.partner"].browse(partner_id).exists()
         if not partner:
             raise ValidationError(_("The proposed contact is unavailable."))
         company_id = values.get("company_id", self.env.company.id)
         series = self._validate_proposal_target(company_id, values.get("series_id"))
         today = fields.Date.context_today(self)
-        grant = self.env["community.meeting.proposal.grant"].sudo().search([
-            ("partner_id", "=", partner.id), ("company_id", "=", company_id), ("active", "=", True),
-            "|", ("active_from", "=", False), ("active_from", "<=", today),
-            "|", ("active_until", "=", False), ("active_until", ">=", today),
-            "|", ("series_id", "=", False), ("series_id", "=", series.id),
-        ], limit=1)
+        grant = (
+            self.env["community.meeting.proposal.grant"]
+            .sudo()
+            .search(
+                [
+                    ("partner_id", "=", partner.id),
+                    ("company_id", "=", company_id),
+                    ("active", "=", True),
+                    "|",
+                    ("active_from", "=", False),
+                    ("active_from", "<=", today),
+                    "|",
+                    ("active_until", "=", False),
+                    ("active_until", ">=", today),
+                    "|",
+                    ("series_id", "=", False),
+                    ("series_id", "=", series.id),
+                ],
+                limit=1,
+            )
+        )
         if not grant:
-            raise AccessError(_("This contact is not eligible to propose topics in the selected scope."))
+            raise AccessError(
+                _(
+                    "This contact is not eligible to propose topics in the selected "
+                    "scope."
+                )
+            )
         values = dict(values, company_id=company_id, series_id=series.id)
         return self._create_proposal(values, partner, self.env.uid)
 
@@ -421,7 +492,9 @@ class AgendaParticipation(models.Model):
             raise ValidationError(_("Estimated and actual minutes cannot be negative."))
 
     @api.model_create_multi
-    def create(self, vals_list):
+    # Synchronize reusable topics with meeting-specific agenda participation.
+    # Synchronize reusable topics with meeting-specific agenda participation.
+    def create(self, vals_list):  # noqa: C901
         prepared = []
         for original in vals_list:
             vals = dict(original)
@@ -485,10 +558,12 @@ class AgendaParticipation(models.Model):
 
     def _write_topic_content(self, vals):
         if vals:
-            return super(AgendaParticipation, self).write(vals)
+            return super().write(vals)
         return True
 
-    def write(self, vals):
+    # Preserve topic and participation workflow invariants during editor writes.
+    # Preserve topic and participation workflow invariants during editor writes.
+    def write(self, vals):  # noqa: C901
         if "has_started" in vals:
             raise UserError(_("Point start status is managed by the live meeting."))
         if "topic_id" in vals or "is_followup" in vals:
@@ -513,9 +588,10 @@ class AgendaParticipation(models.Model):
                 topic._lock_workflow()
         result = super().write(vals)
         for item in self:
-            if (
-                item.actual_started_at
-                and vals.get("disposition") in ("discussed", "closed", "deferred")
+            if item.actual_started_at and vals.get("disposition") in (
+                "discussed",
+                "closed",
+                "deferred",
             ):
                 item._pause_timing()
             if vals.get("disposition") == "deferred":
@@ -535,7 +611,9 @@ class AgendaParticipation(models.Model):
 
     def _pause_timing(self):
         self.meeting_id._lock_live_workflow()
-        self.invalidate_recordset(["actual_started_at", "actual_seconds", "actual_minutes"])
+        self.invalidate_recordset(
+            ["actual_started_at", "actual_seconds", "actual_minutes"]
+        )
         now = fields.Datetime.now()
         for item in self.filtered("actual_started_at"):
             started = fields.Datetime.to_datetime(item.actual_started_at)
@@ -557,7 +635,9 @@ class AgendaParticipation(models.Model):
             meeting._lock_live_workflow()
             if not meeting.time_tracking_enabled:
                 raise UserError(_("Time tracking is disabled for this meeting."))
-            item.invalidate_recordset(["disposition", "actual_started_at", "actual_seconds", "actual_minutes"])
+            item.invalidate_recordset(
+                ["disposition", "actual_started_at", "actual_seconds", "actual_minutes"]
+            )
             if not self.env.user.has_group("community_meetings.group_meeting_editor"):
                 raise UserError(_("Only meeting editors can start a point timer."))
             if (
@@ -566,7 +646,9 @@ class AgendaParticipation(models.Model):
                 or meeting.actual_paused_at
                 or meeting.actual_end_datetime
             ):
-                raise UserError(_("Start the live meeting before timing an agenda point."))
+                raise UserError(
+                    _("Start the live meeting before timing an agenda point.")
+                )
             if item.disposition == "closed" or (
                 item.kind == "information" and item.disposition == "discussed"
             ):
@@ -626,7 +708,8 @@ class AgendaParticipation(models.Model):
             if not (item._followup_actions() - actions):
                 raise ValidationError(
                     _(
-                        "A resolved TODO must keep at least one non-cancelled follow-up task."
+                        "A resolved TODO must keep at least one non-cancelled "
+                        "follow-up task."
                     )
                 )
 
@@ -647,18 +730,21 @@ class MeetingSeries(models.Model):
 
     topic_ids = fields.One2many("community.meeting.topic", "series_id", string="Points")
     pending_proposal_ids = fields.One2many(
-        "community.meeting.topic", compute="_compute_pending_proposals",
+        "community.meeting.topic",
+        compute="_compute_pending_proposals",
         groups="community_meetings.group_meeting_editor",
     )
 
     @api.depends("topic_ids.state", "topic_ids.proposal_status")
     def _compute_pending_proposals(self):
         for series in self:
-            series.pending_proposal_ids = self.env["community.meeting.topic"].search([
-                ("series_id", "=", series.id),
-                ("state", "=", "proposed"),
-                ("proposal_status", "=", "submitted"),
-            ])
+            series.pending_proposal_ids = self.env["community.meeting.topic"].search(
+                [
+                    ("series_id", "=", series.id),
+                    ("state", "=", "proposed"),
+                    ("proposal_status", "=", "submitted"),
+                ]
+            )
 
 
 class MeetingTopicCopy(models.Model):
@@ -672,7 +758,9 @@ class MeetingTopicCopy(models.Model):
             "name": _("Copy Point to Another Series"),
             "res_model": "community.meeting.topic.copy.wizard",
             "view_mode": "form",
-            "views": [(self.env.ref("community_meetings.view_topic_copy_wizard").id, "form")],
+            "views": [
+                (self.env.ref("community_meetings.view_topic_copy_wizard").id, "form")
+            ],
             "target": "new",
             "context": {"default_topic_id": self.id},
         }
@@ -685,7 +773,8 @@ class TopicCopyWizard(models.TransientModel):
     topic_id = fields.Many2one("community.meeting.topic", required=True, readonly=True)
     company_id = fields.Many2one(related="topic_id.company_id", readonly=True)
     destination_series_id = fields.Many2one(
-        "community.meeting.series", required=True,
+        "community.meeting.series",
+        required=True,
         domain="[('company_id', '=', company_id), ('active', '=', True)]",
     )
 
@@ -696,22 +785,27 @@ class TopicCopyWizard(models.TransientModel):
         self.destination_series_id.check_access("read")
         if self.destination_series_id.company_id != source.company_id:
             raise ValidationError(_("Choose a series in the same company."))
-        new = self.env["community.meeting.topic"].create({
-            "name": source.name,
-            "description": source.description,
-            "agenda_type_id": source.agenda_type_id.id,
-            "priority": source.priority,
-            "deadline": source.deadline,
-            "estimated_minutes": source.estimated_minutes,
-            "followup_allowed_kinds": [(6, 0, source.followup_allowed_kinds.ids)],
-            "followup_default_kind": source.followup_default_kind,
-            "company_id": source.company_id.id,
-            "series_id": self.destination_series_id.id,
-            "state": "open",
-            "origin_topic_id": source.id,
-        })
+        new = self.env["community.meeting.topic"].create(
+            {
+                "name": source.name,
+                "description": source.description,
+                "agenda_type_id": source.agenda_type_id.id,
+                "priority": source.priority,
+                "deadline": source.deadline,
+                "estimated_minutes": source.estimated_minutes,
+                "followup_allowed_kinds": [(6, 0, source.followup_allowed_kinds.ids)],
+                "followup_default_kind": source.followup_default_kind,
+                "company_id": source.company_id.id,
+                "series_id": self.destination_series_id.id,
+                "state": "open",
+                "origin_topic_id": source.id,
+            }
+        )
         return {
-            "type": "ir.actions.act_window", "name": _("Point"),
-            "res_model": "community.meeting.topic", "res_id": new.id,
-            "views": [(False, "form")], "target": "current",
+            "type": "ir.actions.act_window",
+            "name": _("Point"),
+            "res_model": "community.meeting.topic",
+            "res_id": new.id,
+            "views": [(False, "form")],
+            "target": "current",
         }

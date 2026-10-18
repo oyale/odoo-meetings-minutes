@@ -42,15 +42,29 @@ class TestMeetingDomain(TransactionCase):
             return meeting.action_approve_minutes()
 
     def test_next_meeting_recurrence_preserves_local_time_across_dst(self):
-        series = self.env["community.meeting.series"].create({"name": "DST series", "timezone": "Europe/Madrid", "next_meeting_rule": "interval_days", "next_meeting_interval_days": 7})
-        self.assertEqual(str(series._propose_next_meeting_datetime("2026-10-23 08:00:00")), "2026-10-30 09:00:00")
+        series = self.env["community.meeting.series"].create(
+            {
+                "name": "DST series",
+                "timezone": "Europe/Madrid",
+                "next_meeting_rule": "interval_days",
+                "next_meeting_interval_days": 7,
+            }
+        )
+        self.assertEqual(
+            str(series._propose_next_meeting_datetime("2026-10-23 08:00:00")),
+            "2026-10-30 09:00:00",
+        )
         series.write({"next_meeting_interval_days": 2})
         with self.assertRaises(ValidationError):
             series._propose_next_meeting_datetime("2026-10-23 00:30:00")
 
     def test_point_edits_do_not_rewrite_held_minutes(self):
-        meeting = self.env["community.meeting"].create({"name": "Frozen minutes", "start_datetime": "2026-11-02 10:00:00"})
-        point = self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Frozen point"})
+        meeting = self.env["community.meeting"].create(
+            {"name": "Frozen minutes", "start_datetime": "2026-11-02 10:00:00"}
+        )
+        point = self.env["community.meeting.agenda.item"].create(
+            {"meeting_id": meeting.id, "name": "Frozen point"}
+        )
         meeting.action_schedule()
         meeting.action_mark_held()
         point.topic_id.write({"name": "Edited after the session"})
@@ -58,8 +72,12 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(point.topic_id.name, "Edited after the session")
 
     def test_pauses_reject_editorial_rpc_writes_and_allow_minutes_drafting(self):
-        meeting = self.env["community.meeting"].create({"name": "Pause policy", "start_datetime": "2026-11-01 10:00:00"})
-        point = self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Notes"})
+        meeting = self.env["community.meeting"].create(
+            {"name": "Pause policy", "start_datetime": "2026-11-01 10:00:00"}
+        )
+        point = self.env["community.meeting.agenda.item"].create(
+            {"meeting_id": meeting.id, "name": "Notes"}
+        )
         meeting.action_schedule()
         meeting.action_start_meeting()
         point.action_start_timing()
@@ -78,7 +96,13 @@ class TestMeetingDomain(TransactionCase):
             point.write({"disposition": "deferred", "deferral_reason": "Wait"})
         self.assertEqual(point.disposition, "open")
         with self.assertRaises(UserError):
-            self.env["community.meeting.resolution"].create({"meeting_id": meeting.id, "agenda_item_id": point.id, "title": "Forbidden agreement"})
+            self.env["community.meeting.resolution"].create(
+                {
+                    "meeting_id": meeting.id,
+                    "agenda_item_id": point.id,
+                    "title": "Forbidden agreement",
+                }
+            )
         for model, values in [
             ("community.meeting.resolution", {"title": "Default context agreement"}),
             ("community.meeting.dissent", {"body": "Default context dissent"}),
@@ -86,25 +110,64 @@ class TestMeetingDomain(TransactionCase):
             ("community.meeting.action", {"name": "Default context follow-up"}),
         ]:
             with self.assertRaises(UserError):
-                self.env[model].with_context(default_meeting_id=meeting.id, default_agenda_item_id=point.id).create(values)
+                self.env[model].with_context(
+                    default_meeting_id=meeting.id, default_agenda_item_id=point.id
+                ).create(values)
         meeting.action_mark_held()
         point.write({"discussion_notes": "Editorial correction after meeting"})
         self.assertIn("Editorial correction", point.discussion_notes)
 
     def test_preparation_unifies_requests_and_promoted_followups(self):
-        series = self.env["community.meeting.series"].create({"name": "Unified preparation"})
-        origin = self.env["community.meeting"].create({"name": "Origin", "series_id": series.id, "start_datetime": "2026-11-01 10:00:00"})
-        item = self.env["community.meeting.agenda.item"].create({"meeting_id": origin.id, "name": "Original"})
-        resolution = self.env["community.meeting.resolution"].create({"meeting_id": origin.id, "agenda_item_id": item.id, "title": "Review agreement"})
-        transfer = self.env["community.meeting.carryover"].create({"origin_model": "resolution", "origin_record_id": resolution.id, "destination_series_id": series.id})
-        action = self.env["community.meeting.action"].create({"meeting_id": origin.id, "agenda_item_id": item.id, "name": "Promoted work"})
+        series = self.env["community.meeting.series"].create(
+            {"name": "Unified preparation"}
+        )
+        origin = self.env["community.meeting"].create(
+            {
+                "name": "Origin",
+                "series_id": series.id,
+                "start_datetime": "2026-11-01 10:00:00",
+            }
+        )
+        item = self.env["community.meeting.agenda.item"].create(
+            {"meeting_id": origin.id, "name": "Original"}
+        )
+        resolution = self.env["community.meeting.resolution"].create(
+            {
+                "meeting_id": origin.id,
+                "agenda_item_id": item.id,
+                "title": "Review agreement",
+            }
+        )
+        transfer = self.env["community.meeting.carryover"].create(
+            {
+                "origin_model": "resolution",
+                "origin_record_id": resolution.id,
+                "destination_series_id": series.id,
+            }
+        )
+        action = self.env["community.meeting.action"].create(
+            {
+                "meeting_id": origin.id,
+                "agenda_item_id": item.id,
+                "name": "Promoted work",
+            }
+        )
         item.write({"disposition": "closed"})
         origin.action_schedule()
         origin.action_mark_held()
-        wizard = self.env["community.meeting.create.wizard"].create({"name": "Next", "series_id": series.id, "start_datetime": "2026-11-08 10:00:00", "step": "people"})
+        wizard = self.env["community.meeting.create.wizard"].create(
+            {
+                "name": "Next",
+                "series_id": series.id,
+                "start_datetime": "2026-11-08 10:00:00",
+                "step": "people",
+            }
+        )
         wizard.action_next()
         self.assertEqual(len(wizard.carry_line_ids), 2)
-        request_line = wizard.carry_line_ids.filtered(lambda line: line.transfer_id == transfer)
+        request_line = wizard.carry_line_ids.filtered(
+            lambda line: line.transfer_id == transfer
+        )
         self.assertTrue(request_line)
         request_line.decision = "postpone"
         wizard.action_finish()
@@ -115,8 +178,12 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(included.topic_id.origin_action_id, action)
         wizard.action_finish()
         self.assertEqual(len(wizard.created_meeting_id.agenda_item_ids), 1)
-        later = self.env["community.meeting"]._agenda_candidates(series, "2026-11-15 10:00:00")
-        self.assertIn(f"transfer:{transfer.id}", [candidate["key"] for candidate in later])
+        later = self.env["community.meeting"]._agenda_candidates(
+            series, "2026-11-15 10:00:00"
+        )
+        self.assertIn(
+            f"transfer:{transfer.id}", [candidate["key"] for candidate in later]
+        )
 
     def test_topic_identity_and_session_history(self):
         series = self.env["community.meeting.series"].create({"name": "Domain series"})
@@ -166,68 +233,107 @@ class TestMeetingDomain(TransactionCase):
             agenda_type = self.env["community.meeting.agenda.type"].search(
                 [("behavior", "=", behavior), ("active", "=", True)], limit=1
             )
-            self.assertTrue(agenda_type, "Missing agenda type for %s" % behavior)
+            self.assertTrue(agenda_type, f"Missing agenda type for {behavior}")
         meeting = self.env["community.meeting"].create({"name": "Structural types"})
-        item = self.env["community.meeting.agenda.item"].create({
-            "meeting_id": meeting.id, "name": "Next", "kind": "next_meeting",
-        })
+        item = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": meeting.id,
+                "name": "Next",
+                "kind": "next_meeting",
+            }
+        )
         self.assertEqual(item.agenda_type_id.behavior, "next_meeting")
         self.assertEqual(item.kind, "next_meeting")
 
     def test_series_structural_points_are_added_in_order(self):
-        series = self.env["community.meeting.series"].create({
-            "name": "Structural",
-            "has_minutes_approval_point": True,
-            "has_next_meeting_point": True,
-        })
-        previous = self.env["community.meeting"].create({
-            "name": "Previous meeting", "series_id": series.id,
-            "start_datetime": "2026-10-01 10:00:00",
-        })
+        series = self.env["community.meeting.series"].create(
+            {
+                "name": "Structural",
+                "has_minutes_approval_point": True,
+                "has_next_meeting_point": True,
+            }
+        )
+        previous = self.env["community.meeting"].create(
+            {
+                "name": "Previous meeting",
+                "series_id": series.id,
+                "start_datetime": "2026-10-01 10:00:00",
+            }
+        )
         previous.action_schedule()
         previous.action_mark_held()
-        meeting = self.env["community.meeting"].create({
-            "name": "Structural meeting", "series_id": series.id,
-            "start_datetime": "2026-10-08 10:00:00",
-        })
-        self.env["community.meeting.agenda.item"].create({
-            "meeting_id": meeting.id, "name": "Regular point", "kind": "discussion",
-        })
+        meeting = self.env["community.meeting"].create(
+            {
+                "name": "Structural meeting",
+                "series_id": series.id,
+                "start_datetime": "2026-10-08 10:00:00",
+            }
+        )
+        self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": meeting.id,
+                "name": "Regular point",
+                "kind": "discussion",
+            }
+        )
         items = meeting.agenda_item_ids.sorted("sequence")
         self.assertEqual(items[0].agenda_type_id.behavior, "minutes_approval")
         self.assertEqual(items[-1].agenda_type_id.behavior, "next_meeting")
 
     def test_no_minutes_approval_point_without_pending_minutes(self):
-        series = self.env["community.meeting.series"].create({
-            "name": "No pending minutes", "has_minutes_approval_point": True,
-        })
-        meeting = self.env["community.meeting"].create({
-            "name": "Fresh meeting", "series_id": series.id,
-            "start_datetime": "2026-10-08 10:00:00",
-        })
-        self.assertFalse(meeting.agenda_item_ids.filtered(
-            lambda item: item.agenda_type_id.behavior == "minutes_approval"
-        ))
+        series = self.env["community.meeting.series"].create(
+            {
+                "name": "No pending minutes",
+                "has_minutes_approval_point": True,
+            }
+        )
+        meeting = self.env["community.meeting"].create(
+            {
+                "name": "Fresh meeting",
+                "series_id": series.id,
+                "start_datetime": "2026-10-08 10:00:00",
+            }
+        )
+        self.assertFalse(
+            meeting.agenda_item_ids.filtered(
+                lambda item: item.agenda_type_id.behavior == "minutes_approval"
+            )
+        )
 
     def test_approved_previous_minutes_are_recorded_on_later_point(self):
-        series = self.env["community.meeting.series"].create({
-            "name": "Approval history", "has_minutes_approval_point": True,
-        })
-        previous = self.env["community.meeting"].create({
-            "name": "Previous", "series_id": series.id,
-            "start_datetime": "2026-10-01 10:00:00",
-        })
+        series = self.env["community.meeting.series"].create(
+            {
+                "name": "Approval history",
+                "has_minutes_approval_point": True,
+            }
+        )
+        previous = self.env["community.meeting"].create(
+            {
+                "name": "Previous",
+                "series_id": series.id,
+                "start_datetime": "2026-10-01 10:00:00",
+            }
+        )
         previous.action_schedule()
         previous.action_mark_held()
         previous.action_draft_minutes()
-        self.env["community.meeting.agenda.item"].create({
-            "meeting_id": previous.id, "name": "Topic", "kind": "discussion",
-        })
-        later = self.env["community.meeting"].create({
-            "name": "Later", "series_id": series.id,
-            "start_datetime": "2026-10-08 10:00:00",
-        })
-        point = later.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
+        self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": previous.id,
+                "name": "Topic",
+                "kind": "discussion",
+            }
+        )
+        later = self.env["community.meeting"].create(
+            {
+                "name": "Later",
+                "series_id": series.id,
+                "start_datetime": "2026-10-08 10:00:00",
+            }
+        )
+        point = later.agenda_item_ids.filtered(
+            lambda item: item.kind == "minutes_approval"
+        )
         self.assertTrue(point)
         self.assertEqual(later.get_pending_minutes_for_approval()[0]["id"], previous.id)
         self._approve_without_rendering_pdf(previous)
@@ -238,11 +344,15 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(point.minutes_approval_ids.meeting_id, previous)
 
     def test_approved_minutes_open_read_only_in_live_view(self):
-        meeting = self.env["community.meeting"].create({"name": "Approved live view", "start_datetime": "2026-11-02 10:00:00"})
+        meeting = self.env["community.meeting"].create(
+            {"name": "Approved live view", "start_datetime": "2026-11-02 10:00:00"}
+        )
         meeting.action_schedule()
         meeting.action_mark_held()
         meeting.action_draft_minutes()
-        self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Topic", "kind": "discussion"})
+        self.env["community.meeting.agenda.item"].create(
+            {"meeting_id": meeting.id, "name": "Topic", "kind": "discussion"}
+        )
         self._approve_without_rendering_pdf(meeting)
         self.assertEqual(meeting.state, "approved")
         action = meeting.action_open_live_meeting()
@@ -255,30 +365,54 @@ class TestMeetingDomain(TransactionCase):
         self.assertTrue(sequence, "The meeting sequence should exist after install.")
         sequence.sudo().unlink()
         with self.assertRaises(ValidationError):
-            self.env["community.meeting"].create({
-                "name": "No sequence meeting", "start_datetime": "2026-11-02 10:00:00",
-            })
+            self.env["community.meeting"].create(
+                {
+                    "name": "No sequence meeting",
+                    "start_datetime": "2026-11-02 10:00:00",
+                }
+            )
 
     def test_approver_without_editor_can_approve_minutes(self):
         # Pins the sudo() write in _set_approved_revision: approvers are
         # read-only on the meeting, yet must be able to approve.
-        approver = self.env["res.users"].sudo().create({
-            "name": "Domain approver",
-            "login": "domain-approver-test",
-            "email": "domain-approver@example.test",
-            "groups_id": [(6, 0, [
-                self.env.ref("base.group_user").id,
-                self.env.ref("community_meetings.group_meeting_approver").id,
-            ])],
-        })
+        approver = (
+            self.env["res.users"]
+            .sudo()
+            .create(
+                {
+                    "name": "Domain approver",
+                    "login": "domain-approver-test",
+                    "email": "domain-approver@example.test",
+                    "groups_id": [
+                        (
+                            6,
+                            0,
+                            [
+                                self.env.ref("base.group_user").id,
+                                self.env.ref(
+                                    "community_meetings.group_meeting_approver"
+                                ).id,
+                            ],
+                        )
+                    ],
+                }
+            )
+        )
         self.assertFalse(approver.has_group("community_meetings.group_meeting_editor"))
-        meeting = self.env["community.meeting"].create({
-            "name": "Approval pin", "start_datetime": "2026-11-03 10:00:00",
-            "reader_user_ids": [(4, approver.id)],
-        })
-        self.env["community.meeting.agenda.item"].create({
-            "meeting_id": meeting.id, "name": "Topic", "kind": "discussion",
-        })
+        meeting = self.env["community.meeting"].create(
+            {
+                "name": "Approval pin",
+                "start_datetime": "2026-11-03 10:00:00",
+                "reader_user_ids": [(4, approver.id)],
+            }
+        )
+        self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": meeting.id,
+                "name": "Topic",
+                "kind": "discussion",
+            }
+        )
         meeting.action_schedule()
         meeting.action_mark_held()
         meeting.action_draft_minutes()
@@ -288,24 +422,34 @@ class TestMeetingDomain(TransactionCase):
 
     def test_series_next_meeting_rule_proposes_date(self):
         series = self.env["community.meeting.series"].create({"name": "Recurrence"})
-        series.write({"next_meeting_rule": "interval_days", "next_meeting_interval_days": 7})
+        series.write(
+            {"next_meeting_rule": "interval_days", "next_meeting_interval_days": 7}
+        )
         self.assertEqual(
             str(series._propose_next_meeting_datetime("2026-10-20 10:00:00")),
             "2026-10-27 10:00:00",
         )
 
     def test_new_meeting_uses_the_agreed_next_date(self):
-        series = self.env["community.meeting.series"].create({
-            "name": "Agreed date", "has_next_meeting_point": True,
-        })
-        meeting = self.env["community.meeting"].create({
-            "name": "First", "series_id": series.id,
-            "start_datetime": "2026-10-01 10:00:00",
-        })
+        series = self.env["community.meeting.series"].create(
+            {
+                "name": "Agreed date",
+                "has_next_meeting_point": True,
+            }
+        )
+        meeting = self.env["community.meeting"].create(
+            {
+                "name": "First",
+                "series_id": series.id,
+                "start_datetime": "2026-10-01 10:00:00",
+            }
+        )
         agreed = fields.Datetime.to_datetime("2026-10-15 17:30:00")
-        meeting.agenda_item_ids.filtered(lambda i: i.kind == "next_meeting").write({
-            "next_meeting_datetime": agreed,
-        })
+        meeting.agenda_item_ids.filtered(lambda i: i.kind == "next_meeting").write(
+            {
+                "next_meeting_datetime": agreed,
+            }
+        )
         self.assertEqual(series._proposed_next_meeting_datetime(), agreed)
         action = series.action_new_meeting()
         self.assertEqual(action["context"]["default_start_datetime"], agreed)
@@ -314,29 +458,45 @@ class TestMeetingDomain(TransactionCase):
             str(series._propose_next_meeting_datetime("2026-10-19 10:00:00")),
             "2026-10-20 10:00:00",
         )
-        series.write({"next_meeting_rule": "day_of_month", "next_meeting_day_of_month": 15})
+        series.write(
+            {"next_meeting_rule": "day_of_month", "next_meeting_day_of_month": 15}
+        )
         self.assertEqual(
             str(series._propose_next_meeting_datetime("2026-10-10 10:00:00")),
             "2026-10-15 10:00:00",
         )
 
     def test_guided_wizard_uses_agreed_date_after_series_selection(self):
-        series = self.env["community.meeting.series"].create({
-            "name": "Guided agreed date", "has_next_meeting_point": True,
-        })
-        meeting = self.env["community.meeting"].create({
-            "name": "Previous meeting", "series_id": series.id,
-            "start_datetime": "2026-10-01 10:00:00",
-        })
+        series = self.env["community.meeting.series"].create(
+            {
+                "name": "Guided agreed date",
+                "has_next_meeting_point": True,
+            }
+        )
+        meeting = self.env["community.meeting"].create(
+            {
+                "name": "Previous meeting",
+                "series_id": series.id,
+                "start_datetime": "2026-10-01 10:00:00",
+            }
+        )
         agreed = fields.Datetime.to_datetime("2026-10-15 17:30:00")
-        meeting.agenda_item_ids.filtered(lambda item: item.kind == "next_meeting").write({
-            "next_meeting_datetime": agreed,
-        })
+        meeting.agenda_item_ids.filtered(
+            lambda item: item.kind == "next_meeting"
+        ).write(
+            {
+                "next_meeting_datetime": agreed,
+            }
+        )
 
         wizard_model = self.env["community.meeting.create.wizard"]
-        defaults = wizard_model.default_get([
-            "series_id", "start_datetime", "last_default_start",
-        ])
+        defaults = wizard_model.default_get(
+            [
+                "series_id",
+                "start_datetime",
+                "last_default_start",
+            ]
+        )
         self.assertEqual(defaults["last_default_start"], defaults["start_datetime"])
         wizard = wizard_model.new(defaults)
         wizard.series_id = series
@@ -344,92 +504,149 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(wizard.start_datetime, agreed)
 
     def test_next_meeting_point_keeps_current_meeting_local_hour(self):
-        series = self.env["community.meeting.series"].create({
-            "name": "Next point hour", "timezone": "Europe/Madrid",
-            "has_next_meeting_point": True, "next_meeting_rule": "interval_days",
-            "next_meeting_interval_days": 7,
-        })
-        meeting = self.env["community.meeting"].create({
-            "name": "Before daylight saving ends", "series_id": series.id,
-            "start_datetime": "2026-10-23 08:00:00",
-        })
-        next_point = meeting.agenda_item_ids.filtered(lambda item: item.kind == "next_meeting")
+        series = self.env["community.meeting.series"].create(
+            {
+                "name": "Next point hour",
+                "timezone": "Europe/Madrid",
+                "has_next_meeting_point": True,
+                "next_meeting_rule": "interval_days",
+                "next_meeting_interval_days": 7,
+            }
+        )
+        meeting = self.env["community.meeting"].create(
+            {
+                "name": "Before daylight saving ends",
+                "series_id": series.id,
+                "start_datetime": "2026-10-23 08:00:00",
+            }
+        )
+        next_point = meeting.agenda_item_ids.filtered(
+            lambda item: item.kind == "next_meeting"
+        )
         self.assertEqual(
-            str(next_point.next_meeting_datetime), "2026-10-30 09:00:00",
-            "The next meeting point should preserve the 10:00 Madrid meeting hour across DST.",
+            str(next_point.next_meeting_datetime),
+            "2026-10-30 09:00:00",
+            "The next meeting point should preserve the 10:00 Madrid meeting hour "
+            "across DST.",
         )
 
     def test_cross_series_carryover_uses_destination_point_estimate(self):
-        source_series = self.env["community.meeting.series"].create({
-            "name": "Source estimate series", "default_estimated_minutes": 12,
-        })
-        destination_series = self.env["community.meeting.series"].create({
-            "name": "Destination estimate series", "default_estimated_minutes": 35,
-        })
-        origin = self.env["community.meeting"].create({
-            "name": "Origin", "series_id": source_series.id,
-            "start_datetime": "2026-10-01 10:00:00",
-        })
-        source = self.env["community.meeting.agenda.item"].create({
-            "meeting_id": origin.id, "name": "Cross-series point",
-            "estimated_minutes": 12,
-        })
-        destination = self.env["community.meeting"].create({
-            "name": "Destination", "series_id": destination_series.id,
-            "start_datetime": "2026-10-08 10:00:00",
-        })
-        transfer = self.env["community.meeting.carryover"].create({
-            "origin_model": "agenda_item", "origin_record_id": source.id,
-            "destination_series_id": destination_series.id,
-            "destination_meeting_id": destination.id,
-        })
+        source_series = self.env["community.meeting.series"].create(
+            {
+                "name": "Source estimate series",
+                "default_estimated_minutes": 12,
+            }
+        )
+        destination_series = self.env["community.meeting.series"].create(
+            {
+                "name": "Destination estimate series",
+                "default_estimated_minutes": 35,
+            }
+        )
+        origin = self.env["community.meeting"].create(
+            {
+                "name": "Origin",
+                "series_id": source_series.id,
+                "start_datetime": "2026-10-01 10:00:00",
+            }
+        )
+        source = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": origin.id,
+                "name": "Cross-series point",
+                "estimated_minutes": 12,
+            }
+        )
+        destination = self.env["community.meeting"].create(
+            {
+                "name": "Destination",
+                "series_id": destination_series.id,
+                "start_datetime": "2026-10-08 10:00:00",
+            }
+        )
+        transfer = self.env["community.meeting.carryover"].create(
+            {
+                "origin_model": "agenda_item",
+                "origin_record_id": source.id,
+                "destination_series_id": destination_series.id,
+                "destination_meeting_id": destination.id,
+            }
+        )
 
         transfer.action_accept(destination.id)
 
         self.assertEqual(transfer.destination_item_id.estimated_minutes, 35)
 
     def test_same_series_carryover_fills_missing_point_estimate_from_series(self):
-        series = self.env["community.meeting.series"].create({
-            "name": "Carryover estimate series", "default_estimated_minutes": 25,
-        })
-        origin = self.env["community.meeting"].create({
-            "name": "Origin without estimate", "series_id": series.id,
-            "start_datetime": "2026-10-01 10:00:00",
-        })
-        source = self.env["community.meeting.agenda.item"].create({
-            "meeting_id": origin.id, "name": "Legacy point", "estimated_minutes": 0,
-        })
-        destination = self.env["community.meeting"].create({
-            "name": "Destination", "series_id": series.id,
-            "start_datetime": "2026-10-08 10:00:00",
-        })
-        transfer = self.env["community.meeting.carryover"].create({
-            "origin_model": "agenda_item", "origin_record_id": source.id,
-            "destination_series_id": series.id,
-            "destination_meeting_id": destination.id,
-        })
+        series = self.env["community.meeting.series"].create(
+            {
+                "name": "Carryover estimate series",
+                "default_estimated_minutes": 25,
+            }
+        )
+        origin = self.env["community.meeting"].create(
+            {
+                "name": "Origin without estimate",
+                "series_id": series.id,
+                "start_datetime": "2026-10-01 10:00:00",
+            }
+        )
+        source = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": origin.id,
+                "name": "Legacy point",
+                "estimated_minutes": 0,
+            }
+        )
+        destination = self.env["community.meeting"].create(
+            {
+                "name": "Destination",
+                "series_id": series.id,
+                "start_datetime": "2026-10-08 10:00:00",
+            }
+        )
+        transfer = self.env["community.meeting.carryover"].create(
+            {
+                "origin_model": "agenda_item",
+                "origin_record_id": source.id,
+                "destination_series_id": series.id,
+                "destination_meeting_id": destination.id,
+            }
+        )
 
         transfer.action_accept(destination.id)
 
         self.assertEqual(transfer.destination_item_id.estimated_minutes, 25)
 
     def test_followup_promotes_to_point_when_origin_closes(self):
-        meeting = self.env["community.meeting"].create({
-            "name": "Promotion",
-            "start_datetime": "2026-11-01 10:00:00",
-        })
-        item = self.env["community.meeting.agenda.item"].create({
-            "meeting_id": meeting.id, "name": "Point", "kind": "discussion",
-        })
+        meeting = self.env["community.meeting"].create(
+            {
+                "name": "Promotion",
+                "start_datetime": "2026-11-01 10:00:00",
+            }
+        )
+        item = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": meeting.id,
+                "name": "Point",
+                "kind": "discussion",
+            }
+        )
         meeting.action_schedule()
         item.write({"disposition": "closed"})
-        action = self.env["community.meeting.action"].create({
-            "meeting_id": meeting.id, "agenda_item_id": item.id, "name": "Continue work",
-        })
+        action = self.env["community.meeting.action"].create(
+            {
+                "meeting_id": meeting.id,
+                "agenda_item_id": item.id,
+                "name": "Continue work",
+            }
+        )
         meeting.action_mark_held()
-        promoted = self.env["community.meeting.topic"].search([
-            ("origin_action_id", "=", action.id),
-        ])
+        promoted = self.env["community.meeting.topic"].search(
+            [
+                ("origin_action_id", "=", action.id),
+            ]
+        )
         self.assertEqual(len(promoted), 1)
         self.assertEqual(promoted.origin_topic_id, item.topic_id)
         self.assertEqual(promoted.name, "Continue work")
@@ -438,14 +655,21 @@ class TestMeetingDomain(TransactionCase):
     def test_general_dissent_is_rejected(self):
         meeting = self.env["community.meeting"].create({"name": "No general dissent"})
         with self.assertRaises(ValidationError), self.cr.savepoint():
-            self.env["community.meeting.dissent"].create({
-                "meeting_id": meeting.id, "body": "General dissent",
-            })
+            self.env["community.meeting.dissent"].create(
+                {
+                    "meeting_id": meeting.id,
+                    "body": "General dissent",
+                }
+            )
 
     def test_unstarted_meeting_can_change_and_remove_series(self):
-        series = self.env["community.meeting.series"].create({"name": "Original series"})
+        series = self.env["community.meeting.series"].create(
+            {"name": "Original series"}
+        )
         other = self.env["community.meeting.series"].create({"name": "Other series"})
-        meeting = self.env["community.meeting"].create({"name": "Fixed series", "series_id": series.id})
+        meeting = self.env["community.meeting"].create(
+            {"name": "Fixed series", "series_id": series.id}
+        )
         meeting.write({"series_id": series.id})
         meeting.write({"series_id": other.id})
         self.assertEqual(meeting.series_id, other)
@@ -476,14 +700,18 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(meeting.secretary_id, self.env.user)
 
     def test_series_meeting_name_pattern_updates_until_manually_overridden(self):
-        series = self.env["community.meeting.series"].create({
-            "name": "Quarterly board",
-            "meeting_name_pattern": "{date} — {series}",
-        })
-        wizard = self.env["community.meeting.create.wizard"].create({
-            "series_id": series.id,
-            "start_datetime": "2026-12-01 12:00:00",
-        })
+        series = self.env["community.meeting.series"].create(
+            {
+                "name": "Quarterly board",
+                "meeting_name_pattern": "{date} — {series}",
+            }
+        )
+        wizard = self.env["community.meeting.create.wizard"].create(
+            {
+                "series_id": series.id,
+                "start_datetime": "2026-12-01 12:00:00",
+            }
+        )
         wizard._onchange_series()
         self.assertEqual(wizard.name, "2026-12-01 — Quarterly board")
         wizard.start_datetime = "2026-12-08 12:00:00"
@@ -496,10 +724,12 @@ class TestMeetingDomain(TransactionCase):
 
     def test_series_meeting_name_pattern_rejects_unknown_placeholders(self):
         with self.assertRaises(ValidationError), self.cr.savepoint():
-            self.env["community.meeting.series"].create({
-                "name": "Invalid pattern",
-                "meeting_name_pattern": "{date} {unknown}",
-            })
+            self.env["community.meeting.series"].create(
+                {
+                    "name": "Invalid pattern",
+                    "meeting_name_pattern": "{date} {unknown}",
+                }
+            )
 
     def test_point_actual_minutes_are_recorded_and_non_negative(self):
         meeting = self.env["community.meeting"].create({"name": "Timing"})
@@ -512,13 +742,18 @@ class TestMeetingDomain(TransactionCase):
             item.write({"actual_minutes": -1})
 
     def test_point_timer_accumulates_when_reopened(self):
-        meeting = self.env["community.meeting"].create({
-            "name": "Point timing",
-            "start_datetime": fields.Datetime.now() + timedelta(days=1),
-        })
-        item = self.env["community.meeting.agenda.item"].create({
-            "meeting_id": meeting.id, "name": "Timed point",
-        })
+        meeting = self.env["community.meeting"].create(
+            {
+                "name": "Point timing",
+                "start_datetime": fields.Datetime.now() + timedelta(days=1),
+            }
+        )
+        item = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": meeting.id,
+                "name": "Timed point",
+            }
+        )
         meeting.action_schedule()
         meeting.action_start_meeting()
 
@@ -542,14 +777,18 @@ class TestMeetingDomain(TransactionCase):
     def test_navigating_timer_can_pause_and_resume_same_point(self):
         # The browser tests cover focus/collapse; this verifies the server state
         # used by those controls can stop and resume without losing elapsed time.
-        meeting = self.env["community.meeting"].create({
-            "name": "Timer resume",
-            "start_datetime": fields.Datetime.now() + timedelta(days=1),
-        })
-        first, second = self.env["community.meeting.agenda.item"].create([
-            {"meeting_id": meeting.id, "name": "First"},
-            {"meeting_id": meeting.id, "name": "Second"},
-        ])
+        meeting = self.env["community.meeting"].create(
+            {
+                "name": "Timer resume",
+                "start_datetime": fields.Datetime.now() + timedelta(days=1),
+            }
+        )
+        first, second = self.env["community.meeting.agenda.item"].create(
+            [
+                {"meeting_id": meeting.id, "name": "First"},
+                {"meeting_id": meeting.id, "name": "Second"},
+            ]
+        )
         meeting.action_schedule()
         meeting.action_start_meeting()
         first.action_start_timing()
@@ -557,7 +796,9 @@ class TestMeetingDomain(TransactionCase):
         second.action_start_timing()
         self.assertFalse(first.actual_started_at)
         self.assertGreaterEqual(first.actual_minutes, 2)
-        second.write({"actual_started_at": fields.Datetime.now() - timedelta(minutes=1)})
+        second.write(
+            {"actual_started_at": fields.Datetime.now() - timedelta(minutes=1)}
+        )
         second.action_pause_timing()
         first.action_start_timing()
         first.write({"actual_started_at": fields.Datetime.now() - timedelta(minutes=1)})
@@ -565,13 +806,18 @@ class TestMeetingDomain(TransactionCase):
         self.assertGreaterEqual(first.actual_minutes, 3)
 
     def test_paused_unresolved_live_point_is_offered_at_next_meeting(self):
-        meeting = self.env["community.meeting"].create({
-            "name": "Carry paused point",
-            "start_datetime": fields.Datetime.now() + timedelta(days=1),
-        })
-        item = self.env["community.meeting.agenda.item"].create({
-            "meeting_id": meeting.id, "name": "Unfinished discussion",
-        })
+        meeting = self.env["community.meeting"].create(
+            {
+                "name": "Carry paused point",
+                "start_datetime": fields.Datetime.now() + timedelta(days=1),
+            }
+        )
+        item = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": meeting.id,
+                "name": "Unfinished discussion",
+            }
+        )
         meeting.action_schedule()
         meeting.action_start_meeting()
         item.action_start_timing()
@@ -582,16 +828,23 @@ class TestMeetingDomain(TransactionCase):
         self.assertTrue(item.review_next_meeting)
 
     def test_live_decision_can_be_undone_and_agreement_edits_sync(self):
-        meeting = self.env["community.meeting"].create({
-            "name": "Live decision", "start_datetime": "2026-11-01 10:00:00",
-        })
+        meeting = self.env["community.meeting"].create(
+            {
+                "name": "Live decision",
+                "start_datetime": "2026-11-01 10:00:00",
+            }
+        )
         item = self.env["community.meeting.agenda.item"].create(
             {"meeting_id": meeting.id, "name": "Decision", "kind": "decision"}
         )
-        agreement = self.env["community.meeting.resolution"].create({
-            "meeting_id": meeting.id, "agenda_item_id": item.id,
-            "title": "Decision agreement", "decision_outcome": "approved",
-        })
+        agreement = self.env["community.meeting.resolution"].create(
+            {
+                "meeting_id": meeting.id,
+                "agenda_item_id": item.id,
+                "title": "Decision agreement",
+                "decision_outcome": "approved",
+            }
+        )
         agreement.write({"decision_outcome": "denied"})
         self.assertEqual(item.decision_result, "denied")
         meeting.action_schedule()
@@ -671,21 +924,34 @@ class TestMeetingDomain(TransactionCase):
         series = self.env["community.meeting.series"].create(
             {"name": "Follow-up carryover", "carryover_policy": "review"}
         )
-        previous = self.env["community.meeting"].create({
-            "name": "Previous follow-up meeting", "series_id": series.id,
-            "start_datetime": "2026-10-01 10:00:00",
-        })
-        point = self.env["community.meeting.agenda.item"].create({
-            "meeting_id": previous.id, "name": "Completed follow-up point",
-        })
-        self.env["community.meeting.action"].create({
-            "meeting_id": previous.id, "agenda_item_id": point.id,
-            "name": "Already completed follow-up", "state": "done",
-        })
-        next_meeting = self.env["community.meeting"].create({
-            "name": "Next follow-up meeting", "series_id": series.id,
-            "start_datetime": "2026-10-08 10:00:00",
-        })
+        previous = self.env["community.meeting"].create(
+            {
+                "name": "Previous follow-up meeting",
+                "series_id": series.id,
+                "start_datetime": "2026-10-01 10:00:00",
+            }
+        )
+        point = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": previous.id,
+                "name": "Completed follow-up point",
+            }
+        )
+        self.env["community.meeting.action"].create(
+            {
+                "meeting_id": previous.id,
+                "agenda_item_id": point.id,
+                "name": "Already completed follow-up",
+                "state": "done",
+            }
+        )
+        next_meeting = self.env["community.meeting"].create(
+            {
+                "name": "Next follow-up meeting",
+                "series_id": series.id,
+                "start_datetime": "2026-10-08 10:00:00",
+            }
+        )
 
         candidates = self.env["community.meeting"]._carryover_candidates(
             series, next_meeting.start_datetime
@@ -698,17 +964,26 @@ class TestMeetingDomain(TransactionCase):
         series = self.env["community.meeting.series"].create(
             {"name": "No follow-up carryover", "carryover_policy": "review"}
         )
-        previous = self.env["community.meeting"].create({
-            "name": "Previous empty meeting", "series_id": series.id,
-            "start_datetime": "2026-10-01 10:00:00",
-        })
-        point = self.env["community.meeting.agenda.item"].create({
-            "meeting_id": previous.id, "name": "No follow-up point",
-        })
-        next_meeting = self.env["community.meeting"].create({
-            "name": "Next empty meeting", "series_id": series.id,
-            "start_datetime": "2026-10-08 10:00:00",
-        })
+        previous = self.env["community.meeting"].create(
+            {
+                "name": "Previous empty meeting",
+                "series_id": series.id,
+                "start_datetime": "2026-10-01 10:00:00",
+            }
+        )
+        point = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": previous.id,
+                "name": "No follow-up point",
+            }
+        )
+        next_meeting = self.env["community.meeting"].create(
+            {
+                "name": "Next empty meeting",
+                "series_id": series.id,
+                "start_datetime": "2026-10-08 10:00:00",
+            }
+        )
 
         candidates = self.env["community.meeting"]._carryover_candidates(
             series, next_meeting.start_datetime
@@ -721,45 +996,71 @@ class TestMeetingDomain(TransactionCase):
         activity = self.env.ref("community_meetings.followup_kind_activity")
         company.sudo().write({"followup_allowed_kinds": [(6, 0, activity.ids)]})
         series = self.env["community.meeting.series"].create({"name": "Allowed kinds"})
-        meeting = self.env["community.meeting"].create({
-            "name": "Cascade", "series_id": series.id, "start_datetime": "2026-11-05 10:00:00",
-        })
-        item = self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Point"})
-        self.assertEqual(meeting.get_followup_defaults(item.id)["allowed_kinds"], ["activity"])
+        meeting = self.env["community.meeting"].create(
+            {
+                "name": "Cascade",
+                "series_id": series.id,
+                "start_datetime": "2026-11-05 10:00:00",
+            }
+        )
+        item = self.env["community.meeting.agenda.item"].create(
+            {"meeting_id": meeting.id, "name": "Point"}
+        )
+        self.assertEqual(
+            meeting.get_followup_defaults(item.id)["allowed_kinds"], ["activity"]
+        )
         self.assertEqual(meeting.get_followup_defaults(item.id)["kind"], "activity")
         # A point override narrows nothing new in core, but must be accepted.
         item.followup_default_kind = "activity"
         self.assertEqual(item.get_followup_defaults()["kind"], "activity")
 
     def test_activity_default_uses_company_activity_type(self):
-        call_type = self.env["mail.activity.type"].search([
-            ("category", "=", "phonecall"),
-        ], limit=1)
+        call_type = self.env["mail.activity.type"].search(
+            [
+                ("category", "=", "phonecall"),
+            ],
+            limit=1,
+        )
         self.assertTrue(call_type)
-        self.env.company.sudo().write({
-            "followup_default_kind": "activity",
-            "meeting_default_activity_type_id": call_type.id,
-        })
+        self.env.company.sudo().write(
+            {
+                "followup_default_kind": "activity",
+                "meeting_default_activity_type_id": call_type.id,
+            }
+        )
         meeting = self.env["community.meeting"].create({"name": "Activity-only policy"})
-        item = self.env["community.meeting.agenda.item"].create({
-            "meeting_id": meeting.id, "name": "Follow-up",
-        })
+        item = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": meeting.id,
+                "name": "Follow-up",
+            }
+        )
         defaults = item.get_followup_defaults()
         self.assertEqual(defaults["kind"], "activity")
-        action = self.env["community.meeting.action"].create({
-            "meeting_id": meeting.id, "agenda_item_id": item.id,
-            "name": "Call attendee",
-        })
+        action = self.env["community.meeting.action"].create(
+            {
+                "meeting_id": meeting.id,
+                "agenda_item_id": item.id,
+                "name": "Call attendee",
+            }
+        )
         self.assertEqual(action.followup_kind, "activity")
         self.assertEqual(action.followup_activity_id.activity_type_id, call_type)
 
     def test_followup_conversion_replaces_container(self):
         meeting = self.env["community.meeting"].create({"name": "Conversion"})
-        item = self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Point"})
-        action = self.env["community.meeting.action"].create({
-            "meeting_id": meeting.id, "agenda_item_id": item.id, "name": "Follow up",
-            "responsible_user_id": self.env.uid, "followup_kind": "activity",
-        })
+        item = self.env["community.meeting.agenda.item"].create(
+            {"meeting_id": meeting.id, "name": "Point"}
+        )
+        action = self.env["community.meeting.action"].create(
+            {
+                "meeting_id": meeting.id,
+                "agenda_item_id": item.id,
+                "name": "Follow up",
+                "responsible_user_id": self.env.uid,
+                "followup_kind": "activity",
+            }
+        )
         self.assertTrue(action.followup_activity_ids)
         action.action_convert_followup_kind("activity")
         self.assertEqual(action.followup_kind, "activity")
@@ -798,13 +1099,21 @@ class TestMeetingDomain(TransactionCase):
 
     def test_closed_todo_rejects_deleting_its_last_native_activity(self):
         meeting = self.env["community.meeting"].create({"name": "Native evidence"})
-        item = self.env["community.meeting.agenda.item"].create({
-            "meeting_id": meeting.id, "name": "Closed TODO", "kind": "todo",
-        })
-        action = self.env["community.meeting.action"].create({
-            "meeting_id": meeting.id, "agenda_item_id": item.id,
-            "name": "Required activity", "followup_kind": "activity",
-        })
+        item = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": meeting.id,
+                "name": "Closed TODO",
+                "kind": "todo",
+            }
+        )
+        action = self.env["community.meeting.action"].create(
+            {
+                "meeting_id": meeting.id,
+                "agenda_item_id": item.id,
+                "name": "Required activity",
+                "followup_kind": "activity",
+            }
+        )
         activity = action.followup_activity_id
         item.write({"disposition": "closed"})
         with self.assertRaises(ValidationError), self.cr.savepoint():
@@ -816,24 +1125,50 @@ class TestMeetingDomain(TransactionCase):
         self.assertTrue(item._followup_actions())
 
     def test_closed_todo_keeps_evidence_when_one_of_two_activities_is_removed(self):
-        other = self.env["res.users"].sudo().create({
-            "name": "Other owner", "login": "native-evidence-other-owner",
-            "groups_id": [(6, 0, [
-                self.env.ref("base.group_user").id,
-                self.env.ref("community_meetings.group_meeting_reader").id,
-            ])],
-        })
-        meeting = self.env["community.meeting"].create({
-            "name": "Two owners", "reader_user_ids": [(4, other.id)],
-        })
-        item = self.env["community.meeting.agenda.item"].create({
-            "meeting_id": meeting.id, "name": "Two-owner TODO", "kind": "todo",
-        })
-        action = self.env["community.meeting.action"].create({
-            "meeting_id": meeting.id, "agenda_item_id": item.id,
-            "name": "Shared work", "followup_kind": "activity",
-            "responsible_user_ids": [(6, 0, [self.env.uid, other.id])],
-        })
+        other = (
+            self.env["res.users"]
+            .sudo()
+            .create(
+                {
+                    "name": "Other owner",
+                    "login": "native-evidence-other-owner",
+                    "groups_id": [
+                        (
+                            6,
+                            0,
+                            [
+                                self.env.ref("base.group_user").id,
+                                self.env.ref(
+                                    "community_meetings.group_meeting_reader"
+                                ).id,
+                            ],
+                        )
+                    ],
+                }
+            )
+        )
+        meeting = self.env["community.meeting"].create(
+            {
+                "name": "Two owners",
+                "reader_user_ids": [(4, other.id)],
+            }
+        )
+        item = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": meeting.id,
+                "name": "Two-owner TODO",
+                "kind": "todo",
+            }
+        )
+        action = self.env["community.meeting.action"].create(
+            {
+                "meeting_id": meeting.id,
+                "agenda_item_id": item.id,
+                "name": "Shared work",
+                "followup_kind": "activity",
+                "responsible_user_ids": [(6, 0, [self.env.uid, other.id])],
+            }
+        )
         item.write({"disposition": "closed"})
         first = action.followup_activity_id
         first.unlink()
@@ -844,13 +1179,21 @@ class TestMeetingDomain(TransactionCase):
 
     def test_open_todo_allows_deleting_native_activity(self):
         meeting = self.env["community.meeting"].create({"name": "Open TODO"})
-        item = self.env["community.meeting.agenda.item"].create({
-            "meeting_id": meeting.id, "name": "Open point", "kind": "todo",
-        })
-        action = self.env["community.meeting.action"].create({
-            "meeting_id": meeting.id, "agenda_item_id": item.id,
-            "name": "Optional activity", "followup_kind": "activity",
-        })
+        item = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": meeting.id,
+                "name": "Open point",
+                "kind": "todo",
+            }
+        )
+        action = self.env["community.meeting.action"].create(
+            {
+                "meeting_id": meeting.id,
+                "agenda_item_id": item.id,
+                "name": "Optional activity",
+                "followup_kind": "activity",
+            }
+        )
         activity = action.followup_activity_id
         activity.unlink()
         self.assertFalse(activity.exists())
@@ -875,22 +1218,61 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(task.state, "done")
 
     def test_native_followup_creates_one_activity_per_responsible_person(self):
-        other = self.env["res.users"].sudo().create({"name": "Second responsible", "login": "second-followup-owner", "email": "second-responsible@example.test", "groups_id": [(6, 0, [self.env.ref("base.group_user").id, self.env.ref("community_meetings.group_meeting_reader").id])]})
-        meeting = self.env["community.meeting"].create({"name": "Shared responsibility", "reader_user_ids": [(4, other.id)]})
-        item = self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Work"})
-        action = self.env["community.meeting.action"].create({"meeting_id": meeting.id, "agenda_item_id": item.id, "name": "Shared native to-do", "responsible_user_ids": [(6, 0, [self.env.uid, other.id])]})
+        other = (
+            self.env["res.users"]
+            .sudo()
+            .create(
+                {
+                    "name": "Second responsible",
+                    "login": "second-followup-owner",
+                    "email": "second-responsible@example.test",
+                    "groups_id": [
+                        (
+                            6,
+                            0,
+                            [
+                                self.env.ref("base.group_user").id,
+                                self.env.ref(
+                                    "community_meetings.group_meeting_reader"
+                                ).id,
+                            ],
+                        )
+                    ],
+                }
+            )
+        )
+        meeting = self.env["community.meeting"].create(
+            {"name": "Shared responsibility", "reader_user_ids": [(4, other.id)]}
+        )
+        item = self.env["community.meeting.agenda.item"].create(
+            {"meeting_id": meeting.id, "name": "Work"}
+        )
+        action = self.env["community.meeting.action"].create(
+            {
+                "meeting_id": meeting.id,
+                "agenda_item_id": item.id,
+                "name": "Shared native to-do",
+                "responsible_user_ids": [(6, 0, [self.env.uid, other.id])],
+            }
+        )
         self.assertEqual(len(action.followup_activity_ids), 2)
-        first = action.followup_activity_ids.filtered(lambda a: a.user_id.id == self.env.uid)
+        first = action.followup_activity_ids.filtered(
+            lambda a: a.user_id.id == self.env.uid
+        )
         first.action_feedback(feedback="My part is done")
         self.assertEqual(action.state, "open")
         self.assertEqual(len(action.followup_activity_ids), 1)
-        action.followup_activity_ids.with_user(other).action_feedback(feedback="All done")
+        action.followup_activity_ids.with_user(other).action_feedback(
+            feedback="All done"
+        )
         self.assertEqual(action.state, "done")
         self.assertTrue(action.followup_activity_completed_on)
         action.write({"state": "open"})
         self.assertEqual(len(action.followup_activity_ids), 2)
         with self.assertRaises(ValidationError):
-            action.with_context(meeting_followup_activity_internal=True).write({"followup_activity_completed_on": fields.Datetime.now()})
+            action.with_context(meeting_followup_activity_internal=True).write(
+                {"followup_activity_completed_on": fields.Datetime.now()}
+            )
 
     def test_closed_point_followup_preserves_global_result_until_explicit_reopen(self):
         series = self.env["community.meeting.series"].create({"name": "Follow-up"})
@@ -1185,7 +1567,8 @@ class TestMeetingDomain(TransactionCase):
         self.assertTrue(destination)
         ids = [item.id, destination.id]
         self.env.cr.execute(
-            "UPDATE community_meeting_agenda_item SET topic_id=NULL,is_followup=false WHERE id IN %s",
+            "UPDATE community_meeting_agenda_item SET topic_id=NULL,is_followup=false "
+            "WHERE id IN %s",
             [tuple(ids)],
         )
         (item | destination).invalidate_recordset(["topic_id", "is_followup"])

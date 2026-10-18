@@ -48,6 +48,12 @@ jobs:
             apt-get install -y wkhtmltopdf
           fi
           wkhtmltopdf --version
+          html_file=$(mktemp --suffix=.html)
+          pdf_file=$(mktemp --suffix=.pdf)
+          trap 'rm -f "$html_file" "$pdf_file"' EXIT
+          printf '%s\n' '<html><body>PDF renderer smoke test</body></html>' > "$html_file"
+          wkhtmltopdf --quiet --disable-local-file-access "$html_file" "$pdf_file"
+          test "$(head -c 5 "$pdf_file")" = '%PDF-'
       - name: Check licenses
         run: manifestoo -d . check-licenses
       - name: Check development status

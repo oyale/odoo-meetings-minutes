@@ -18,20 +18,38 @@ class MeetingRevisionReport(models.AbstractModel):
         for revision in revisions:
             snapshot = json.loads(revision.snapshot_json)
             meeting = snapshot["meeting"]
-            docs.append({
-                "revision": revision,
-                "snapshot": snapshot,
-                "meeting": meeting,
-                "description": Markup(meeting["description"]),
-                "minutes_notes": Markup(meeting["minutes_notes"]),
-                "agenda": [{
-                    **item,
-                    "description_html": Markup(item["description"]),
-                    "discussion_html": Markup(item["discussion"]),
-                    "resolutions": [{**resolution, "body_html": Markup(resolution["body"])} for resolution in item["resolutions"]],
-                } for item in snapshot["agenda"]],
-                "general_resolutions": [{**resolution, "body_html": Markup(resolution["body"])} for resolution in snapshot["general_resolutions"]],
-                "actions": snapshot["actions"],
-                "dissents": [{**dissent, "body_html": Markup(dissent["body"])} for dissent in snapshot["dissents"]],
-            })
-        return {"doc_ids": revisions.ids, "doc_model": "community.meeting.revision", "docs": docs}
+            docs.append(
+                {
+                    "revision": revision,
+                    "snapshot": snapshot,
+                    "meeting": meeting,
+                    "description": Markup(meeting["description"]),
+                    "minutes_notes": Markup(meeting["minutes_notes"]),
+                    "agenda": [
+                        {
+                            **item,
+                            "description_html": Markup(item["description"]),
+                            "discussion_html": Markup(item["discussion"]),
+                            "resolutions": [
+                                {**resolution, "body_html": Markup(resolution["body"])}
+                                for resolution in item["resolutions"]
+                            ],
+                        }
+                        for item in snapshot["agenda"]
+                    ],
+                    "general_resolutions": [
+                        {**resolution, "body_html": Markup(resolution["body"])}
+                        for resolution in snapshot["general_resolutions"]
+                    ],
+                    "actions": snapshot["actions"],
+                    "dissents": [
+                        {**dissent, "body_html": Markup(dissent["body"])}
+                        for dissent in snapshot["dissents"]
+                    ],
+                }
+            )
+        return {
+            "doc_ids": revisions.ids,
+            "doc_model": "community.meeting.revision",
+            "docs": docs,
+        }
