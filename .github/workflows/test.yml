@@ -10,6 +10,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-22.04
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -46,6 +47,7 @@ jobs:
             apt-get update
             apt-get install -y wkhtmltopdf
           fi
+          wkhtmltopdf --version
       - name: Check licenses
         run: manifestoo -d . check-licenses
       - name: Check development status

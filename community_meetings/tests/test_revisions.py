@@ -1,4 +1,6 @@
 import json
+import subprocess
+from unittest.mock import patch
 
 from odoo.exceptions import UserError
 from odoo.tests import TransactionCase, tagged
@@ -25,7 +27,7 @@ class TestMeetingRevisions(TransactionCase):
             "groups_id": [(6, 0, [cls.env.ref("base.group_user").id, cls.env.ref("community_meetings.group_meeting_manager").id])],
         })
 
-    def _approved_meeting(self):
+    def _approved_meeting(self, render_pdf=False):
         meeting = self.env["community.meeting"].with_user(self.editor).create({
             "name": "Revision stability test",
             "start_datetime": "2026-11-01 10:00:00",
@@ -54,7 +56,11 @@ class TestMeetingRevisions(TransactionCase):
         meeting.with_user(self.editor).action_schedule()
         meeting.with_user(self.editor).action_mark_held()
         meeting.with_user(self.editor).action_draft_minutes()
-        revision = meeting.with_user(self.approver).action_approve_minutes()
+        approved = meeting.with_user(self.approver)
+        if render_pdf:
+            revision = self._approve_with_pdf_timeout(approved)
+        else:
+            revision = self._approve_without_rendering_pdf(approved)
         return meeting, action, revision
 
     def _drafted_meeting(self, name):
@@ -73,10 +79,45 @@ class TestMeetingRevisions(TransactionCase):
         meeting.with_user(self.editor).action_draft_minutes()
         return meeting
 
+    def _approve_without_rendering_pdf(self, meeting):
+        report_model = self.env["ir.actions.report"]
+        pdf_fixture = b"%PDF-1.4\n% PDF rendering is covered by the integration test.\n"
+        with patch.object(
+            type(report_model), "_render_qweb_pdf", return_value=(pdf_fixture, "pdf")
+        ):
+            return meeting.action_approve_minutes()
+
+    def _approve_with_pdf_timeout(self, meeting):
+        original_communicate = subprocess.Popen.communicate
+
+        def communicate_with_timeout(process, *args, **kwargs):
+            command = process.args
+            executable = command[0] if isinstance(command, (list, tuple)) else command
+            if "wkhtmltopdf" not in str(executable):
+                return original_communicate(process, *args, **kwargs)
+            try:
+                return original_communicate(
+                    process, *args, timeout=120, **kwargs
+                )
+            except subprocess.TimeoutExpired as error:
+                process.kill()
+                _stdout, stderr = original_communicate(process)
+                raise AssertionError(
+                    "wkhtmltopdf did not finish within 120 seconds. "
+                    f"stderr: {(stderr or '')[-4000:]}"
+                ) from error
+
+        with patch.object(
+            subprocess.Popen, "communicate", communicate_with_timeout
+        ):
+            return meeting.action_approve_minutes()
+
     def test_approve_minutes_recordset_approves_all(self):
         first = self._drafted_meeting("First recordset approval")
         second = self._drafted_meeting("Second recordset approval")
-        revisions = (first | second).with_user(self.approver).action_approve_minutes()
+        revisions = self._approve_without_rendering_pdf(
+            (first | second).with_user(self.approver)
+        )
         # F1: the loop must not return early; both meetings get approved.
         self.assertEqual(len(revisions), 2)
         self.assertEqual(first.state, "approved")
@@ -91,13 +132,15 @@ class TestMeetingRevisions(TransactionCase):
         self.env["community.meeting.carryover"].with_user(self.editor).create({
             "origin_model": "resolution", "origin_record_id": resolution.id, "destination_series_id": destination.id,
         })
-        revision = meeting.with_user(self.approver).action_approve_minutes()
+        revision = self._approve_without_rendering_pdf(
+            meeting.with_user(self.approver)
+        )
         snapshot = json.loads(revision.snapshot_json)
         self.assertEqual(snapshot["schema_version"], 2)
         self.assertEqual(snapshot["carryovers"][0]["destination_series"], {"id": destination.id, "name": destination.name})
 
     def test_pdf_and_snapshot_are_stable_after_action_changes(self):
-        meeting, action, revision = self._approved_meeting()
+        meeting, action, revision = self._approved_meeting(render_pdf=True)
         before_json = revision.snapshot_json
         before_pdf = revision.pdf_attachment_id.raw
         snapshot = json.loads(before_json)
@@ -119,7 +162,7 @@ class TestMeetingRevisions(TransactionCase):
         manager_meeting = meeting.with_user(self.manager)
         manager_meeting.action_start_amendment()
         manager_meeting.write({"minutes_notes": "Corrected wording"})
-        second = manager_meeting.action_approve_minutes()
+        second = self._approve_without_rendering_pdf(manager_meeting)
 
         self.assertEqual(second.revision_number, 2)
         self.assertEqual(second.previous_revision_id, first)
@@ -137,7 +180,7 @@ class TestMeetingRevisions(TransactionCase):
         manager_meeting.action_start_amendment()
         meeting.resolution_ids.with_user(self.manager).write({"status": "withdrawn"})
         decision.with_user(self.manager).write({"kind": "information"})
-        second = manager_meeting.action_approve_minutes()
+        second = self._approve_without_rendering_pdf(manager_meeting)
 
         self.assertEqual(first.status, "superseded")
         self.assertEqual(second.revision_number, 2)

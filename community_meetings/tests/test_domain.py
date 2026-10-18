@@ -1,8 +1,9 @@
 from datetime import timedelta
+from unittest.mock import patch
 
 from odoo import fields
-from odoo.tests import TransactionCase, tagged
 from odoo.exceptions import UserError, ValidationError
+from odoo.tests import TransactionCase, tagged
 
 
 @tagged("post_install", "-at_install")
@@ -31,6 +32,14 @@ class TestMeetingDomain(TransactionCase):
     def setUp(self):
         super().setUp()
         self.env = self.env(user=self.editor)
+
+    def _approve_without_rendering_pdf(self, meeting):
+        report_model = self.env["ir.actions.report"]
+        pdf_fixture = b"%PDF-1.4\n% PDF rendering is covered by TestMeetingRevisions.\n"
+        with patch.object(
+            type(report_model), "_render_qweb_pdf", return_value=(pdf_fixture, "pdf")
+        ):
+            return meeting.action_approve_minutes()
 
     def test_next_meeting_recurrence_preserves_local_time_across_dst(self):
         series = self.env["community.meeting.series"].create({"name": "DST series", "timezone": "Europe/Madrid", "next_meeting_rule": "interval_days", "next_meeting_interval_days": 7})
@@ -221,7 +230,7 @@ class TestMeetingDomain(TransactionCase):
         point = later.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
         self.assertTrue(point)
         self.assertEqual(later.get_pending_minutes_for_approval()[0]["id"], previous.id)
-        previous.action_approve_minutes()
+        self._approve_without_rendering_pdf(previous)
         self.assertEqual(later.get_pending_minutes_for_approval(), [])
         history = later.get_minutes_approval_history()
         self.assertEqual(len(history), 1)
@@ -234,7 +243,7 @@ class TestMeetingDomain(TransactionCase):
         meeting.action_mark_held()
         meeting.action_draft_minutes()
         self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Topic", "kind": "discussion"})
-        meeting.action_approve_minutes()
+        self._approve_without_rendering_pdf(meeting)
         self.assertEqual(meeting.state, "approved")
         action = meeting.action_open_live_meeting()
         self.assertEqual(action["tag"], "community_meetings.live_meeting")
@@ -273,7 +282,7 @@ class TestMeetingDomain(TransactionCase):
         meeting.action_schedule()
         meeting.action_mark_held()
         meeting.action_draft_minutes()
-        revision = meeting.with_user(approver).action_approve_minutes()
+        revision = self._approve_without_rendering_pdf(meeting.with_user(approver))
         self.assertEqual(meeting.state, "approved")
         self.assertEqual(revision.approved_by_id, approver)
 
