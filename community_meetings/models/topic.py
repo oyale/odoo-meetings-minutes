@@ -493,7 +493,6 @@ class AgendaParticipation(models.Model):
 
     @api.model_create_multi
     # Synchronize reusable topics with meeting-specific agenda participation.
-    # Synchronize reusable topics with meeting-specific agenda participation.
     def create(self, vals_list):  # noqa: C901
         prepared = []
         for original in vals_list:
@@ -561,7 +560,6 @@ class AgendaParticipation(models.Model):
             return super().write(vals)
         return True
 
-    # Preserve topic and participation workflow invariants during editor writes.
     # Preserve topic and participation workflow invariants during editor writes.
     def write(self, vals):  # noqa: C901
         if "has_started" in vals:

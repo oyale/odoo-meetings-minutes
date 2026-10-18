@@ -319,7 +319,6 @@ class CommunityMeeting(models.Model):
 
     @api.model_create_multi
     # Generate protected references and materialize carryovers in one transaction.
-    # Generate protected references and materialize carryovers in one transaction.
     def create(self, vals_list):  # noqa: C901
         if not self.env.user.has_group("community_meetings.group_meeting_editor"):
             raise AccessError(_("You are not allowed to create meetings."))
@@ -373,7 +372,6 @@ class CommunityMeeting(models.Model):
             and not self.approved_revision_id
         )
 
-    # Preserve the ordering of series, workflow, timing, and permission guards.
     # Preserve the ordering of series, workflow, timing, and permission guards.
     def write(self, vals):  # noqa: C901
         if "series_id" in vals:

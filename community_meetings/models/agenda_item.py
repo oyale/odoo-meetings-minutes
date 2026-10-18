@@ -271,7 +271,6 @@ class CommunityMeetingAgendaItem(models.Model):
         return super().create(values_list)
 
     # Keep these checks ordered at the workflow boundary for live point writes.
-    # Keep these checks ordered at the workflow boundary for live point writes.
     def write(self, vals):  # noqa: C901
         if "meeting_id" in vals and any(
             item.meeting_id.id != vals["meeting_id"] for item in self

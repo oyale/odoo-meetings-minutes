@@ -94,7 +94,6 @@ class CommunityMeetingSeries(models.Model):
     next_meeting_interval_days = fields.Integer(string="Days")
 
     # Each recurrence rule has distinct date and timezone edge cases.
-    # Each recurrence rule has distinct date and timezone edge cases.
     def _propose_next_meeting_datetime(self, from_datetime):  # noqa: C901
         """Compute the proposed next meeting date from the series default."""
         self.ensure_one()

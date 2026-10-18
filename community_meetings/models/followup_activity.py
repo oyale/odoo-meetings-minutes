@@ -350,7 +350,6 @@ class FollowupActivity(models.Model):
         return records
 
     # Synchronize native activities and workflow state in the same write.
-    # Synchronize native activities and workflow state in the same write.
     def write(self, vals):  # noqa: C901
         values = dict(vals)
         reopening = (

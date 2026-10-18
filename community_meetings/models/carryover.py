@@ -197,7 +197,6 @@ class CommunityMeetingCarryover(models.Model):
 
     @api.model_create_multi
     # Authorization, deduplication, and materialization share one transaction.
-    # Authorization, deduplication, and materialization share one transaction.
     def create(self, vals_list):  # noqa: C901
         if not self.env.user.has_group("community_meetings.group_meeting_editor"):
             raise AccessError(_("Only meeting editors can request agenda carryover."))
