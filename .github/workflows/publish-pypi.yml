@@ -57,6 +57,8 @@ jobs:
           path.write_text(updated, encoding="utf-8")
           PY
       - name: Build addon wheels
+        env:
+          WHOOL_POST_VERSION_STRATEGY_OVERRIDE: none
         run: |
           python -m pip install --upgrade build
           for addon in community_meetings community_meetings_project community_meetings_calendar community_meetings_extension_demo; do

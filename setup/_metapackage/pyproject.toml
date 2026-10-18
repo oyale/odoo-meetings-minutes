@@ -1,8 +1,6 @@
 [project]
 name = "odoo-meetings-minutes"
 version = "18.0.20261018.1"
-description = "Install the Odoo 18 Community Meetings addon suite"
-readme = "README.md"
 dependencies = [
     "odoo-addon-community_meetings==18.0.*",
     "odoo-addon-community_meetings_calendar==18.0.*",
@@ -12,4 +10,5 @@ dependencies = [
 classifiers=[
     "Programming Language :: Python",
     "Framework :: Odoo",
+    "Framework :: Odoo :: 18.0",
 ]
