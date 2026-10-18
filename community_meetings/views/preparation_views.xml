@@ -53,7 +53,7 @@
     <field name="description" widget="html" nolabel="1"/>
 </div>
 <div class="o_meeting_point_planning" invisible="topic_id">
-    <div class="o_meeting_point_section_heading"><span class="o_meeting_point_sparkle"><i class="fa fa-magic" aria-hidden="true"/></span><div><strong>Give it a little shape</strong><small>Set the urgency and a realistic timebox.</small></div></div>
+    <div class="o_meeting_point_section_heading"><span class="o_meeting_point_sparkle"><i class="fa fa-magic" aria-hidden="true" title="Planning"/></span><div><strong>Give it a little shape</strong><small>Set the urgency and a realistic timebox.</small></div></div>
     <div class="o_meeting_point_priority_block"><label class="form-label" for="priority">How urgent is it?</label><field name="priority" widget="meeting_point_priority" nolabel="1"/></div>
     <div class="o_meeting_point_time_block"><label class="form-label" for="estimated_minutes">How long should we give it?</label><field name="estimated_minutes" widget="meeting_point_minutes" nolabel="1"/><div class="o_meeting_point_time_note"><i class="fa fa-lightbulb-o" aria-hidden="true"/> A rough estimate helps the group keep the meeting on track.</div></div>
     <div class="o_meeting_point_advanced_field"><label class="form-label" for="deadline">Add a deadline</label><field name="deadline" nolabel="1" placeholder="No deadline yet"/></div>
@@ -61,9 +61,9 @@
 <group><field name="presenter_partner_id"/></group>
 <field name="presenter_loaded" invisible="1"/>
 <div class="o_meeting_point_advanced_field"><label class="form-label" for="related_topic_ids">Related points</label><field name="related_topic_ids" nolabel="1" widget="many2many_tags" domain="[('company_id', '=', company_id), ('id', '!=', topic_id)]" placeholder="Link useful context"/></div>
-<div class="o_meeting_point_more_toggle" invisible="topic_id"><field name="more_options" widget="boolean_toggle"/><div><strong>More options</strong><small>Reuse a point and tune follow-ups.</small></div><i class="fa fa-sliders" aria-hidden="true"/></div>
+<div class="o_meeting_point_more_toggle" invisible="topic_id"><field name="more_options" widget="boolean_toggle"/><div><strong>More options</strong><small>Reuse a point and tune follow-ups.</small></div><i class="fa fa-sliders" aria-hidden="true" title="More options"/></div>
 <div class="o_meeting_point_more_panel" invisible="not more_options and not topic_id">
-    <div class="o_meeting_point_more_heading"><span class="o_meeting_point_more_icon"><i class="fa fa-magic" aria-hidden="true"/></span><div><strong>A few extra details</strong><small>Make this point easier to pick up and follow through.</small></div></div>
+    <div class="o_meeting_point_more_heading"><span class="o_meeting_point_more_icon"><i class="fa fa-magic" aria-hidden="true" title="Additional details"/></span><div><strong>A few extra details</strong><small>Make this point easier to pick up and follow through.</small></div></div>
     <div class="o_meeting_point_advanced_field"><label class="form-label" for="topic_id">Start from an existing point</label><field name="topic_id" nolabel="1" options="{'no_create': True}" domain="[('company_id', '=', company_id), ('series_id', '=', series_id)]" placeholder="Search this series"/></div>
     <field name="origin_topic_id" invisible="not origin_topic_id"/>
     <div class="o_meeting_point_followup_grid"><div class="o_meeting_point_advanced_field"><label class="form-label" for="followup_allowed_kinds">Follow-up types</label><field name="followup_allowed_kinds" nolabel="1" widget="many2many_tags"/></div><div class="o_meeting_point_advanced_field"><label class="form-label" for="followup_default_kind">Default follow-up</label><field name="followup_default_kind" nolabel="1"/></div></div>
