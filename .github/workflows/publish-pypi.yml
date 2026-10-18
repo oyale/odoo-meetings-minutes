@@ -86,16 +86,21 @@ jobs:
         include:
           - project: odoo-meetings-minutes
             wheel: odoo_meetings_minutes-*.whl
+            environment: pypi
           - project: odoo-addon-community-meetings
             wheel: odoo_addon_community_meetings-*.whl
+            environment: pypi-community-meetings
           - project: odoo-addon-community-meetings-calendar
             wheel: odoo_addon_community_meetings_calendar-*.whl
+            environment: pypi-community-meetings-calendar
           - project: odoo-addon-community-meetings-extension-demo
             wheel: odoo_addon_community_meetings_extension_demo-*.whl
+            environment: pypi-community-meetings-extension-demo
           - project: odoo-addon-community-meetings-project
             wheel: odoo_addon_community_meetings_project-*.whl
+            environment: pypi-community-meetings-project
     environment:
-      name: pypi
+      name: ${{ matrix.environment }}
       url: https://pypi.org/project/${{ matrix.project }}/
     permissions:
       id-token: write
