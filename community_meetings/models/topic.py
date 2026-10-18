@@ -213,11 +213,15 @@ class MeetingTopic(models.Model):
             )
         self.invalidate_recordset(["write_date"])
 
-    def _record_result(self, item):
+    def _record_result(self, item, already_locked=False):
         self.ensure_one()
         self.check_access("write")
-        self._lock_workflow()
-        self.invalidate_recordset()
+        if not already_locked:
+            self._lock_workflow()
+        if not already_locked:
+            # The lock may have waited for another transaction to change
+            # workflow state; refresh only the fields checked below.
+            self.invalidate_recordset(["state", "last_participation_id"])
         if item.is_followup:
             return
         if (
@@ -495,6 +499,8 @@ class AgendaParticipation(models.Model):
     # Synchronize reusable topics with meeting-specific agenda participation.
     def create(self, vals_list):  # noqa: C901
         prepared = []
+        pending_topic_indexes = []
+        pending_topic_values = []
         for original in vals_list:
             vals = dict(original)
             if vals.get("has_started"):
@@ -540,15 +546,19 @@ class AgendaParticipation(models.Model):
                         )
                         .id
                     )
-                topic = self.env["community.meeting.topic"].create(
+                pending_topic_indexes.append(len(prepared))
+                pending_topic_values.append(
                     {
                         **{k: vals[k] for k in CONTENT_FIELDS if k in vals},
                         "company_id": meeting.company_id.id,
                         "series_id": meeting.series_id.id,
                     }
                 )
-                vals["topic_id"] = topic.id
             prepared.append(vals)
+        if pending_topic_values:
+            topics = self.env["community.meeting.topic"].create(pending_topic_values)
+            for index, topic in zip(pending_topic_indexes, topics):
+                prepared[index]["topic_id"] = topic.id
         items = super().create(prepared)
         for item in items:
             if item.disposition != "open":
@@ -582,9 +592,17 @@ class AgendaParticipation(models.Model):
         if {"disposition", "decision_result"}.intersection(vals):
             self.meeting_id._lock_live_workflow()
             # Serialize changes across sessions sharing a point.
-            for topic in self.mapped("topic_id").sorted("id"):
+            topics = self.mapped("topic_id").sorted("id")
+            for topic in topics:
                 topic._lock_workflow()
+            # Read the post-lock state in one batch. _record_result then uses
+            # this fresh prefetch while applying each participation's result.
+            topics.invalidate_recordset(["state", "last_participation_id"])
+            topics.mapped("state")
+            topics.sudo().mapped("last_participation_id")
         result = super().write(vals)
+        if {"disposition", "decision_result"}.intersection(vals):
+            self.mapped("topic_id")
         for item in self:
             if item.actual_started_at and vals.get("disposition") in (
                 "discussed",
@@ -595,7 +613,7 @@ class AgendaParticipation(models.Model):
             if vals.get("disposition") == "deferred":
                 super(AgendaParticipation, item).write({"review_next_meeting": True})
             if {"disposition", "decision_result"}.intersection(vals) and item.topic_id:
-                item.topic_id._record_result(item)
+                item.topic_id._record_result(item, already_locked=True)
             content = {
                 k: item[k].id if k == "agenda_type_id" else item[k]
                 for k in CONTENT_FIELDS
@@ -700,10 +718,12 @@ class AgendaParticipation(models.Model):
         return self.topic_id.action_open()
 
     def _validate_followup_removal(self, actions):
-        for item in self.filtered(
+        items = self.filtered(
             lambda i: i.kind == "todo" and i.disposition == "closed"
-        ):
-            if not (item._followup_actions() - actions):
+        )
+        actions_by_topic = items._followup_actions_by_topic()
+        for item in items:
+            if not (actions_by_topic.get(item.topic_id.id) - actions):
                 raise ValidationError(
                     _(
                         "A resolved TODO must keep at least one non-cancelled "
@@ -713,14 +733,7 @@ class AgendaParticipation(models.Model):
 
     def _followup_actions(self):
         self.ensure_one()
-        actions = self.env["community.meeting.action"].search(
-            [
-                ("topic_id", "=", self.topic_id.id),
-                ("state", "!=", "cancelled"),
-                ("responsible_user_id", "!=", False),
-            ]
-        )
-        return actions.filtered(lambda action: action._has_execution_evidence())
+        return self._followup_actions_by_topic()[self.topic_id.id]
 
 
 class MeetingSeries(models.Model):

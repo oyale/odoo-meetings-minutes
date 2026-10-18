@@ -120,65 +120,114 @@ class CommunityMeetingAgendaItem(models.Model):
                 _("Agenda items cannot be added to approved or cancelled meetings.")
             )
 
-    @api.constrains("kind", "decision_result", "disposition")
-    def _check_workflow_requirements(self):
-        for item in self:
-            if item.kind != "decision" and item.decision_result:
+    def _active_workflow_resolutions(self):
+        resolutions = self.env["community.meeting.resolution"].search(
+            [
+                ("agenda_item_id", "in", self.ids),
+                ("status", "=", "active"),
+                ("decision_outcome", "!=", False),
+            ]
+        )
+        by_item = {}
+        for resolution in resolutions:
+            by_item.setdefault(resolution.agenda_item_id.id, resolution)
+        return by_item
+
+    def _workflow_todo_actions(self, workflow_items):
+        todo_items = workflow_items.filtered(
+            lambda row: row.kind == "todo" and row.disposition == "closed"
+        )
+        return todo_items._followup_actions_by_topic()
+
+    def _check_non_decision_resolution(self, workflow_items, resolutions_by_item):
+        if resolutions_by_item is None:
+            resolutions_by_item = workflow_items._active_workflow_resolutions()
+        if resolutions_by_item.get(self.id):
+            raise ValidationError(
+                _("Withdraw the decision agreement before changing the point type.")
+            )
+        return resolutions_by_item
+
+    def _check_decision_resolution(self, workflow_items, resolutions_by_item):
+        if resolutions_by_item is None:
+            resolutions_by_item = workflow_items._active_workflow_resolutions()
+        agreement = resolutions_by_item.get(self.id)
+        if (
+            self.disposition == "closed"
+            or self.decision_result in ("approved", "denied")
+            or agreement
+        ) and (
+            not agreement
+            or self.decision_result != agreement.decision_outcome
+            or self.disposition != "closed"
+        ):
+            raise ValidationError(
+                _(
+                    "Record an active agreement approving or rejecting this "
+                    "decision before closing it. The point's result must match "
+                    "that agreement."
+                )
+            )
+        return resolutions_by_item
+
+    def _followup_actions_by_topic(self):
+        topics = self.topic_id
+        if not topics:
+            return {}
+        action_model = self.env["community.meeting.action"]
+        actions_by_topic = {topic.id: action_model for topic in topics}
+        actions = self.env["community.meeting.action"].search(
+            [
+                ("topic_id", "in", topics.ids),
+                ("state", "!=", "cancelled"),
+                ("responsible_user_id", "!=", False),
+            ]
+        )
+        evidence_by_action = actions._execution_evidence_by_action()
+        actions = actions.filtered(lambda action: evidence_by_action.get(action.id))
+        if len(topics) == 1:
+            return {topics.id: actions}
+        actions.mapped("topic_id")
+        for action in actions:
+            actions_by_topic[action.topic_id.id] |= action
+        return actions_by_topic
+
+    def _check_workflow_item(self, workflow_items, state):
+        if self.kind != "decision":
+            if self.decision_result:
                 raise ValidationError(
                     _("Only decision agenda items can have a decision outcome.")
                 )
-            if item.kind != "decision" and self.env[
-                "community.meeting.resolution"
-            ].search_count(
-                [
-                    ("agenda_item_id", "=", item.id),
-                    ("status", "=", "active"),
-                    ("decision_outcome", "!=", False),
-                ]
-            ):
-                raise ValidationError(
-                    _("Withdraw the decision agreement before changing the point type.")
-                )
-            if (
-                item.decision_result in ("approved", "denied")
-                and item.disposition != "closed"
-            ):
-                raise ValidationError(
-                    _("An approved or denied decision must be marked as resolved.")
-                )
-            if item.kind == "decision":
-                agreement = self.env["community.meeting.resolution"].search(
-                    [
-                        ("agenda_item_id", "=", item.id),
-                        ("status", "=", "active"),
-                        ("decision_outcome", "!=", False),
-                    ],
-                    limit=1,
-                )
-                if (
-                    item.disposition == "closed"
-                    or item.decision_result in ("approved", "denied")
-                    or agreement
-                ) and (
-                    not agreement
-                    or item.decision_result != agreement.decision_outcome
-                    or item.disposition != "closed"
-                ):
-                    raise ValidationError(
-                        _(
-                            "Record an active agreement approving or rejecting this "
-                            "decision before closing it. The point's result must match "
-                            "that agreement."
-                        )
-                    )
-            if (
-                item.kind == "todo"
-                and item.disposition == "closed"
-                and not item._followup_actions()
-            ):
+            if state["resolutions"] is None:
+                state["resolutions"] = workflow_items._active_workflow_resolutions()
+            self._check_non_decision_resolution(
+                workflow_items, state["resolutions"]
+            )
+        if (
+            self.decision_result in ("approved", "denied")
+            and self.disposition != "closed"
+        ):
+            raise ValidationError(
+                _("An approved or denied decision must be marked as resolved.")
+            )
+        if self.kind == "decision":
+            if state["resolutions"] is None:
+                state["resolutions"] = workflow_items._active_workflow_resolutions()
+            self._check_decision_resolution(workflow_items, state["resolutions"])
+        if self.kind == "todo" and self.disposition == "closed":
+            if state["todo_actions"] is None:
+                state["todo_actions"] = self._workflow_todo_actions(workflow_items)
+            if not state["todo_actions"].get(self.topic_id.id):
                 raise ValidationError(
                     _("Create a follow-up task for this TODO before resolving it.")
                 )
+
+    @api.constrains("kind", "decision_result", "disposition")
+    def _check_workflow_requirements(self):
+        workflow_items = self
+        state = {"resolutions": None, "todo_actions": None}
+        for item in self:
+            item._check_workflow_item(workflow_items, state)
 
     @api.constrains(
         "disposition", "deferral_reason_code", "deferral_reason", "deferral_blocked_by"
@@ -239,6 +288,7 @@ class CommunityMeetingAgendaItem(models.Model):
             raise UserError(
                 _("Agenda items cannot be added to approved or cancelled meetings.")
             )
+        default_types = {}
         values_list = []
         for original_vals in vals_list:
             vals = dict(original_vals)
@@ -253,12 +303,15 @@ class CommunityMeetingAgendaItem(models.Model):
                 kind = vals.get("kind") or self.default_get(["kind"]).get(
                     "kind", "discussion"
                 )
-                agenda_type = self.env["community.meeting.agenda.type"].search(
-                    [("behavior", "=", kind), ("active", "=", True)],
-                    order="sequence, id",
-                    limit=1,
-                )
-                vals["agenda_type_id"] = agenda_type.id
+                if kind not in default_types:
+                    default_types[kind] = self.env[
+                        "community.meeting.agenda.type"
+                    ].search(
+                        [("behavior", "=", kind), ("active", "=", True)],
+                        order="sequence, id",
+                        limit=1,
+                    )
+                vals["agenda_type_id"] = default_types[kind].id
             if kind == "decision":
                 vals.setdefault("decision_result", "pending")
                 if vals.get("decision_result") in ("approved", "denied"):
@@ -347,10 +400,12 @@ class CommunityMeetingAgendaItem(models.Model):
         )
 
     def _check_todo_has_followup_action(self):
-        for item in self.filtered(
+        items = self.filtered(
             lambda row: row.kind == "todo" and row.disposition == "closed"
-        ):
-            if not item._followup_actions():
+        )
+        actions_by_topic = items._followup_actions_by_topic()
+        for item in items:
+            if not actions_by_topic.get(item.topic_id.id):
                 raise ValidationError(
                     _(
                         "A resolved TODO must keep at least one non-cancelled "

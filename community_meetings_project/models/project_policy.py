@@ -206,22 +206,32 @@ class Agenda(models.Model):
             raise UserError(
                 _("The task requirement is recorded by the point workflow.")
             )
+        snapshot_fields = (
+            "project_requirement_snapshot",
+            "task_scope_snapshot",
+            "allowed_project_snapshot_id",
+        )
+        groups = {}
         for item in self:
-            values = dict(vals)
+            snapshot = None
             if (
-                values.get("disposition") == "closed"
+                vals.get("disposition") == "closed"
                 and item.kind == "todo"
                 and item.disposition != "closed"
             ):
                 policy = item.meeting_id._project_policy()
-                values["project_requirement_snapshot"] = policy[
-                    "meeting_todo_requirement"
-                ]
-                values["task_scope_snapshot"] = policy["meeting_task_scope"]
-                values["allowed_project_snapshot_id"] = (
+                snapshot = (
+                    policy["meeting_todo_requirement"],
+                    policy["meeting_task_scope"],
                     item.meeting_id._meeting_project().id
                     if policy["meeting_task_scope"] == "configured"
                     else False
                 )
-            super(Agenda, item).write(values)
+            groups.setdefault(snapshot, self.browse())
+            groups[snapshot] |= item
+        for snapshot, items in groups.items():
+            values = dict(vals)
+            if snapshot is not None:
+                values.update(dict(zip(snapshot_fields, snapshot)))
+            super(Agenda, items).write(values)
         return True

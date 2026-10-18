@@ -205,11 +205,23 @@ class FollowupActivity(models.Model):
     )
     followup_activity_completed_on = fields.Datetime(readonly=True, copy=False)
 
+    def _native_execution_evidence_by_action(self):
+        activities = self.mapped("followup_activity_ids").exists()
+        activity_ids = set(activities.ids)
+        return {
+            action.id: bool(
+                activity_ids.intersection(action.followup_activity_ids.ids)
+                or action.followup_activity_completed_on
+            )
+            for action in self
+        }
+
+    def _execution_evidence_by_action(self):
+        return self._native_execution_evidence_by_action()
+
     def _has_execution_evidence(self):
         self.ensure_one()
-        return bool(
-            self.followup_activity_ids.exists() or self.followup_activity_completed_on
-        )
+        return self._execution_evidence_by_action()[self.id]
 
     def _sync_followup_activity(self):
         for action in self:

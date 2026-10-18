@@ -1,5 +1,8 @@
+from unittest.mock import patch
+
 from odoo.exceptions import AccessError, ValidationError
 from odoo.tests import TransactionCase, tagged
+
 from odoo.addons.mail.tests.common import MailCase
 
 
@@ -230,6 +233,62 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
         with self.assertRaises(ValidationError):
             self._meeting(attendee_partner_ids=[(6, 0, [cross_company.partner_id.id])])
 
+    def test_calendar_sync_validates_a_meeting_batch_before_creating_events(self):
+        valid = self._meeting(name="First valid batch invite")
+        invalid = self._meeting(name="Invalid batch invite")
+        invalid_partner = self.env["res.partner"].create(
+            {"name": "External batch invite"}
+        )
+        attendees = self.env["community.meeting"]._fields["attendee_partner_ids"]
+        self.env.cr.execute(
+            f"INSERT INTO {attendees.relation} ({attendees.column1}, {attendees.column2}) "
+            "VALUES (%s, %s)",
+            [invalid.id, invalid_partner.id],
+        )
+        invalid.invalidate_recordset(["attendee_partner_ids"])
+        self.env.cr.execute(
+            "UPDATE community_meeting SET state='scheduled' WHERE id IN %s",
+            [tuple((valid | invalid).ids)],
+        )
+        (valid | invalid).invalidate_recordset(["state"])
+        (valid | invalid)._lock_calendar_event()
+
+        with self.assertRaises(ValidationError):
+            (valid | invalid)._sync_calendar_event()
+
+        self.assertFalse(valid.calendar_event_ids)
+        self.assertFalse(invalid.calendar_event_ids)
+
+    def test_calendar_sync_creates_events_in_one_batch_per_owner(self):
+        self.env["ir.config_parameter"].sudo().set_param("calendar.block_mail", "1")
+        meetings = self._meeting(name="First batch event") | self._meeting(
+            name="Second batch event"
+        )
+        self.env.cr.execute(
+            "UPDATE community_meeting SET state='scheduled' WHERE id IN %s",
+            [tuple(meetings.ids)],
+        )
+        meetings.invalidate_recordset(["state"])
+        meetings._lock_calendar_event()
+
+        calendar_event_class = type(self.env["calendar.event"])
+        original_create = calendar_event_class._community_meetings_calendar_create
+        batch_sizes = []
+
+        def record_create(events, vals_list):
+            batch_sizes.append(len(vals_list))
+            return original_create(events, vals_list)
+
+        with patch.object(
+            calendar_event_class,
+            "_community_meetings_calendar_create",
+            record_create,
+        ):
+            meetings._sync_calendar_event()
+
+        self.assertEqual(batch_sizes, [2])
+        self.assertEqual(len(meetings.calendar_event_ids), 2)
+
     def test_cancel_removes_event_and_notifies_invitees(self):
         meeting = self._meeting()
         meeting.action_schedule()
@@ -303,10 +362,9 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
     def test_schedule_rollback_does_not_leave_event_or_send_invitation(self):
         meeting = self._meeting()
         mail_ids_before = set(self.env["mail.mail"].search([]).ids)
-        with self.assertRaises(RuntimeError):
-            with self.env.cr.savepoint():
-                meeting.action_schedule()
-                raise RuntimeError("rollback scheduled meeting")
+        with self.assertRaises(RuntimeError), self.env.cr.savepoint():
+            meeting.action_schedule()
+            raise RuntimeError("rollback scheduled meeting")
         meeting.invalidate_recordset(["calendar_event_ids", "state"])
         self.assertFalse(meeting.calendar_event_ids)
         self.assertEqual(set(self.env["mail.mail"].search([]).ids), mail_ids_before)

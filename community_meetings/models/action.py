@@ -149,7 +149,7 @@ class CommunityMeetingAction(models.Model):
         topics = self.mapped("topic_id")
         for topic in topics.sorted("id"):
             topic._lock_workflow()
-        for item in (
+        items = (
             self.env["community.meeting.agenda.item"]
             .sudo()
             .search(
@@ -159,8 +159,10 @@ class CommunityMeetingAction(models.Model):
                     ("disposition", "=", "closed"),
                 ]
             )
-        ):
-            remaining = item._followup_actions() - self
+        )
+        actions_by_topic = items._followup_actions_by_topic()
+        for item in items:
+            remaining = actions_by_topic[item.topic_id.id] - self
             if not remaining:
                 raise ValidationError(
                     _(

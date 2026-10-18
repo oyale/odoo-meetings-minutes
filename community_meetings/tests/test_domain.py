@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from odoo import fields
 from odoo.exceptions import UserError, ValidationError
+from odoo.models import BaseModel
 from odoo.tests import TransactionCase, tagged
 
 
@@ -1216,6 +1217,115 @@ class TestMeetingDomain(TransactionCase):
         item.write({"disposition": "closed"})
         task.write({"state": "done"})
         self.assertEqual(task.state, "done")
+
+    def test_agenda_creation_batches_new_topic_creation(self):
+        meeting = self.env["community.meeting"].create(
+            {"name": "Batched topic creation"}
+        )
+        topic_class = type(self.env["community.meeting.topic"])
+        original_create = topic_class.create
+        batch_sizes = []
+
+        def record_create(topics, vals_list):
+            batch_sizes.append(len(vals_list))
+            return original_create(topics, vals_list)
+
+        with patch.object(topic_class, "create", record_create):
+            items = self.env["community.meeting.agenda.item"].create(
+                [
+                    {"meeting_id": meeting.id, "name": "First new point"},
+                    {"meeting_id": meeting.id, "name": "Second new point"},
+                ]
+            )
+
+        self.assertEqual(batch_sizes, [2])
+        self.assertEqual(len(items.topic_id), 2)
+
+    def test_followup_actions_by_topic_avoids_topic_field_load_for_one_topic(self):
+        series = self.env["community.meeting.series"].create(
+            {"name": "Shared topic lookup series"}
+        )
+        meeting = self.env["community.meeting"].create(
+            {"name": "One-topic lookup", "series_id": series.id}
+        )
+        item = self.env["community.meeting.agenda.item"].create(
+            {"meeting_id": meeting.id, "name": "One-topic TODO", "kind": "todo"}
+        )
+        action = self.env["community.meeting.action"].create(
+            {
+                "meeting_id": meeting.id,
+                "agenda_item_id": item.id,
+                "name": "One-topic action",
+                "responsible_user_id": self.editor.id,
+                "followup_kind": "activity",
+            }
+        )
+        mapped_topic_sizes = []
+        original_mapped = BaseModel.mapped
+
+        def count_action_topic_mapping(records, field_name):
+            if records._name == "community.meeting.action" and field_name == "topic_id":
+                mapped_topic_sizes.append(len(records))
+            return original_mapped(records, field_name)
+
+        with patch.object(BaseModel, "mapped", count_action_topic_mapping):
+            actions_by_topic = item._followup_actions_by_topic()
+        self.assertFalse(
+            mapped_topic_sizes,
+            "single-topic grouping should return before mapping action topic_id",
+        )
+        self.assertEqual(actions_by_topic[item.topic_id.id], action)
+
+        same_topic_meeting = self.env["community.meeting"].create(
+            {"name": "Second participation of same topic", "series_id": series.id}
+        )
+        same_topic_item = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": same_topic_meeting.id,
+                "topic_id": item.topic_id.id,
+                "name": "Repeated topic",
+            }
+        )
+        same_topic_result = (item | same_topic_item)._followup_actions_by_topic()
+        self.assertEqual(set(same_topic_result), {item.topic_id.id})
+        self.assertEqual(same_topic_result[item.topic_id.id], action)
+
+        other_topic_meeting = self.env["community.meeting"].create(
+            {"name": "Second topic meeting", "series_id": series.id}
+        )
+        other_item = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": other_topic_meeting.id,
+                "name": "Different topic",
+                "kind": "todo",
+            }
+        )
+        other_action = self.env["community.meeting.action"].create(
+            {
+                "meeting_id": other_topic_meeting.id,
+                "agenda_item_id": other_item.id,
+                "name": "Different-topic action",
+                "responsible_user_id": self.editor.id,
+                "followup_kind": "activity",
+            }
+        )
+        multiple_topics = (item | other_item)._followup_actions_by_topic()
+        self.assertEqual(multiple_topics[item.topic_id.id], action)
+        self.assertEqual(multiple_topics[other_item.topic_id.id], other_action)
+
+        empty_topic_meeting = self.env["community.meeting"].create(
+            {"name": "Topic without actions", "series_id": series.id}
+        )
+        empty_item = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": empty_topic_meeting.id,
+                "name": "No-action topic",
+                "kind": "todo",
+            }
+        )
+        empty_result = empty_item._followup_actions_by_topic()
+        self.assertIn(empty_item.topic_id.id, empty_result)
+        self.assertFalse(empty_result[empty_item.topic_id.id])
 
     def test_native_followup_creates_one_activity_per_responsible_person(self):
         other = (
