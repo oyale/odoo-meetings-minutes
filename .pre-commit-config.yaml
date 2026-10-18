@@ -3,8 +3,24 @@ repos:
     rev: 23.11.0
     hooks:
       - id: towncrier-check
-        args: [--config=towncrier.toml, --compare-with=origin/18.0]
-        files: ^(community_meetings|community_meetings_calendar|community_meetings_project|community_meetings_extension_demo)/
+        name: Require a Community Meetings news fragment
+        args: [--config=towncrier-check/community_meetings.toml, --dir=., --compare-with=origin/18.0]
+        files: ^community_meetings/
+        pass_filenames: false
+      - id: towncrier-check
+        name: Require a Calendar Integration news fragment
+        args: [--config=towncrier-check/community_meetings_calendar.toml, --dir=., --compare-with=origin/18.0]
+        files: ^community_meetings_calendar/
+        pass_filenames: false
+      - id: towncrier-check
+        name: Require a Project Integration news fragment
+        args: [--config=towncrier-check/community_meetings_project.toml, --dir=., --compare-with=origin/18.0]
+        files: ^community_meetings_project/
+        pass_filenames: false
+      - id: towncrier-check
+        name: Require an Extension Demo news fragment
+        args: [--config=towncrier-check/community_meetings_extension_demo.toml, --dir=., --compare-with=origin/18.0]
+        files: ^community_meetings_extension_demo/
         pass_filenames: false
   - repo: https://github.com/sbidoul/whool
     rev: v1.3

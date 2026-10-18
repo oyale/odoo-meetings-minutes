@@ -5,7 +5,6 @@ name = "Odoo Meetings Minutes"
 directory = "."
 filename = "docs/user/release-notes.md"
 start_string = "<!-- towncrier release notes start -->"
-issue_format = "[#{issue}](https://github.com/oyale/odoo-meetings-minutes/issues/{issue})"
 
 [[tool.towncrier.section]]
 name = "Community Meetings"
