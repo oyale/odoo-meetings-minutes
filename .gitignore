@@ -8,6 +8,7 @@ venv/
 build/
 dist/
 *.egg-info/
+README.rst
 docs/_build/
 .idea/
 .vscode/
