@@ -2,13 +2,42 @@ name: Tests
 
 on:
   workflow_call:
+    inputs:
+      force:
+        description: Run the Odoo test matrix regardless of changed paths
+        required: false
+        type: boolean
+        default: false
   pull_request:
     branches: [18.0]
   push:
     branches: [18.0]
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      run_tests: ${{ steps.filter.outputs.run_tests }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Detect Odoo-related changes
+        id: filter
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BASE: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+          FORCE_TESTS: ${{ inputs.force }}
+        run: python .github/scripts/filter_odoo_tests.py
+
   test:
+    needs: changes
+    if: needs.changes.outputs.run_tests == 'true'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:

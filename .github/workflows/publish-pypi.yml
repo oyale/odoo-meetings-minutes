@@ -76,6 +76,8 @@ jobs:
 
   test:
     uses: ./.github/workflows/test.yml
+    with:
+      force: true
 
   publish:
     needs: [build, test]
