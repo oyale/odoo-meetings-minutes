@@ -10,6 +10,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.release-packages.outputs.matrix }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -56,14 +58,110 @@ jobs:
               raise SystemExit("Could not identify the metapackage version")
           path.write_text(updated, encoding="utf-8")
           PY
+      - name: Select packages changed since the previous release
+        id: release-packages
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+
+          addons = {
+              "community_meetings": {
+                  "addon": "community_meetings",
+                  "project": "odoo-addon-community-meetings",
+                  "wheel": "odoo_addon_community_meetings-*.whl",
+                  "environment": "pypi-community-meetings",
+              },
+              "community_meetings_calendar": {
+                  "addon": "community_meetings_calendar",
+                  "project": "odoo-addon-community-meetings-calendar",
+                  "wheel": "odoo_addon_community_meetings_calendar-*.whl",
+                  "environment": "pypi-community-meetings-calendar",
+              },
+              "community_meetings_extension_demo": {
+                  "addon": "community_meetings_extension_demo",
+                  "project": "odoo-addon-community-meetings-extension-demo",
+                  "wheel": "odoo_addon_community_meetings_extension_demo-*.whl",
+                  "environment": "pypi-community-meetings-extension-demo",
+              },
+              "community_meetings_project": {
+                  "addon": "community_meetings_project",
+                  "project": "odoo-addon-community-meetings-project",
+                  "wheel": "odoo_addon_community_meetings_project-*.whl",
+                  "environment": "pypi-community-meetings-project",
+              },
+          }
+          current = os.environ["RELEASE_TAG"]
+          previous = subprocess.run(
+              [
+                  "git",
+                  "describe",
+                  "--tags",
+                  "--abbrev=0",
+                  "--match",
+                  "18.0.*",
+                  "--match",
+                  "v18.0.*",
+                  f"{current}^",
+              ],
+              check=False,
+              capture_output=True,
+              text=True,
+          )
+          if previous.returncode:
+              changed = set(addons)
+          else:
+              paths = subprocess.run(
+                  ["git", "diff", "--name-only", previous.stdout.strip(), current],
+                  check=True,
+                  capture_output=True,
+                  text=True,
+              ).stdout.splitlines()
+              changed = {
+                  name
+                  for name in addons
+                  if any(
+                      path.startswith(f"{name}/")
+                      and not path.startswith(f"{name}/readme/newsfragments/")
+                      for path in paths
+                  )
+              }
+
+          matrix = [addons[name] for name in addons if name in changed]
+          matrix.append(
+              {
+                  "addon": None,
+                  "project": "odoo-meetings-minutes",
+                  "wheel": "odoo_meetings_minutes-*.whl",
+                  "environment": "pypi",
+              }
+          )
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"matrix={json.dumps(matrix)}\n")
+          print("Publishing:", ", ".join(item["project"] for item in matrix))
+          PY
       - name: Build addon wheels
         env:
-          WHOOL_POST_VERSION_STRATEGY_OVERRIDE: none
+          RELEASE_PACKAGES: ${{ steps.release-packages.outputs.matrix }}
         run: |
           python -m pip install --upgrade build
-          for addon in community_meetings community_meetings_project community_meetings_calendar community_meetings_extension_demo; do
-            python -m build --wheel --outdir dist "$addon"
-          done
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+
+          packages = json.loads(os.environ["RELEASE_PACKAGES"])
+          for package in packages:
+              addon = package["addon"]
+              if addon:
+                  subprocess.run(
+                      ["python", "-m", "build", "--wheel", "--outdir", "dist", addon],
+                      check=True,
+                  )
+          PY
       - name: Build the suite metapackage
         run: python -m build --wheel --outdir dist setup/_metapackage
       - name: Check package metadata
@@ -87,22 +185,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - project: odoo-meetings-minutes
-            wheel: odoo_meetings_minutes-*.whl
-            environment: pypi
-          - project: odoo-addon-community-meetings
-            wheel: odoo_addon_community_meetings-*.whl
-            environment: pypi-community-meetings
-          - project: odoo-addon-community-meetings-calendar
-            wheel: odoo_addon_community_meetings_calendar-*.whl
-            environment: pypi-community-meetings-calendar
-          - project: odoo-addon-community-meetings-extension-demo
-            wheel: odoo_addon_community_meetings_extension_demo-*.whl
-            environment: pypi-community-meetings-extension-demo
-          - project: odoo-addon-community-meetings-project
-            wheel: odoo_addon_community_meetings_project-*.whl
-            environment: pypi-community-meetings-project
+        include: ${{ fromJSON(needs.build.outputs.packages) }}
     environment:
       name: ${{ matrix.environment }}
       url: https://pypi.org/project/${{ matrix.project }}/
