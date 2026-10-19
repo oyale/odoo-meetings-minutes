@@ -10,6 +10,7 @@ The suite creates and removes one scheduled meeting per case.
 import os
 import time
 import unittest
+import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urljoin
@@ -49,8 +50,8 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         cls.browser.close()
         cls.playwright.stop()
 
-    def rpc(self, model, method, args, kwargs=None):
-        response = self.page.request.post(
+    def rpc(self, model, method, args, kwargs=None, page=None):
+        response = (page or self.page).request.post(
             urljoin(BASE_URL + "/", "web/dataset/call_kw/%s/%s" % (model, method)),
             data={"jsonrpc": "2.0", "method": "call", "params": {
                 "model": model, "method": method, "args": args, "kwargs": kwargs or {},
@@ -130,8 +131,8 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
     def outcome(self, kind):
         return self.card(kind, begin=False).locator(".o_live_outcome_badge")
 
-    def record(self, model, record_id, fields):
-        return self.rpc(model, "read", [[record_id], fields])[0]
+    def record(self, model, record_id, fields, page=None):
+        return self.rpc(model, "read", [[record_id], fields], page=page)[0]
 
     def wait_timer(self, item_id, running):
         deadline = time.monotonic() + 8
@@ -460,7 +461,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
 
     def test_series_structural_points_render_in_live_meeting(self):
         series = self.rpc("community.meeting.series", "create", [{
-            "name": "Structural live",
+            "name": "Structural live " + uuid.uuid4().hex[:8],
             "has_minutes_approval_point": True,
             "has_next_meeting_point": True,
         }])
@@ -487,7 +488,10 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(self.page.locator(".o_live_minutes_approval")).to_contain_text("Structural previous meeting")
 
     def test_review_previous_minutes_opens_live_and_approves(self):
-        series = self.rpc("community.meeting.series", "create", [{"name": "Review minutes series"}])
+        series = self.rpc(
+            "community.meeting.series", "create",
+            [{"name": "Review minutes series " + uuid.uuid4().hex[:8]}],
+        )
         self.rpc("community.meeting", "write", [[self.meeting_id], {"series_id": series}])
         self.rpc("community.meeting", "action_mark_held", [[self.meeting_id]])
         self.rpc("community.meeting", "action_draft_minutes", [[self.meeting_id]])
@@ -569,7 +573,10 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             expect(page.get_by_text("PRIVATE_EDITORIAL_CONTENT")).to_have_count(0)
             page.get_by_role("button", name="Approve Minutes", exact=True).click()
             expect(page.locator(".o_live_topbar")).to_contain_text("Approved")
-            self.assertEqual(self.record("community.meeting", self.meeting_id, ["state"])["state"], "approved")
+            self.assertEqual(
+                self.record("community.meeting", self.meeting_id, ["state"], page=page)["state"],
+                "approved",
+            )
         finally:
             context.close()
 
@@ -629,7 +636,13 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
 
         self.page.get_by_label("Meeting name").fill("Paused meeting header edited")
         self.page.get_by_label("Meeting name").press("Tab")
-        self.page.get_by_label("Minutes secretary").select_option(label=LOGIN)
+        secretary = self.rpc(
+            "res.users", "search_read", [[("login", "=", LOGIN)]],
+            {"fields": ["name"], "limit": 1},
+        )[0]
+        self.page.get_by_label("Minutes secretary").select_option(
+            value=str(secretary["id"])
+        )
         self.page.locator(".o_live_more_details > summary").click()
         self.page.get_by_label("Location").fill("Board Room")
         self.page.get_by_label("Location").press("Tab")
@@ -642,14 +655,14 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             ["name", "secretary_id", "location", "meeting_url"],
         )
         self.assertEqual(saved["name"], "Paused meeting header edited")
-        self.assertEqual(saved["secretary_id"][1], LOGIN)
+        self.assertEqual(saved["secretary_id"][0], secretary["id"])
         self.assertEqual(saved["location"], "Board Room")
         self.assertEqual(saved["meeting_url"], "https://meet.example.test/board")
         self.page.reload(wait_until="domcontentloaded")
         self.page.locator(".o_live_more_details > summary").click()
         expect(self.page.get_by_label("Meeting name")).to_have_value("Paused meeting header edited")
         expect(self.page.get_by_label("Location", exact=True)).to_have_value("Board Room")
-        expect(self.page.get_by_label("Minutes secretary").locator("option:checked")).to_have_text(LOGIN)
+        expect(self.page.get_by_label("Minutes secretary").locator("option:checked")).to_have_text(secretary["name"])
 
 
     def test_decision_can_be_undone_during_running_meeting(self):
@@ -717,8 +730,28 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         card.get_by_role("button", name="Undo point result").click()
         card.get_by_role("button", name="Reopen point").click()
         card.get_by_role("button", name="Resume point").click()
+        deadline = time.time() + 8
+        point = self.record(
+            "community.meeting.agenda.item", self.item_ids["decision"],
+            ["actual_started_at"],
+        )
+        while time.time() < deadline and not point["actual_started_at"]:
+            time.sleep(0.2)
+            point = self.record(
+                "community.meeting.agenda.item", self.item_ids["decision"],
+                ["actual_started_at"],
+            )
+        self.assertTrue(point["actual_started_at"], "Point should be resumed before postponing it")
+        expand = card.locator(".o_live_expand")
+        if expand.get_attribute("aria-expanded") == "false":
+            expand.click()
+        expect(card.get_by_role("button", name="Postpone agenda point")).to_be_visible()
         card.get_by_role("button", name="Postpone agenda point").click()
-        card.get_by_label("Reason for postponing").fill("The approval needs review.")
+        if expand.get_attribute("aria-expanded") == "false":
+            expand.click()
+        reason = card.get_by_label("Reason for postponing")
+        expect(reason).to_be_visible()
+        reason.fill("The approval needs review.")
         card.get_by_role("button", name="Leave postponed").click()
         deadline = time.time() + 8
         point = self.record("community.meeting.agenda.item", self.item_ids["decision"], ["disposition"])

@@ -1351,7 +1351,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         wizard.locator('button[name="action_next"]').click()
         expect(
             wizard.get_by_text(
-                "There are no points to carry over into this meeting.", exact=True
+                "There are no points to carry forward into this meeting.", exact=True
             )
         ).to_be_visible()
         expect(wizard.locator('.o_field_widget[name="carry_line_ids"]')).not_to_be_visible()
@@ -1539,7 +1539,9 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             '.o_field_widget[name="carry_line_ids"] tr.o_data_row'
         ).filter(has_text=source_name)
         expect(row).to_be_visible()
-        expect(row.locator('input[data-value="include"]')).to_be_checked()
+        expect(
+            row.get_by_role("button", name="Accept", exact=True)
+        ).to_have_class(re.compile(r"(?:^|\s)is-selected(?:\s|$)"))
         wizard.locator('button[name="action_next"]').click()
         wizard.locator('button[name="action_next"]').click()
         expect(
@@ -2086,10 +2088,14 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         expect(rows).to_have_count(1)
         row = rows.first
         row.locator('td[name="decision"]').click()
-        row.locator('input[data-value="discard"]').check()
+        discard = row.get_by_role("button", name="Discard", exact=True)
+        discard.click()
+        expect(discard).to_have_class(re.compile(r"(?:^|\s)is-selected(?:\s|$)"))
         wizard.locator('button[name="action_back"]').click()
         wizard.locator('button[name="action_next"]').click()
-        expect(row.locator('input[data-value="discard"]')).to_be_checked()
+        expect(
+            row.get_by_role("button", name="Discard", exact=True)
+        ).to_have_class(re.compile(r"(?:^|\s)is-selected(?:\s|$)"))
         wizard.locator('button[name="action_next"]').click()
         wizard.locator('button[name="action_next"]').click()
         wizard.locator('button[name="action_finish"]').click()
@@ -2270,9 +2276,10 @@ def run_suite(test_case=FullMeetingBrowserChecks, actions=ACTIONS):
         print(json.dumps(actions, indent=2))
         raise SystemExit(0)
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(test_case)
-    if len(sys.argv) > 1:
+    selectors = [argument.rsplit(".", 1)[-1] for argument in sys.argv[1:] if not argument.startswith("-")]
+    if selectors:
         suite = unittest.TestSuite(
-            t for t in suite if any(part in t._testMethodName for part in sys.argv[1:])
+            t for t in suite if any(part in t._testMethodName for part in selectors)
         )
     result = unittest.TextTestRunner(verbosity=2, resultclass=CoverageResult).run(suite)
     covered = [
@@ -2310,7 +2317,10 @@ def run_suite(test_case=FullMeetingBrowserChecks, actions=ACTIONS):
     )
     raise SystemExit(
         0
-        if result.wasSuccessful() and not result.skipped and (len(sys.argv) > 1 or report["percent"] >= 90)
+        if result.wasSuccessful()
+        and result.testsRun > 0
+        and not result.skipped
+        and (selectors or report["percent"] >= 90)
         else 1
     )
 
