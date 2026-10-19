@@ -2,7 +2,6 @@ from . import meeting_kind
 from . import meeting
 from . import minutes_approval
 from . import series
-from . import recurring_point
 from . import agenda_item
 from . import agenda_type
 from . import resolution
@@ -16,6 +15,7 @@ from . import topic
 from . import preparation
 from . import followup_kind
 from . import followup_activity
+from . import recurring_point
 from . import creation_wizard
 from . import recurring_point_wizard
 from . import series_wizard

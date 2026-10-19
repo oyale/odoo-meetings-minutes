@@ -77,14 +77,17 @@ class MeetingSeriesAgendaTemplate(models.Model):
         if meeting.series_id != self.series_id:
             raise ValidationError(_("A recurring point can only be added to a meeting in its series."))
 
-        previous_item = self.env["community.meeting.agenda.item"].search(
+        previous_items = self.env["community.meeting.agenda.item"].search(
             [
                 ("topic_id.recurring_template_id", "=", self.id),
                 ("meeting_id.series_id", "=", self.series_id.id),
                 ("meeting_id.start_datetime", "<", meeting.start_datetime),
-            ],
-            order="meeting_id.start_datetime desc, id desc",
-            limit=1,
+            ]
+        )
+        previous_item = max(
+            previous_items,
+            key=lambda item: (item.meeting_id.start_datetime, item.id),
+            default=self.env["community.meeting.agenda.item"],
         )
         topic = self.env["community.meeting.topic"].create(
             {

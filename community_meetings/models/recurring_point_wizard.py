@@ -1,7 +1,7 @@
 from odoo import api, fields, models
 
 
-class MeetingCreateWizard(models.Model):
+class MeetingCreateWizard(models.TransientModel):
     _inherit = "community.meeting.create.wizard"
 
     recurring_line_ids = fields.One2many(

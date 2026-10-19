@@ -1,11 +1,4 @@
 {
   "schema_version": 1,
-  "pending": [
-    {
-      "ticket": "16",
-      "addon": "community_meetings",
-      "area": "tests_and_validation",
-      "action": "Add and run a Playwright journey for recurring template definition, include/skip choices across meetings, and previous-occurrence linking on a fresh disposable database via .dev_tooling alternate port; use an existing editor test credential."
-    }
-  ]
+  "pending": []
 }

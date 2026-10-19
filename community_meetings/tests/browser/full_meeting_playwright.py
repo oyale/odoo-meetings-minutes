@@ -137,6 +137,11 @@ ACTIONS = {
         "review meeting summary",
     ],
     "test_series_creation": ["create series", "new meeting from series"],
+    "test_recurring_agenda_template_selection_and_lineage": [
+        "create a recurring agenda template",
+        "include and skip template per meeting",
+        "link occurrence to previous occurrence",
+    ],
     "test_carryover_request": [
         "request carryover",
         "accept carryover",
@@ -1077,6 +1082,126 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             self.page.locator('.o_field_widget[name="series_id"] input')
         ).to_have_value(name)
         # Leave the unsaved meeting without persisting it.
+
+    def test_recurring_agenda_template_selection_and_lineage(self):
+        suffix = uuid.uuid4().hex[:8]
+        series_name = "Browser recurring " + suffix
+        template_name = "Recurring review " + suffix
+        series_id = self.rpc("community.meeting.series", "create", [{"name": series_name}])
+        self.retained.append({"model": "community.meeting.series", "id": series_id})
+        self.page.goto(
+            "%s/web#model=community.meeting.series&id=%s&view_type=form"
+            % (BASE_URL, series_id)
+        )
+        self.page.get_by_role("tab", name="Recurring agenda").click()
+        template_list = self.page.locator(
+            '.o_field_widget[name="recurring_point_ids"]'
+        )
+        template_list.get_by_text("Add a line", exact=True).click()
+        new_row = template_list.locator("tr.o_data_row").last
+        name_cell = new_row.locator('td[name="name"]')
+        name_cell.click()
+        name_input = name_cell.locator("input")
+        name_input.fill(template_name)
+        expect(name_input).to_have_value(template_name)
+        name_input.press("Tab")
+        self.page.locator(".o_form_button_save").click()
+        template_row = template_list.locator("tr.o_data_row").filter(
+            has_text=template_name
+        )
+        expect(template_row).to_be_visible()
+        template_ids = self.rpc(
+            "community.meeting.series.agenda.template", "search",
+            [[("series_id", "=", series_id), ("name", "=", template_name)]],
+        )
+        self.assertEqual(len(template_ids), 1)
+        self.rpc(
+            "community.meeting.series.agenda.template", "write",
+            [template_ids, {"estimated_minutes": 12}],
+        )
+
+        def create_meeting(title, start, include):
+            self.page.goto(
+                "%s/web#model=community.meeting.series&id=%s&view_type=form"
+                % (BASE_URL, series_id)
+            )
+            self.page.locator('button[name="action_new_meeting"]').click()
+            wizard = self.page.get_by_role("dialog").last
+            wizard.locator('button[name="action_next"]').click()
+            wizard.locator('.o_field_widget[name="name"] input').fill(title)
+            wizard.locator('.o_field_widget[name="start_datetime"] input').fill(start)
+            wizard.locator('button[name="action_next"]').click()
+            wizard.locator('button[name="action_next"]').click()
+            wizard.locator('button[name="action_next"]').click()
+            row = wizard.locator(
+                '.o_field_widget[name="recurring_line_ids"] tr.o_data_row'
+            ).filter(has_text=template_name)
+            expect(row).to_be_visible()
+            toggle = row.locator('input[type="checkbox"]')
+            expect(toggle).to_be_checked()
+            if not include:
+                toggle.uncheck()
+                expect(toggle).not_to_be_checked()
+            wizard.locator('button[name="action_next"]').click()
+            summary = wizard.locator('.o_field_widget[name="review_summary"]')
+            if include:
+                expect(summary).to_contain_text(template_name)
+            else:
+                expect(summary).not_to_contain_text(template_name)
+            wizard.locator('button[name="action_finish"]').click()
+            expect(wizard).not_to_be_visible(timeout=30000)
+            ids = self.rpc(
+                "community.meeting", "search",
+                [[("series_id", "=", series_id), ("name", "=", title)]],
+            )
+            self.assertEqual(len(ids), 1)
+            self.retained.append({"model": "community.meeting", "id": ids[0]})
+            return ids[0]
+
+        first_meeting = create_meeting(
+            series_name + " first", "11/02/2026 10:00:00", True
+        )
+        skipped_meeting = create_meeting(
+            series_name + " skipped", "11/09/2026 10:00:00", False
+        )
+        later_meeting = create_meeting(
+            series_name + " later", "11/16/2026 10:00:00", True
+        )
+
+        def recurring_topic(meeting_id):
+            item_ids = self.rpc(
+                "community.meeting.agenda.item", "search",
+                [[("meeting_id", "=", meeting_id)]],
+            )
+            if not item_ids:
+                return False
+            topic_ids = self.rpc(
+                "community.meeting.agenda.item", "search_read",
+                [[("id", "in", item_ids)]], {"fields": ["topic_id"]},
+            )
+            ids = [row["topic_id"][0] for row in topic_ids if row["topic_id"]]
+            topics = self.rpc(
+                "community.meeting.topic", "search_read",
+                [[("id", "in", ids), ("recurring_template_id", "!=", False)]],
+                {"fields": ["id", "previous_occurrence_id"]},
+            )
+            return topics[0] if topics else False
+
+        first_topic = recurring_topic(first_meeting)
+        self.assertTrue(first_topic)
+        self.assertFalse(recurring_topic(skipped_meeting))
+        later_topic = recurring_topic(later_meeting)
+        self.assertTrue(later_topic)
+        self.assertEqual(later_topic["previous_occurrence_id"][0], first_topic["id"])
+
+        self.rpc("community.meeting", "action_schedule", [[later_meeting]])
+        self.page.goto(
+            "%s/web#model=community.meeting&id=%s&view_type=form"
+            % (BASE_URL, later_meeting)
+        )
+        self.page.get_by_role("button", name="Open Meeting").click()
+        card = self.page.locator(".o_live_agenda_card").filter(has_text=template_name)
+        expect(card).to_contain_text("Previous occurrence")
 
     def test_carryover_request(self):
         series = self.rpc(
