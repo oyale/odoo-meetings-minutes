@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
     <record id="rule_meeting_company" model="ir.rule">
         <field name="name">Meetings in allowed companies</field>

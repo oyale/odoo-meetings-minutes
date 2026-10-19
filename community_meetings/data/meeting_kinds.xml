@@ -1,7 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo noupdate="1">
     <record id="kind_operational" model="community.meeting.kind">
         <field name="name">Operational</field>
         <field name="code">operational</field>
-        <field name="sequence">10</field>
+        <field name="sequence" eval="10" />
     </record>
 </odoo>

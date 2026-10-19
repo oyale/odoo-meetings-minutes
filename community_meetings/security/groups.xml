@@ -1,23 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
     <record id="module_category_meeting_reader" model="ir.module.category">
         <field name="name">Meetings</field>
         <field name="parent_id" ref="base.module_category_services"/>
-        <field name="sequence">40</field>
+        <field name="sequence" eval="40" />
     </record>
     <record id="module_category_meeting_editor" model="ir.module.category">
         <field name="name">Meetings</field>
         <field name="parent_id" ref="base.module_category_services"/>
-        <field name="sequence">41</field>
+        <field name="sequence" eval="41" />
     </record>
     <record id="module_category_meeting_approver" model="ir.module.category">
         <field name="name">Meetings</field>
         <field name="parent_id" ref="base.module_category_services"/>
-        <field name="sequence">42</field>
+        <field name="sequence" eval="42" />
     </record>
     <record id="module_category_meeting_manager" model="ir.module.category">
         <field name="name">Meetings</field>
         <field name="parent_id" ref="base.module_category_services"/>
-        <field name="sequence">43</field>
+        <field name="sequence" eval="43" />
     </record>
     <record id="group_agenda_proposer" model="res.groups">
         <field name="name">Meeting Agenda Proposer</field>

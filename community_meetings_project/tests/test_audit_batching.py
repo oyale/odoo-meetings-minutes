@@ -127,9 +127,12 @@ class TestAuditBatching(TransactionCase):
             # Legacy addons often refine the inherited predicate.
             return original_evidence(record) and record.id != action.id
 
-        with patch.object(action_class, "_has_execution_evidence", extension_evidence):
-            with self.assertRaises(ValidationError), self.cr.savepoint():
-                self.item.write({"disposition": "closed"})
+        with (
+            patch.object(action_class, "_has_execution_evidence", extension_evidence),
+            self.assertRaises(ValidationError),
+            self.cr.savepoint(),
+        ):
+            self.item.write({"disposition": "closed"})
 
         self.assertIn(action.id, calls)
         self.assertEqual(self.item.disposition, "open")

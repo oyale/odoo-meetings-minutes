@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
     <record id="view_calendar_event_form_community_meeting" model="ir.ui.view">
         <field name="name">calendar.event.form.community.meeting</field>

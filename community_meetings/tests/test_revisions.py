@@ -197,7 +197,7 @@ class TestMeetingRevisions(TransactionCase):
         )
 
     def test_report_html_and_snapshot_are_stable_after_action_changes(self):
-        meeting, action, revision = self._approved_meeting()
+        _, action, revision = self._approved_meeting()
         before_json = revision.snapshot_json
         before_pdf = revision.pdf_attachment_id.raw
         rendered_html, report_type = self.env["ir.actions.report"]._render_qweb_html(

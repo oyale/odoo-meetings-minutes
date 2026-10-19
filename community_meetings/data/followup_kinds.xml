@@ -1,7 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo noupdate="1">
     <record id="followup_kind_activity" model="community.meeting.followup.kind">
         <field name="name">Odoo activity</field>
         <field name="code">activity</field>
-        <field name="sequence">10</field>
+        <field name="sequence" eval="10" />
     </record>
 </odoo>

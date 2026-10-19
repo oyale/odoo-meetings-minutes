@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
     <menuitem id="menu_community_meetings_root" name="Meetings" action="action_community_meetings" sequence="40" groups="base.group_user"/>
     <menuitem id="menu_community_meeting_configuration" name="Configuration" parent="menu_community_meetings_root" sequence="90" groups="community_meetings.group_meeting_manager"/>

@@ -140,35 +140,33 @@ class TestProjectTaskConcurrency(TransactionCase):
             raise AssertionError("TODO closure exhausted serialization retries")
 
         try:
-            with patch.object(
-                checker, "_check_closed_todo_project_tasks", pause_after_validation
+            with (
+                patch.object(
+                    checker, "_check_closed_todo_project_tasks", pause_after_validation
+                ),
+                ThreadPoolExecutor(max_workers=2) as workers,
             ):
-                with ThreadPoolExecutor(max_workers=2) as workers:
-                    deletion = workers.submit(delete_task)
-                    try:
-                        self.assertTrue(validated.wait(10), "Deletion never validated")
-                        closure = workers.submit(close_todo)
-                        self.assertTrue(
-                            closing_started.wait(10), "Closure never started"
-                        )
-                        # Observe actual lock contention rather than assuming a
-                        # thread has reached a particular point after a sleep.
-                        deadline = time.monotonic() + 10
-                        blocked = False
-                        with database.cursor() as observer:
-                            while not closure.done() and time.monotonic() < deadline:
-                                observer.execute(
-                                    "SELECT pg_blocking_pids(%s)", closing_pid
-                                )
-                                blocked = bool(observer.fetchone()[0])
-                                if blocked:
-                                    break
-                                release_delete.wait(0.01)
-                    finally:
-                        release_delete.set()
-                    deletion.result(timeout=15)
-                    self.assertEqual(closure.result(timeout=15), "rejected")
-                    self.assertTrue(blocked, "Closure did not wait for the topic lock")
+                deletion = workers.submit(delete_task)
+                try:
+                    self.assertTrue(validated.wait(10), "Deletion never validated")
+                    closure = workers.submit(close_todo)
+                    self.assertTrue(closing_started.wait(10), "Closure never started")
+                    # Observe actual lock contention rather than assuming a
+                    # thread has reached a particular point after a sleep.
+                    deadline = time.monotonic() + 10
+                    blocked = False
+                    with database.cursor() as observer:
+                        while not closure.done() and time.monotonic() < deadline:
+                            observer.execute("SELECT pg_blocking_pids(%s)", closing_pid)
+                            blocked = bool(observer.fetchone()[0])
+                            if blocked:
+                                break
+                            release_delete.wait(0.01)
+                finally:
+                    release_delete.set()
+                deletion.result(timeout=15)
+                self.assertEqual(closure.result(timeout=15), "rejected")
+                self.assertTrue(blocked, "Closure did not wait for the topic lock")
             with database.cursor() as cr:
                 env = api.Environment(cr, SUPERUSER_ID, context)
                 self.assertFalse(env["project.task"].browse(ids["task"]).exists())

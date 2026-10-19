@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
     <record id="action_report_meeting_revision" model="ir.actions.report">
         <field name="name">Approved Meeting Minutes</field>
@@ -15,28 +16,28 @@
                 <t t-set="o" t-value="doc['revision']"/>
                 <t t-call="web.external_layout">
                     <div class="page">
-                        <h2><span t-esc="doc['meeting']['name']"/> <small><span t-esc="doc['meeting']['code']"/></small></h2>
-                        <p>Revision <span t-esc="doc['revision'].revision_number"/> · Approved by <span t-esc="doc['snapshot']['approval']['approver']"/> on <span t-esc="doc['snapshot']['approval']['approved_at']"/></p>
-                        <p><strong>Company:</strong> <span t-esc="doc['meeting']['company']"/> · <strong>Organizer:</strong> <span t-esc="doc['meeting']['organizer']"/></p>
-                        <p><strong>Secretary:</strong> <span t-esc="doc['meeting']['secretary']"/> · <strong>Attendees:</strong> <span t-esc="', '.join(doc['meeting']['attendees'])"/></p>
-                        <p><span t-esc="doc['meeting']['start_datetime']"/> <span t-esc="doc['meeting']['location']"/></p>
+                        <h2><span t-out="doc['meeting']['name']"/> <small><span t-out="doc['meeting']['code']"/></small></h2>
+                        <p>Revision <span t-out="doc['revision'].revision_number"/> · Approved by <span t-out="doc['snapshot']['approval']['approver']"/> on <span t-out="doc['snapshot']['approval']['approved_at']"/></p>
+                        <p><strong>Company:</strong> <span t-out="doc['meeting']['company']"/> · <strong>Organizer:</strong> <span t-out="doc['meeting']['organizer']"/></p>
+                        <p><strong>Secretary:</strong> <span t-out="doc['meeting']['secretary']"/> · <strong>Attendees:</strong> <span t-out="', '.join(doc['meeting']['attendees'])"/></p>
+                        <p><span t-out="doc['meeting']['start_datetime']"/> <span t-out="doc['meeting']['location']"/></p>
                         <div t-if="doc['description']"><h3>Description</h3><div t-out="doc['description']"/></div>
                         <h3>Agenda and discussion</h3>
                         <t t-foreach="doc['agenda']" t-as="item">
-                            <h4><span t-esc="item['sequence']"/>. <span t-esc="item['name']"/> (<span t-esc="item['kind']"/>)</h4>
+                            <h4><span t-out="item['sequence']"/>. <span t-out="item['name']"/> (<span t-out="item['kind']"/>)</h4>
                             <div t-if="item['description_html']" t-out="item['description_html']"/>
                             <div t-if="item['discussion_html']" t-out="item['discussion_html']"/>
-                            <p t-if="item['disposition']">Disposition: <span t-esc="item['disposition']"/> <span t-esc="item['deferral_reason']"/></p>
-                            <p t-if="item['decision_result_label']">Decision: <span t-esc="item['decision_result_label']"/></p>
-                            <div t-foreach="item['resolutions']" t-as="resolution"><strong t-esc="resolution['title']"/><div t-out="resolution['body_html']"/></div>
+                            <p t-if="item['disposition']">Disposition: <span t-out="item['disposition']"/> <span t-out="item['deferral_reason']"/></p>
+                            <p t-if="item['decision_result_label']">Decision: <span t-out="item['decision_result_label']"/></p>
+                            <div t-foreach="item['resolutions']" t-as="resolution"><strong t-out="resolution['title']"/><div t-out="resolution['body_html']"/></div>
                         </t>
-                        <div t-if="doc['general_resolutions']"><h3>Meeting-wide resolutions</h3><div t-foreach="doc['general_resolutions']" t-as="resolution"><strong t-esc="resolution['title']"/><div t-out="resolution['body_html']"/></div></div>
+                        <div t-if="doc['general_resolutions']"><h3>Meeting-wide resolutions</h3><div t-foreach="doc['general_resolutions']" t-as="resolution"><strong t-out="resolution['title']"/><div t-out="resolution['body_html']"/></div></div>
                         <div t-if="doc['minutes_notes']"><h3>Minutes</h3><div t-out="doc['minutes_notes']"/></div>
                         <h3>Follow-up actions</h3>
-                        <ul><li t-foreach="doc['actions']" t-as="action"><span t-esc="action['name']"/> — <span t-esc="', '.join(action.get('responsibles', [])) or action['responsible']"/> — <span t-esc="action['deadline']"/> (<span t-esc="action['state']"/>)</li></ul>
-                        <div t-if="doc['dissents']"><h3>Dissents and reservations</h3><div t-foreach="doc['dissents']" t-as="dissent"><strong t-esc="dissent['kind']"/> · <span t-esc="dissent['author']"/> · <span t-esc="dissent['scope']"/><div t-out="dissent['body_html']"/></div></div>
-                        <div t-if="doc['snapshot']['carryovers']"><h3>Carryover</h3><ul><li t-foreach="doc['snapshot']['carryovers']" t-as="carry"><span t-esc="carry['origin_name']"/> — <span t-esc="carry['status']"/> — <span t-esc="carry['reason']"/><t t-if="carry.get('destination_series', {}).get('name')"> — <span t-esc="carry['destination_series']['name']"/></t><t t-if="carry.get('destination')"> / <span t-esc="carry['destination']"/></t></li></ul></div>
-                        <p class="text-muted">Snapshot SHA-256: <span t-esc="doc['revision'].snapshot_sha256"/></p>
+                        <ul><li t-foreach="doc['actions']" t-as="action"><span t-out="action['name']"/> — <span t-out="', '.join(action.get('responsibles', [])) or action['responsible']"/> — <span t-out="action['deadline']"/> (<span t-out="action['state']"/>)</li></ul>
+                        <div t-if="doc['dissents']"><h3>Dissents and reservations</h3><div t-foreach="doc['dissents']" t-as="dissent"><strong t-out="dissent['kind']"/> · <span t-out="dissent['author']"/> · <span t-out="dissent['scope']"/><div t-out="dissent['body_html']"/></div></div>
+                        <div t-if="doc['snapshot']['carryovers']"><h3>Carryover</h3><ul><li t-foreach="doc['snapshot']['carryovers']" t-as="carry"><span t-out="carry['origin_name']"/> — <span t-out="carry['status']"/> — <span t-out="carry['reason']"/><t t-if="carry.get('destination_series', {}).get('name')"> — <span t-out="carry['destination_series']['name']"/></t><t t-if="carry.get('destination')"> / <span t-out="carry['destination']"/></t></li></ul></div>
+                        <p class="text-muted">Snapshot SHA-256: <span t-out="doc['revision'].snapshot_sha256"/></p>
                     </div>
                 </t>
             </t>

@@ -229,14 +229,12 @@ class CommunityMeetingSeries(models.Model):
             series.company_id.id != vals["company_id"] for series in self
         ):
             raise UserError(_("A meeting series cannot be moved to another company."))
-        if not self.env.user.has_group("community_meetings.group_meeting_manager"):
-            if any(self.env.user not in series.coordinator_user_ids for series in self):
-                raise UserError(
-                    _(
-                        "Only a series coordinator or meeting manager can edit "
-                        "this series."
-                    )
-                )
+        if not self.env.user.has_group(
+            "community_meetings.group_meeting_manager"
+        ) and any(self.env.user not in series.coordinator_user_ids for series in self):
+            raise UserError(
+                _("Only a series coordinator or meeting manager can edit this series.")
+            )
         if "meeting_kind_id" in vals and self.env[
             "community.meeting"
         ].sudo().search_count([("series_id", "in", self.ids)]):

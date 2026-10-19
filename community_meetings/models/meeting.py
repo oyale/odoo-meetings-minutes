@@ -329,10 +329,7 @@ class CommunityMeeting(models.Model):
                 )
             if vals.get("approved_revision_id") or vals.get("revision_ids"):
                 raise ValidationError(
-                    _(
-                        "Approved revisions cannot be assigned during meeting "
-                        "creation."
-                    )
+                    _("Approved revisions cannot be assigned during meeting creation.")
                 )
             if vals.get("code", "New") == "New":
                 # Editors may create meetings without gaining general sequence
@@ -424,16 +421,14 @@ class CommunityMeeting(models.Model):
             "editor_user_ids",
             "reader_user_ids",
         }.intersection(vals)
-        if protected_fields and not self.env.user.has_group(
-            "community_meetings.group_meeting_manager"
+        if (
+            protected_fields
+            and not self.env.user.has_group("community_meetings.group_meeting_manager")
+            and any(meeting.organizer_id != self.env.user for meeting in self)
         ):
-            if any(meeting.organizer_id != self.env.user for meeting in self):
-                raise UserError(
-                    _(
-                        "Only the organizer or a meeting manager can change "
-                        "meeting access."
-                    )
-                )
+            raise UserError(
+                _("Only the organizer or a meeting manager can change meeting access.")
+            )
         if any(meeting.state in ("approved", "cancelled") for meeting in self):
             raise UserError(_("Approved or cancelled meetings cannot be edited."))
         return super().write(vals)

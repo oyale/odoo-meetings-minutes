@@ -575,7 +575,6 @@ class MailActivity(models.Model):
                     else False,
                 }
             )
-            if all_done:
-                if action.state not in ("done", "cancelled"):
-                    action.write({"state": "done"})
+            if all_done and action.state not in ("done", "cancelled"):
+                action.write({"state": "done"})
         return result

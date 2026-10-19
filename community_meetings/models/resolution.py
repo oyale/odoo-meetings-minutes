@@ -125,8 +125,10 @@ class CommunityMeetingResolution(models.Model):
 
     def _sync_decision_items(self, items):
         for item in items.filtered(
-            lambda point: point.kind == "decision"
-            and point.meeting_id.state not in ("approved", "cancelled")
+            lambda point: (
+                point.kind == "decision"
+                and point.meeting_id.state not in ("approved", "cancelled")
+            )
         ):
             agreement = self.search(
                 [
