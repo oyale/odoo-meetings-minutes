@@ -486,7 +486,7 @@ class AgendaParticipation(models.Model):
             prepared.append(vals)
         if pending_topic_values:
             topics = self.env["community.meeting.topic"].create(pending_topic_values)
-            for index, topic in zip(pending_topic_indexes, topics):
+            for index, topic in zip(pending_topic_indexes, topics, strict=True):
                 prepared[index]["topic_id"] = topic.id
         items = super().create(prepared)
         for item in items:
@@ -625,9 +625,7 @@ class AgendaParticipation(models.Model):
         return self.topic_id.action_open()
 
     def _validate_followup_removal(self, actions):
-        items = self.filtered(
-            lambda i: i.kind == "todo" and i.disposition == "closed"
-        )
+        items = self.filtered(lambda i: i.kind == "todo" and i.disposition == "closed")
         actions_by_topic = items._followup_actions_by_topic()
         for item in items:
             if not (actions_by_topic.get(item.topic_id.id) - actions):

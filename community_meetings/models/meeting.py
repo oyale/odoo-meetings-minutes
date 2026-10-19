@@ -418,9 +418,10 @@ class CommunityMeeting(models.Model):
             actions_by_meeting.setdefault(action.meeting_id.id, self.env["community.meeting.action"])
             actions_by_meeting[action.meeting_id.id] |= action
         existing_action_ids = set(
-            self.env["community.meeting.topic"].search(
-                [("origin_action_id", "in", actions.ids)]
-            ).mapped("origin_action_id").ids
+            self.env["community.meeting.topic"]
+            .search([("origin_action_id", "in", actions.ids)])
+            .mapped("origin_action_id")
+            .ids
         )
         pending = actions.filtered(lambda action: action.id not in existing_action_ids)
         if not pending:
