@@ -369,6 +369,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_proposal_group_policy__active
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__active
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__active
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_agenda_template__active
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_resolution__status__active
 msgid "Active"
 msgstr ""
@@ -4707,6 +4708,7 @@ msgstr ""
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__estimated_minutes
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__estimated_minutes
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_agenda_template__estimated_minutes
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__estimated_minutes
 msgid "Estimated Minutes"
 msgstr ""
@@ -5782,6 +5784,7 @@ msgstr ""
 
 #. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_carry_review_line__decision__include
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Include"
 msgstr ""
 
@@ -6540,6 +6543,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_kind__name
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__name
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__name
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_agenda_template__name
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_recurring_point_review_line__name
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Name"
 msgstr ""
@@ -7680,6 +7685,7 @@ msgstr ""
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__agenda_type_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__agenda_type_id
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_agenda_template__agenda_type_id
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Point type"
 msgstr ""
@@ -7800,6 +7806,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__priority
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__priority
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__priority
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_agenda_template__priority
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Priority"
 msgstr ""
@@ -10368,6 +10375,7 @@ msgstr ""
 msgid "Recurring agenda points"
 msgstr ""
 
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 #. module: community_meetings
 msgid "Recurring agenda"
 msgstr ""
@@ -10380,14 +10388,17 @@ msgstr ""
 msgid "Recurring point template"
 msgstr ""
 
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 #. module: community_meetings
 msgid "Recurring points from this series"
 msgstr ""
 
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 #. module: community_meetings
 msgid "These templates are proposed when preparing a meeting. Each selected point becomes an independent occurrence; skipping one meeting does not remove the template."
 msgstr ""
 
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 #. module: community_meetings
 msgid "These start selected. Deselecting a point skips it only for this meeting; the series template stays unchanged."
 msgstr ""

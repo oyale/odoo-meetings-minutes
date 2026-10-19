@@ -13,6 +13,8 @@ aplican automáticamente; no hay que confirmarlos con otro botón.
 
 ![Asistente de reunión: fecha, hora, título y duración](../img/new-meeting-when.png)
 
+![Asistente de reunión: plantillas recurrentes seleccionadas](../img/recurring-agenda-selection.png)
+
 1. **Serie** — elige una o déjala vacía para una reunión independiente. Al elegir
    una serie se aplican sus sugerencias; si cambias de serie, se actualizan sin
    perder tus ediciones.
@@ -27,10 +29,15 @@ aplican automáticamente; no hay que confirmarlos con otro botón.
    reloj ámbar para **Posponerlo** o la cruz roja para **Descartarlo**. Se muestran
    el tipo, la prioridad y los minutos estimados cuando están disponibles. Con
    política *Automática*, los puntos sin terminar ya vienen incluidos.
-5. **Agenda** — añade puntos ahora (o después). La estimación de minutos
-   seleccionados incluye los puntos que añadas y los que hayas aceptado de
-   reuniones anteriores. Todavía no incluye los puntos estructurales que la
-   serie pueda añadir automáticamente.
+5. **Agenda** — las plantillas recurrentes activas de la serie aparecen
+   seleccionadas. Desmarca una para omitirla en esta reunión; seguirá en la
+   serie para las siguientes. Cada plantilla incluida crea un punto
+   independiente enlazado con su ocurrencia anterior más reciente que se haya
+   incluido, aunque alguna reunión intermedia la omitiera. También puedes añadir
+   otros puntos ahora (o después). La estimación incluye los puntos recurrentes
+   seleccionados, los que añadas y los que aceptes de reuniones anteriores.
+   Todavía no incluye los puntos estructurales que la serie pueda añadir
+   automáticamente.
 6. **Revisión** — comprueba los datos y la agenda. Los puntos que continúan
    muestran el título y, debajo, la decisión y otros datos, además de su tiempo
    total estimado. El resumen de agenda incluye los puntos automáticos cuando la

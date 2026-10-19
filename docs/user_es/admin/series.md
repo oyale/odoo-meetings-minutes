@@ -113,6 +113,17 @@ vincular la serie nueva a un proyecto existente o crear uno para ella. En el
 formulario de la serie se añade la página **Política de seguimientos y tareas**;
 ver [Project](../integrations/project.md#política-de-tareas).
 
+### Plantillas de agenda recurrentes
+
+En **Agenda recurrente**, los editores pueden añadir plantillas, cambiar su tipo
+de punto, prioridad y estimación, reordenarlas o desactivarlas. Una estimación
+de cero usa el valor predeterminado de la serie o la empresa. Las plantillas
+activas se proponen y aparecen seleccionadas al preparar cada nueva reunión de
+la serie. Estos ajustes afectan a las reuniones que se creen después; no
+reescriben las reuniones existentes.
+
+![Plantillas de agenda recurrentes de una serie](../img/series-form.png)
+
 ## Botones y propuestas
 
 - **Nueva reunión** — abre el asistente de creación de reuniones con esta serie

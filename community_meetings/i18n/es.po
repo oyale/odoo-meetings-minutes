@@ -396,6 +396,7 @@ msgstr "No se pueden editar las acciones de reuniones canceladas."
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_proposal_group_policy__active
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__active
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__active
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_agenda_template__active
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_resolution__status__active
 msgid "Active"
 msgstr "Activo"
@@ -4792,6 +4793,7 @@ msgstr "Fecha y hora de fin estimadas"
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__estimated_minutes
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__estimated_minutes
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_agenda_template__estimated_minutes
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__estimated_minutes
 msgid "Estimated Minutes"
 msgstr "Minutos estimados"
@@ -5884,6 +5886,7 @@ msgstr "En curso"
 
 #. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_carry_review_line__decision__include
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Include"
 msgstr "Incluir"
 
@@ -6653,6 +6656,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_kind__name
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__name
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__name
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_agenda_template__name
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_recurring_point_review_line__name
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Name"
 msgstr "Nombre"
@@ -7830,6 +7835,7 @@ msgstr "El estado de inicio del punto se gestiona desde la reunión en curso."
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__agenda_type_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__agenda_type_id
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_agenda_template__agenda_type_id
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Point type"
 msgstr "Tipo de punto"
@@ -7958,6 +7964,7 @@ msgstr "Actividad de seguimiento principal"
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__priority
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__priority
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__priority
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_agenda_template__priority
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Priority"
 msgstr "Prioridad"
@@ -10613,6 +10620,7 @@ msgstr "Origen: registros de traspaso de la reunión."
 msgid "Recurring agenda points"
 msgstr "Puntos de agenda recurrentes"
 
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 #. module: community_meetings
 msgid "Recurring agenda"
 msgstr "Agenda recurrente"
@@ -10625,14 +10633,17 @@ msgstr "Punto de agenda recurrente"
 msgid "Recurring point template"
 msgstr "Plantilla de punto recurrente"
 
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 #. module: community_meetings
 msgid "Recurring points from this series"
 msgstr "Puntos recurrentes de esta serie"
 
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 #. module: community_meetings
 msgid "These templates are proposed when preparing a meeting. Each selected point becomes an independent occurrence; skipping one meeting does not remove the template."
 msgstr "Estas plantillas se proponen al preparar una reunión. Cada punto seleccionado crea una ocurrencia independiente; omitir una reunión no elimina la plantilla."
 
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 #. module: community_meetings
 msgid "These start selected. Deselecting a point skips it only for this meeting; the series template stays unchanged."
 msgstr "Estos puntos aparecen seleccionados. Desmarcar uno lo omite solo en esta reunión; la plantilla de la serie no cambia."

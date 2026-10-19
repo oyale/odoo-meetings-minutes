@@ -108,6 +108,16 @@ new series to an existing project or create a project for it. A
 **Follow-up and Task Policy** page is added to the series form — see
 [Project](../integrations/project.md#task-policy).
 
+### Recurring agenda templates
+
+On **Recurring agenda**, editors can add templates, change their point type,
+priority and estimate, reorder them, or deactivate them. Active templates are
+proposed and selected by default when preparing each new meeting in the series.
+An estimate of zero uses the series or company default. These settings affect
+meetings created afterwards; they do not rewrite meetings that already exist.
+
+![Recurring agenda templates on a series](../img/series-form.png)
+
 ## Buttons and proposals
 
 - **New Meeting** — opens the meeting creation wizard pre-loaded with this series.

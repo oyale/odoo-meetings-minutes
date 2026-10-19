@@ -13,6 +13,8 @@ series; there is no separate confirmation button.
 
 ![Meeting wizard: date, time, title and duration](../img/new-meeting-when.png)
 
+![Meeting wizard: recurring agenda templates selected by default](../img/recurring-agenda-selection.png)
+
 1. **Series** — pick one, or leave empty for a standalone meeting. Choosing a
    series applies its suggestions automatically; changing series refreshes
    those suggestions while keeping your edits.
@@ -27,9 +29,14 @@ series; there is no separate confirmation button.
    clock to **Postpone** it, or the red cross to **Discard** it permanently.
    Type, priority and estimated minutes are shown where available. If the
    policy is *Automatic*, unfinished points are already included.
-5. **Agenda** — add points now (or later). The selected-minutes estimate
-   includes points you add and continuing points you accepted. It does not yet
-   include structural points the series may add automatically.
+5. **Agenda** — active recurring templates from the selected series start
+   selected. Clear a template to skip it for this meeting; it remains on the
+   series for later meetings. Each included template creates a separate point
+   occurrence linked to its most recent earlier included occurrence, even if a
+   meeting in between skipped it. Add other points now (or later). The
+   selected-minutes estimate includes selected recurring points, points you add
+   and continuing points you accepted. It does not yet include structural
+   points the series may add automatically.
 6. **Review** — check the meeting details and agenda. Continuing points show
    their title with decision and other metadata below it, plus a separate total
    estimate. The agenda summary includes automatic structural points when the
