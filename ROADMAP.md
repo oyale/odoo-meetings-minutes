@@ -1,16 +1,24 @@
 # Community Meetings roadmap
 
-This roadmap lists ideas being considered for future releases. It has no
-release dates, and priorities may change as the project evolves. The current
-features are documented in the [user guide](https://oyale.github.io/odoo-meetings-minutes/).
+This roadmap lists recently shipped features and ideas being considered for
+future releases. It has no release dates, and priorities may change as the
+project evolves. Current features are documented in the
+[user guide](https://oyale.github.io/odoo-meetings-minutes/).
 
-## Planned
+## Recently shipped
 
 ### Recurring agenda points
 
-Let a series define points that should be suggested whenever a meeting is
-created. The meeting creator could include or skip each suggestion for that
-meeting without changing the series.
+A series can define recurring agenda point templates. Selected templates create
+independent points in each meeting and link to the previous occurrence.
+
+### Draft minutes preview
+
+Editors and approvers can preview saved draft minutes from the meeting form or
+live screen before approval. The preview excludes private editorial notes and
+does not create the official PDF.
+
+## Planned
 
 ### Add existing Odoo work to an agenda
 
@@ -49,17 +57,26 @@ jurisdictions must be defined before committing to implementation.
 
 # Hoja de ruta de Community Meetings
 
-Esta hoja recoge ideas para próximas versiones. No fija fechas de entrega y las
-prioridades pueden cambiar. Las funciones actuales están descritas en la
+Esta hoja recoge funciones publicadas recientemente e ideas para próximas
+versiones. No fija fechas de entrega y las prioridades pueden cambiar. Las
+funciones actuales están descritas en la
 [guía de usuario](https://oyale.github.io/odoo-meetings-minutes/html-es/index.html).
 
-## Previsto
+## Publicado recientemente
 
 ### Puntos recurrentes del orden del día
 
-Permitir que una serie defina puntos que se sugieran al crear cada reunión. La
-persona que prepara la reunión podría incluir u omitir cada sugerencia sin
-modificar la configuración de la serie.
+Una serie puede definir plantillas recurrentes para el orden del día. Las
+plantillas elegidas crean puntos independientes en cada reunión y enlazan con
+la ocurrencia anterior.
+
+### Vista previa del borrador del acta
+
+Quienes editan y aprueban pueden previsualizar el borrador guardado desde el
+formulario o la pantalla de reunión en vivo antes de aprobarlo. La vista previa
+excluye las notas editoriales privadas y no genera el PDF oficial.
+
+## Previsto
 
 ### Añadir trabajo existente de Odoo a la agenda
 

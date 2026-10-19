@@ -1,7 +1,7 @@
 {
     "name": "Community Meetings - Calendar Integration",
     "summary": "Create private Calendar invitations for scheduled community meetings",
-    "version": "18.0.1.0.1",
+    "version": "18.0.1.0.2",
     "category": "Productivity/Calendar",
     "license": "AGPL-3",
     "author": "Pelayo García",

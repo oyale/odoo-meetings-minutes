@@ -1,5 +1,5 @@
 [tool.towncrier]
-# Keep per-addon fragments and publish their combined release history at root.
+# Keep per-addon fragments and publish both the suite history and addon histories.
 name = "Odoo Meetings Minutes"
 directory = "."
 filename = "CHANGELOG.md"

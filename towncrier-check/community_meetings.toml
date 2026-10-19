@@ -1,9 +1,10 @@
 [tool.towncrier]
+name = "Community Meetings"
 directory = "."
-filename = "CHANGELOG.md"
+filename = "community_meetings/CHANGELOG.md"
 start_string = "<!-- towncrier release notes start -->"
 title_format = "## {name} {version} ({project_date})"
 
 [[tool.towncrier.section]]
-name = "Community Meetings"
+name = "Release notes"
 path = "community_meetings/readme/newsfragments"

@@ -126,6 +126,7 @@ jobs:
                   if any(
                       path.startswith(f"{name}/")
                       and not path.startswith(f"{name}/readme/newsfragments/")
+                      and path != f"{name}/CHANGELOG.md"
                       for path in paths
                   )
               }

@@ -2,9 +2,30 @@
 
 User-facing changes to the Odoo Meetings Minutes suite. Each release records
 the exact Odoo addon version included in the published suite packages.
-History below starts at `18.0.20261018.2`; earlier releases are not backfilled.
+History below starts at `18.0.20261018.2`; earlier suite releases are not backfilled.
+Each addon changelog starts with its first release prepared after this change;
+the combined history below retains the existing suite release notes.
 
 <!-- towncrier release notes start -->
+## Odoo Meetings Minutes 18.0.20261019.3 (2026-10-19)
+
+### Addon versions
+
+| Addon | Odoo module version |
+|---|---:|
+| [Community Meetings](community_meetings/CHANGELOG.md) | `18.0.6.2.3` |
+| [Calendar Integration](community_meetings_calendar/CHANGELOG.md) | `18.0.1.0.2` |
+| [Project Integration](community_meetings_project/CHANGELOG.md) | `18.0.3.1.3` |
+| [Extension Demo](community_meetings_extension_demo/CHANGELOG.md) | `18.0.1.0.1` |
+
+=====================================================
+
+## Community Meetings
+
+### Features
+
+- Editors and approvers can preview the saved minutes draft from the meeting form or live screen before approval. The preview excludes private editorial notes and does not create the official PDF; approval still creates the immutable revision and PDF.
+- Meeting series can define recurring agenda point templates. Selected templates create independent points in each meeting and link to the previous occurrence.
 ## Odoo Meetings Minutes 18.0.20261019.2 (2026-10-19)
 
 ### Addon versions
