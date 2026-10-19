@@ -10363,3 +10363,55 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Source: meeting carryover records."
 msgstr ""
+
+#. module: community_meetings
+msgid "Recurring agenda points"
+msgstr ""
+
+#. module: community_meetings
+msgid "Recurring agenda"
+msgstr ""
+
+#. module: community_meetings
+msgid "Recurring agenda point"
+msgstr ""
+
+#. module: community_meetings
+msgid "Recurring point template"
+msgstr ""
+
+#. module: community_meetings
+msgid "Recurring points from this series"
+msgstr ""
+
+#. module: community_meetings
+msgid "These templates are proposed when preparing a meeting. Each selected point becomes an independent occurrence; skipping one meeting does not remove the template."
+msgstr ""
+
+#. module: community_meetings
+msgid "These start selected. Deselecting a point skips it only for this meeting; the series template stays unchanged."
+msgstr ""
+
+#. module: community_meetings
+msgid "Only meeting editors can manage recurring agenda points."
+msgstr ""
+
+#. module: community_meetings
+msgid "A recurring point can only be added to a meeting in its series."
+msgstr ""
+
+#. module: community_meetings
+msgid "A recurring occurrence must belong to its template series."
+msgstr ""
+
+#. module: community_meetings
+msgid "A previous occurrence must use the same recurring template."
+msgstr ""
+
+#. module: community_meetings
+msgid "Previous occurrence"
+msgstr ""
+
+#. module: community_meetings
+msgid "Leave at zero to use the series or company default."
+msgstr ""

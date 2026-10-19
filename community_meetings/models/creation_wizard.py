@@ -130,6 +130,11 @@ class MeetingCreateWizard(models.TransientModel):
         "line_ids.priority",
         "line_ids.estimated_minutes",
         "line_ids.included",
+        "recurring_line_ids.name",
+        "recurring_line_ids.agenda_type_id",
+        "recurring_line_ids.priority",
+        "recurring_line_ids.included",
+        "recurring_line_ids.estimated_minutes",
     )
     def _compute_review_summary(self):
         for wizard in self:
@@ -169,6 +174,18 @@ class MeetingCreateWizard(models.TransientModel):
                 )
                 for line in wizard.line_ids.filtered("included")
             ]
+            agenda.extend(
+                Markup(
+                    '<li class="o_meeting_review_recurring"><strong>{}</strong>'
+                    "<span>{} min · {} · {}</span></li>"
+                ).format(
+                    line.name or "",
+                    line.estimated_minutes or 0,
+                    line.agenda_type_id.display_name or _("Point"),
+                    self._priority_label(line.priority),
+                )
+                for line in wizard.recurring_line_ids.filtered("included")
+            )
             agenda.extend(
                 Markup(
                     "<li><strong>{}</strong><span>{} min · {} · {}</span></li>"
@@ -281,6 +298,9 @@ class MeetingCreateWizard(models.TransientModel):
         "line_ids.estimated_minutes",
         "carry_line_ids.decision",
         "carry_line_ids.estimated_minutes",
+        "recurring_line_ids.name",
+        "recurring_line_ids.included",
+        "recurring_line_ids.estimated_minutes",
     )
     def _compute_selected_minutes(self):
         for wizard in self:
@@ -290,6 +310,10 @@ class MeetingCreateWizard(models.TransientModel):
                 wizard.carry_line_ids.filtered(
                     lambda line: line.decision == "include"
                 ).mapped("estimated_minutes")
+            ) + sum(
+                wizard.recurring_line_ids.filtered("included").mapped(
+                    "estimated_minutes"
+                )
             )
 
     @api.model
@@ -357,6 +381,8 @@ class MeetingCreateWizard(models.TransientModel):
                 )
                 for candidate in candidates
             ]
+        if self.step == "carryover":
+            self._load_recurring_points()
         self.step = steps[min(steps.index(self.step) + 1, len(steps) - 1)]
         return self._reload()
 
@@ -411,6 +437,10 @@ class MeetingCreateWizard(models.TransientModel):
                     line._item_values(meeting)
                 )
                 line._write_related_points(item.topic_id)
+            for line in self.recurring_line_ids.filtered("included").sorted(
+                lambda row: (row.sequence, row.id)
+            ):
+                line.template_id._create_occurrence(meeting)
             for line in self.carry_line_ids.filtered(
                 lambda line: line.decision == "include"
             ):

@@ -32,6 +32,19 @@ class MeetingTopic(models.Model):
         string="Origin point",
         copy=False,
     )
+    recurring_template_id = fields.Many2one(
+        "community.meeting.series.agenda.template",
+        string="Recurring point template",
+        ondelete="set null",
+        index=True,
+        copy=False,
+    )
+    previous_occurrence_id = fields.Many2one(
+        "community.meeting.topic",
+        string="Previous occurrence",
+        ondelete="set null",
+        copy=False,
+    )
     origin_action_id = fields.Many2one(
         "community.meeting.action",
         ondelete="set null",
@@ -122,6 +135,17 @@ class MeetingTopic(models.Model):
         for topic in self:
             if topic in topic.related_topic_ids:
                 raise ValidationError(_("A point cannot be related to itself."))
+
+    @api.constrains("series_id", "recurring_template_id", "previous_occurrence_id")
+    def _check_recurring_occurrence_links(self):
+        for topic in self:
+            if topic.recurring_template_id and topic.series_id != topic.recurring_template_id.series_id:
+                raise ValidationError(_("A recurring occurrence must belong to its template series."))
+            if topic.previous_occurrence_id and (
+                not topic.recurring_template_id
+                or topic.previous_occurrence_id.recurring_template_id != topic.recurring_template_id
+            ):
+                raise ValidationError(_("A previous occurrence must use the same recurring template."))
 
     @api.model_create_multi
     def create(self, vals_list):

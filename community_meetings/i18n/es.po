@@ -10608,3 +10608,55 @@ msgstr "Origen: discrepancias marcadas para incluirlas en el acta."
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Source: meeting carryover records."
 msgstr "Origen: registros de traspaso de la reunión."
+
+#. module: community_meetings
+msgid "Recurring agenda points"
+msgstr "Puntos de agenda recurrentes"
+
+#. module: community_meetings
+msgid "Recurring agenda"
+msgstr "Agenda recurrente"
+
+#. module: community_meetings
+msgid "Recurring agenda point"
+msgstr "Punto de agenda recurrente"
+
+#. module: community_meetings
+msgid "Recurring point template"
+msgstr "Plantilla de punto recurrente"
+
+#. module: community_meetings
+msgid "Recurring points from this series"
+msgstr "Puntos recurrentes de esta serie"
+
+#. module: community_meetings
+msgid "These templates are proposed when preparing a meeting. Each selected point becomes an independent occurrence; skipping one meeting does not remove the template."
+msgstr "Estas plantillas se proponen al preparar una reunión. Cada punto seleccionado crea una ocurrencia independiente; omitir una reunión no elimina la plantilla."
+
+#. module: community_meetings
+msgid "These start selected. Deselecting a point skips it only for this meeting; the series template stays unchanged."
+msgstr "Estos puntos aparecen seleccionados. Desmarcar uno lo omite solo en esta reunión; la plantilla de la serie no cambia."
+
+#. module: community_meetings
+msgid "Only meeting editors can manage recurring agenda points."
+msgstr "Solo los editores de reuniones pueden gestionar puntos de agenda recurrentes."
+
+#. module: community_meetings
+msgid "A recurring point can only be added to a meeting in its series."
+msgstr "Un punto recurrente solo se puede añadir a una reunión de su serie."
+
+#. module: community_meetings
+msgid "A recurring occurrence must belong to its template series."
+msgstr "Una ocurrencia recurrente debe pertenecer a la serie de su plantilla."
+
+#. module: community_meetings
+msgid "A previous occurrence must use the same recurring template."
+msgstr "La ocurrencia anterior debe usar la misma plantilla recurrente."
+
+#. module: community_meetings
+msgid "Previous occurrence"
+msgstr "Ocurrencia anterior"
+
+#. module: community_meetings
+msgid "Leave at zero to use the series or company default."
+msgstr "Deja el valor en cero para usar el predeterminado de la serie o de la compañía."

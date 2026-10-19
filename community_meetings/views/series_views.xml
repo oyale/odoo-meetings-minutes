@@ -67,6 +67,42 @@
                                 </group>
                             </group>
                         </page>
+                        <page string="Recurring agenda" name="recurring_agenda">
+                            <p class="text-muted">
+                                These templates are proposed when preparing a meeting. Each selected point becomes an independent occurrence; skipping one meeting does not remove the template.
+                            </p>
+                            <field name="recurring_point_ids" context="{'default_series_id': id}">
+                                <list default_order="sequence, id" editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="active" widget="boolean_toggle"/>
+                                    <field name="name"/>
+                                    <field name="agenda_type_id"/>
+                                    <field name="priority"/>
+                                    <field name="estimated_minutes"/>
+                                </list>
+                                <form string="Recurring agenda point">
+                                    <sheet>
+                                        <group>
+                                            <field name="series_id" invisible="1"/>
+                                            <field name="name"/>
+                                            <field name="agenda_type_id" widget="meeting_agenda_type_rich"/>
+                                            <field name="priority"/>
+                                            <field name="estimated_minutes" widget="meeting_point_minutes"/>
+                                            <field name="presenter_partner_id"/>
+                                            <field name="active" widget="boolean_toggle"/>
+                                            <field name="sequence"/>
+                                        </group>
+                                        <group string="Description">
+                                            <field name="description" nolabel="1" widget="html"/>
+                                        </group>
+                                        <group string="Follow-ups" invisible="agenda_type_id.behavior != 'todo'">
+                                            <field name="followup_allowed_kinds" widget="many2many_tags"/>
+                                            <field name="followup_default_kind"/>
+                                        </group>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
                         <page string="Agenda structure" name="structure">
                             <group>
                                 <group>
@@ -191,7 +227,7 @@
                     </div>
                 </div>
                 <div class="o_meeting_series_step" invisible="step != 'structure'">
-                    <div class="o_meeting_wizard_intro"><h2>Set agenda and meeting rules</h2><p>Choose when points can be added and which recurring points the series creates.</p></div>
+                    <div class="o_meeting_wizard_intro"><h2>Set agenda and meeting rules</h2><p>Choose when points can be added and set the agenda defaults. You can define recurring points from the series after it is created.</p></div>
                     <div class="o_meeting_series_panel">
                         <h3>Meeting controls</h3>
                         <div class="o_meeting_series_policy">

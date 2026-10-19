@@ -46,6 +46,11 @@ class CommunityMeetingSeries(models.Model):
         help="People responsible for preparing the meetings of this series.",
     )
     meeting_ids = fields.One2many("community.meeting", "series_id", string="Meetings")
+    recurring_point_ids = fields.One2many(
+        "community.meeting.series.agenda.template",
+        "series_id",
+        string="Recurring agenda points",
+    )
     carryover_policy = fields.Selection(
         [("review", "Review"), ("automatic", "Automatic"), ("manual", "Manual")],
         default="review",

@@ -83,6 +83,24 @@
         <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
+    <record id="rule_recurring_agenda_template_company" model="ir.rule">
+        <field name="name">Recurring points in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_series_agenda_template"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_recurring_agenda_template_editor" model="ir.rule">
+        <field name="name">Edit recurring points of coordinated series</field>
+        <field name="model_id" ref="model_community_meeting_series_agenda_template"/>
+        <field name="groups" eval="[(4, ref('group_meeting_editor'))]"/>
+        <field name="domain_force">[('series_id.coordinator_user_ids', 'in', user.id)]</field>
+    </record>
+    <record id="rule_recurring_agenda_template_manager" model="ir.rule">
+        <field name="name">Manage recurring points in allowed companies</field>
+        <field name="model_id" ref="model_community_meeting_series_agenda_template"/>
+        <field name="groups" eval="[(4, ref('group_meeting_manager'))]"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
     <record id="rule_agenda_company" model="ir.rule">
         <field name="name">Agenda items in allowed companies</field>
         <field name="model_id" ref="model_community_meeting_agenda_item"/>

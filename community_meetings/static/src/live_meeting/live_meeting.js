@@ -126,12 +126,13 @@ export class LiveMeeting extends Component {
         const meetingTopics = await this.orm.searchRead(
             "community.meeting.topic",
             [["id", "in", topicIds]],
-            ["name", "description", "state", "outcome", "priority", "deadline", "estimated_minutes", "presenter_partner_id", "series_id", "related_topic_ids", "origin_topic_id", "origin_action_id"],
+            ["name", "description", "state", "outcome", "priority", "deadline", "estimated_minutes", "presenter_partner_id", "series_id", "related_topic_ids", "origin_topic_id", "previous_occurrence_id", "origin_action_id"],
         );
         const extraTopicIds = meetingTopics
             .flatMap((topic) => [
                 ...(topic.related_topic_ids || []),
                 ...(topic.origin_topic_id ? [topic.origin_topic_id[0]] : []),
+                ...(topic.previous_occurrence_id ? [topic.previous_occurrence_id[0]] : []),
             ])
             .filter((id) => !topicIds.includes(id));
         const extraTopics = extraTopicIds.length
@@ -243,6 +244,12 @@ export class LiveMeeting extends Component {
         const topic = this.topicById(item.topic_id?.[0]);
         return topic?.origin_topic_id ? this.topicById(topic.origin_topic_id[0]) : false;
     }
+    previousOccurrence(item) {
+        const topic = this.topicById(item.topic_id?.[0]);
+        return topic?.previous_occurrence_id
+            ? this.topicById(topic.previous_occurrence_id[0])
+            : false;
+    }
     originActionName(item) {
         return this.originAction(item)?.name || this.topicById(item.topic_id?.[0])?.origin_action_id?.[1] || "";
     }
@@ -252,13 +259,17 @@ export class LiveMeeting extends Component {
     }
     hasPointRelations(item) {
         return Boolean(
-            this.relatedTopics(item).length || this.originTopic(item) || this.originActionName(item)
+            this.relatedTopics(item).length || this.originTopic(item) || this.previousOccurrence(item) || this.originActionName(item)
         );
     }
     relationTopics(item) {
-        const related = this.relatedTopics(item).map((topic) => ({ ...topic, relationLabel: _t("Related") }));
+        const previous = this.previousOccurrence(item);
         const origin = this.originTopic(item);
+        const related = this.relatedTopics(item)
+            .filter((topic) => topic.id !== previous?.id && topic.id !== origin?.id)
+            .map((topic) => ({ ...topic, relationLabel: _t("Related") }));
         if (origin) related.push({ ...origin, relationLabel: _t("Origin") });
+        if (previous) related.push({ ...previous, relationLabel: _t("Previous occurrence") });
         return related;
     }
     topicStateLabel(topic) {

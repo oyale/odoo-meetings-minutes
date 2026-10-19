@@ -4,6 +4,7 @@ from . import test_carryover
 from . import test_revisions
 from . import test_domain
 from . import test_series_wizard
+from . import test_series_recurring_points
 from . import test_postpone
 from . import test_carryover_discovery
 from . import test_configuration
