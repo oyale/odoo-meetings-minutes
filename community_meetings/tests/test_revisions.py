@@ -188,6 +188,68 @@ class TestMeetingRevisions(TransactionCase):
             {"id": destination.id, "name": destination.name},
         )
 
+    def test_draft_preview_contains_only_public_content_and_has_no_write_effects(self):
+        meeting = self._drafted_meeting("Draft preview content")
+        item = meeting.agenda_item_ids[0]
+        meeting.with_user(self.editor).write({"minutes_notes": "<p>Preview narrative</p>"})
+        self.env["community.meeting.resolution"].with_user(self.editor).create(
+            {
+                "meeting_id": meeting.id,
+                "agenda_item_id": item.id,
+                "title": "Preview agreement",
+                "body": "<p>Public agreement</p>",
+            }
+        )
+        self.env["community.meeting.editor.note"].with_user(self.editor).create(
+            {"meeting_id": meeting.id, "agenda_item_id": item.id, "content": "PRIVATE_PREVIEW_NOTE"}
+        )
+        self.env["community.meeting.dissent"].with_user(self.editor).create(
+            [
+                {
+                    "meeting_id": meeting.id,
+                    "agenda_item_id": item.id,
+                    "body": "<p>Included preview dissent</p>",
+                    "include_in_minutes": True,
+                },
+                {
+                    "meeting_id": meeting.id,
+                    "agenda_item_id": item.id,
+                    "body": "EXCLUDED_PREVIEW_DISSENT",
+                    "include_in_minutes": False,
+                },
+            ]
+        )
+
+        before_state = meeting.state
+        before_revisions = meeting.revision_ids.ids
+        public_content = self.env["community.meeting.revision"]._build_public_content(meeting)
+        preview = meeting.with_user(self.editor).get_minutes_preview_html()
+
+        self.assertIn("Draft — not approved.", preview)
+        self.assertIn("Preview narrative", preview)
+        self.assertIn("Preview agreement", preview)
+        self.assertIn("Included preview dissent", preview)
+        self.assertNotIn("PRIVATE_PREVIEW_NOTE", preview)
+        self.assertNotIn("EXCLUDED_PREVIEW_DISSENT", preview)
+        self.assertEqual(meeting.state, before_state)
+        self.assertEqual(meeting.revision_ids.ids, before_revisions)
+
+        meeting.with_user(self.editor).write({"minutes_notes": "<p>Updated preview narrative</p>"})
+        updated_preview = meeting.with_user(self.editor).get_minutes_preview_html()
+        self.assertIn("Updated preview narrative", updated_preview)
+        self.assertNotIn("Preview narrative", updated_preview)
+
+        public_content = self.env["community.meeting.revision"]._build_public_content(meeting)
+        revision = self._approve_without_rendering_pdf(meeting.with_user(self.approver))
+        snapshot = json.loads(revision.snapshot_json)
+        self.assertEqual({key: snapshot[key] for key in public_content}, public_content)
+
+    def test_preview_action_points_to_preview_client_action(self):
+        meeting = self._drafted_meeting("Preview client action")
+        action = meeting.with_user(self.editor).action_preview_minutes()
+        self.assertEqual(action["tag"], "community_meetings.minutes_preview")
+        self.assertEqual(action["params"]["meeting_id"], meeting.id)
+
     def test_report_html_and_snapshot_are_stable_after_action_changes(self):
         _, action, revision = self._approved_meeting()
         before_json = revision.snapshot_json

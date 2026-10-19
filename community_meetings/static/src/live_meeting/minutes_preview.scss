@@ -1,0 +1,41 @@
+.o_community_minutes_preview {
+    min-height: 100vh;
+    background: #f4f5f7;
+
+    .o_community_minutes_preview_toolbar {
+        position: sticky;
+        z-index: 2;
+        top: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .75rem 1.25rem;
+        background: #fff;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .o_community_minutes_preview_body {
+        display: block;
+        max-width: 960px;
+        margin: 2rem auto;
+        padding: 3rem;
+        background: #fff;
+        box-shadow: 0 2px 12px rgba(25, 35, 45, .08);
+
+        .o_meeting_minutes_document {
+            line-height: 1.55;
+        }
+
+        h2 { margin-bottom: 1rem; }
+        h3 { margin-top: 1.75rem; }
+        h4 { margin-top: 1.25rem; }
+    }
+
+    @media (max-width: 700px) {
+        .o_community_minutes_preview_body {
+            margin: .75rem;
+            padding: 1.25rem;
+        }
+    }
+}

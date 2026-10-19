@@ -18,6 +18,14 @@ form. The meeting enters **Minutes draft**:
 - **Private editorial notes** are excluded from minutes — use them for internal
   remarks and delete them before approval if desired.
 
+Before approval, use **Preview Minutes** from the meeting form or live screen to
+review the complete draft assembled from the saved meeting data. The preview
+marks the document as unapproved and points back to the meeting sections that
+provide its content. Save pending live-screen edits first. Use **Meeting notes**
+for the general narrative; agenda discussion, agreements, follow-ups and
+included dissents are drawn from their own records. The official PDF is created
+when an approver approves the minutes.
+
 > **Tip:** The minutes-approval structural point of *later* meetings will list this acta
 > until it is approved — approve promptly to keep the queue clean.
 

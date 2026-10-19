@@ -64,6 +64,32 @@ class TestMeetingSecurity(TransactionCase):
         with self.assertRaises(AccessError):
             meeting.with_user(self.outsider).get_live_capabilities()
 
+    def test_minutes_preview_requires_role_record_access_and_allowed_state(self):
+        meeting = self.env["community.meeting"].with_user(self.editor).create({
+            "name": "Minutes preview access",
+            "start_datetime": "2026-12-01 10:00:00",
+            "reader_user_ids": [(4, self.reader.id), (4, self.outsider.id)],
+        })
+        self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": meeting.id, "name": "Preview access point",
+        })
+        with self.assertRaises(UserError):
+            meeting.with_user(self.editor).get_minutes_preview_html()
+        with self.assertRaises(AccessError):
+            meeting.with_user(self.reader).get_minutes_preview_html()
+        with self.assertRaises(AccessError):
+            meeting.with_user(self.outsider).get_minutes_preview_html()
+
+        meeting.with_user(self.editor).action_schedule()
+        meeting.with_user(self.editor).action_mark_held()
+        self.reader.write({
+            "groups_id": [(4, self.env.ref("community_meetings.group_meeting_approver").id)],
+        })
+        self.assertIn(
+            "Draft — not approved.",
+            meeting.with_user(self.reader).get_minutes_preview_html(),
+        )
+
     def test_internal_user_gets_proposal_capability_only(self):
         self.assertTrue(self.outsider.has_group("community_meetings.group_agenda_proposer"))
         self.assertFalse(self.outsider.has_group("community_meetings.group_meeting_reader"))
