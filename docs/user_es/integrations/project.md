@@ -3,7 +3,18 @@
 Módulo opcional que conecta los seguimientos de las reuniones con las tareas de
 **Project** de Odoo. Requiere `project` y `community_meetings`.
 
-![Seguimiento con tarea de proyecto](img/project-task.png)
+![Seguimiento con tarea de proyecto](../img/project-task.png)
+
+## Vincular un proyecto al crear una serie
+
+Si está instalado el módulo Project, el paso **Estructura** del asistente de
+**Nueva serie de reuniones** incluye el interruptor **Vincular un proyecto**.
+Actívalo para elegir un proyecto existente o crear uno para la serie. La elección
+se repasa antes de crear la serie y quedará vinculada para sus tareas y
+seguimientos. El interruptor empieza desactivado; si lo dejas así, la serie no
+queda vinculada a ningún proyecto.
+
+![Asistente de serie con un proyecto existente vinculado](../img/series-project-link.png)
 
 ## Crear una tarea desde un seguimiento
 

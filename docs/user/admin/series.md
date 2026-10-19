@@ -1,14 +1,25 @@
 # Series configuration (manager / editor)
 
-A **series** is a recurring meeting template. Everything configured here is
-copied into new meetings at creation time — later edits do not affect existing
-meetings.
+A **series** holds the defaults and rules for recurring meetings. New meetings
+start from these choices; changing them later does not rewrite meetings already
+created.
 
 Location: **Meetings → Meeting Series**. The creation wizard (*New* in the
-series list) asks the same information in steps: basics → schedule → structure
-→ review.
+series list) has four steps: series identity and unfinished points, meeting
+defaults, agenda and meeting rules, then review. **Usual attendees** are
+suggested for each meeting and can be changed there. The agenda step explains
+the time, point, and recurrence choices beside their controls.
 
-![Series form](img/series-form.png)
+In **Structure**, the company-default switches for time tracking, point policy
+and point estimates start on. Turn a switch off to choose a series-specific
+value. The **Automatic points** controls add minutes approval when minutes are
+pending and a next-meeting point to every meeting; both are optional and start
+off. Enabling the next-meeting point reveals the rule used to suggest its date.
+With the Project addon, project linking is also optional and starts off.
+
+![Series form](../img/series-form.png)
+
+![New Meeting Series wizard: Structure step](../img/series-structure-wizard.png)
 
 ## Header: What and People
 
@@ -43,8 +54,8 @@ meeting as *Series description*.
 
 ## Policies
 
-This tab decides how the series behaves. Every value can stay on
-**Company default**.
+This tab decides how the series behaves. Time tracking and adding-points rules
+can use **Company default**; the unfinished-points rule is chosen explicitly.
 
 ### Unfinished points (carryover policy)
 
@@ -75,7 +86,7 @@ This tab decides how the series behaves. Every value can stay on
 
 | Field | Meaning |
 |---|---|
-| **Default point estimate (minutes)** | Pre-filled estimate for new points of this series. Empty → company value (shown next to it). |
+| **Default point estimate (minutes)** | Pre-filled estimate for new points of this series. In the creation wizard, **Company default** is on initially; turn it off to set a series-specific estimate. A value of zero on the series form uses the company estimate. |
 
 Minutes-approval and next-meeting structural points ignore this value: they
 reserve 5 minutes each (5 per pending acta for approvals).
@@ -92,8 +103,10 @@ Optional overrides of the coordination/secretary labels for this series only.
 | **Default follow-up type** | Pre-selected type. |
 | **Default activity type** | For follow-ups recorded as Odoo activities. |
 
-With the Project addon, a **Follow-up and Task Policy** page is added here —
-see [Project](../integrations/project.md#task-policy).
+With the Project addon, the wizard's **Structure** step also lets you link the
+new series to an existing project or create a project for it. A
+**Follow-up and Task Policy** page is added to the series form — see
+[Project](../integrations/project.md#task-policy).
 
 ## Buttons and proposals
 

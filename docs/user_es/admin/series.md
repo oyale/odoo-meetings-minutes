@@ -1,14 +1,28 @@
 # Configuración de series (gestor / editor)
 
-Una **serie** es la plantilla de una reunión recurrente. Todo lo configurado aquí
-se copia en las reuniones nuevas al crearse — las ediciones posteriores no afectan
-a las reuniones existentes.
+Una **serie** contiene los valores y reglas de las reuniones recurrentes. Las
+reuniones nuevas parten de estas opciones; cambiarlas después no reescribe las
+reuniones ya creadas.
 
 Ubicación: **Reuniones → Series de reuniones**. El asistente de creación (*Nuevo* en la
-lista de series) pide lo mismo por pasos: básicos → programación → estructura →
-revisión.
+lista de series) tiene cuatro pasos: identidad de la serie y puntos sin terminar,
+valores de las reuniones, agenda y reglas, y revisión. **Asistentes habituales**
+son las personas propuestas para cada reunión; podrás cambiarlas en cada caso.
+El paso de agenda explica las opciones de tiempo, puntos y recurrencia junto a
+sus controles.
 
-![Formulario de serie](img/series-form.png)
+En **Estructura**, los interruptores para usar los valores de la compañía en el
+seguimiento de tiempo, la política de puntos y las estimaciones empiezan
+activados. Desactiva uno para elegir un valor para la serie. **Puntos
+automáticos** permite añadir el punto de aprobación del acta cuando haya actas
+pendientes y un punto para fijar la próxima reunión en cada reunión de la serie;
+ambos empiezan desactivados. Al activar el punto de próxima reunión aparece la
+regla para proponer la fecha. Con el módulo Project, el vínculo con el proyecto
+también es opcional y empieza desactivado.
+
+![Formulario de serie](../img/series-form.png)
+
+![Asistente Nueva serie de reuniones: paso Estructura](../img/series-structure-wizard.png)
 
 ## Cabecera: Qué y Personas
 
@@ -43,8 +57,9 @@ lectura en cada reunión como *Descripción de la serie*.
 
 ## Políticas
 
-Esta pestaña decide el comportamiento de la serie. Todo puede quedarse en
-**Predeterminado de la compañía**.
+Esta pestaña decide el comportamiento de la serie. El seguimiento del tiempo y
+la política para añadir puntos pueden usar **Predeterminado de la compañía**;
+la política de puntos sin terminar se elige expresamente.
 
 ### Puntos sin terminar (arrastre)
 
@@ -75,7 +90,7 @@ Esta pestaña decide el comportamiento de la serie. Todo puede quedarse en
 
 | Campo | Significado |
 |---|---|
-| **Default point estimate (minutes)** | Estimación pre-rellenada para los puntos nuevos de esta serie. Vacío → valor de la compañía (se muestra al lado). |
+| **Estimación predeterminada por punto (minutos)** | Estimación propuesta para los puntos nuevos de esta serie. En el asistente de creación, **Predeterminado de la compañía** está activado inicialmente; desactívalo para fijar un valor para la serie. Un valor cero en el formulario de la serie usa la estimación de la compañía. |
 
 Los puntos estructurales (aprobación de acta y próxima reunión) ignoran este
 valor: reservan 5 minutos cada uno (5 por acta pendiente en las aprobaciones).
@@ -93,7 +108,9 @@ esta serie.
 | **Tipo de seguimiento por defecto** | Tipo preseleccionado. |
 | **Tipo de actividad por defecto** | Para seguimientos registrados como actividades de Odoo. |
 
-Con el módulo Project se añade aquí una página **Follow-up and Task Policy** —
+Con el módulo Project, el paso **Estructura** del asistente también permite
+vincular la serie nueva a un proyecto existente o crear uno para ella. En el
+formulario de la serie se añade la página **Política de seguimientos y tareas**;
 ver [Project](../integrations/project.md#política-de-tareas).
 
 ## Botones y propuestas
@@ -105,7 +122,7 @@ ver [Project](../integrations/project.md#política-de-tareas).
   hay propuestas pendientes, con botones Aceptar/Rechazar — ver
   [Proponer un punto](../user/propose-a-point.md).
 
-## Pestaña Meetings
+## Pestaña Reuniones
 
 Lista de solo lectura con las reuniones de la serie, de más reciente a más
 antigua, con insignias de estado. Abre una para trabajar con ella.

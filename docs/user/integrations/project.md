@@ -3,7 +3,17 @@
 Optional addon connecting meeting follow-ups to Odoo **Project** tasks.
 Requires `project` and `community_meetings`.
 
-![Follow-up with project task](img/project-task.png)
+![Follow-up with project task](../img/project-task.png)
+
+## Linking a project when creating a series
+
+When the Project addon is installed, the **Structure** step of the *New Meeting
+Series* wizard includes a **Link a project** switch. Turn it on to choose an
+existing project or create one for the series. The choice is shown again during
+review and becomes the series' project for tasks and follow-ups. The switch is
+off by default; leaving it off keeps the series unlinked.
+
+![New Meeting Series wizard with an existing project linked](../img/series-project-link.png)
 
 ## Creating a task from a follow-up
 
