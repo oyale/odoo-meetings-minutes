@@ -194,7 +194,12 @@ class Agenda(models.Model):
                 )
             prepared.append(vals)
         records = super().create(prepared)
-        records._check_closed_todo_project_tasks(records)
+        # These participations were just inserted and cannot be closed by a
+        # concurrent transaction yet. Only rows already closed need evidence;
+        # task removal must still lock existing open participations.
+        records._check_closed_todo_project_tasks(
+            records.filtered(lambda item: item.disposition == "closed")
+        )
         return records
 
     def write(self, vals):
@@ -206,22 +211,32 @@ class Agenda(models.Model):
             raise UserError(
                 _("The task requirement is recorded by the point workflow.")
             )
+        snapshot_fields = (
+            "project_requirement_snapshot",
+            "task_scope_snapshot",
+            "allowed_project_snapshot_id",
+        )
+        groups = {}
         for item in self:
-            values = dict(vals)
+            snapshot = None
             if (
-                values.get("disposition") == "closed"
+                vals.get("disposition") == "closed"
                 and item.kind == "todo"
                 and item.disposition != "closed"
             ):
                 policy = item.meeting_id._project_policy()
-                values["project_requirement_snapshot"] = policy[
-                    "meeting_todo_requirement"
-                ]
-                values["task_scope_snapshot"] = policy["meeting_task_scope"]
-                values["allowed_project_snapshot_id"] = (
+                snapshot = (
+                    policy["meeting_todo_requirement"],
+                    policy["meeting_task_scope"],
                     item.meeting_id._meeting_project().id
                     if policy["meeting_task_scope"] == "configured"
-                    else False
+                    else False,
                 )
-            super(Agenda, item).write(values)
+            groups.setdefault(snapshot, self.browse())
+            groups[snapshot] |= item
+        for snapshot, items in groups.items():
+            values = dict(vals)
+            if snapshot is not None:
+                values.update(dict(zip(snapshot_fields, snapshot, strict=False)))
+            super(Agenda, items).write(values)
         return True

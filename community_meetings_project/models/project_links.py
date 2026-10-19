@@ -10,29 +10,67 @@ class ProjectTaskLinkChecks(models.AbstractModel):
     _abstract = True
 
     def _check_closed_todo_project_tasks(
-        self, agenda_items, excluded_action_ids=(), excluded_task_ids=()
+        self,
+        agenda_items,
+        excluded_action_ids=(),
+        excluded_task_ids=(),
+        locked_topic_ids=(),
     ):
-        for topic in agenda_items.topic_id.sorted("id"):
+        locked_topic_ids = set(locked_topic_ids)
+        # Open participations can close concurrently with task removal. Lock
+        # their topics as well, before deciding whether evidence is required.
+        unlocked_topics = agenda_items.topic_id.filtered(
+            lambda row: row.id not in locked_topic_ids
+        ).sorted("id")
+        for topic in unlocked_topics:
             topic._lock_workflow()
-        for item in agenda_items.filtered(
-            lambda row: row.kind == "todo"
-            and row.disposition == "closed"
-            and row.requires_project_task
-        ):
-            actions = item.env["community.meeting.action"].search(
-                [
-                    ("topic_id", "=", item.topic_id.id),
-                    ("state", "!=", "cancelled"),
-                    ("responsible_user_id", "!=", False),
-                    ("id", "not in", list(excluded_action_ids)),
-                ]
+        # Callers that already own these locks have current ORM values. Only
+        # refresh participations whose lock we acquired in this check.
+        unlocked_topic_ids = set(unlocked_topics.ids)
+        agenda_items.filtered(
+            lambda item: item.topic_id.id in unlocked_topic_ids
+        ).invalidate_recordset(
+            [
+                "kind",
+                "disposition",
+                "requires_project_task",
+                "project_requirement_snapshot",
+                "task_scope_snapshot",
+                "allowed_project_snapshot_id",
+            ]
+        )
+        items = agenda_items.filtered(
+            lambda row: (
+                row.kind == "todo"
+                and row.disposition == "closed"
+                and row.requires_project_task
             )
-            tasks = actions.mapped("project_task_ids").filtered(
-                lambda task, item=item: task.id not in excluded_task_ids
-                and task.user_ids
-                and task.state != "1_canceled"
-                and task.active
-                and (not task.company_id or task.company_id == item.company_id)
+        )
+        if not items:
+            return
+        action_model = items.env["community.meeting.action"]
+        actions = action_model.search(
+            [
+                ("topic_id", "in", items.topic_id.ids),
+                ("state", "!=", "cancelled"),
+                ("responsible_user_id", "!=", False),
+                ("id", "not in", list(excluded_action_ids)),
+            ]
+        )
+        actions_by_topic = {}
+        for action in actions:
+            actions_by_topic.setdefault(action.topic_id.id, action_model)
+            actions_by_topic[action.topic_id.id] |= action
+        for item in items:
+            topic_actions = actions_by_topic.get(item.topic_id.id, action_model)
+            tasks = topic_actions.mapped("project_task_ids").filtered(
+                lambda task, item=item: (
+                    task.id not in excluded_task_ids
+                    and task.user_ids
+                    and task.state != "1_canceled"
+                    and task.active
+                    and (not task.company_id or task.company_id == item.company_id)
+                )
             )
             scope = (
                 item.task_scope_snapshot
@@ -206,7 +244,14 @@ class CommunityMeetingAgendaItem(models.Model):
                     ids, record.meeting_id
                 )
         result = super().write(vals)
-        self._check_closed_todo_project_tasks(self)
+        already_locked_topic_ids = (
+            self.topic_id.ids
+            if {"disposition", "decision_result"}.intersection(vals)
+            else ()
+        )
+        self._check_closed_todo_project_tasks(
+            self, locked_topic_ids=already_locked_topic_ids
+        )
         return result
 
 
@@ -255,17 +300,28 @@ class CommunityMeetingAction(models.Model):
         ondelete={"project_task": "set default", "project_todo": "set default"},
     )
 
-    def _has_execution_evidence(self):
-        self.ensure_one()
-        if self.followup_kind not in ("project_task", "project_todo"):
-            return super()._has_execution_evidence()
-        return bool(
-            self.project_task_ids.filtered(
-                lambda task: task.active
-                and task.user_ids
-                and task.state != "1_canceled"
-            )
+    def _default_execution_evidence_by_action(self):
+        project_actions = self.filtered(
+            lambda action: action.followup_kind in ("project_task", "project_todo")
         )
+        native_actions = self - project_actions
+        evidence_by_action = super(
+            CommunityMeetingAction, native_actions
+        )._default_execution_evidence_by_action()
+        valid_task_ids = set(
+            project_actions.mapped("project_task_ids")
+            .filtered(
+                lambda task: (
+                    task.active and task.user_ids and task.state != "1_canceled"
+                )
+            )
+            .ids
+        )
+        for action in project_actions:
+            evidence_by_action[action.id] = bool(
+                valid_task_ids.intersection(action.project_task_ids.ids)
+            )
+        return evidence_by_action
 
     def _sync_external_artifact(self):
         for action in self:
@@ -499,18 +555,25 @@ class ProjectTask(models.Model):
     _inherit = "project.task"
 
     def write(self, vals):
+        evidence_fields = {"state", "active", "user_ids", "project_id", "company_id"}
+        if not self or not evidence_fields.intersection(vals):
+            return super().write(vals)
         actions = (
             self.env["community.meeting.action"]
             .sudo()
             .search([("project_task_ids", "in", self.ids)])
         )
+        if not actions:
+            return super().write(vals)
         for topic in actions.topic_id.sorted("id"):
             topic._lock_workflow()
         result = super().write(vals)
         if "state" in vals:
             completable = actions.filtered(
-                lambda a: a.followup_kind in ("project_task", "project_todo")
-                and a.state not in ("done", "cancelled")
+                lambda a: (
+                    a.followup_kind in ("project_task", "project_todo")
+                    and a.state not in ("done", "cancelled")
+                )
             )
             for action in completable:
                 tasks = action.project_task_ids
@@ -523,7 +586,9 @@ class ProjectTask(models.Model):
         )
         self.env[
             "community.meeting.project.task.mixin"
-        ].sudo()._check_closed_todo_project_tasks(items)
+        ].sudo()._check_closed_todo_project_tasks(
+            items, locked_topic_ids=actions.topic_id.ids
+        )
         return result
 
     def unlink(self):

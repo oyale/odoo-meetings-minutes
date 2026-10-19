@@ -485,40 +485,58 @@ class CommunityMeeting(models.Model):
     def _promote_followups(self):
         """At meeting close (held), promote open follow-ups whose origin point
         is closed into new persistent points, keeping traceability to both."""
-        for meeting in self:
-            actions = self.env["community.meeting.action"].search(
-                [
-                    ("meeting_id", "=", meeting.id),
-                    ("state", "not in", ("done", "cancelled")),
-                    ("topic_id.state", "=", "closed"),
-                ]
+        if not self:
+            return True
+        actions = self.env["community.meeting.action"].search(
+            [
+                ("meeting_id", "in", self.ids),
+                ("state", "not in", ("done", "cancelled")),
+                ("topic_id.state", "=", "closed"),
+            ]
+        )
+        if not actions:
+            return True
+        actions_by_meeting = {}
+        for action in actions:
+            actions_by_meeting.setdefault(
+                action.meeting_id.id, self.env["community.meeting.action"]
             )
-            for action in actions:
-                if self.env["community.meeting.topic"].search_count(
-                    [
-                        ("origin_action_id", "=", action.id),
-                    ]
-                ):
-                    continue
-                default_type = self.env["community.meeting.agenda.type"].search(
-                    [("behavior", "=", "followup"), ("active", "=", True)], limit=1
-                )
-                responsible = action.responsible_user_id.partner_id
-                self.env["community.meeting.topic"].create(
-                    {
-                        "name": action.name,
-                        "agenda_type_id": default_type.id,
-                        "origin_topic_id": action.topic_id.id,
-                        "origin_action_id": action.id,
-                        "company_id": meeting.company_id.id,
-                        "series_id": meeting.series_id.id,
-                        "presenter_partner_id": (
-                            responsible.id
-                            if responsible
-                            else self.env.user.partner_id.id
-                        ),
-                    }
-                )
+            actions_by_meeting[action.meeting_id.id] |= action
+        existing_action_ids = set(
+            self.env["community.meeting.topic"].search(
+                [("origin_action_id", "in", actions.ids)]
+            ).mapped("origin_action_id").ids
+        )
+        pending = actions.filtered(lambda action: action.id not in existing_action_ids)
+        if not pending:
+            return True
+        default_type = self.env["community.meeting.agenda.type"].search(
+            [("behavior", "=", "followup"), ("active", "=", True)], limit=1
+        )
+        values_list = []
+        for meeting in self:
+            for action in actions_by_meeting.get(
+                meeting.id, self.env["community.meeting.action"]
+            ):
+                if action.id not in existing_action_ids:
+                    responsible = action.responsible_user_id.partner_id
+                    values_list.append(
+                        {
+                            "name": action.name,
+                            "agenda_type_id": default_type.id,
+                            "origin_topic_id": action.topic_id.id,
+                            "origin_action_id": action.id,
+                            "company_id": meeting.company_id.id,
+                            "series_id": meeting.series_id.id,
+                            "presenter_partner_id": (
+                                responsible.id
+                                if responsible
+                                else self.env.user.partner_id.id
+                            ),
+                        }
+                    )
+        self.env["community.meeting.topic"].create(values_list)
+        return True
 
     def get_pending_minutes_for_approval(self):
         """Previous meetings in the same series whose minutes are not approved."""

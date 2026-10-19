@@ -1,4 +1,6 @@
-from odoo.exceptions import ValidationError
+from unittest.mock import patch
+
+from odoo.exceptions import AccessError, ValidationError
 from odoo.tests import TransactionCase, tagged
 
 
@@ -44,6 +46,35 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         self.assertFalse(action.project_task_ids.project_id)
         self.assertTrue(action.project_task_ids.user_ids)
         self.assertTrue(action._has_execution_evidence())
+
+    def test_batched_evidence_is_returned_per_same_topic_action(self):
+        meeting = self.meetings[0]
+        actions = self.env["community.meeting.action"].with_user(self.editor).create(
+            [
+                {
+                    "meeting_id": meeting.id,
+                    "agenda_item_id": self.item.id,
+                    "name": "Same-topic action with task evidence",
+                    "responsible_user_id": self.editor.id,
+                    "followup_kind": "project_task",
+                    "project_task_ids": [(4, self.tasks[0].id)],
+                },
+                {
+                    "meeting_id": meeting.id,
+                    "agenda_item_id": self.item.id,
+                    "name": "Same-topic action without task evidence",
+                    "responsible_user_id": self.editor.id,
+                    "followup_kind": "project_task",
+                },
+            ]
+        )
+
+        evidence_by_action = actions._execution_evidence_by_action()
+
+        self.assertEqual(
+            evidence_by_action,
+            {actions[0].id: True, actions[1].id: False},
+        )
 
     def test_multiple_task_links_and_reverse_navigation(self):
         meeting = self.meetings[0]
@@ -91,6 +122,108 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
             self.tasks[0].unlink()
         with self.assertRaises(ValidationError), self.cr.savepoint():
             action.with_user(self.editor).write({"project_task_ids": [(5, 0, 0)]})
+
+    def test_batch_todo_write_reaches_constraint_with_all_same_policy_items(self):
+        size = 100
+        meeting = self.env["community.meeting"].with_user(self.editor).create({
+            "name": "Batched TODO constraint",
+            "series_id": self.series.id,
+        })
+        items = self.env["community.meeting.agenda.item"].with_user(self.editor).create(
+            [
+                {
+                    "meeting_id": meeting.id,
+                    "name": f"Batched TODO {index}",
+                    "kind": "todo",
+                }
+                for index in range(size)
+            ]
+        )
+        self.env["community.meeting.action"].with_user(self.editor).create(
+            [
+                {
+                    "meeting_id": meeting.id,
+                    "agenda_item_id": item.id,
+                    "name": f"Batched TODO action {index}",
+                    "responsible_user_id": self.editor.id,
+                    "followup_kind": "activity",
+                }
+                for index, item in enumerate(items)
+            ]
+        )
+        batch_sizes = []
+        agenda_model = type(items)
+        original_lookup = agenda_model._followup_actions_by_topic
+
+        def record_lookup_batch(records):
+            batch_sizes.append(len(records))
+            return original_lookup(records)
+
+        with patch.object(
+            agenda_model, "_followup_actions_by_topic", record_lookup_batch
+        ):
+            items.write({"disposition": "closed"})
+
+        self.assertEqual(batch_sizes, [size])
+        self.assertEqual(set(items.mapped("project_requirement_snapshot")), {"core"})
+
+    def test_batch_todo_write_preserves_mixed_policy_snapshots(self):
+        project_series = self.env["community.meeting.series"].with_user(
+            self.editor
+        ).create(
+            {
+                "name": "Project-required batch series",
+                "meeting_todo_requirement": "project",
+            }
+        )
+        core_meeting, project_meeting = self.env[
+            "community.meeting"
+        ].with_user(self.editor).create(
+            [
+                {"name": "Core-policy TODO", "series_id": self.series.id},
+                {"name": "Project-policy TODO", "series_id": project_series.id},
+            ]
+        )
+        core_item, project_item = self.env[
+            "community.meeting.agenda.item"
+        ].with_user(self.editor).create(
+            [
+                {
+                    "meeting_id": core_meeting.id,
+                    "name": "Core requirement",
+                    "kind": "todo",
+                },
+                {
+                    "meeting_id": project_meeting.id,
+                    "name": "Project requirement",
+                    "kind": "todo",
+                },
+            ]
+        )
+        self.env["community.meeting.action"].with_user(self.editor).create(
+            [
+                {
+                    "meeting_id": core_meeting.id,
+                    "agenda_item_id": core_item.id,
+                    "name": "Core action",
+                    "responsible_user_id": self.editor.id,
+                    "followup_kind": "activity",
+                },
+                {
+                    "meeting_id": project_meeting.id,
+                    "agenda_item_id": project_item.id,
+                    "name": "Project action",
+                    "responsible_user_id": self.editor.id,
+                    "followup_kind": "project_task",
+                    "project_task_ids": [(4, self.tasks[0].id)],
+                },
+            ]
+        )
+
+        (core_item | project_item).write({"disposition": "closed"})
+
+        self.assertEqual(core_item.project_requirement_snapshot, "core")
+        self.assertEqual(project_item.project_requirement_snapshot, "project")
 
     def test_non_todo_points_do_not_require_project_tasks_to_close(self):
         item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
@@ -201,6 +334,210 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         })
         with self.assertRaises(ValidationError):
             wizard.action_create()
+
+    def test_task_writer_without_meeting_access_completes_delegated_actions(self):
+        writer = self.env["res.users"].create({
+            "name": "Project Task Writer Without Meeting Access",
+            "login": "project-task-writer-no-meeting-access",
+            "company_id": self.editor.company_id.id,
+            "company_ids": [(6, 0, [self.editor.company_id.id])],
+            "groups_id": [(6, 0, [
+                self.env.ref("base.group_user").id,
+                self.env.ref("project.group_project_user").id,
+            ])],
+        })
+        denied_writer = self.env["res.users"].create({
+            "name": "User Without Project Task Write",
+            "login": "project-task-writer-denied",
+            "company_id": self.editor.company_id.id,
+            "company_ids": [(6, 0, [self.editor.company_id.id])],
+            "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
+        })
+        meeting = self.env["community.meeting"].with_user(self.editor).create({
+            "name": "Private delegated Project completion",
+        })
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": meeting.id,
+            "name": "Private delegated point",
+        })
+        first, second = self.env["project.task"].create([
+            {
+                "name": "First delegated task",
+                "project_id": self.project.id,
+                "user_ids": [(4, writer.id)],
+            },
+            {
+                "name": "Shared delegated task",
+                "project_id": self.project.id,
+                "user_ids": [(4, writer.id)],
+            },
+        ])
+        first_action, shared_action = self.env[
+            "community.meeting.action"
+        ].with_user(self.editor).create([
+            {
+                "meeting_id": meeting.id,
+                "agenda_item_id": item.id,
+                "name": "First action requiring both tasks",
+                "followup_kind": "project_task",
+                "project_task_ids": [(6, 0, [first.id, second.id])],
+            },
+            {
+                "meeting_id": meeting.id,
+                "agenda_item_id": item.id,
+                "name": "Second action sharing one task",
+                "followup_kind": "project_task",
+                "project_task_ids": [(4, second.id)],
+            },
+        ])
+
+        with self.assertRaises(AccessError):
+            meeting.with_user(writer).check_access("read")
+        with self.assertRaises(AccessError):
+            first_action.with_user(writer).check_access("read")
+        with self.assertRaises(AccessError):
+            first.with_user(denied_writer).write({"state": "1_done"})
+        self.assertEqual(first_action.state, "open")
+        self.assertEqual(shared_action.state, "open")
+
+        first.with_user(writer).write({"state": "1_done"})
+        self.assertEqual(first_action.state, "open")
+        self.assertEqual(shared_action.state, "open")
+        second.with_user(writer).write({"state": "1_done"})
+        self.assertEqual(first_action.state, "done")
+        self.assertEqual(shared_action.state, "done")
+
+        with self.assertRaises(AccessError):
+            meeting.with_user(writer).read(["name"])
+        with self.assertRaises(AccessError):
+            first_action.with_user(writer).read(["name"])
+        second.with_user(writer).write({"state": "01_in_progress"})
+        self.assertEqual(first_action.state, "done")
+        self.assertEqual(shared_action.state, "done")
+
+    def test_action_changes_keep_hidden_closed_todo_evidence_in_scope(self):
+        writer = self.env["res.users"].create({
+            "name": "Editor for One Meeting Only",
+            "login": "project-link-one-meeting-editor",
+            "company_id": self.editor.company_id.id,
+            "company_ids": [(6, 0, [self.editor.company_id.id])],
+            "groups_id": [(6, 0, [
+                self.env.ref("base.group_user").id,
+                self.env.ref("community_meetings.group_meeting_editor").id,
+                self.env.ref("project.group_project_user").id,
+            ])],
+        })
+        self.series.write({"meeting_todo_requirement": "project"})
+        private_meeting = self.env["community.meeting"].with_user(self.editor).create({
+            "name": "Hidden meeting with valid Project evidence",
+            "series_id": self.series.id,
+        })
+        visible_meeting = self.env["community.meeting"].with_user(writer).create({
+            "name": "Visible meeting sharing the point",
+            "series_id": self.series.id,
+        })
+        private_item = self.env["community.meeting.agenda.item"].with_user(
+            self.editor
+        ).create({
+            "meeting_id": private_meeting.id,
+            "name": "Private closed TODO",
+            "kind": "todo",
+        })
+        private_action = self.env["community.meeting.action"].with_user(
+            self.editor
+        ).create({
+            "meeting_id": private_meeting.id,
+            "agenda_item_id": private_item.id,
+            "name": "Valid hidden Project action",
+            "responsible_user_id": self.editor.id,
+            "followup_kind": "project_task",
+            "project_task_ids": [(4, self.tasks[0].id)],
+        })
+        private_item.with_user(self.editor).write({"disposition": "closed"})
+        visible_item = self.env["community.meeting.agenda.item"].with_user(writer).sudo().create({
+            "meeting_id": visible_meeting.id,
+            "topic_id": private_item.topic_id.id,
+            "name": "Visible participation of shared topic",
+        })
+
+        with self.assertRaises(AccessError):
+            private_meeting.with_user(writer).check_access("read")
+        visible_action = self.env["community.meeting.action"].with_user(writer).create({
+            "meeting_id": visible_meeting.id,
+            "agenda_item_id": visible_item.id,
+            "name": "Unassigned visible action",
+        })
+        visible_action.with_user(writer).write({"name": "Edited visible action"})
+        visible_action.with_user(writer).unlink()
+
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            private_action.with_user(self.editor).write({
+                "project_task_ids": [(5, 0, 0)],
+            })
+        self.assertEqual(private_item.disposition, "closed")
+        self.assertEqual(private_action.project_task_ids, self.tasks[0])
+
+    def test_delegated_completion_preserves_approved_minutes(self):
+        approver = self.env["res.users"].create({
+            "name": "Minutes Approver for Project Delegation",
+            "login": "project-delegation-minutes-approver",
+            "company_id": self.editor.company_id.id,
+            "company_ids": [(6, 0, [self.editor.company_id.id])],
+            "groups_id": [(6, 0, [
+                self.env.ref("base.group_user").id,
+                self.env.ref("community_meetings.group_meeting_approver").id,
+            ])],
+        })
+        writer = self.env["res.users"].create({
+            "name": "Minutes Task Writer without Meeting Access",
+            "login": "project-minutes-writer-no-meeting-access",
+            "company_id": self.editor.company_id.id,
+            "company_ids": [(6, 0, [self.editor.company_id.id])],
+            "groups_id": [(6, 0, [
+                self.env.ref("base.group_user").id,
+                self.env.ref("project.group_project_user").id,
+            ])],
+        })
+        meeting = self.env["community.meeting"].with_user(self.editor).create({
+            "name": "Approved minutes with delegated Project follow-up",
+            "start_datetime": "2026-11-15 10:00:00",
+            "reader_user_ids": [(4, approver.id)],
+        })
+        item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": meeting.id,
+            "name": "Project follow-up point",
+        })
+        task = self.env["project.task"].create({
+            "name": "Task completed after approval",
+            "project_id": self.project.id,
+            "user_ids": [(4, writer.id)],
+        })
+        action = self.env["community.meeting.action"].with_user(self.editor).create({
+            "meeting_id": meeting.id,
+            "agenda_item_id": item.id,
+            "name": "Complete the linked task",
+            "followup_kind": "project_task",
+            "project_task_ids": [(4, task.id)],
+        })
+        meeting.with_user(self.editor).action_schedule()
+        meeting.with_user(self.editor).action_mark_held()
+        meeting.with_user(self.editor).action_draft_minutes()
+        report_model = self.env["ir.actions.report"]
+        with patch.object(
+            type(report_model),
+            "_render_qweb_pdf",
+            return_value=(b"%PDF-1.4\nproject delegation fixture\n", "pdf"),
+        ):
+            meeting.with_user(approver).action_approve_minutes()
+        revision = meeting.approved_revision_id
+        snapshot_before = revision.snapshot_json
+        pdf_before = revision.pdf_attachment_id.raw
+
+        task.with_user(writer).write({"state": "1_done"})
+
+        self.assertEqual(action.state, "done")
+        self.assertEqual(revision.snapshot_json, snapshot_before)
+        self.assertEqual(revision.pdf_attachment_id.raw, pdf_before)
 
     def test_series_project_is_lazy_and_existing_task_can_be_external(self):
         self.editor.write({'groups_id': [(4, self.env.ref('project.group_project_manager').id)]})

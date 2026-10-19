@@ -1,6 +1,6 @@
 import uuid
 
-from odoo import _, Command, api, fields, models
+from odoo import Command, _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 
 
@@ -25,23 +25,35 @@ class CommunityMeeting(models.Model):
 
     def _check_calendar_attendees(self):
         user_model = self.env["res.users"].sudo()
+        partners_by_meeting = {
+            meeting.id: meeting._calendar_attendee_partner_ids() for meeting in self
+        }
+        all_partners = self.env["res.partner"].browse(
+            set().union(*(partners.ids for partners in partners_by_meeting.values()))
+        )
+        if not all_partners:
+            return True
+        linked_users = user_model.search([
+            ("partner_id", "in", all_partners.ids),
+            ("active", "=", True),
+            ("share", "=", False),
+        ])
+        users_by_partner = {}
+        for user in linked_users:
+            users_by_partner.setdefault(user.partner_id.id, self.env["res.users"])
+            users_by_partner[user.partner_id.id] |= user
         for meeting in self:
-            partners = meeting._calendar_attendee_partner_ids()
-            linked_users = user_model.search([
-                ("partner_id", "in", partners.ids),
-                ("active", "=", True),
-                ("share", "=", False),
-            ])
-            users_by_partner = {}
-            for user in linked_users:
-                users_by_partner.setdefault(user.partner_id.id, self.env["res.users"])
-                users_by_partner[user.partner_id.id] |= user
-            for partner in partners:
+            for partner in partners_by_meeting[meeting.id]:
                 eligible = users_by_partner.get(partner.id, self.env["res.users"])
-                if not eligible or not any(meeting.company_id in user.company_ids for user in eligible):
-                    raise ValidationError(_(
-                        "Calendar invitees must be active internal users in the meeting company."
-                    ))
+                if not eligible or not any(
+                    meeting.company_id in user.company_ids for user in eligible
+                ):
+                    raise ValidationError(
+                        _(
+                            "Calendar invitees must be active internal users in the "
+                            "meeting company."
+                        )
+                    )
 
     def _calendar_attendee_partner_ids(self):
         self.ensure_one()
@@ -110,10 +122,14 @@ class CommunityMeeting(models.Model):
 
     def _sync_calendar_event(self):
         """Sync events; callers must hold the meeting row lock."""
+        scheduled = self.filtered(lambda meeting: meeting.state == "scheduled")
+        if not scheduled:
+            return True
+        scheduled._check_calendar_attendees()
+        creates_by_owner = {}
         for meeting in self:
             if meeting.state != "scheduled":
                 continue
-            meeting._check_calendar_attendees()
             event = meeting.calendar_event_ids
             owner_env = self.env["calendar.event"].with_user(meeting.organizer_id).sudo()
             if event:
@@ -127,7 +143,12 @@ class CommunityMeeting(models.Model):
                 if removed:
                     event._community_meetings_calendar_cancel_mail(removed)
             else:
-                owner_env._community_meetings_calendar_create([meeting._calendar_event_values()])
+                entry = creates_by_owner.setdefault(
+                    meeting.organizer_id.id, (owner_env, [])
+                )
+                entry[1].append(meeting._calendar_event_values())
+        for owner_env, values_list in creates_by_owner.values():
+            owner_env._community_meetings_calendar_create(values_list)
 
     def _cancel_calendar_event(self):
         """Cancel events; callers must hold the meeting row lock."""

@@ -205,11 +205,37 @@ class FollowupActivity(models.Model):
     )
     followup_activity_completed_on = fields.Datetime(readonly=True, copy=False)
 
+    def _native_execution_evidence_by_action(self):
+        activities = self.mapped("followup_activity_ids").exists()
+        activity_ids = set(activities.ids)
+        return {
+            action.id: bool(
+                activity_ids.intersection(action.followup_activity_ids.ids)
+                or action.followup_activity_completed_on
+            )
+            for action in self
+        }
+
+    def _default_execution_evidence_by_action(self):
+        """Batch predicate hook; extensions should delegate unhandled actions."""
+        return self._native_execution_evidence_by_action()
+
+    def _execution_evidence_by_action(self):
+        """Preserve older singleton overrides while batching standard kinds.
+
+        A legacy override may call super(): the singleton entry point therefore
+        calls the default batch hook, never this compatibility dispatcher.
+        """
+        if (
+            type(self)._has_execution_evidence
+            is not FollowupActivity._has_execution_evidence
+        ):
+            return {action.id: action._has_execution_evidence() for action in self}
+        return self._default_execution_evidence_by_action()
+
     def _has_execution_evidence(self):
         self.ensure_one()
-        return bool(
-            self.followup_activity_ids.exists() or self.followup_activity_completed_on
-        )
+        return self._default_execution_evidence_by_action()[self.id]
 
     def _sync_followup_activity(self):
         for action in self:
@@ -231,8 +257,9 @@ class FollowupActivity(models.Model):
                     _("Choose an Odoo activity type for this follow-up.")
                 )
             activities.filtered(
-                lambda a, owners=owners, action=action: a.user_id not in owners
-                or a.user_id in action.completed_user_ids
+                lambda a, owners=owners, action=action: (
+                    a.user_id not in owners or a.user_id in action.completed_user_ids
+                )
             ).unlink()
             for owner in owners - action.completed_user_ids:
                 if not action.with_user(owner).has_access("read"):
@@ -539,8 +566,9 @@ class MailActivity(models.Model):
                         (3, aid) for aid in finished_ids[action.id]
                     ],
                     "followup_activity_id": action.followup_activity_ids.filtered(
-                        lambda activity, action=action: activity.id
-                        not in finished_ids[action.id]
+                        lambda activity, action=action: (
+                            activity.id not in finished_ids[action.id]
+                        )
                     )[:1].id,
                     "followup_activity_completed_on": fields.Datetime.now()
                     if all_done
