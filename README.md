@@ -61,11 +61,16 @@ for user-facing changes between releases.
 ## Preparing a release
 
 After bumping the versions of changed addons in their manifests, refresh the
-addon version table in this README:
+addon version table in this README. Stage the changed manifest files first so
+the generator reads their new versions:
 
 ```console
 pre-commit run oca-gen-addons-table --hook-stage manual
 ```
+
+If the command updates this README, pre-commit reports that change on the first
+run. Review and stage the generated table, then rerun the command to confirm it
+passes.
 
 Then use Python 3.11 or newer and Towncrier 23.6 or newer to prepare the
 changelog. Preview it, then run the same command without `--draft` to write
