@@ -45,6 +45,8 @@ jobs:
         env:
           BASE: ${{ steps.changes.outputs.base }}
         run: python .github/scripts/check_towncrier_fragments.py "$BASE" "$GITHUB_SHA"
+      - name: Test release helper
+        run: python -m unittest discover -s .github/scripts/tests -v
       - name: Check changed files
         env:
           BASE: ${{ steps.changes.outputs.base }}

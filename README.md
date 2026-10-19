@@ -60,32 +60,30 @@ for user-facing changes between releases.
 
 ## Preparing a release
 
-After bumping the versions of changed addons in their manifests, refresh the
-addon version table in this README. Stage the changed manifest files first so
-the generator reads their new versions:
+Run the local release helper from a clean tracked working tree on branch
+`18.0`. It finds addon changes since the latest release tag, increments the
+patch version of changed addons that have not already been bumped, refreshes
+the generated README and metapackage metadata, builds the changelog, and creates
+the release commit. With no options, it prints a dry run:
 
 ```console
-pre-commit run oca-gen-addons-table --hook-stage manual
+python3.11 .github/scripts/release.py
 ```
 
-If the command updates this README, pre-commit reports that change on the first
-run. Review and stage the generated table, then rerun the command to confirm it
-passes.
-
-Then use Python 3.11 or newer and Towncrier 23.6 or newer to prepare the
-changelog. Preview it, then run the same command without `--draft` to write
-`CHANGELOG.md` and remove the consumed news fragments:
+The helper checks required Towncrier fragments and uses today's date for the
+next suite version. It prepares and commits locally with `--apply`, pushes the
+commit with `--push`, or pushes and creates a GitHub Release with `--publish`.
+Publishing the GitHub Release starts the PyPI workflow:
 
 ```console
-python3.11 .github/scripts/prepare_release.py \
-  --version 18.0.<date-or-sequence>.<revision> --draft
-python3.11 .github/scripts/prepare_release.py \
-  --version 18.0.<date-or-sequence>.<revision>
+python3.11 .github/scripts/release.py --apply
+python3.11 .github/scripts/release.py --push
+python3.11 .github/scripts/release.py --publish
 ```
 
-Commit the changelog, manifest versions, generated addon table, and fragment
-removals together before tagging the release. The preparation command refuses
-to add the same release version twice.
+Pass `--version 18.0.<date>.<sequence>` to choose the suite version explicitly.
+If a push fails after the release commit is created, rerun with `--push` or
+`--publish` to resume that prepared release.
 GitHub Pages builds the bilingual user and administrator documentation from
 `docs/user/` and `docs/user_es/` on every push to `18.0`.
 See [ROADMAP.md](ROADMAP.md) for planned user-facing improvements.
