@@ -127,6 +127,9 @@ ACTIONS = {
         "prepare minutes",
         "return to meetings",
     ],
+    "test_minutes_preview_returns_to_draft_meeting": [
+        "preview saved draft minutes and return to meeting",
+    ],
     "test_already_held": ["record already held meeting"],
     "test_point_type": ["change point type"],
     "test_mobile_layout": ["use live on mobile width"],

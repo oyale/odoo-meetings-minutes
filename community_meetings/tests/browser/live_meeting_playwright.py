@@ -434,6 +434,30 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             "contenteditable", "true",
         )
 
+    def test_minutes_preview_returns_to_draft_meeting(self):
+        self.rpc("community.meeting", "action_mark_held", [[self.meeting_id]])
+        self.rpc("community.meeting", "action_draft_minutes", [[self.meeting_id]])
+        self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
+        self.page.get_by_role("button", name="Open Meeting").click(timeout=30000)
+        self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
+
+        self.page.get_by_role("button", name="Preview Minutes", exact=True).click()
+        preview = self.page.locator(".o_community_minutes_preview")
+        expect(preview).to_contain_text("Draft preview · saved content")
+        expect(preview).to_contain_text("Browser Discussion case")
+        expect(preview.get_by_role("button", name="Return to meeting to edit")).to_be_visible()
+        self.assertEqual(
+            self.record("community.meeting", self.meeting_id, ["state"])["state"],
+            "minutes_draft",
+        )
+
+        preview.get_by_role("button", name="Return to meeting to edit").click()
+        expect(self.page.locator(".o_form_view")).to_be_visible(timeout=30000)
+        self.assertEqual(
+            self.record("community.meeting", self.meeting_id, ["state"])["state"],
+            "minutes_draft",
+        )
+
     def test_series_structural_points_render_in_live_meeting(self):
         series = self.rpc("community.meeting.series", "create", [{
             "name": "Structural live",
