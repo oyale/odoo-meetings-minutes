@@ -15,5 +15,6 @@ docs/_build/
 /.superpowers/
 /.agents/
 /.codex/
+/.codegraph/
 /.claude/
 /.cursor/
