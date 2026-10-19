@@ -149,6 +149,8 @@ ACTIONS = {
         "series duration defaults",
         "wizard back preserves edits",
         "rich point body",
+        "choose a behavior-specific agenda type card",
+        "navigate agenda type cards with the keyboard",
         "point priority",
         "optional deadline",
         "optional time estimate",
@@ -1232,13 +1234,22 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         point.locator(
             '.o_field_widget[name="description"] [contenteditable="true"]'
         ).fill("Background, proposed action and supporting links.")
-        point.locator('.o_field_widget[name="priority"] select').select_option(
-            label="Critical"
-        )
+        decision_type = point.get_by_role("radio", name=re.compile("^Decision"))
+        decision_type.click()
         expect(
-            point.locator('.o_field_widget[name="estimated_minutes"] input')
+            decision_type
+        ).to_have_attribute("aria-checked", "true")
+        decision_type.focus()
+        decision_type.press("ArrowRight")
+        expect(
+            point.get_by_role("radio", name=re.compile("^TODO"))
+        ).to_have_attribute("aria-checked", "true")
+        decision_type.click()
+        point.get_by_role("radio", name=re.compile("^Critical")).click()
+        expect(
+            point.get_by_role("spinbutton", name="Custom estimate in minutes")
         ).to_be_visible()
-        point.locator('.o_field_widget[name="estimated_minutes"] input').fill("20")
+        point.get_by_role("spinbutton", name="Custom estimate in minutes").fill("20")
         point.locator('.o_field_widget[name="deadline"] input').fill("12/20/2026")
         point.locator('button[name="action_save"]').click()
         wizard = self.page.get_by_role("dialog").last
@@ -1269,6 +1280,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             {
                 "fields": [
                     "name",
+                    "kind",
                     "description",
                     "priority",
                     "estimated_minutes",
@@ -1278,6 +1290,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             },
         )
         self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["kind"], "decision")
         self.assertEqual(
             (items[0]["priority"], items[0]["estimated_minutes"], items[0]["deadline"]),
             ("3", 20, "2026-12-20"),

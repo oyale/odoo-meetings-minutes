@@ -15,6 +15,39 @@ class MeetingSeriesWizard(models.TransientModel):
     _name = "community.meeting.series.wizard"
     _description = "Create a Meeting Series"
 
+    @api.model
+    def default_get(self, fields_list):
+        values = super().default_get(fields_list)
+        # Seed the policy controls explicitly: the structure step may not be
+        # mounted when the form first asks for its defaults, and uninitialized
+        # toggles would be saved as series-specific overrides when advancing.
+        company = self.env["res.company"].browse(
+            values.get("company_id") or self.env.company.id
+        )
+        time_tracking = values.get("time_tracking", "inherit")
+        add_point_policy = values.get("add_point_policy", "inherit")
+        if "use_company_time_tracking" in fields_list:
+            values["use_company_time_tracking"] = time_tracking == "inherit"
+        if "time_tracking_override" in fields_list:
+            values["time_tracking_override"] = (
+                ("on" if company.meeting_time_tracking else "off")
+                if time_tracking == "inherit"
+                else time_tracking
+            )
+        if "use_company_add_point_policy" in fields_list:
+            values["use_company_add_point_policy"] = add_point_policy == "inherit"
+        if "add_point_policy_override" in fields_list:
+            values["add_point_policy_override"] = (
+                company.meeting_add_point_policy
+                if add_point_policy == "inherit"
+                else add_point_policy
+            )
+        if "use_company_estimated_minutes" in fields_list:
+            values["use_company_estimated_minutes"] = not values.get(
+                "default_estimated_minutes", 0
+            )
+        return values
+
     step = fields.Selection(
         [
             ("basics", "Series"),
@@ -25,40 +58,57 @@ class MeetingSeriesWizard(models.TransientModel):
         default="basics",
         required=True,
     )
-    name = fields.Char(required=True)
+    name = fields.Char(string="Series name", required=True)
     company_id = fields.Many2one(
         "res.company", required=True, default=lambda self: self.env.company
     )
     active = fields.Boolean(default=True)
     coordinator_user_ids = fields.Many2many(
-        "res.users", "community_meeting_series_wizard_coordinator_rel"
+        "res.users", "community_meeting_series_wizard_coordinator_rel",
+        string="Coordinators",
     )
     carryover_policy = fields.Selection(
         [("review", "Review"), ("automatic", "Automatic"), ("manual", "Manual")],
         default="review",
         required=True,
+        string="Unfinished points",
     )
     timezone = fields.Selection(
         [(tz, tz) for tz in pytz.all_timezones],
         required=True,
         default=lambda self: self.env.user.tz or "UTC",
+        string="Time zone",
     )
     duration_hours = fields.Float(string="Default duration", default=1.0, required=True)
     attendee_partner_ids = fields.Many2many(
-        "res.partner", "community_meeting_series_wizard_attendee_rel"
+        "res.partner", "community_meeting_series_wizard_attendee_rel",
+        string="Usual attendees",
     )
-    meeting_name_pattern = fields.Char(default="{date} {series}", required=True)
-    has_minutes_approval_point = fields.Boolean()
-    has_next_meeting_point = fields.Boolean()
+    meeting_name_pattern = fields.Char(
+        string="Meeting title pattern", default="{date} {series}", required=True
+    )
+    has_minutes_approval_point = fields.Boolean(
+        string="Add a minutes approval point"
+    )
+    has_next_meeting_point = fields.Boolean(string="Add a next meeting point")
     next_meeting_rule = fields.Selection(
-        [("weekday", "Next weekday"), ("day_of_month", "Next day of month"), ("interval_days", "After N days")]
+        [
+            ("weekday", "Next weekday"),
+            ("day_of_month", "Next day of month"),
+            ("interval_days", "After N days"),
+        ],
+        string="Suggest the next date by",
     )
     next_meeting_weekday = fields.Selection(
-        [("0", "Monday"), ("1", "Tuesday"), ("2", "Wednesday"), ("3", "Thursday"),
-         ("4", "Friday"), ("5", "Saturday"), ("6", "Sunday")]
+        [
+            ("0", "Monday"), ("1", "Tuesday"), ("2", "Wednesday"),
+            ("3", "Thursday"), ("4", "Friday"), ("5", "Saturday"),
+            ("6", "Sunday"),
+        ],
+        string="Weekday",
     )
-    next_meeting_day_of_month = fields.Integer()
-    next_meeting_interval_days = fields.Integer()
+    next_meeting_day_of_month = fields.Integer(string="Day of month")
+    next_meeting_interval_days = fields.Integer(string="Days later")
     created_series_id = fields.Many2one("community.meeting.series", readonly=True)
 
     @api.model
@@ -93,7 +143,17 @@ class MeetingSeriesWizard(models.TransientModel):
 
     time_tracking = fields.Selection(
         [("inherit", "Company default"), ("on", "On"), ("off", "Off")],
-        default="inherit", required=True,
+        default="inherit", required=True, string="Time tracking",
+    )
+    use_company_time_tracking = fields.Boolean(
+        default=True,
+        string="Company time-tracking default",
+    )
+    time_tracking_override = fields.Selection(
+        [("on", "On"), ("off", "Off")],
+        compute="_compute_time_tracking_override",
+        inverse="_inverse_time_tracking_override",
+        string="Time tracking for this series",
     )
     add_point_policy = fields.Selection(
         [
@@ -102,9 +162,82 @@ class MeetingSeriesWizard(models.TransientModel):
             ("scheduled", "Before it starts"),
             ("ongoing", "While it runs"),
         ],
-        default="inherit", required=True,
+        default="inherit", required=True, string="When points can be added",
+    )
+    use_company_add_point_policy = fields.Boolean(
+        default=True,
+        string="Company point-policy default",
+    )
+    add_point_policy_override = fields.Selection(
+        [("draft", "Draft only"), ("scheduled", "Before it starts"), ("ongoing", "While it runs")],
+        compute="_compute_add_point_policy_override",
+        inverse="_inverse_add_point_policy_override",
+        string="Adding points for this series",
     )
     default_estimated_minutes = fields.Integer(string="Default point estimate (minutes)")
+    use_company_estimated_minutes = fields.Boolean(
+        compute="_compute_use_company_estimated_minutes",
+        inverse="_inverse_use_company_estimated_minutes",
+        string="Company default point estimate",
+    )
+
+    @api.onchange("use_company_time_tracking")
+    def _onchange_use_company_time_tracking(self):
+        for wizard in self:
+            if wizard.use_company_time_tracking:
+                wizard.time_tracking = "inherit"
+            elif wizard.time_tracking == "inherit":
+                wizard.time_tracking = (
+                    "on" if wizard.company_id.meeting_time_tracking else "off"
+                )
+
+    @api.depends("time_tracking", "company_id.meeting_time_tracking")
+    def _compute_time_tracking_override(self):
+        for wizard in self:
+            wizard.time_tracking_override = (
+                wizard.time_tracking
+                if wizard.time_tracking != "inherit"
+                else "on" if wizard.company_id.meeting_time_tracking else "off"
+            )
+
+    def _inverse_time_tracking_override(self):
+        for wizard in self:
+            wizard.time_tracking = wizard.time_tracking_override
+
+    @api.onchange("use_company_add_point_policy")
+    def _onchange_use_company_add_point_policy(self):
+        for wizard in self:
+            if wizard.use_company_add_point_policy:
+                wizard.add_point_policy = "inherit"
+            elif wizard.add_point_policy == "inherit":
+                wizard.add_point_policy = wizard.company_id.meeting_add_point_policy
+
+    @api.depends("add_point_policy", "company_id.meeting_add_point_policy")
+    def _compute_add_point_policy_override(self):
+        for wizard in self:
+            wizard.add_point_policy_override = (
+                wizard.add_point_policy
+                if wizard.add_point_policy != "inherit"
+                else wizard.company_id.meeting_add_point_policy
+            )
+
+    def _inverse_add_point_policy_override(self):
+        for wizard in self:
+            wizard.add_point_policy = wizard.add_point_policy_override
+
+    @api.depends("default_estimated_minutes")
+    def _compute_use_company_estimated_minutes(self):
+        for wizard in self:
+            wizard.use_company_estimated_minutes = not wizard.default_estimated_minutes
+
+    def _inverse_use_company_estimated_minutes(self):
+        for wizard in self:
+            if wizard.use_company_estimated_minutes:
+                wizard.default_estimated_minutes = 0
+            elif not wizard.default_estimated_minutes:
+                wizard.default_estimated_minutes = (
+                    wizard.company_id.meeting_estimated_minutes or 5
+                )
 
     def action_finish(self):
         self.ensure_one()

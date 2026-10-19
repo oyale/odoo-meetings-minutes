@@ -44,6 +44,27 @@ msgid "Action"
 msgstr ""
 
 #. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
+msgid "Link a project"
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
+msgid "Keep this series connected to a project for its tasks and follow-ups."
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
+msgid "Project link"
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
+msgid "Choose a project"
+msgstr ""
+
+
+#. module: community_meetings_project
 #: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_links__agenda_item_ids
 msgid "Agenda Item"
 msgstr ""
@@ -586,4 +607,43 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_topic__followup_default_kind__project_todo
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__followup_default_kind__project_todo
 msgid "To-do"
+msgstr ""
+#. module: community_meetings_project
+#: code:addons/community_meetings_project/views/preparation_views.xml:0
+msgid "Follow-up"
+msgstr ""
+
+#. module: community_meetings_project
+#: code:addons/community_meetings_project/views/preparation_views.xml:0
+msgid "Follow-up owners"
+msgstr ""
+
+#. module: community_meetings_project
+#: code:addons/community_meetings_project/views/preparation_views.xml:0
+msgid "Follow-up deadline"
+msgstr ""
+
+#. module: community_meetings_project
+#: code:addons/community_meetings_project/views/preparation_views.xml:0
+msgid "Link a project task"
+msgstr ""
+
+#. module: community_meetings_project
+#: code:addons/community_meetings_project/views/preparation_views.xml:0
+msgid "Use an existing task or create one from this follow-up."
+msgstr ""
+
+#. module: community_meetings_project
+#: code:addons/community_meetings_project/views/preparation_views.xml:0
+msgid "Follow-up context"
+msgstr ""
+
+#. module: community_meetings_project
+#: code:addons/community_meetings_project/views/preparation_views.xml:0
+msgid "Choose an existing task"
+msgstr ""
+
+#. module: community_meetings_project
+#: code:addons/community_meetings_project/views/preparation_views.xml:0
+msgid "Create a new task"
 msgstr ""

@@ -414,6 +414,17 @@ class CommunityMeetingProjectTaskWizard(models.TransientModel):
     action_id = fields.Many2one(
         "community.meeting.action", required=True, readonly=True
     )
+    followup_name = fields.Char(
+        string="Follow-up", related="action_id.name", readonly=True
+    )
+    followup_responsible_user_ids = fields.Many2many(
+        string="Follow-up owners",
+        related="action_id.responsible_user_ids",
+        readonly=True,
+    )
+    followup_deadline = fields.Date(
+        string="Follow-up deadline", related="action_id.deadline", readonly=True
+    )
     project_id = fields.Many2one("project.project")
     has_default_project = fields.Boolean(readonly=True)
     choose_another_project = fields.Boolean(string="Choose a different project")

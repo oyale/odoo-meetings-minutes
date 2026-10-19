@@ -2,13 +2,17 @@
 <templates xml:space="preserve">
 
     <t t-name="community_meetings.AgendaTypeField">
-        <div class="o_meeting_type_choices" role="radiogroup">
+        <div t-att-class="'o_meeting_type_choices ' + (props.richChoices ? 'o_meeting_type_choices_rich ' + (!state.showAllRichChoices ? 'is-collapsed' : '') : '')" role="radiogroup" aria-label="Agenda type">
             <button t-foreach="items" t-as="item" t-key="item.id" type="button"
-                    t-att-class="'btn o_meeting_type_choice ' + (item.id === value ? 'btn-primary' : 'btn-outline-secondary')"
-                    t-att-aria-pressed="item.id === value"
+                    t-if="!props.richChoices or state.showAllRichChoices or item.id === value"
+                    t-att-class="'btn o_meeting_type_choice ' + (props.richChoices ? 'o_meeting_type_card' : (item.id === value ? 'btn-primary' : 'btn-outline-secondary')) + (item.id === value ? ' is-selected' : '') + (props.richChoices and !state.showAllRichChoices ? ' is-compact' : '')"
+                    role="radio" t-att-aria-checked="item.id === value"
+                    t-att-data-item-id="item.id"
+                    t-att-aria-label="item.name"
                     t-att-disabled="props.readonly"
-                    t-on-click="() => this.select(item)">
-                <i t-attf-class="fa #{item.icon} me-1" aria-hidden="true"/><t t-out="item.name"/>
+                    t-on-click="() => this.select(item)" t-on-keydown="(ev) => this.onKeydown(ev, item)">
+                <i t-attf-class="fa #{item.icon} me-1" aria-hidden="true"/><strong t-out="item.name"/>
+                <small t-if="props.richChoices" t-out="item.hint"/>
             </button>
         </div>
     </t>

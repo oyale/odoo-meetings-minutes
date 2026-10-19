@@ -16,12 +16,16 @@
     <t t-name="community_meetings.MeetingMinutesField">
         <div class="o_meeting_minutes_picker">
             <div class="o_meeting_minute_presets" role="group" aria-label="Estimated duration">
+                <button t-if="props.companyDefault" type="button"
+                        t-att-class="'btn btn-sm ' + (usesCompanyDefault ? 'btn-primary' : 'btn-light')"
+                        t-att-aria-pressed="usesCompanyDefault" t-att-disabled="props.readonly"
+                        t-on-click="useCompanyDefault"><i class="fa fa-building-o me-1" aria-hidden="true"/>Company default</button>
                 <button t-foreach="[5, 10, 15, 20, 30, 45]" t-as="minutes" t-key="minutes" type="button"
                         t-att-class="'btn btn-sm ' + (value === minutes ? 'btn-primary' : 'btn-light')"
                         t-att-aria-pressed="value === minutes" t-att-disabled="props.readonly"
                         t-on-click="() => this.setValue(minutes)"><t t-out="minutes"/> min</button>
             </div>
-            <div class="o_meeting_minute_custom">
+            <div t-if="!usesCompanyDefault" class="o_meeting_minute_custom">
                 <i class="fa fa-hourglass-half" aria-hidden="true"/>
                 <input type="number" min="0" step="1" inputmode="numeric" aria-label="Custom estimate in minutes"
                        t-att-value="value" t-att-disabled="props.readonly"
@@ -29,5 +33,38 @@
                 <span>minutes</span>
             </div>
         </div>
+    </t>
+
+    <t t-name="community_meetings.MeetingMoreOptionsField">
+        <button type="button" class="o_meeting_more_options_button"
+                role="switch" t-att-aria-checked="value" t-att-disabled="props.readonly"
+                t-on-click="toggle">
+            <span class="o_meeting_more_options_switch" aria-hidden="true"><i class="fa fa-sliders"/></span>
+            <span class="o_meeting_more_options_copy"><strong>More options</strong><small>Add an existing point or configure follow-ups.</small></span>
+            <i class="fa fa-angle-down o_meeting_more_options_chevron" aria-hidden="true"/>
+        </button>
+    </t>
+
+    <t t-name="community_meetings.MeetingCarryoverDecisionField">
+        <div class="o_meeting_carry_decisions" role="group" aria-label="Decision">
+            <button t-foreach="choices" t-as="choice" t-key="choice.value" type="button"
+                    t-att-class="'o_meeting_carry_decision o_meeting_carry_decision_' + choice.color + (value === choice.value ? ' is-selected' : '')"
+                    t-att-aria-pressed="value === choice.value"
+                    t-att-aria-label="choice.label"
+                    t-att-title="choice.label"
+                    t-on-pointerdown="stopRowEvent"
+                    t-on-mousedown="stopRowEvent"
+                    t-on-click="(ev) => this.select(choice.value, ev)">
+                <i t-attf-class="fa {{ choice.icon }}" aria-hidden="true"/>
+                <span class="visually-hidden" t-out="choice.label"/>
+            </button>
+        </div>
+    </t>
+
+    <t t-name="community_meetings.MeetingClearTopicField">
+        <button type="button" class="btn btn-link o_meeting_clear_topic" t-on-click="clear">
+            <i class="fa fa-times-circle me-1" aria-hidden="true"/>
+            <span>Clear selected point</span>
+        </button>
     </t>
 </templates>

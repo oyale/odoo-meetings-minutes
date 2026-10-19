@@ -1,13 +1,25 @@
 <odoo>
     <record id="view_topic_form" model="ir.ui.view">
         <field name="name">community.meeting.topic.form</field><field name="model">community.meeting.topic</field>
-        <field name="arch" type="xml"><form string="Point"><header><button name="action_copy_to_series" type="object" string="Copy to another series" groups="community_meetings.group_meeting_editor"/></header><sheet>
+        <field name="arch" type="xml"><form string="Point" class="o_meeting_point_form"><header><button name="action_copy_to_series" type="object" string="Copy to another series" groups="community_meetings.group_meeting_editor"/></header><sheet>
             <h1><field name="name"/></h1>
-            <group><field name="agenda_type_id" widget="meeting_agenda_type"/><field name="state" readonly="1"/><field name="outcome" readonly="1"/><field name="postponed" readonly="1"/><field name="presenter_partner_id"/><field name="priority"/><field name="deadline"/><field name="estimated_minutes"/><field name="series_id" readonly="1"/></group>
             <field name="description" widget="html"/>
+            <group string="Point details">
+                <field name="agenda_type_id" widget="meeting_agenda_type"/>
+                <field name="state" readonly="1"/>
+                <field name="outcome" readonly="1"/>
+                <field name="postponed" readonly="1"/>
+                <field name="presenter_partner_id"/>
+                <field name="series_id" readonly="1"/>
+            </group>
+            <group string="Planning">
+                <field name="priority"/>
+                <field name="deadline"/>
+                <field name="estimated_minutes"/>
+            </group>
             <group string="Advanced follow-up options"><field name="followup_allowed_kinds" widget="many2many_tags"/><field name="followup_default_kind"/></group>
             <group string="Related"><field name="origin_topic_id" readonly="1" invisible="not origin_topic_id"/><field name="related_topic_ids" widget="many2many_tags" domain="[('company_id', '=', company_id), ('id', '!=', id)]"/></group>
-            <field name="participation_ids" readonly="1"><list><field name="meeting_id"/><field name="disposition"/></list></field>
+            <group string="Participation history"><field name="participation_ids" readonly="1"><list><field name="meeting_id"/><field name="disposition"/></list></field></group>
         </sheet><chatter/></form></field>
     </record>
     <record id="view_topic_copy_wizard" model="ir.ui.view">
@@ -25,21 +37,51 @@
             <xpath expr="//field[@name='agenda_item_ids']/list/field[@name='name']" position="after"><field name="priority" optional="hide"/><field name="estimated_minutes" optional="hide"/><field name="review_next_meeting" optional="show"/></xpath>
         </field>
     </record>
-    <record id="view_series_preparation" model="ir.ui.view">
-        <field name="name">community.meeting.series.preparation</field><field name="model">community.meeting.series</field><field name="inherit_id" ref="view_community_meeting_series_form"/>
-        <field name="arch" type="xml"><xpath expr="//group[@name='followups']//group[1]" position="inside"><field name="followup_allowed_kinds" widget="many2many_tags"/><field name="followup_default_kind"/></xpath><xpath expr="//group[@name='followups']//group[2]" position="inside"><field name="default_activity_type_id"/></xpath></field>
-    </record>
-
 <record id="view_meeting_create_wizard" model="ir.ui.view">
 <field name="name">community.meeting.create.wizard</field><field name="model">community.meeting.create.wizard</field>
-<field name="arch" type="xml"><form string="Prepare a Meeting">
-<header><field name="step" widget="statusbar"/></header>
-<group invisible="step != 'series'"><field name="company_id" invisible="1"/><field name="defaults_applied" invisible="1"/><field name="last_default_duration" invisible="1"/><field name="last_default_start" invisible="1"/><field name="last_default_attendee_ids" invisible="1"/><field name="series_id" domain="[('company_id','=',company_id)]"/><p>Choose a series, or leave it empty for a standalone meeting. Your edits are kept when changing series.</p><button name="action_use_series_defaults" type="object" string="Use series defaults" invisible="not series_id"/></group>
-<group invisible="step != 'when'"><field name="suggested_name" invisible="1"/><field name="start_datetime"/><field name="name" placeholder="e.g. Weekly sync"/><field name="duration_hours" widget="float_time"/></group>
-<group invisible="step != 'people'"><field name="attendee_partner_ids" widget="many2many_tags"/></group>
-<group invisible="step != 'carryover'"><p invisible="carry_line_ids" class="text-muted">There are no points to carry over into this meeting.</p><p invisible="not carry_line_ids">Review the points to continue. Accept to include a point, Postpone to keep it for a later meeting, or Discard to drop it (it will not be offered again).</p><field name="carry_line_ids" nolabel="1" invisible="not carry_line_ids"><list editable="bottom" create="0" delete="0"><field name="decision" widget="radio" options="{'horizontal': True}"/><field name="name"/><field name="origin_meeting_id"/><field name="reason"/></list></field></group>
-<group invisible="step != 'agenda'"><button name="action_add_point" type="object" string="Add Point" class="btn-primary"/><field name="line_ids" readonly="1" domain="[('included','=',True)]"><list create="0" delete="0"><field name="name"/><field name="topic_id"/><field name="agenda_type_id"/><field name="priority"/></list></field></group>
-<group invisible="step != 'review'"><p class="text-muted">Confirm the full result before creating the meeting.</p><field name="review_summary" nolabel="1" readonly="1"/></group>
+<field name="arch" type="xml"><form string="Prepare a Meeting" class="o_meeting_create_wizard">
+<header><field name="step" widget="statusbar" statusbar_visible="series,when,people,carryover,agenda,review"/></header>
+<field name="company_id" invisible="1"/><field name="defaults_applied" invisible="1"/><field name="last_default_duration" invisible="1"/><field name="last_default_start" invisible="1"/><field name="last_default_attendee_ids" invisible="1"/><field name="suggested_name" invisible="1"/>
+<div class="o_meeting_create_step" invisible="step != 'series'">
+    <div class="o_meeting_wizard_intro"><h2>Choose a series</h2><p>Use a series for its defaults, or leave it empty for a standalone meeting. Your edits stay when you change series.</p></div>
+    <div class="o_meeting_create_panel"><h3>Meeting series</h3><group><field name="series_id" domain="[('company_id','=',company_id)]"/></group><p class="o_meeting_create_hint" invisible="not series_id">The series defaults are applied automatically. You can edit the duration and attendees in the next steps.</p></div>
+</div>
+<div class="o_meeting_create_step" invisible="step != 'when'">
+    <div class="o_meeting_wizard_intro"><h2>Plan this meeting</h2><p>Choose when it starts, what it is called and how long to reserve.</p></div>
+    <div class="o_meeting_create_panel o_meeting_when_panel">
+        <div class="o_meeting_when_grid">
+            <div class="o_meeting_when_field o_meeting_when_name">
+                <label for="name"><span class="o_meeting_when_icon"><i class="fa fa-pencil" aria-hidden="true"/></span><span><strong>Meeting name</strong><small>Give this meeting a clear name</small></span></label>
+                <field name="name" nolabel="1" placeholder="e.g. Weekly sync"/>
+            </div>
+            <div class="o_meeting_when_field">
+                <div class="o_meeting_when_heading"><span class="o_meeting_when_icon"><i class="fa fa-calendar" aria-hidden="true"/></span><label for="start_datetime"><strong>Start date and time</strong><small>When should the meeting begin?</small></label></div>
+                <field name="start_datetime" nolabel="1"/>
+            </div>
+            <div class="o_meeting_when_field">
+                <div class="o_meeting_when_heading"><span class="o_meeting_when_icon"><i class="fa fa-clock-o" aria-hidden="true"/></span><label for="duration_hours"><strong>Estimated duration</strong><small>Hours:minutes (1:00 = 1 hour).</small></label></div>
+                <div class="o_meeting_duration_value"><field name="duration_hours" widget="float_time" nolabel="1"/><label class="o_meeting_duration_unit" for="duration_hours" string="Hours:minutes"/></div>
+            </div>
+        </div>
+        <p class="o_meeting_create_hint" invisible="not series_id">The suggested start time, meeting name and duration can all be changed for this meeting.</p>
+    </div>
+</div>
+<div class="o_meeting_create_step" invisible="step != 'people'">
+    <div class="o_meeting_wizard_intro"><h2>Invite attendees</h2><p>Choose the people expected to take part in this meeting.</p></div>
+    <div class="o_meeting_create_panel"><h3>People invited</h3><group><field name="attendee_partner_ids" widget="many2many_tags"/></group><p class="o_meeting_create_hint">A series may suggest attendees. Changes here apply to this meeting only.</p></div>
+</div>
+<div class="o_meeting_create_step" invisible="step != 'carryover'">
+    <div class="o_meeting_wizard_intro"><h2>Review points carried forward</h2><p>Choose which points to include in this meeting.</p></div>
+    <div class="o_meeting_create_panel"><h3>Points from earlier meetings</h3><p invisible="carry_line_ids" class="o_meeting_create_hint">There are no points to carry forward into this meeting.</p><field name="carry_line_ids" class="o_meeting_carryover_cards" nolabel="1" invisible="not carry_line_ids"><list editable="bottom" create="0" delete="0"><field name="decision" string="Decision" widget="meeting_carryover_decision" width="150px"/><field name="name" string="Name" width="220px"/><field name="agenda_type_id" string="Point type" width="150px"/><field name="priority" optional="hide"/><field name="estimated_minutes" string="Min." width="85px"/><field name="origin_meeting_id" optional="hide"/><field name="presentation_reason" string="Reason" optional="hide"/></list></field></div>
+</div>
+<div class="o_meeting_create_step" invisible="step != 'agenda'">
+    <div class="o_meeting_wizard_intro"><h2>Build the agenda</h2><p>Add new points and review the points that will be included.</p></div>
+    <div class="o_meeting_create_panel"><h3>Selected agenda</h3><button name="action_add_point" type="object" string="Add Point" class="btn-primary"/><p invisible="line_ids" class="o_meeting_create_hint">No new agenda points have been added. Accepted points from earlier meetings will appear in the review.</p><field name="line_ids" class="o_meeting_agenda_preview" readonly="1" invisible="not line_ids" domain="[('included','=',True)]"><list create="0" delete="0"><field name="name"/><field name="topic_id"/><field name="agenda_type_id"/><field name="priority"/><field name="estimated_minutes"/></list></field><div class="o_meeting_selected_total"><label for="selected_minutes" string="Estimated agenda time (minutes)"/><field name="selected_minutes" readonly="1" nolabel="1"/></div><p class="o_meeting_create_hint">The series may add recurring points when the meeting is created.</p></div>
+</div>
+<div class="o_meeting_create_step" invisible="step != 'review'">
+    <div class="o_meeting_wizard_intro"><h2>Review and create</h2><p>Check the details and selected points. Go back to change any choice.</p></div>
+    <field name="review_summary" widget="html" nolabel="1" readonly="1"/>
+</div>
 <footer><button name="action_back" type="object" string="Back" invisible="step == 'series'"/><button name="action_next" type="object" string="Next" class="btn-primary" invisible="step == 'review'"/><button name="action_finish" type="object" string="Create Meeting" class="btn-primary" invisible="step != 'review'"/><button string="Cancel" special="cancel"/></footer>
 </form></field></record>
 <record id="view_point_wizard" model="ir.ui.view"><field name="name">community.meeting.point.wizard</field><field name="model">community.meeting.point.wizard</field>
@@ -47,24 +89,30 @@
 <field name="meeting_id" invisible="1"/><field name="creation_wizard_id" invisible="1"/><field name="series_id" invisible="1"/><field name="company_id" invisible="1"/><field name="propose" invisible="1"/><field name="proposal_series_id" invisible="not propose" domain="[('company_id', '=', company_id), ('active', '=', True)]"/>
 <div class="o_meeting_point_context text-muted" invisible="not meeting_id"><i class="fa fa-calendar-o" aria-hidden="true"/> Adding to <field name="meeting_id" readonly="1" nolabel="1" options="{'no_open': True}"/></div>
 <div class="oe_title" invisible="topic_id"><label for="name" string="What is this point about?"/><h1><field name="name" placeholder="A clear one-line title"/></h1></div>
-<group invisible="topic_id"><field name="agenda_type_id" widget="meeting_agenda_type"/></group>
+<group invisible="topic_id"><field name="agenda_type_id" widget="meeting_agenda_type_rich"/></group>
+<div class="o_meeting_point_responsible">
+    <div class="o_meeting_point_responsible_intro"><span class="o_meeting_point_responsible_icon"><i class="fa fa-user-circle-o" aria-hidden="true"/></span><div><strong>Responsible</strong><small>Who will present this point and guide the discussion?</small></div></div>
+    <field name="presenter_partner_id" nolabel="1" placeholder="Choose a responsible person"/>
+</div>
 <div class="o_meeting_point_description" invisible="topic_id">
     <div class="o_meeting_point_description_hint text-muted">Explain the subject so any attendee can follow it. Add the links or documents needed to act on it.</div>
     <field name="description" widget="html" nolabel="1"/>
 </div>
 <div class="o_meeting_point_planning" invisible="topic_id">
-    <div class="o_meeting_point_section_heading"><span class="o_meeting_point_sparkle"><i class="fa fa-magic" aria-hidden="true" title="Planning"/></span><div><strong>Give it a little shape</strong><small>Set the urgency and a realistic timebox.</small></div></div>
+            <div class="o_meeting_point_section_heading"><span class="o_meeting_point_sparkle"><i class="fa fa-calendar-check-o" aria-hidden="true" title="When and what for"/></span><div><strong>When and what for</strong><small>Set the urgency and choose a realistic timebox for this point.</small></div></div>
     <div class="o_meeting_point_priority_block"><label class="form-label" for="priority">How urgent is it?</label><field name="priority" widget="meeting_point_priority" nolabel="1"/></div>
     <div class="o_meeting_point_time_block"><label class="form-label" for="estimated_minutes">How long should we give it?</label><field name="estimated_minutes" widget="meeting_point_minutes" nolabel="1"/><div class="o_meeting_point_time_note"><i class="fa fa-lightbulb-o" aria-hidden="true"/> A rough estimate helps the group keep the meeting on track.</div></div>
     <div class="o_meeting_point_advanced_field"><label class="form-label" for="deadline">Add a deadline</label><field name="deadline" nolabel="1" placeholder="No deadline yet"/></div>
 </div>
-<group><field name="presenter_partner_id"/></group>
 <field name="presenter_loaded" invisible="1"/>
-<div class="o_meeting_point_advanced_field"><label class="form-label" for="related_topic_ids">Related points</label><field name="related_topic_ids" nolabel="1" widget="many2many_tags" domain="[('company_id', '=', company_id), ('id', '!=', topic_id)]" placeholder="Link useful context"/></div>
-<div class="o_meeting_point_more_toggle" invisible="topic_id"><field name="more_options" widget="boolean_toggle"/><div><strong>More options</strong><small>Reuse a point and tune follow-ups.</small></div><i class="fa fa-sliders" aria-hidden="true" title="More options"/></div>
+<div class="o_meeting_point_related">
+    <div class="o_meeting_point_related_heading"><span class="o_meeting_point_related_icon"><i class="fa fa-link" aria-hidden="true"/></span><div><strong>Related points</strong><small>Link background or earlier points that help explain this one.</small></div></div>
+    <field name="related_topic_ids" nolabel="1" widget="many2many_tags" domain="[('company_id', '=', company_id), ('id', '!=', topic_id)]" placeholder="Search for related points"/>
+</div>
+<field name="more_options" widget="meeting_point_more_options" class="o_meeting_point_more_toggle" nolabel="1" invisible="topic_id"/>
 <div class="o_meeting_point_more_panel" invisible="not more_options and not topic_id">
     <div class="o_meeting_point_more_heading"><span class="o_meeting_point_more_icon"><i class="fa fa-magic" aria-hidden="true" title="Additional details"/></span><div><strong>A few extra details</strong><small>Make this point easier to pick up and follow through.</small></div></div>
-    <div class="o_meeting_point_advanced_field"><label class="form-label" for="topic_id">Start from an existing point</label><field name="topic_id" nolabel="1" options="{'no_create': True}" domain="[('company_id', '=', company_id), ('series_id', '=', series_id)]" placeholder="Search this series"/></div>
+    <div class="o_meeting_point_advanced_field"><label class="form-label" for="topic_id">Reuse an existing point</label><p class="o_meeting_series_hint text-muted small">Add a point from this series to the meeting. Its title, description and type stay as they are; you can change who presents it here.</p><field name="topic_id" nolabel="1" options="{'no_create': True}" domain="[('company_id', '=', company_id), ('series_id', '=', series_id)]" placeholder="Search this series"/><field name="clear_topic" widget="meeting_clear_topic" nolabel="1" invisible="not topic_id"/></div>
     <field name="origin_topic_id" invisible="not origin_topic_id"/>
     <div class="o_meeting_point_followup_grid"><div class="o_meeting_point_advanced_field"><label class="form-label" for="followup_allowed_kinds">Follow-up types</label><field name="followup_allowed_kinds" nolabel="1" widget="many2many_tags"/></div><div class="o_meeting_point_advanced_field"><label class="form-label" for="followup_default_kind">Default follow-up</label><field name="followup_default_kind" nolabel="1"/></div></div>
 </div>

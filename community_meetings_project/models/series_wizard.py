@@ -7,7 +7,7 @@ class SeriesWizard(models.TransientModel):
 
     link_project = fields.Boolean(string="Link a Project")
     project_id = fields.Many2one("project.project", string="Project")
-    new_project = fields.Boolean(string="Create a new project")
+    new_project = fields.Boolean(string="Project source", default=False)
     new_project_name = fields.Char(string="New project name")
 
     @api.onchange("link_project")

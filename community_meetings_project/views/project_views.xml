@@ -43,14 +43,27 @@
         <field name="name">community.meeting.project.task.wizard.form</field>
         <field name="model">community.meeting.project.task.wizard</field>
         <field name="arch" type="xml">
-            <form string="Create Project Task">
+            <form string="Create Project Task" class="o_meeting_project_task_wizard">
                 <group>
-                    <field name="action_id"/>
-                    <field name="existing_task_id" options="{'no_create':True}"/>
-                    <field name="name" invisible="existing_task_id"/>
+                    <div class="o_meeting_wizard_intro"><h2>Link a project task</h2><p>Use an existing task or create one from this follow-up.</p></div>
+                    <field name="action_id" invisible="1"/>
+                    <group string="Follow-up context" name="followup_context">
+                        <field name="followup_name" readonly="1"/>
+                        <field name="followup_responsible_user_ids" widget="many2many_tags" readonly="1"/>
+                        <field name="followup_deadline" readonly="1"/>
+                    </group>
+                    <group string="Choose an existing task" name="existing_task_choice">
+                        <field name="existing_task_id" options="{'no_create':True}"/>
+                    </group>
+                    <group string="Create a new task" name="new_task_choice" invisible="existing_task_id">
+                        <field name="name"/>
+                    </group>
                     <field name="has_default_project" invisible="1"/>
-                    <field name="choose_another_project" invisible="existing_task_id or not has_default_project"/>
-                    <field name="project_id" invisible="existing_task_id or (has_default_project and not choose_another_project)"/>
+                    <group string="Project" name="project_choice" invisible="existing_task_id">
+                        <field name="project_id" readonly="1" invisible="not has_default_project or choose_another_project"/>
+                        <field name="choose_another_project" invisible="not has_default_project"/>
+                        <field name="project_id" invisible="has_default_project and not choose_another_project"/>
+                    </group>
                 </group>
                 <footer>
                     <button name="action_create" type="object" string="Create and Link" class="oe_highlight"/>
@@ -91,11 +104,27 @@
         <field name="model">community.meeting.series.wizard</field>
         <field name="inherit_id" ref="community_meetings.view_series_wizard"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='has_next_meeting_point']" position="after">
-                <field name="link_project"/>
-                <field name="project_id" invisible="not link_project or new_project" options="{'no_create': True}" domain="['|', ('company_id', '=', company_id), ('company_id', '=', False)]"/>
-                <field name="new_project" invisible="not link_project"/>
-                <field name="new_project_name" invisible="not link_project or not new_project" placeholder="Project name"/>
+            <xpath expr="//div[@name='project_wizard_configuration']" position="replace">
+                <div class="o_meeting_series_panel o_meeting_series_project_panel" invisible="step != 'structure'">
+                    <div class="o_meeting_series_policy_header">
+                        <label class="o_meeting_series_project_label" for="link_project"><strong>Link a project</strong><span>Keep this series connected to a project for its tasks and follow-ups.</span></label>
+                        <field name="link_project" widget="boolean_toggle" nolabel="1"/>
+                    </div>
+                    <div class="o_meeting_series_project_options" invisible="not link_project">
+                        <field name="new_project" widget="radio" options="{'horizontal': True}"/>
+                        <field name="project_id" invisible="new_project" options="{'no_create': True}" domain="['|', ('company_id', '=', company_id), ('company_id', '=', False)]" placeholder="Choose a project"/>
+                        <field name="new_project_name" invisible="not new_project" placeholder="Project name"/>
+                    </div>
+                </div>
+            </xpath>
+            <xpath expr="//div[@name='project_wizard_review']" position="replace">
+                <div class="o_meeting_series_panel o_meeting_series_project_panel" invisible="step != 'review' or not link_project">
+                    <h3>Project link</h3>
+                    <field name="link_project" readonly="1" invisible="1"/>
+                    <field name="project_id" readonly="1" invisible="not link_project or new_project"/>
+                    <field name="new_project" readonly="1" invisible="1"/>
+                    <field name="new_project_name" readonly="1" invisible="not link_project or not new_project"/>
+                </div>
             </xpath>
         </field>
     </record>

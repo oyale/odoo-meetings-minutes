@@ -42,6 +42,7 @@
             "community_meetings/static/src/live_meeting/live_meeting.xml",
             "community_meetings/static/src/fields/agenda_type/agenda_type.xml",
             "community_meetings/static/src/fields/point_options/point_options.xml",
+            "community_meetings/static/src/preparation/preparation.scss",
             "community_meetings/static/src/live_meeting/live_meeting.scss",
         ],
     },

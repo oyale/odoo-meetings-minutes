@@ -588,3 +588,62 @@ msgstr "Vence"
 #: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
 msgid "Archived"
 msgstr "Archivada"
+#. module: community_meetings_project
+#: code:addons/community_meetings_project/views/preparation_views.xml:0
+msgid "Follow-up"
+msgstr "Seguimiento"
+
+#. module: community_meetings_project
+#: code:addons/community_meetings_project/views/preparation_views.xml:0
+msgid "Follow-up owners"
+msgstr "Responsables del seguimiento"
+
+#. module: community_meetings_project
+#: code:addons/community_meetings_project/views/preparation_views.xml:0
+msgid "Follow-up deadline"
+msgstr "Fecha límite del seguimiento"
+
+#. module: community_meetings_project
+#: code:addons/community_meetings_project/views/preparation_views.xml:0
+msgid "Link a project task"
+msgstr "Vincular una tarea de proyecto"
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
+msgid "Link a project"
+msgstr "Vincular un proyecto"
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
+msgid "Keep this series connected to a project for its tasks and follow-ups."
+msgstr "Mantén esta serie vinculada a un proyecto para sus tareas y seguimientos."
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
+msgid "Project link"
+msgstr "Vínculo con el proyecto"
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
+msgid "Choose a project"
+msgstr "Elige un proyecto"
+
+#. module: community_meetings_project
+#: code:addons/community_meetings_project/views/preparation_views.xml:0
+msgid "Use an existing task or create one from this follow-up."
+msgstr "Usa una tarea existente o crea una desde este seguimiento."
+
+#. module: community_meetings_project
+#: code:addons/community_meetings_project/views/preparation_views.xml:0
+msgid "Follow-up context"
+msgstr "Contexto del seguimiento"
+
+#. module: community_meetings_project
+#: code:addons/community_meetings_project/views/preparation_views.xml:0
+msgid "Choose an existing task"
+msgstr "Elegir una tarea existente"
+
+#. module: community_meetings_project
+#: code:addons/community_meetings_project/views/preparation_views.xml:0
+msgid "Create a new task"
+msgstr "Crear una tarea nueva"

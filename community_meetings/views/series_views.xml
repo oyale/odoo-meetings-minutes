@@ -147,49 +147,157 @@
         <field name="name">community.meeting.series.wizard</field>
         <field name="model">community.meeting.series.wizard</field>
         <field name="arch" type="xml">
-            <form string="New Meeting Series">
+            <form string="New Meeting Series" class="o_meeting_series_wizard">
                 <header><field name="step" widget="statusbar"/></header>
                 <field name="created_series_id" invisible="1"/>
-                <group invisible="step != 'basics'">
-                    <field name="name" placeholder="Series name"/>
-                    <field name="company_id" groups="base.group_multi_company"/>
-                    <field name="coordinator_user_ids" widget="many2many_tags"/>
-                    <field name="carryover_policy"/>
-                    <field name="active"/>
-                </group>
-                <group invisible="step != 'schedule'">
-                    <field name="timezone"/>
-                    <field name="duration_hours" widget="float_time"/>
-                    <field name="attendee_partner_ids" widget="many2many_tags"/>
-                    <field name="meeting_name_pattern" placeholder="{date} {series}"/>
-                </group>
-                <group invisible="step != 'structure'">
-                    <field name="time_tracking"/>
-                    <field name="add_point_policy"/>
-                    <field name="default_estimated_minutes"/>
-                    <field name="has_minutes_approval_point"/>
-                    <field name="has_next_meeting_point"/>
-                    <field name="next_meeting_rule"/>
-                    <field name="next_meeting_weekday" invisible="next_meeting_rule != 'weekday'"/>
-                    <field name="next_meeting_day_of_month" invisible="next_meeting_rule != 'day_of_month'"/>
-                    <field name="next_meeting_interval_days" invisible="next_meeting_rule != 'interval_days'"/>
-                </group>
-                <group invisible="step != 'review'">
-                    <field name="name" readonly="1"/>
-                    <field name="company_id" readonly="1"/>
-                    <field name="coordinator_user_ids" widget="many2many_tags" readonly="1"/>
-                    <field name="carryover_policy" readonly="1"/>
-                    <field name="timezone" readonly="1"/>
-                    <field name="duration_hours" widget="float_time" readonly="1"/>
-                    <field name="attendee_partner_ids" widget="many2many_tags" readonly="1"/>
-                    <field name="meeting_name_pattern" readonly="1"/>
-                    <field name="has_minutes_approval_point" readonly="1"/>
-                    <field name="time_tracking" readonly="1"/>
-                    <field name="add_point_policy" readonly="1"/>
-                    <field name="default_estimated_minutes" readonly="1"/>
-                    <field name="has_next_meeting_point" readonly="1"/>
-                    <field name="next_meeting_rule" readonly="1"/>
-                </group>
+                <div class="o_meeting_series_step" invisible="step != 'basics'">
+                    <div class="o_meeting_wizard_intro"><h2>Set up your meeting series</h2><p>Give it a clear name, choose its coordinators, and decide how unfinished points continue.</p></div>
+                    <div class="o_meeting_series_active">
+                        <label class="o_meeting_series_active_hitarea" for="active" string=""/>
+                        <div class="o_meeting_series_active_copy"><h3>Series is active</h3><p>Active series are available when preparing meetings.</p></div>
+                        <field name="active" widget="boolean_toggle" nolabel="1"/>
+                    </div>
+                    <div class="o_meeting_series_panel o_meeting_series_identity">
+                        <h3>Series identity</h3>
+                        <group>
+                            <field name="name" placeholder="Series name" class="o_meeting_series_name"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="coordinator_user_ids" widget="many2many_tags"/>
+                        </group>
+                        <p class="o_meeting_series_hint">Coordinators are responsible for preparing this series. If left empty, you become its first coordinator.</p>
+                    </div>
+                    <div class="o_meeting_series_panel">
+                        <h3>Unfinished points</h3>
+                        <group><field name="carryover_policy" widget="radio" options="{'horizontal': True}" class="o_meeting_series_carryover_policy o_meeting_series_carryover_radios"/></group>
+                        <p class="o_meeting_series_hint">Review lets you decide which points continue while preparing the next meeting. Automatic carries unfinished points forward without asking. With Manual, you must find and move each point yourself; it will never be suggested automatically.</p>
+                    </div>
+                </div>
+                <div class="o_meeting_series_step" invisible="step != 'schedule'">
+                    <div class="o_meeting_wizard_intro"><h2>Set the meeting defaults</h2><p>These are suggestions for future meetings; you can adjust each meeting later.</p></div>
+                    <div class="o_meeting_series_panel">
+                        <h3>Time and title</h3>
+                        <group>
+                            <field name="timezone"/>
+                            <field name="duration_hours" widget="float_time"/>
+                            <field name="meeting_name_pattern" placeholder="{date} {series}"/>
+                        </group>
+                        <p class="o_meeting_series_hint">The time zone is used to suggest the next date. In the title pattern, {date} is the meeting date and {series} is this series name.</p>
+                    </div>
+                    <div class="o_meeting_series_panel">
+                        <h3>People to invite</h3>
+                        <group><field name="attendee_partner_ids" widget="many2many_tags"/></group>
+                        <p class="o_meeting_series_hint">These people are suggested for each new meeting. You can change the attendees for an individual meeting.</p>
+                    </div>
+                </div>
+                <div class="o_meeting_series_step" invisible="step != 'structure'">
+                    <div class="o_meeting_wizard_intro"><h2>Set agenda and meeting rules</h2><p>Choose when points can be added and which recurring points the series creates.</p></div>
+                    <div class="o_meeting_series_panel">
+                        <h3>Meeting controls</h3>
+                        <div class="o_meeting_series_policy">
+                            <div class="o_meeting_series_policy_header">
+                                <h4>Time tracking</h4>
+                                <div class="o_meeting_series_policy_toggle">
+                                    <field name="use_company_time_tracking" widget="boolean_toggle" nolabel="1"/>
+                                    <label for="use_company_time_tracking" string="Company default"/>
+                                </div>
+                            </div>
+                            <field name="time_tracking" invisible="1"/>
+                            <p class="o_meeting_series_hint" invisible="not use_company_time_tracking">Tracks meeting and agenda-point time. This series inherits the company setting. Turn off the switch to choose a value for this series.</p>
+                            <field name="time_tracking_override" widget="radio" options="{'horizontal': True}" invisible="use_company_time_tracking" nolabel="1"/>
+                        </div>
+                        <div class="o_meeting_series_policy">
+                            <div class="o_meeting_series_policy_header">
+                                <h4>Adding points</h4>
+                                <div class="o_meeting_series_policy_toggle">
+                                    <field name="use_company_add_point_policy" widget="boolean_toggle" nolabel="1"/>
+                                    <label for="use_company_add_point_policy" string="Company default"/>
+                                </div>
+                            </div>
+                            <field name="add_point_policy" invisible="1"/>
+                            <p class="o_meeting_series_hint" invisible="not use_company_add_point_policy">Controls when people can add agenda points. This series inherits the company rule. Turn off the switch to choose a value for this series.</p>
+                            <field name="add_point_policy_override" widget="radio" options="{'horizontal': True}" invisible="use_company_add_point_policy" nolabel="1"/>
+                        </div>
+                    </div>
+                    <div class="o_meeting_series_panel">
+                        <h3>Agenda defaults</h3>
+                        <div class="o_meeting_series_estimate">
+                            <div class="o_meeting_series_policy_header">
+                                <h4>Default estimate per agenda point</h4>
+                                <div class="o_meeting_series_policy_toggle">
+                                    <field name="use_company_estimated_minutes" widget="boolean_toggle" nolabel="1"/>
+                                    <label for="use_company_estimated_minutes" string="Company default"/>
+                                </div>
+                            </div>
+                            <p class="o_meeting_series_hint" invisible="not use_company_estimated_minutes">Suggests a duration for new agenda points. This series inherits the company estimate. Turn off the switch to set an estimate for this series.</p>
+                            <group invisible="use_company_estimated_minutes"><field name="default_estimated_minutes" widget="meeting_point_minutes" nolabel="1"/></group>
+                            <p class="o_meeting_series_hint" invisible="use_company_estimated_minutes">This estimate is suggested for new agenda points. Each point can have its own estimate.</p>
+                        </div>
+                        <h3 class="o_meeting_series_subheading">Automatic points</h3>
+                        <div class="o_meeting_series_agenda_options">
+                            <div class="o_meeting_series_agenda_option">
+                                <div class="o_meeting_series_agenda_option_header">
+                                    <label class="o_meeting_series_agenda_option_label" for="has_minutes_approval_point"><strong>Minutes approval</strong><span>Added when earlier meeting minutes are waiting for approval.</span></label>
+                                    <field name="has_minutes_approval_point" widget="boolean_toggle" nolabel="1"/>
+                                </div>
+                            </div>
+                            <div class="o_meeting_series_agenda_option">
+                                <div class="o_meeting_series_agenda_option_header">
+                                    <label class="o_meeting_series_agenda_option_label" for="has_next_meeting_point"><strong>Next meeting date</strong><span>Adds a point to agree on the next date at every meeting in this series.</span></label>
+                                    <field name="has_next_meeting_point" widget="boolean_toggle" nolabel="1"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="o_meeting_series_panel" invisible="not has_next_meeting_point">
+                        <h3>Suggested next date</h3>
+                        <label for="next_meeting_rule" string="Calculate the next date according to"/>
+                        <group class="o_meeting_series_next_date_rules">
+                            <field name="next_meeting_rule" widget="radio" options="{'horizontal': True}" class="o_meeting_series_next_date_radios" nolabel="1"/>
+                            <field name="next_meeting_weekday" widget="radio" options="{'horizontal': True}" class="o_meeting_series_weekday_radios" invisible="next_meeting_rule != 'weekday'"/>
+                            <field name="next_meeting_day_of_month" invisible="next_meeting_rule != 'day_of_month'"/>
+                            <field name="next_meeting_interval_days" invisible="next_meeting_rule != 'interval_days'"/>
+                        </group>
+                        <p class="o_meeting_series_hint">Choose a rule to reveal its value. The suggested date appears in the next-meeting agenda point; it does not schedule a meeting automatically.</p>
+                    </div>
+                    <div name="project_wizard_configuration"/>
+                </div>
+                <div class="o_meeting_series_step" invisible="step != 'review'">
+                    <div class="o_meeting_wizard_intro"><h2>Review the series</h2><p>Check the choices below. Use Back to change anything before creating the series.</p></div>
+                    <div class="o_meeting_series_panel">
+                        <h3>Identity and people</h3>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="company_id" readonly="1"/>
+                            <field name="coordinator_user_ids" widget="many2many_tags" readonly="1"/>
+                            <field name="attendee_partner_ids" widget="many2many_tags" readonly="1"/>
+                        </group>
+                    </div>
+                    <div class="o_meeting_series_panel">
+                        <h3>Meeting defaults</h3>
+                        <group>
+                            <field name="timezone" readonly="1"/>
+                            <field name="duration_hours" widget="float_time" readonly="1"/>
+                            <field name="meeting_name_pattern" readonly="1"/>
+                            <field name="use_company_estimated_minutes" readonly="1"/>
+                            <field name="default_estimated_minutes" readonly="1" invisible="use_company_estimated_minutes"/>
+                        </group>
+                    </div>
+                    <div class="o_meeting_series_panel">
+                        <h3>Agenda and rules</h3>
+                        <group>
+                            <field name="carryover_policy" readonly="1"/>
+                            <field name="time_tracking" readonly="1"/>
+                            <field name="add_point_policy" readonly="1"/>
+                            <field name="has_minutes_approval_point" readonly="1"/>
+                            <field name="has_next_meeting_point" readonly="1"/>
+                            <field name="next_meeting_rule" readonly="1" invisible="not has_next_meeting_point"/>
+                            <field name="next_meeting_weekday" readonly="1" invisible="not has_next_meeting_point or next_meeting_rule != 'weekday'"/>
+                            <field name="next_meeting_day_of_month" readonly="1" invisible="not has_next_meeting_point or next_meeting_rule != 'day_of_month'"/>
+                            <field name="next_meeting_interval_days" readonly="1" invisible="not has_next_meeting_point or next_meeting_rule != 'interval_days'"/>
+                        </group>
+                    </div>
+                    <div name="project_wizard_review"/>
+                </div>
                 <footer>
                     <button name="action_back" type="object" string="Back" invisible="step == 'basics'"/>
                     <button name="action_next" type="object" string="Next" class="btn-primary" invisible="step == 'review'"/>

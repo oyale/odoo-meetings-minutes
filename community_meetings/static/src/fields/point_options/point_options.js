@@ -12,6 +12,12 @@ const PRIORITIES = [
     { value: "3", label: _t("Critical"), hint: _t("Drop everything"), icon: "fa-fire" },
 ];
 
+const CARRYOVER_DECISIONS = [
+    { value: "include", label: _t("Accept"), icon: "fa-check", color: "include" },
+    { value: "postpone", label: _t("Postpone"), icon: "fa-clock-o", color: "postpone" },
+    { value: "discard", label: _t("Discard"), icon: "fa-times", color: "discard" },
+];
+
 export class MeetingPriorityField extends Component {
     static template = "community_meetings.MeetingPriorityField";
     static props = { ...standardFieldProps };
@@ -33,16 +39,75 @@ export class MeetingPriorityField extends Component {
 
 export class MeetingMinutesField extends Component {
     static template = "community_meetings.MeetingMinutesField";
-    static props = { ...standardFieldProps };
+    static props = {
+        ...standardFieldProps,
+        companyDefault: { type: Boolean, optional: true },
+    };
 
     get value() {
         return Number(this.props.record.data[this.props.name] || 0);
+    }
+
+    get usesCompanyDefault() {
+        return this.props.companyDefault && this.value === 0;
     }
 
     setValue(value) {
         if (!this.props.readonly) {
             const minutes = Math.max(0, Number.parseInt(value, 10) || 0);
             this.props.record.update({ [this.props.name]: minutes });
+        }
+    }
+
+    useCompanyDefault() {
+        this.setValue(0);
+    }
+}
+
+export class MeetingMoreOptionsField extends Component {
+    static template = "community_meetings.MeetingMoreOptionsField";
+    static props = { ...standardFieldProps };
+
+    get value() {
+        return Boolean(this.props.record.data[this.props.name]);
+    }
+
+    toggle() {
+        if (!this.props.readonly) {
+            this.props.record.update({ [this.props.name]: !this.value });
+        }
+    }
+}
+
+export class MeetingCarryoverDecisionField extends Component {
+    static template = "community_meetings.MeetingCarryoverDecisionField";
+    static props = { ...standardFieldProps };
+
+    get value() {
+        return this.props.record.data[this.props.name];
+    }
+
+    get choices() {
+        return CARRYOVER_DECISIONS;
+    }
+
+    stopRowEvent(event) {
+        event.stopPropagation();
+    }
+
+    select(value, event) {
+        event.stopPropagation();
+        this.props.record.update({ [this.props.name]: value });
+    }
+}
+
+export class MeetingClearTopicField extends Component {
+    static template = "community_meetings.MeetingClearTopicField";
+    static props = { ...standardFieldProps };
+
+    clear() {
+        if (!this.props.readonly) {
+            this.props.record.update({ topic_id: false });
         }
     }
 }
@@ -56,4 +121,22 @@ registry.category("fields").add("meeting_point_minutes", {
     component: MeetingMinutesField,
     displayName: _t("Meeting point estimate"),
     supportedTypes: ["integer"],
+    extractProps: ({ options }) => ({
+        companyDefault: Boolean(options.company_default),
+    }),
+});
+registry.category("fields").add("meeting_point_more_options", {
+    component: MeetingMoreOptionsField,
+    displayName: _t("Meeting point extra options"),
+    supportedTypes: ["boolean"],
+});
+registry.category("fields").add("meeting_carryover_decision", {
+    component: MeetingCarryoverDecisionField,
+    displayName: _t("Meeting carryover decision"),
+    supportedTypes: ["selection"],
+});
+registry.category("fields").add("meeting_clear_topic", {
+    component: MeetingClearTopicField,
+    displayName: _t("Clear selected point"),
+    supportedTypes: ["boolean"],
 });

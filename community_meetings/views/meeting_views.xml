@@ -37,7 +37,7 @@
         <field name="name">community.meeting.form</field>
         <field name="model">community.meeting</field>
         <field name="arch" type="xml">
-            <form string="Meeting">
+            <form string="Meeting" class="o_meeting_persistent_form">
                 <header>
                     <button name="action_open_live_meeting" type="object" string="Open Meeting" class="oe_highlight" groups="community_meetings.group_meeting_reader"/>
                     <button name="action_schedule" type="object" string="Schedule" invisible="state != 'draft'" groups="community_meetings.group_meeting_editor"/>

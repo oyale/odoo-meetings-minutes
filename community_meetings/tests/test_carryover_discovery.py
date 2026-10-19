@@ -27,6 +27,34 @@ class TestCarryoverDiscovery(TransactionCase):
             "start_datetime": "2026-11-08 10:00:00",
         })
 
+    def test_new_meeting_review_projects_carryover_and_escapes_names(self):
+        source = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
+            "meeting_id": self.source.id,
+            "name": '<img src=x onerror="alert(1)">',
+            "review_next_meeting": True,
+        })
+        wizard = self.env["community.meeting.create.wizard"].with_user(
+            self.editor
+        ).create({
+            "step": "people",
+            "series_id": self.series.id,
+            "name": "Next review",
+            "start_datetime": "2026-11-15 10:00:00",
+            "duration_hours": 1,
+        })
+        wizard.action_next()
+        line = wizard.carry_line_ids.filtered(lambda row: row.source_id == source)
+        self.assertEqual(len(line), 1)
+        self.assertEqual(line.agenda_type_id, source.agenda_type_id)
+        self.assertEqual(line.priority, "1")
+        self.assertEqual(
+            line.estimated_minutes,
+            self.series._point_estimated_minutes_default(),
+        )
+        summary = str(wizard.review_summary)
+        self.assertIn("&lt;img", summary)
+        self.assertNotIn("<img", summary)
+
     def test_dismissed_source_with_followup_is_not_offered_and_finish_succeeds(self):
         item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
             "meeting_id": self.source.id, "name": "Ongoing work",

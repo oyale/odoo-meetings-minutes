@@ -42,7 +42,9 @@ msgstr ""
 
 #. module: community_meetings
 #. odoo-javascript
+#. odoo-python
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+#: code:addons/community_meetings/models/creation_wizard.py:0
 msgid "(archived)"
 msgstr "(archivado)"
 
@@ -52,7 +54,9 @@ msgid "(change it in Settings → Meetings → Time tracking)."
 msgstr "(cámbialo en Ajustes → Reuniones → Seguimiento de tiempo)."
 
 #. module: community_meetings
+#. odoo-python
 #. odoo-javascript
+#: code:addons/community_meetings/models/creation_wizard.py:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "(optional)"
 msgstr "(opcional)"
@@ -93,17 +97,8 @@ msgstr "<strong>Compañía:</strong>"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
-msgid ""
-"<strong>Give it a little shape</strong><small>Set the urgency and a "
-"realistic timebox.</small>"
-msgstr "<strong>Dale forma</strong><small>Define su prioridad y una duración aproximada.</small>"
-
-#. module: community_meetings
-#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
-msgid ""
-"<strong>More options</strong><small>Reuse a point and tune follow-ups.</"
-"small>"
-msgstr "<strong>Más opciones</strong><small>Reutiliza un punto y configura sus seguimientos.</small>"
+msgid "<strong>When and what for</strong><small>Set the urgency and choose a realistic timebox for this point.</small>"
+msgstr "<strong>Cuándo y para qué</strong><small>Define la prioridad y elige una duración realista para este punto.</small>"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_preparation
@@ -202,7 +197,9 @@ msgid "A follow-up kind with this code already exists."
 msgstr "Ya existe un tipo de seguimiento con este código."
 
 #. module: community_meetings
+#. odoo-python
 #. odoo-javascript
+#: code:addons/community_meetings/models/creation_wizard.py:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "A follow-up task must be recorded before this TODO can be resolved."
 msgstr ""
@@ -322,7 +319,9 @@ msgid "A user group can have only one proposal policy."
 msgstr "Un grupo de usuarios solo puede tener una política de propuestas."
 
 #. module: community_meetings
+#. odoo-python
 #. odoo-javascript
+#: code:addons/community_meetings/models/creation_wizard.py:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_carryover_form
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_carryover_list
@@ -657,6 +656,7 @@ msgstr "Añadir nota privada"
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_settings_followups
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
 msgid "Adding points"
 msgstr "Añadir puntos"
 
@@ -3168,13 +3168,10 @@ msgid "Attachment Count"
 msgstr "Número de adjuntos"
 
 #. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__attendee_partner_ids
-msgid "Attendee Partner"
-msgstr "Contacto asistente"
-
-#. module: community_meetings
 #. odoo-javascript
+#. odoo-python
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+#: code:addons/community_meetings/models/creation_wizard.py:0
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__attendee_partner_ids
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_create_wizard__attendee_partner_ids
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_create_wizard__step__people
@@ -3380,6 +3377,7 @@ msgstr "Volver a reuniones"
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__add_point_policy__scheduled
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__add_point_policy__scheduled
 #: model:ir.model.fields.selection,name:community_meetings.selection__res_company__meeting_add_point_policy__scheduled
+#: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__add_point_policy_override__scheduled
 msgid "Before it starts"
 msgstr "Antes de empezar"
 
@@ -3825,10 +3823,15 @@ msgid "Company"
 msgstr "Compañía"
 
 #. module: community_meetings
+#. odoo-javascript
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__add_point_policy__inherit
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__time_tracking__inherit
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__add_point_policy__inherit
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__time_tracking__inherit
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__use_company_time_tracking
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__use_company_add_point_policy
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
 msgid "Company default"
 msgstr "Predeterminado de la compañía"
 
@@ -3947,6 +3950,7 @@ msgstr "Etiqueta del rol de coordinación"
 msgid "Coordinator User"
 msgstr "Usuario coordinador"
 
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__coordinator_user_ids
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__coordinator_user_ids
 msgid "Coordinators"
@@ -4150,7 +4154,9 @@ msgid "Creation Wizard"
 msgstr "Asistente de creación"
 
 #. module: community_meetings
+#. odoo-python
 #. odoo-javascript
+#: code:addons/community_meetings/models/creation_wizard.py:0
 #: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_item__priority__3
@@ -4188,6 +4194,7 @@ msgid "Date chosen for the next meeting by a 'Next Meeting' point."
 msgstr ""
 "Fecha elegida para la próxima reunión en un punto de «Próxima reunión»."
 
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__next_meeting_day_of_month
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__next_meeting_day_of_month
 msgid "Day of month"
@@ -4213,6 +4220,7 @@ msgstr "Fecha límite"
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carry_review_line__decision
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_item__kind__decision
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_type__behavior__decision
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Decision"
 msgstr "Decisión"
 
@@ -4368,6 +4376,8 @@ msgid "Develop the point"
 msgstr "Desarrollo del punto"
 
 #. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/creation_wizard.py:0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_carry_review_line__decision__discard
 msgid "Discard"
 msgstr "Descartar"
@@ -4379,7 +4389,9 @@ msgid "Discarded when preparing the meeting."
 msgstr "Descartado al preparar la reunión."
 
 #. module: community_meetings
+#. odoo-python
 #. odoo-javascript
+#: code:addons/community_meetings/models/creation_wizard.py:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 msgid "Discussed"
 msgstr "Debatido"
@@ -4572,6 +4584,7 @@ msgstr "Borrador"
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__add_point_policy__draft
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__add_point_policy__draft
 #: model:ir.model.fields.selection,name:community_meetings.selection__res_company__meeting_add_point_policy__draft
+#: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__add_point_policy_override__draft
 msgid "Draft only"
 msgstr "Solo borrador"
 
@@ -4587,7 +4600,9 @@ msgstr ""
 "realiza: también mientras la reunión está en curso, hasta que termine."
 
 #. module: community_meetings
+#. odoo-python
 #. odoo-javascript
+#: code:addons/community_meetings/models/creation_wizard.py:0
 #: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
 msgid "Drop everything"
 msgstr "Prioridad máxima"
@@ -5783,7 +5798,9 @@ msgid "Held"
 msgstr "Celebrada"
 
 #. module: community_meetings
+#. odoo-python
 #. odoo-javascript
+#: code:addons/community_meetings/models/creation_wizard.py:0
 #: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_item__priority__2
@@ -6218,7 +6235,9 @@ msgid "Location"
 msgstr "Ubicación"
 
 #. module: community_meetings
+#. odoo-python
 #. odoo-javascript
+#: code:addons/community_meetings/models/creation_wizard.py:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_item__priority__0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_point_wizard__priority__0
@@ -6227,7 +6246,9 @@ msgid "Low"
 msgstr "Baja"
 
 #. module: community_meetings
+#. odoo-python
 #. odoo-javascript
+#: code:addons/community_meetings/models/creation_wizard.py:0
 #: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
 msgid "Low-key"
 msgstr "Baja"
@@ -6407,6 +6428,7 @@ msgstr "Acta de la reunión"
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Meeting name"
 msgstr "Nombre de la reunión"
 
@@ -6590,7 +6612,9 @@ msgid "More meeting details"
 msgstr "Más detalles de la reunión"
 
 #. module: community_meetings
+#. odoo-javascript
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__more_options
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
 msgid "More options"
 msgstr "Más opciones"
 
@@ -6654,6 +6678,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__name
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__name
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__name
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Name"
 msgstr "Nombre"
 
@@ -6801,6 +6826,7 @@ msgstr "Próxima reunión"
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__next_meeting_datetime
 msgid "Next meeting date"
 msgstr "Fecha de la próxima reunión"
@@ -6875,7 +6901,9 @@ msgid "None"
 msgstr "Ninguno"
 
 #. module: community_meetings
+#. odoo-python
 #. odoo-javascript
+#: code:addons/community_meetings/models/creation_wizard.py:0
 #: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_item__priority__1
@@ -6962,12 +6990,14 @@ msgstr "Odoo crea una actividad independiente para cada persona."
 #. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__time_tracking__off
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__time_tracking__off
+#: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__time_tracking_override__off
 msgid "Off"
 msgstr "Desactivado"
 
 #. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__time_tracking__on
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__time_tracking__on
+#: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__time_tracking_override__on
 msgid "On"
 msgstr "Activado"
 
@@ -7845,6 +7875,7 @@ msgstr "El estado de inicio del punto se gestiona desde la reunión en curso."
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__agenda_type_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__agenda_type_id
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Point type"
 msgstr "Tipo de punto"
 
@@ -7861,9 +7892,11 @@ msgstr "Los puntos solo se pueden añadir mientras la reunión es un borrador."
 
 #. module: community_meetings
 #. odoo-javascript
+#. odoo-python
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+#: code:addons/community_meetings/models/creation_wizard.py:0
 msgid "Points to continue"
-msgstr "Puntos para continuar"
+msgstr "Puntos que continúan"
 
 #. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__timezone__poland
@@ -7883,7 +7916,9 @@ msgid "Portugal"
 msgstr ""
 
 #. module: community_meetings
+#. odoo-python
 #. odoo-javascript
+#: code:addons/community_meetings/models/creation_wizard.py:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_carry_review_line__decision__postpone
 msgid "Postpone"
@@ -7968,6 +8003,7 @@ msgstr "Actividad de seguimiento principal"
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__priority
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__priority
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__priority
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Priority"
 msgstr "Prioridad"
 
@@ -8091,12 +8127,14 @@ msgstr ""
 msgid "Readers"
 msgstr "Lectores"
 
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carry_review_line__reason
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover__reason
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover_wizard__reason
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Reason"
 msgstr "Motivo"
 
@@ -8568,6 +8606,7 @@ msgid "Sequence"
 msgstr "Secuencia"
 
 #. module: community_meetings
+#. odoo-python
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__series_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover__series_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover_wizard__series_id
@@ -8578,6 +8617,7 @@ msgstr "Secuencia"
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_create_wizard__step__series
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__step__basics
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_search
+#: code:addons/community_meetings/models/creation_wizard.py:0
 msgid "Series"
 msgstr "Serie"
 
@@ -8586,6 +8626,7 @@ msgstr "Serie"
 msgid "Series description"
 msgstr "Descripción de la serie"
 
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__name
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
@@ -8721,10 +8762,6 @@ msgstr "Fecha de inicio"
 msgid "Start Meeting"
 msgstr "Iniciar reunión"
 
-#. module: community_meetings
-#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
-msgid "Start from an existing point"
-msgstr "Partir de un punto existente"
 
 #. module: community_meetings
 #. odoo-python
@@ -9221,10 +9258,12 @@ msgstr "Jueves"
 msgid "Time Tracking"
 msgstr "Seguimiento de tiempo"
 
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__time_tracking
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__time_tracking_enabled
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_settings_followups
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
 msgid "Time tracking"
 msgstr "Seguimiento de tiempo"
 
@@ -9246,6 +9285,8 @@ msgid "Timezone used to propose the next meeting date."
 msgstr "Zona horaria usada para proponer la fecha de la próxima reunión."
 
 #. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/creation_wizard.py:0
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__name
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_resolution__title
 msgid "Title"
@@ -9421,6 +9462,8 @@ msgstr "Deshacer el resultado del punto"
 msgid "Undo result"
 msgstr "Deshacer resultado"
 
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__carryover_policy
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 msgid "Unfinished points"
@@ -9459,7 +9502,7 @@ msgstr "Usa una acción del flujo de propuestas para cambiar su estado."
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Use series defaults"
-msgstr "Usar valores de la serie"
+msgstr ""
 
 #. module: community_meetings
 #. odoo-python
@@ -9513,6 +9556,7 @@ msgstr ""
 msgid "Wednesday"
 msgstr "Miércoles"
 
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__next_meeting_weekday
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__next_meeting_weekday
 msgid "Weekday"
@@ -9551,6 +9595,8 @@ msgid "What was agreed?"
 msgstr "¿Qué se ha acordado?"
 
 #. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/creation_wizard.py:0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_create_wizard__step__when
 msgid "When"
 msgstr "Cuándo"
@@ -9607,12 +9653,15 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__add_point_policy__ongoing
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__add_point_policy__ongoing
 #: model:ir.model.fields.selection,name:community_meetings.selection__res_company__meeting_add_point_policy__ongoing
+#: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__add_point_policy_override__ongoing
 msgid "While it runs"
 msgstr "Mientras se realiza"
 
 #. module: community_meetings
 #. odoo-javascript
+#. odoo-python
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+#: code:addons/community_meetings/models/creation_wizard.py:0
 msgid "Why reopen this point? (optional)"
 msgstr "¿Por qué reabrir este punto? (opcional)"
 
@@ -9735,6 +9784,7 @@ msgstr "fa-comments-o"
 msgid "min"
 msgstr "min"
 
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
@@ -9779,5 +9829,717 @@ msgstr "· <strong>Organizador:</strong>"
 msgid "· Approved by"
 msgstr "· Aprobada por"
 
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
 #~ msgid "Planning"
 #~ msgstr "Planificación"
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Who is this series for?"
+msgstr "¿Para quién es esta serie?"
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Set the meeting defaults"
+msgstr "Configurar valores predeterminados de reunión"
+
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "These values will be suggested for future meetings and can be adjusted there."
+msgstr "Estos valores se sugerirán en futuras reuniones y podrán ajustarse allí."
+
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Choose agenda and workflow policies"
+msgstr "Elegir las políticas de agenda y flujo de trabajo"
+
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Decide which points are created automatically and how the series handles time and follow-ups."
+msgstr "Decide qué puntos se crean automáticamente y cómo la serie gestiona el tiempo y los seguimientos."
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Review the series"
+msgstr "Revisar la serie"
+
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Check the defaults and policies before creating the series."
+msgstr "Revisa los valores y las políticas antes de crear la serie."
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/preparation_views.xml:0
+msgid "Choose a series"
+msgstr "Elegir una serie"
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/preparation_views.xml:0
+msgid "Use a series for its defaults, or leave it empty for a standalone meeting. Your edits stay when you change series."
+msgstr "Usa una serie para aplicar sus valores predeterminados o déjala vacía para una reunión independiente. Tus cambios se conservan al cambiar de serie."
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/preparation_views.xml:0
+msgid "Set the meeting details"
+msgstr "Configurar los datos de la reunión"
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/preparation_views.xml:0
+msgid "Choose when the meeting starts and how much time to reserve. You can edit the suggested title."
+msgstr "Elige cuándo empieza la reunión y cuánto tiempo reservar. Puedes editar el título sugerido."
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/preparation_views.xml:0
+msgid "Invite attendees"
+msgstr "Invitar a los asistentes"
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/preparation_views.xml:0
+msgid "Choose the people expected to take part in this meeting."
+msgstr "Elige quién participará en esta reunión."
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/preparation_views.xml:0
+msgid "Review points to continue"
+msgstr "Revisar los puntos arrastrados"
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/preparation_views.xml:0
+msgid "Accept a point to include it, postpone it for later, or discard it so it is not offered again."
+msgstr "Elige qué puntos quieres incluir en esta reunión."
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/creation_wizard.py:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "Choose which points to include in this meeting."
+msgstr "Elige qué puntos quieres incluir en esta reunión."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "Review points carried forward"
+msgstr "Revisar los puntos arrastrados"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "There are no points to carry forward into this meeting."
+msgstr "No hay puntos de reuniones anteriores que incorporar."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "The series defaults are applied automatically. You can edit the duration and attendees in the next steps."
+msgstr "Los valores de la serie se aplican automáticamente. Puedes cambiar la duración y los asistentes en los pasos siguientes."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Automatic points"
+msgstr "Puntos automáticos"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Meetings in this series will follow the company time-tracking setting. Turn off this switch to edit it."
+msgstr "Las reuniones de esta serie seguirán el ajuste de seguimiento de tiempo de la compañía. Desactiva este interruptor para cambiarlo."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Points can be added according to the company rule. Turn off this switch to choose when."
+msgstr "Los puntos se podrán añadir según la regla de la compañía. Desactiva este interruptor para elegir cuándo."
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/preparation_views.xml:0
+msgid "Build the agenda"
+msgstr "Preparar la agenda"
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/preparation_views.xml:0
+msgid "Add new points and review the points that will be included."
+msgstr "Añade puntos y revisa cuáles se incluirán."
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/preparation_views.xml:0
+msgid "Review and create"
+msgstr "Revisar y crear"
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/preparation_views.xml:0
+msgid "Check the details and selected points. Go back to change any choice."
+msgstr "Comprueba los datos y los puntos seleccionados. Vuelve atrás para cambiar cualquier opción."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/agenda_type/agenda_type.js:0
+msgid "Agenda type"
+msgstr "Tipo de agenda"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/agenda_type/agenda_type.js:0
+msgid "Share updates and background."
+msgstr "Compartir novedades y contexto."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/agenda_type/agenda_type.js:0
+msgid "Explore a question together."
+msgstr "Analizar una cuestión en grupo."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/agenda_type/agenda_type.js:0
+msgid "Record a decision and its outcome."
+msgstr "Registrar una decisión y su resultado."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/agenda_type/agenda_type.js:0
+msgid "Agree on work to follow up."
+msgstr "Acordar tareas para hacer seguimiento."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/agenda_type/agenda_type.js:0
+msgid "Review and approve the meeting minutes."
+msgstr "Revisar y aprobar el acta de la reunión."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/agenda_type/agenda_type.js:0
+msgid "Agree when the group will meet again."
+msgstr "Acordar cuándo volverá a reunirse el grupo."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/agenda_type/agenda_type.js:0
+msgid "Review progress on an existing follow-up."
+msgstr "Revisar el progreso de un seguimiento existente."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/agenda_type/agenda_type.js:0
+msgid "Choose the type that best fits this point."
+msgstr "Elige el tipo que mejor encaje con este punto."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/agenda_type/agenda_type.js:0
+msgid "Meeting agenda type cards"
+msgstr "Tarjetas de tipo de punto de agenda"
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/creation_wizard.py:0
+msgid "Duration"
+msgstr "Duración"
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/creation_wizard.py:0
+msgid "%g h"
+msgstr "%g h"
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/creation_wizard.py:0
+msgid "Choose Accept, Postpone, or Discard for each point."
+msgstr "Elige Aceptar, Posponer o Descartar para cada punto."
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/creation_wizard.py:0
+msgid "Selected points: %s minutes"
+msgstr "Puntos seleccionados: %s minutos"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "Selected points"
+msgstr "Puntos seleccionados"
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/creation_wizard.py:0
+msgid "Continued from an earlier meeting."
+msgstr "Continúa desde una reunión anterior."
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/preparation_views.xml:0
+msgid "This series suggests a duration and attendees. You can edit both in the next steps."
+msgstr "Los valores de la serie se aplican automáticamente. Puedes cambiar la duración y los asistentes en los pasos siguientes."
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__timezone
+msgid "Time zone"
+msgstr "Zona horaria"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__attendee_partner_ids
+msgid "Usual attendees"
+msgstr "Asistentes habituales"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__meeting_name_pattern
+msgid "Meeting title pattern"
+msgstr "Patrón del título de la reunión"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__has_minutes_approval_point
+msgid "Add a minutes approval point"
+msgstr "Añadir un punto para aprobar el acta"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__has_next_meeting_point
+msgid "Add a next meeting point"
+msgstr "Añadir un punto para la próxima reunión"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__next_meeting_rule
+msgid "Suggest the next date by"
+msgstr "Calcular la próxima fecha según"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__next_meeting_interval_days
+msgid "Days later"
+msgstr "Días después"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__add_point_policy
+msgid "When points can be added"
+msgstr "Cuándo se pueden añadir puntos"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Give the series a clear name, then choose who prepares its meetings."
+msgstr "Da un nombre claro a la serie y elige quién prepara sus reuniones."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Identity and people"
+msgstr "Identidad y personas"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Coordinators are responsible for preparing this series. If left empty, you become its first coordinator."
+msgstr "Los coordinadores se encargan de preparar esta serie. Si no eliges a nadie, tú serás su primer coordinador."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Review: choose points when preparing the next meeting. Automatic: unfinished points continue without asking. Manual: move each point yourself."
+msgstr "Revisar: elige los puntos al preparar la próxima reunión. Automático: los puntos sin terminar continúan sin preguntar. Manual: mueve cada punto expresamente."
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Set up your meeting series"
+msgstr "Configura tu serie de reuniones"
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Give it a clear name, choose its coordinators, and decide how unfinished points continue."
+msgstr "Ponle un nombre claro, elige a sus coordinadores y decide cómo continúan los puntos sin terminar."
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Series is active"
+msgstr "Serie activa"
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Active series are available when preparing meetings."
+msgstr "Las series activas están disponibles al preparar reuniones."
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Series identity"
+msgstr "Identidad de la serie"
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Review lets you decide which points continue while preparing the next meeting. Automatic carries unfinished points forward without asking. With Manual, you must find and move each point yourself; it will never be suggested automatically."
+msgstr "Con Revisar, decides qué puntos continúan al preparar la próxima reunión. Automático arrastra los puntos sin terminar sin preguntarte. Con Manual, debes buscar y mover cada punto; nunca se te propondrán automáticamente."
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Tracks meeting and agenda-point time. This series inherits the company setting. Turn off the switch to choose a value for this series."
+msgstr "Registra el tiempo de la reunión y de sus puntos de agenda. Esta serie hereda el valor de la compañía. Desactiva el interruptor para definir un valor para esta serie."
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Controls when people can add agenda points. This series inherits the company rule. Turn off the switch to choose a value for this series."
+msgstr "Controla cuándo se pueden añadir puntos de agenda. Esta serie hereda la regla de la compañía. Desactiva el interruptor para definir un valor para esta serie."
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Suggests a duration for new agenda points. This series inherits the company estimate. Turn off the switch to set an estimate for this series."
+msgstr "Propone una duración para los nuevos puntos de agenda. Esta serie hereda la estimación de la compañía. Desactiva el interruptor para definir una estimación para esta serie."
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Choose a rule to reveal its value. The suggested date appears in the next-meeting agenda point; it does not schedule a meeting automatically."
+msgstr "Elige una regla para mostrar su valor. La fecha propuesta aparecerá en el punto de próxima reunión; no programa una reunión automáticamente."
+
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+#. module: community_meetings
+#: code:addons/community_meetings/views/series_views.xml:0
+msgid "Calculate the next date according to"
+msgstr "Calcular la próxima fecha según"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "These are suggestions for future meetings; you can adjust each meeting later."
+msgstr "Son propuestas para futuras reuniones; podrás ajustarlas en cada reunión."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Time and title"
+msgstr "Hora y título"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "The time zone is used to suggest the next date. In the title pattern, {date} is the meeting date and {series} is this series name."
+msgstr "La zona horaria sirve para proponer la próxima fecha. En el patrón del título, {date} es la fecha de la reunión y {series} es el nombre de esta serie."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "People to invite"
+msgstr "Personas a invitar"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "These people are suggested for each new meeting. You can change the attendees for an individual meeting."
+msgstr "Estas personas se proponen para cada reunión nueva. Puedes cambiar los asistentes de una reunión concreta."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Set agenda and meeting rules"
+msgstr "Configurar la agenda y las reglas de la reunión"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Choose when points can be added and which recurring points the series creates."
+msgstr "Elige cuándo se pueden añadir puntos y qué puntos recurrentes crea la serie."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Meeting controls"
+msgstr "Controles de la reunión"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Time tracking uses the company setting unless you turn it on or off here. Points can be limited to drafts, allowed until the meeting starts, or added while it runs."
+msgstr "El seguimiento del tiempo usa la configuración de la compañía salvo que lo actives o desactives aquí. Puedes limitar los puntos a los borradores, permitirlos hasta el inicio o añadirlos durante la reunión."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Agenda defaults"
+msgstr "Valores de la agenda"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "The estimate fills new points; leave it at zero to use the company default. Minutes approval is added only when earlier minutes are pending. The next-meeting point is added to each meeting in this series."
+msgstr "La estimación se propone para los puntos nuevos; déjala en cero para usar la de la compañía. El punto de aprobación solo se añade si hay actas anteriores pendientes. El punto de próxima reunión se añade a cada reunión de la serie."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Suggested next date"
+msgstr "Próxima fecha propuesta"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "This suggests a date in the next-meeting point; it does not schedule a meeting automatically."
+msgstr "Esta opción propone una fecha en el punto de próxima reunión; no programa otra reunión automáticamente."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Check the choices below. Use Back to change anything before creating the series."
+msgstr "Revisa las opciones. Usa Atrás para cambiar algo antes de crear la serie."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Meeting defaults"
+msgstr "Valores de la reunión"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Agenda and rules"
+msgstr "Agenda y reglas"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "Meeting series"
+msgstr "Serie de reuniones"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "People invited"
+msgstr "Personas invitadas"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "A series may suggest attendees. Changes here apply to this meeting only."
+msgstr "Una serie puede proponer asistentes. Los cambios aquí solo afectan a esta reunión."
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/creation_wizard.py:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "Points from earlier meetings"
+msgstr "Puntos de reuniones anteriores"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "Selected agenda"
+msgstr "Agenda seleccionada"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "Accepted points from earlier meetings count toward this estimate. The series may add structural points when the meeting is created."
+msgstr "La estimación incluye los puntos aceptados de reuniones anteriores. La serie puede añadir puntos estructurales al crear la reunión."
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__use_company_time_tracking
+msgid "Use the company time-tracking setting"
+msgstr "Usar el ajuste de seguimiento de tiempo de la compañía"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__time_tracking_override
+msgid "Time tracking for this series"
+msgstr "Seguimiento de tiempo para esta serie"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__use_company_add_point_policy
+msgid "Use the company rule for adding points"
+msgstr "Usar la regla de la compañía para añadir puntos"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__add_point_policy_override
+msgid "Adding points for this series"
+msgstr "Añadir puntos para esta serie"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Series meetings use the current company setting. Turn this off to choose a rule for this series."
+msgstr "Las reuniones de la serie usan el ajuste actual de la compañía. Desactívalo para elegir una regla para esta serie."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Series meetings use the current company rule. Turn this off to choose when points may be added."
+msgstr "Las reuniones de la serie usan la regla actual de la compañía. Desactívala para elegir cuándo se pueden añadir puntos."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "No new agenda points have been added. Accepted points from earlier meetings will appear in the review."
+msgstr "Todavía no se han añadido puntos nuevos a la agenda. Los puntos aceptados de reuniones anteriores aparecerán en la revisión."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "The series may add recurring points when the meeting is created."
+msgstr "La serie puede añadir puntos recurrentes al crear la reunión."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "The company time-tracking setting applies to all meetings in this series. Turn off Company default to choose a different setting."
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "The company rule applies to all meetings in this series. Turn off Company default to choose when points may be added."
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "This is the starting estimate for new agenda points. Each point can have its own estimate."
+msgstr "Esta es la estimación inicial de los puntos nuevos de la agenda. Cada punto puede tener su propia estimación."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Default estimate per agenda point"
+msgstr "Estimación predeterminada por punto de agenda"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "New points use the company estimate. Turn off Company default to set an estimate for this series."
+msgstr "Los puntos nuevos usan la estimación de la compañía. Desactiva «Predeterminado de la compañía» para definir una estimación para esta serie."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "This estimate is suggested for new agenda points. Each point can have its own estimate."
+msgstr "Esta estimación se propone para los puntos nuevos de la agenda. Cada punto puede tener su propia estimación."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "<strong>Responsible</strong><small>Who will present this point and guide the discussion?</small>"
+msgstr "<strong>Responsable</strong><small>¿Quién presentará este punto y guiará el debate?</small>"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "Choose a responsible person"
+msgstr "Selecciona a la persona responsable"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "<strong>Related points</strong><small>Link background or earlier points that help explain this one.</small>"
+msgstr "<strong>Puntos relacionados</strong><small>Enlaza información de contexto o puntos anteriores que ayuden a entender este punto.</small>"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "Search for related points"
+msgstr "Busca puntos relacionados"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Minutes approval"
+msgstr "Aprobación del acta"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Added when earlier meeting minutes are waiting for approval."
+msgstr "Se añade cuando hay actas de reuniones anteriores pendientes de aprobación."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
+msgid "Adds a point to agree on the next date at every meeting in this series."
+msgstr "Añade un punto para acordar la próxima fecha en cada reunión de esta serie."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "Estimated agenda time (minutes)"
+msgstr "Tiempo estimado de agenda (minutos)"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__use_company_time_tracking
+msgid "Company time-tracking default"
+msgstr "Predeterminado de seguimiento de tiempo de la compañía"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__use_company_add_point_policy
+msgid "Company point-policy default"
+msgstr "Predeterminado de la política de puntos de la compañía"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__use_company_estimated_minutes
+msgid "Company default point estimate"
+msgstr "Estimación predeterminada de la compañía"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
+msgid "Add an existing point or configure follow-ups."
+msgstr "Añade un punto existente o configura sus seguimientos."
+
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
+msgid "Add a point from this series to the meeting. Its title, description and type stay as they are; you can change who presents it here."
+msgstr "Añade a la reunión un punto de esta serie. Su título, descripción y tipo se mantienen; aquí puedes cambiar quién lo presenta."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
+#: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
+msgid "Clear selected point"
+msgstr "Quitar el punto seleccionado"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "Plan this meeting"
+msgstr "Planifica esta reunión"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "Choose when it starts, what it is called and how long to reserve."
+msgstr "Elige cuándo empieza, qué nombre tendrá y cuánto tiempo reservar."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "Give this meeting a clear name"
+msgstr "Ponle un nombre claro a esta reunión."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "Start date and time"
+msgstr "Fecha y hora de inicio"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "When should the meeting begin?"
+msgstr "¿Cuándo debe empezar la reunión?"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "How much time should you reserve?"
+msgstr "¿Cuánto tiempo debes reservar?"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "The suggested start time, meeting name and duration can all be changed for this meeting."
+msgstr "Puedes cambiar para esta reunión la hora de inicio, el nombre y la duración propuestos por la serie."
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/creation_wizard.py:0
+msgid "Agenda points for this meeting"
+msgstr "Puntos de la agenda de esta reunión"
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/creation_wizard.py:0
+msgid "Estimated total time"
+msgstr "Tiempo total estimado"
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/creation_wizard.py:0
+msgid "Added automatically"
+msgstr "Añadido automáticamente"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "Duration (hours:minutes)"
+msgstr "Duración (horas:minutos)"
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/creation_wizard.py:0
+msgid "Points included"
+msgstr "Puntos incluidos"
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/creation_wizard.py:0
+msgid "Estimated time"
+msgstr "Tiempo estimado"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "Hours:minutes (1:00 = 1 hour)."
+msgstr "Horas:minutos (1:00 = 1 hora)."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "Hours:minutes"
+msgstr "Horas:minutos"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+msgid "Min."
+msgstr "Min."
