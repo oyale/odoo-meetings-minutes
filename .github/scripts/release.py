@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import ast
 import datetime as dt
+import json
 import os
 import re
 import shutil
@@ -22,9 +23,21 @@ ADDONS = (
     "community_meetings_extension_demo",
 )
 CHANGELOG = ROOT / "CHANGELOG.md"
+RELEASE_FOLLOWUPS = ROOT / "RELEASE_FOLLOWUPS.json"
 METAPACKAGE = ROOT / "setup/_metapackage/pyproject.toml"
 VERSION_RE = re.compile(r"18\.0\.\d+\.\d+")
 RELEASE_HEADING_RE = re.compile(r"^## Odoo Meetings Minutes (18\.0\.\d+\.\d+) \(", re.MULTILINE)
+FOLLOWUP_AREAS = {
+    "documentation",
+    "screenshots",
+    "user_surface_inventory",
+    "translations",
+    "tests_and_validation",
+    "migration",
+    "security",
+    "accessibility",
+    "other",
+}
 
 
 def git(*args: str, check: bool = True, capture: bool = True) -> str:
@@ -75,6 +88,40 @@ def normalize_tag(tag: str) -> str:
 def check_clean_state() -> None:
     if git("status", "--porcelain", "--untracked-files=no"):
         raise SystemExit("Tracked changes are present. Commit or stash them before preparing a release.")
+
+
+def check_release_followups() -> None:
+    try:
+        ledger = json.loads(RELEASE_FOLLOWUPS.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise SystemExit(f"Cannot read release follow-up ledger {RELEASE_FOLLOWUPS}: {error}") from error
+    if not isinstance(ledger, dict) or ledger.get("schema_version") != 1:
+        raise SystemExit(f"Invalid release follow-up ledger schema in {RELEASE_FOLLOWUPS}.")
+    pending = ledger.get("pending")
+    if not isinstance(pending, list):
+        raise SystemExit(f"The 'pending' field must be a list in {RELEASE_FOLLOWUPS}.")
+    for index, item in enumerate(pending, start=1):
+        if (
+            not isinstance(item, dict)
+            or not isinstance(item.get("ticket"), str)
+            or not item["ticket"].strip()
+            or item.get("addon") not in (*ADDONS, "suite")
+            or item.get("area") not in FOLLOWUP_AREAS
+            or not isinstance(item.get("action"), str)
+            or not item["action"].strip()
+        ):
+            raise SystemExit(f"Invalid pending follow-up #{index} in {RELEASE_FOLLOWUPS}.")
+    if pending:
+        details = "\n".join(
+            f"  - {item['ticket']} [{item['addon']} / {item['area']}]: {item['action']}"
+            for item in pending
+        )
+        raise SystemExit(
+            "Release blocked by unresolved follow-ups:\n"
+            f"{details}\n"
+            "Resolve these items and remove them from RELEASE_FOLLOWUPS.json; "
+            "see .github/RELEASE_READINESS.md."
+        )
 
 
 def changed_addons_since(tag: str) -> list[str]:
@@ -221,6 +268,7 @@ def preflight(args: argparse.Namespace) -> tuple[str, str, list[str], bool]:
     if git("branch", "--show-current") != "18.0":
         raise SystemExit("Release preparation must run on branch 18.0.")
     check_clean_state()
+    check_release_followups()
 
     if args.push:
         check_push_target()
