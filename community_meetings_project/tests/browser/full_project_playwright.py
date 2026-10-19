@@ -161,9 +161,12 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         card.get_by_role("button", name="Create Project task").click()
         dialog = self.page.get_by_role("dialog").last
         expect(dialog.get_by_label("Choose a different project")).to_be_visible()
-        expect(dialog.locator('.o_field_widget[name="project_id"]')).not_to_be_visible()
+        expect(
+            dialog.locator('.o_field_widget[name="project_id"] input')
+        ).not_to_be_visible()
         dialog.get_by_label("Choose a different project").check()
         project_field = dialog.locator('.o_field_widget[name="project_id"] input')
+        expect(project_field).to_be_visible()
         project_field.fill(alternate_project_name)
         self.page.get_by_role("option", name=alternate_project_name, exact=True).click()
         dialog.locator('button[name="action_create"]').click()
