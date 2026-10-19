@@ -5,6 +5,37 @@ the exact Odoo addon version included in the published suite packages.
 History below starts at `18.0.20261018.2`; earlier releases are not backfilled.
 
 <!-- towncrier release notes start -->
+## Odoo Meetings Minutes 18.0.20261019.2 (2026-10-19)
+
+### Addon versions
+
+| Addon | Odoo module version |
+|---|---:|
+| Community Meetings | `18.0.6.2.2` |
+| Calendar Integration | `18.0.1.0.1` |
+| Project Integration | `18.0.3.1.2` |
+| Extension Demo | `18.0.1.0.0` |
+
+### Community Meetings
+
+#### Bugfixes
+
+- Preserve execution-evidence checks supplied by addons when validating resolved TODOs.
+
+### Calendar Integration
+
+No user-facing changes.
+
+### Project Integration
+
+#### Bugfixes
+
+- Serialize task deletion with TODO closure so a resolved TODO keeps its required Project task.
+
+### Extension Demo
+
+No significant changes.
+
 ## Odoo Meetings Minutes 18.0.20261019.1 (2026-10-19)
 
 ### Addon versions

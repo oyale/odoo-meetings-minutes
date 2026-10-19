@@ -21,10 +21,10 @@ Available addons
 ----------------
 addon | version | maintainers | summary
 --- | --- | --- | ---
-[community_meetings](community_meetings/) | 18.0.6.2.1 | [![oyale](https://github.com/oyale.png?size=30px)](https://github.com/oyale) | Operational meetings, agendas, resolutions and minutes
-[community_meetings_calendar](community_meetings_calendar/) | 18.0.1.0.0 | [![oyale](https://github.com/oyale.png?size=30px)](https://github.com/oyale) | Create private Calendar invitations for scheduled community meetings
+[community_meetings](community_meetings/) | 18.0.6.2.2 | [![oyale](https://github.com/oyale.png?size=30px)](https://github.com/oyale) | Operational meetings, agendas, resolutions and minutes
+[community_meetings_calendar](community_meetings_calendar/) | 18.0.1.0.1 | [![oyale](https://github.com/oyale.png?size=30px)](https://github.com/oyale) | Create private Calendar invitations for scheduled community meetings
 [community_meetings_extension_demo](community_meetings_extension_demo/) | 18.0.1.0.0 | [![oyale](https://github.com/oyale.png?size=30px)](https://github.com/oyale) | Synthetic example of meeting-kind and snapshot extension hooks
-[community_meetings_project](community_meetings_project/) | 18.0.3.1.1 | [![oyale](https://github.com/oyale.png?size=30px)](https://github.com/oyale) | Link existing Odoo Project tasks to meetings
+[community_meetings_project](community_meetings_project/) | 18.0.3.1.2 | [![oyale](https://github.com/oyale.png?size=30px)](https://github.com/oyale) | Link existing Odoo Project tasks to meetings
 
 [//]: # (end addons)
 
