@@ -50,6 +50,17 @@ def changed_paths() -> list[str] | None:
     if not base_ref or set(base_ref) == {"0"}:
         return None
 
+    base_exists = subprocess.run(
+        ["git", "cat-file", "-e", f"{base_ref}^{{commit}}"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    if base_exists.returncode:
+        # A force-push can remove the event's previous commit from the checkout.
+        # This filter only skips work, so run tests when the comparison is unavailable.
+        return None
+
     output = subprocess.check_output(
         [
             "git",
