@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
     <record id="view_community_meeting_carryover_list" model="ir.ui.view">
         <field name="name">community.meeting.carryover.list</field>
@@ -77,5 +78,5 @@
         <field name="view_id" ref="view_community_meeting_carryover_wizard"/>
         <field name="target">new</field>
     </record>
-    <menuitem id="menu_community_meeting_carryovers" name="Agenda Carryovers" parent="community_meetings.menu_community_meetings_root" action="action_community_meeting_carryovers" sequence="30" groups="community_meetings.group_meeting_editor"/>
+    <menuitem id="menu_community_meeting_carryovers" name="Agenda Carryovers" parent="community_meetings.menu_community_meetings_root" action="action_community_meeting_carryovers" sequence="30" groups="community_meetings.group_meeting_editor" active="False"/>
 </odoo>

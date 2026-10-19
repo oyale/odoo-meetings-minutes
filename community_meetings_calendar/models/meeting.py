@@ -7,9 +7,7 @@ from odoo.exceptions import AccessError, UserError, ValidationError
 class CommunityMeeting(models.Model):
     _inherit = "community.meeting"
 
-    calendar_event_ids = fields.One2many(
-        "calendar.event", "community_meeting_id", string="Calendar Event", copy=False
-    )
+    calendar_event_ids = fields.One2many("calendar.event", "community_meeting_id", string="Calendar Event", copy=False)
 
     @staticmethod
     def _calendar_managed_fields():
@@ -25,9 +23,7 @@ class CommunityMeeting(models.Model):
 
     def _check_calendar_attendees(self):
         user_model = self.env["res.users"].sudo()
-        partners_by_meeting = {
-            meeting.id: meeting._calendar_attendee_partner_ids() for meeting in self
-        }
+        partners_by_meeting = {meeting.id: meeting._calendar_attendee_partner_ids() for meeting in self}
         all_partners = self.env["res.partner"].browse(
             set().union(*(partners.ids for partners in partners_by_meeting.values()))
         )
@@ -47,15 +43,8 @@ class CommunityMeeting(models.Model):
         for meeting in self:
             for partner in partners_by_meeting[meeting.id]:
                 eligible = users_by_partner.get(partner.id, self.env["res.users"])
-                if not eligible or not any(
-                    meeting.company_id in user.company_ids for user in eligible
-                ):
-                    raise ValidationError(
-                        _(
-                            "Calendar invitees must be active internal users in the "
-                            "meeting company."
-                        )
-                    )
+                if not eligible or not any(meeting.company_id in user.company_ids for user in eligible):
+                    raise ValidationError(_("Calendar invitees must be active internal users in the meeting company."))
 
     def _calendar_attendee_partner_ids(self):
         self.ensure_one()
@@ -135,9 +124,7 @@ class CommunityMeeting(models.Model):
     def _ensure_calendar_end_datetime(self):
         for meeting in self:
             if not meeting.end_datetime and meeting.start_datetime:
-                duration = (
-                    meeting.series_id.duration_hours if meeting.series_id else 1.0
-                )
+                duration = meeting.series_id.duration_hours if meeting.series_id else 1.0
                 end = fields.Datetime.add(meeting.start_datetime, hours=duration or 1.0)
                 super(CommunityMeeting, meeting).write({"end_datetime": end})
             if (
@@ -145,9 +132,7 @@ class CommunityMeeting(models.Model):
                 or not meeting.end_datetime
                 or meeting.end_datetime <= meeting.start_datetime
             ):
-                raise ValidationError(
-                    _("The meeting end must be after its start before scheduling.")
-                )
+                raise ValidationError(_("The meeting end must be after its start before scheduling."))
 
     def _sync_calendar_event(self):
         """Sync events; callers must hold the meeting row lock."""
@@ -160,27 +145,19 @@ class CommunityMeeting(models.Model):
             if meeting.state != "scheduled":
                 continue
             event = meeting.calendar_event_ids
-            owner_env = (
-                self.env["calendar.event"].with_user(meeting.organizer_id).sudo()
-            )
+            owner_env = self.env["calendar.event"].with_user(meeting.organizer_id).sudo()
             if event:
                 values = meeting._calendar_event_values(event)
                 if not values:
                     continue
                 old_partners = event.partner_ids
-                event.with_user(
-                    meeting.organizer_id
-                ).sudo()._community_meetings_calendar_write(values)
-                event.invalidate_recordset(
-                    ["partner_ids", "attendee_ids", "name", "start", "stop", "location"]
-                )
+                event.with_user(meeting.organizer_id).sudo()._community_meetings_calendar_write(values)
+                event.invalidate_recordset(["partner_ids", "attendee_ids", "name", "start", "stop", "location"])
                 removed = old_partners - event.partner_ids
                 if removed:
                     event._community_meetings_calendar_cancel_mail(removed)
             else:
-                entry = creates_by_owner.setdefault(
-                    meeting.organizer_id.id, (owner_env, [])
-                )
+                entry = creates_by_owner.setdefault(meeting.organizer_id.id, (owner_env, []))
                 entry[1].append(meeting._calendar_event_values())
         for owner_env, values_list in creates_by_owner.values():
             owner_env._community_meetings_calendar_create(values_list)
@@ -209,9 +186,7 @@ class CommunityMeeting(models.Model):
             self._lock_calendar_event()
         result = super().write(values)
         if changed:
-            self.filtered(
-                lambda meeting: meeting.state == "scheduled"
-            )._sync_calendar_event()
+            self.filtered(lambda meeting: meeting.state == "scheduled")._sync_calendar_event()
         return result
 
     def action_schedule(self):
@@ -234,8 +209,6 @@ class CommunityMeeting(models.Model):
         self._cancel_calendar_event()
         return result
 
-    @api.constrains(
-        "attendee_partner_ids", "organizer_id", "secretary_id", "company_id"
-    )
+    @api.constrains("attendee_partner_ids", "organizer_id", "secretary_id", "company_id")
     def _constrain_calendar_attendees(self):
         self._check_calendar_attendees()

@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
 
     <t t-name="community_meetings.AgendaTypeField">
         <div t-att-class="'o_meeting_type_choices ' + (props.richChoices ? 'o_meeting_type_choices_rich ' + (!state.showAllRichChoices ? 'is-collapsed' : '') : '')" role="radiogroup" aria-label="Agenda type">
-            <button t-foreach="items" t-as="item" t-key="item.id" type="button"
-                    t-if="!props.richChoices or state.showAllRichChoices or item.id === value"
-                    t-att-class="'btn o_meeting_type_choice ' + (props.richChoices ? 'o_meeting_type_card' : (item.id === value ? 'btn-primary' : 'btn-outline-secondary')) + (item.id === value ? ' is-selected' : '') + (props.richChoices and !state.showAllRichChoices ? ' is-compact' : '')"
+            <button t-if="!props.richChoices or state.showAllRichChoices or item.id === value" t-att-class="'btn o_meeting_type_choice ' + (props.richChoices ? 'o_meeting_type_card' : (item.id === value ? 'btn-primary' : 'btn-outline-secondary')) + (item.id === value ? ' is-selected' : '') + (props.richChoices and !state.showAllRichChoices ? ' is-compact' : '')" t-foreach="items" t-as="item"
+                    t-key="item.id"
+                    type="button"
                     role="radio" t-att-aria-checked="item.id === value"
                     t-att-data-item-id="item.id"
                     t-att-aria-label="item.name"

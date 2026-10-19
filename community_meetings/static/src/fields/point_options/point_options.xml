@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
     <t t-name="community_meetings.MeetingPriorityField">
         <div class="o_meeting_point_priority_choices" role="radiogroup" aria-label="Priority">
@@ -16,8 +16,8 @@
     <t t-name="community_meetings.MeetingMinutesField">
         <div class="o_meeting_minutes_picker">
             <div class="o_meeting_minute_presets" role="group" aria-label="Estimated duration">
-                <button t-if="props.companyDefault" type="button"
-                        t-att-class="'btn btn-sm ' + (usesCompanyDefault ? 'btn-primary' : 'btn-light')"
+                <button t-if="props.companyDefault" t-att-class="'btn btn-sm ' + (usesCompanyDefault ? 'btn-primary' : 'btn-light')"
+                        type="button"
                         t-att-aria-pressed="usesCompanyDefault" t-att-disabled="props.readonly"
                         t-on-click="useCompanyDefault"><i class="fa fa-building-o me-1" aria-hidden="true"/>Company default</button>
                 <button t-foreach="[5, 10, 15, 20, 30, 45]" t-as="minutes" t-key="minutes" type="button"

@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 
@@ -17,17 +19,13 @@ CONTENT_FIELDS = (
 class MeetingTopic(models.Model):
     _name = "community.meeting.topic"
     _description = "Meeting Point"
-    _inherit = ["mail.thread"]
+    _inherit: ClassVar[list[str]] = ["mail.thread"]
     _check_company_auto = True
 
     name = fields.Char(required=True, tracking=True)
     description = fields.Html()
-    company_id = fields.Many2one(
-        "res.company", required=True, default=lambda self: self.env.company
-    )
-    series_id = fields.Many2one(
-        "community.meeting.series", check_company=True, ondelete="restrict"
-    )
+    company_id = fields.Many2one("res.company", required=True, default=lambda self: self.env.company)
+    series_id = fields.Many2one("community.meeting.series", check_company=True, ondelete="restrict")
     origin_topic_id = fields.Many2one(
         "community.meeting.topic",
         ondelete="set null",
@@ -40,9 +38,7 @@ class MeetingTopic(models.Model):
         string="Promoted from follow-up",
         copy=False,
     )
-    agenda_type_id = fields.Many2one(
-        "community.meeting.agenda.type", required=True, ondelete="restrict"
-    )
+    agenda_type_id = fields.Many2one("community.meeting.agenda.type", required=True, ondelete="restrict")
     priority = fields.Selection(PRIORITIES, default="1", required=True, tracking=True)
     deadline = fields.Date(tracking=True)
     estimated_minutes = fields.Integer()
@@ -59,9 +55,7 @@ class MeetingTopic(models.Model):
         string="Related points",
         check_company=True,
     )
-    proposer_partner_id = fields.Many2one(
-        "res.partner", ondelete="restrict", index=True
-    )
+    proposer_partner_id = fields.Many2one("res.partner", ondelete="restrict", index=True)
     submitted_by_user_id = fields.Many2one("res.users", readonly=True, index=True)
     submitted_at = fields.Datetime(readonly=True)
     proposal_status = fields.Selection(
@@ -106,9 +100,7 @@ class MeetingTopic(models.Model):
         "topic_id",
         groups="community_meetings.group_meeting_manager",
     )
-    action_ids = fields.One2many(
-        "community.meeting.action", compute="_compute_visible_links", compute_sudo=False
-    )
+    action_ids = fields.One2many("community.meeting.action", compute="_compute_visible_links", compute_sudo=False)
 
     @api.depends("all_participation_ids", "all_action_ids")
     @api.depends_context("uid", "allowed_company_ids")
@@ -117,12 +109,8 @@ class MeetingTopic(models.Model):
         # the visible links are access-filtered per user, so the cache must
         # invalidate when those change.
         for topic in self:
-            topic.participation_ids = self.env["community.meeting.agenda.item"].search(
-                [("topic_id", "=", topic.id)]
-            )
-            topic.action_ids = self.env["community.meeting.action"].search(
-                [("topic_id", "=", topic.id)]
-            )
+            topic.participation_ids = self.env["community.meeting.agenda.item"].search([("topic_id", "=", topic.id)])
+            topic.action_ids = self.env["community.meeting.action"].search([("topic_id", "=", topic.id)])
 
     @api.constrains("estimated_minutes")
     def _check_minutes(self):
@@ -139,9 +127,7 @@ class MeetingTopic(models.Model):
     def create(self, vals_list):
         for vals in vals_list:
             if vals.get("proposal_status") in ("accepted", "rejected", "withdrawn"):
-                raise ValidationError(
-                    _("Use a proposal workflow action to change its status.")
-                )
+                raise ValidationError(_("Use a proposal workflow action to change its status."))
             vals.pop("responded_by_id", None)
             vals.pop("responded_at", None)
             if not self.env.context.get("meeting_proposal_create"):
@@ -151,11 +137,7 @@ class MeetingTopic(models.Model):
                     "submitted_at",
                 ):
                     vals.pop(server_field, None)
-            if (
-                vals.get("state", "open") not in ("open", "proposed")
-                or vals.get("outcome")
-                or vals.get("postponed")
-            ):
+            if vals.get("state", "open") not in ("open", "proposed") or vals.get("outcome") or vals.get("postponed"):
                 raise ValidationError(_("Use the meeting workflow to resolve a point."))
         return super().create(vals_list)
 
@@ -178,9 +160,7 @@ class MeetingTopic(models.Model):
             "company_id",
             "series_id",
         }.intersection(vals):
-            raise UserError(
-                _("Use the meeting workflow to change point state or scope.")
-            )
+            raise UserError(_("Use the meeting workflow to change point state or scope."))
         # Content is shared only by deliberate reuse. Propagation stops at the
         # editable frontier: only participations on draft/scheduled meetings that
         # have not started follow the point. Held/minutes_draft minutes keep their
@@ -190,16 +170,11 @@ class MeetingTopic(models.Model):
         result = super().write(vals)
         for topic in self:
             upcoming = topic.participation_ids.filtered(
-                lambda i: (
-                    i.meeting_id.state in ("draft", "scheduled")
-                    and not i.meeting_id.actual_start_datetime
-                )
+                lambda i: i.meeting_id.state in ("draft", "scheduled") and not i.meeting_id.actual_start_datetime
             )
             for item in upcoming:
                 item.check_access("write")
-                item._write_topic_content(
-                    {k: v for k, v in vals.items() if k in CONTENT_FIELDS}
-                )
+                item._write_topic_content({k: v for k, v in vals.items() if k in CONTENT_FIELDS})
         return result
 
     def _lock_workflow(self):
@@ -207,8 +182,7 @@ class MeetingTopic(models.Model):
         # requests are retried by Odoo instead of validating against old task rows.
         for topic in self.sorted("id"):
             self.env.cr.execute(
-                "UPDATE community_meeting_topic SET write_date=clock_timestamp() "
-                "WHERE id=%s",
+                "UPDATE community_meeting_topic SET write_date=clock_timestamp() WHERE id=%s",
                 [topic.id],
             )
         self.invalidate_recordset(["write_date"])
@@ -224,36 +198,22 @@ class MeetingTopic(models.Model):
             self.invalidate_recordset(["state", "last_participation_id"])
         if item.is_followup:
             return
-        if (
-            self.state == "closed"
-            and self.sudo().last_participation_id
-            and self.sudo().last_participation_id != item
-        ):
+        if self.state == "closed" and self.sudo().last_participation_id and self.sudo().last_participation_id != item:
             raise UserError(_("Reopen the closed point before recording a new result."))
-        closed = item.disposition == "closed" or (
-            item.kind == "information" and item.disposition == "discussed"
-        )
+        closed = item.disposition == "closed" or (item.kind == "information" and item.disposition == "discussed")
         values = {
             "last_participation_id": item.id,
             "state": "closed" if closed else "open",
             "postponed": item.disposition == "deferred",
-            "outcome": (
-                item.decision_result if item.kind == "decision" else item.disposition
-            )
-            if closed
-            else False,
+            "outcome": (item.decision_result if item.kind == "decision" else item.disposition) if closed else False,
         }
         super(MeetingTopic, self.sudo()).write(values)
 
     def _set_series(self, series):
         self.check_access("write")
         for topic in self:
-            if topic.sudo().participation_ids.filtered(
-                lambda i: i.meeting_id.series_id != series
-            ):
-                raise UserError(
-                    _("A shared point cannot be moved to a different series.")
-                )
+            if topic.sudo().participation_ids.filtered(lambda i: i.meeting_id.series_id != series):
+                raise UserError(_("A shared point cannot be moved to a different series."))
         return super().write({"series_id": series.id if series else False})
 
     def _reopen(self, reason):
@@ -320,13 +280,8 @@ class MeetingTopic(models.Model):
     def action_withdraw_proposal(self):
         self.check_access("write")
         for topic in self:
-            if (
-                topic.proposal_status != "submitted"
-                or topic.submitted_by_user_id != self.env.user
-            ):
-                raise AccessError(
-                    _("You can withdraw only your own submitted proposal.")
-                )
+            if topic.proposal_status != "submitted" or topic.submitted_by_user_id != self.env.user:
+                raise AccessError(_("You can withdraw only your own submitted proposal."))
             super(MeetingTopic, topic.sudo()).write(
                 {
                     "proposal_status": "withdrawn",
@@ -344,16 +299,11 @@ class MeetingTopic(models.Model):
         # (and meeting managers) may propose.
         user = self.env.user
         policy_groups = (
-            self.env["community.meeting.proposal.group.policy"]
-            .sudo()
-            .search([("active", "=", True)])
-            .group_id
+            self.env["community.meeting.proposal.group.policy"].sudo().search([("active", "=", True)]).group_id
         )
         if not policy_groups:
             return user.has_group("community_meetings.group_agenda_proposer")
-        return user.has_group("community_meetings.group_meeting_manager") or bool(
-            user.groups_id & policy_groups
-        )
+        return user.has_group("community_meetings.group_meeting_manager") or bool(user.groups_id & policy_groups)
 
     @api.model
     def _validate_proposal_target(self, company_id, series_id):
@@ -391,9 +341,7 @@ class MeetingTopic(models.Model):
                 "state": "proposed",
                 "proposal_status": "submitted",
                 "proposer_partner_id": proposer_partner.id,
-                "submitted_by_user_id": submitted_by.id
-                if hasattr(submitted_by, "id")
-                else submitted_by,
+                "submitted_by_user_id": submitted_by.id if hasattr(submitted_by, "id") else submitted_by,
                 "submitted_at": fields.Datetime.now(),
             }
         )
@@ -405,9 +353,7 @@ class MeetingTopic(models.Model):
             self.env.user.has_group("community_meetings.group_meeting_editor")
             or self.env.user.has_group("community_meetings.group_meeting_manager")
         ):
-            raise AccessError(
-                _("Only a meeting editor can record a proposal on behalf of a contact.")
-            )
+            raise AccessError(_("Only a meeting editor can record a proposal on behalf of a contact."))
         partner = self.env["res.partner"].browse(partner_id).exists()
         if not partner:
             raise ValidationError(_("The proposed contact is unavailable."))
@@ -436,12 +382,7 @@ class MeetingTopic(models.Model):
             )
         )
         if not grant:
-            raise AccessError(
-                _(
-                    "This contact is not eligible to propose topics in the selected "
-                    "scope."
-                )
-            )
+            raise AccessError(_("This contact is not eligible to propose topics in the selected scope."))
         values = dict(values, company_id=company_id, series_id=series.id)
         return self._create_proposal(values, partner, self.env.uid)
 
@@ -479,7 +420,7 @@ class AgendaParticipation(models.Model):
     topic_outcome = fields.Char(related="topic_id.outcome")
     reopen_reason = fields.Char(copy=False)
 
-    _sql_constraints = [
+    _sql_constraints: ClassVar[list[tuple[str, str, str]]] = [
         (
             "meeting_topic_unique",
             "unique(meeting_id, topic_id)",
@@ -489,10 +430,7 @@ class AgendaParticipation(models.Model):
 
     @api.constrains("estimated_minutes", "actual_minutes", "actual_seconds")
     def _check_estimated_minutes(self):
-        if any(
-            i.estimated_minutes < 0 or i.actual_minutes < 0 or i.actual_seconds < 0
-            for i in self
-        ):
+        if any(i.estimated_minutes < 0 or i.actual_minutes < 0 or i.actual_seconds < 0 for i in self):
             raise ValidationError(_("Estimated and actual minutes cannot be negative."))
 
     @api.model_create_multi
@@ -510,19 +448,10 @@ class AgendaParticipation(models.Model):
             topic = self.env["community.meeting.topic"].browse(vals.get("topic_id"))
             if topic:
                 topic.check_access("read")
-                if self.search_count(
-                    [("meeting_id", "=", meeting.id), ("topic_id", "=", topic.id)]
-                ):
-                    raise ValidationError(
-                        _("This point is already on this meeting agenda.")
-                    )
-                if (
-                    topic.company_id != meeting.company_id
-                    or topic.series_id != meeting.series_id
-                ):
-                    raise ValidationError(
-                        _("Reuse points only within their original company and series.")
-                    )
+                if self.search_count([("meeting_id", "=", meeting.id), ("topic_id", "=", topic.id)]):
+                    raise ValidationError(_("This point is already on this meeting agenda."))
+                if topic.company_id != meeting.company_id or topic.series_id != meeting.series_id:
+                    raise ValidationError(_("Reuse points only within their original company and series."))
                 for key in CONTENT_FIELDS:
                     value = topic[key]
                     vals[key] = value.id if key == "agenda_type_id" else value
@@ -581,14 +510,8 @@ class AgendaParticipation(models.Model):
                 was_closed = item.disposition == "closed" or (
                     item.kind == "information" and item.disposition == "discussed"
                 )
-                if (
-                    was_closed
-                    and item.topic_id.state == "closed"
-                    and not item.is_followup
-                ):
-                    raise UserError(
-                        _("Reopen the point with a reason before changing its result.")
-                    )
+                if was_closed and item.topic_id.state == "closed" and not item.is_followup:
+                    raise UserError(_("Reopen the point with a reason before changing its result."))
         if {"disposition", "decision_result"}.intersection(vals):
             self.meeting_id._lock_live_workflow()
             # Serialize changes across sessions sharing a point.
@@ -614,11 +537,7 @@ class AgendaParticipation(models.Model):
                 super(AgendaParticipation, item).write({"review_next_meeting": True})
             if {"disposition", "decision_result"}.intersection(vals) and item.topic_id:
                 item.topic_id._record_result(item, already_locked=True)
-            content = {
-                k: item[k].id if k == "agenda_type_id" else item[k]
-                for k in CONTENT_FIELDS
-                if k in vals
-            }
+            content = {k: item[k].id if k == "agenda_type_id" else item[k] for k in CONTENT_FIELDS if k in vals}
             if "kind" in vals:
                 content["agenda_type_id"] = item.agenda_type_id.id
             if content and item.topic_id:
@@ -627,9 +546,7 @@ class AgendaParticipation(models.Model):
 
     def _pause_timing(self):
         self.meeting_id._lock_live_workflow()
-        self.invalidate_recordset(
-            ["actual_started_at", "actual_seconds", "actual_minutes"]
-        )
+        self.invalidate_recordset(["actual_started_at", "actual_seconds", "actual_minutes"])
         now = fields.Datetime.now()
         for item in self.filtered("actual_started_at"):
             started = fields.Datetime.to_datetime(item.actual_started_at)
@@ -651,9 +568,7 @@ class AgendaParticipation(models.Model):
             meeting._lock_live_workflow()
             if not meeting.time_tracking_enabled:
                 raise UserError(_("Time tracking is disabled for this meeting."))
-            item.invalidate_recordset(
-                ["disposition", "actual_started_at", "actual_seconds", "actual_minutes"]
-            )
+            item.invalidate_recordset(["disposition", "actual_started_at", "actual_seconds", "actual_minutes"])
             if not self.env.user.has_group("community_meetings.group_meeting_editor"):
                 raise UserError(_("Only meeting editors can start a point timer."))
             if (
@@ -662,21 +577,13 @@ class AgendaParticipation(models.Model):
                 or meeting.actual_paused_at
                 or meeting.actual_end_datetime
             ):
-                raise UserError(
-                    _("Start the live meeting before timing an agenda point.")
-                )
-            if item.disposition == "closed" or (
-                item.kind == "information" and item.disposition == "discussed"
-            ):
+                raise UserError(_("Start the live meeting before timing an agenda point."))
+            if item.disposition == "closed" or (item.kind == "information" and item.disposition == "discussed"):
                 raise UserError(_("Reopen a completed point before timing it again."))
             meeting.agenda_item_ids.filtered("actual_started_at")._pause_timing()
             if not item.actual_seconds and item.actual_minutes:
-                super(AgendaParticipation, item).write(
-                    {"actual_seconds": item.actual_minutes * 60}
-                )
-            super(AgendaParticipation, item).write(
-                {"actual_started_at": fields.Datetime.now(), "has_started": True}
-            )
+                super(AgendaParticipation, item).write({"actual_seconds": item.actual_minutes * 60})
+            super(AgendaParticipation, item).write({"actual_started_at": fields.Datetime.now(), "has_started": True})
         return True
 
     def action_pause_timing(self):
@@ -722,12 +629,7 @@ class AgendaParticipation(models.Model):
         actions_by_topic = items._followup_actions_by_topic()
         for item in items:
             if not (actions_by_topic.get(item.topic_id.id) - actions):
-                raise ValidationError(
-                    _(
-                        "A resolved TODO must keep at least one non-cancelled "
-                        "follow-up task."
-                    )
-                )
+                raise ValidationError(_("A resolved TODO must keep at least one non-cancelled follow-up task."))
 
     def _followup_actions(self):
         self.ensure_one()
@@ -767,9 +669,7 @@ class MeetingTopicCopy(models.Model):
             "name": _("Copy Point to Another Series"),
             "res_model": "community.meeting.topic.copy.wizard",
             "view_mode": "form",
-            "views": [
-                (self.env.ref("community_meetings.view_topic_copy_wizard").id, "form")
-            ],
+            "views": [(self.env.ref("community_meetings.view_topic_copy_wizard").id, "form")],
             "target": "new",
             "context": {"default_topic_id": self.id},
         }

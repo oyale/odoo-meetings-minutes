@@ -1,23 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo noupdate="1">
     <record id="agenda_type_information" model="community.meeting.agenda.type">
-        <field name="icon">fa-info-circle</field><field name="name">Information</field><field name="behavior">information</field><field name="sequence">10</field>
+        <field name="icon">fa-info-circle</field><field name="name">Information</field><field name="behavior">information</field><field name="sequence" eval="10" />
     </record>
     <record id="agenda_type_discussion" model="community.meeting.agenda.type">
-        <field name="icon">fa-comments-o</field><field name="name">Discussion</field><field name="behavior">discussion</field><field name="sequence">20</field>
+        <field name="icon">fa-comments-o</field><field name="name">Discussion</field><field name="behavior">discussion</field><field name="sequence" eval="20" />
     </record>
     <record id="agenda_type_decision" model="community.meeting.agenda.type">
-        <field name="icon">fa-gavel</field><field name="name">Decision</field><field name="behavior">decision</field><field name="sequence">30</field>
+        <field name="icon">fa-gavel</field><field name="name">Decision</field><field name="behavior">decision</field><field name="sequence" eval="30" />
     </record>
     <record id="agenda_type_todo" model="community.meeting.agenda.type">
-        <field name="icon">fa-check-square-o</field><field name="name">TODO</field><field name="behavior">todo</field><field name="sequence">40</field>
+        <field name="icon">fa-check-square-o</field><field name="name">TODO</field><field name="behavior">todo</field><field name="sequence" eval="40" />
     </record>
     <record id="agenda_type_minutes_approval" model="community.meeting.agenda.type">
-        <field name="icon">fa-check-circle-o</field><field name="name">Minutes Approval</field><field name="behavior">minutes_approval</field><field name="sequence">5</field>
+        <field name="icon">fa-check-circle-o</field><field name="name">Minutes Approval</field><field name="behavior">minutes_approval</field><field name="sequence" eval="5" />
     </record>
     <record id="agenda_type_next_meeting" model="community.meeting.agenda.type">
-        <field name="icon">fa-calendar-plus-o</field><field name="name">Next Meeting</field><field name="behavior">next_meeting</field><field name="sequence">50</field>
+        <field name="icon">fa-calendar-plus-o</field><field name="name">Next Meeting</field><field name="behavior">next_meeting</field><field name="sequence" eval="50" />
     </record>
     <record id="agenda_type_followup" model="community.meeting.agenda.type">
-        <field name="icon">fa-share</field><field name="name">Follow-up</field><field name="behavior">followup</field><field name="sequence">60</field>
+        <field name="icon">fa-share</field><field name="name">Follow-up</field><field name="behavior">followup</field><field name="sequence" eval="60" />
     </record>
 </odoo>

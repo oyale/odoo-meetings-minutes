@@ -25,9 +25,7 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
                             0,
                             [
                                 cls.env.ref("base.group_user").id,
-                                cls.env.ref(
-                                    "community_meetings.group_meeting_editor"
-                                ).id,
+                                cls.env.ref("community_meetings.group_meeting_editor").id,
                             ],
                         )
                     ],
@@ -62,9 +60,7 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
                             0,
                             [
                                 cls.env.ref("base.group_user").id,
-                                cls.env.ref(
-                                    "community_meetings.group_meeting_reader"
-                                ).id,
+                                cls.env.ref("community_meetings.group_meeting_reader").id,
                             ],
                         )
                     ],
@@ -100,12 +96,8 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
             for name, content, _mimetype in mail.get("attachments", [])
             if name == "invitation.ics"
         ]
-        self.assertTrue(
-            attachments, "The Calendar email did not contain invitation.ics"
-        )
-        self.assertTrue(
-            any(f"UID:{uid}".encode("ascii") in content for content in attachments)
-        )
+        self.assertTrue(attachments, "The Calendar email did not contain invitation.ics")
+        self.assertTrue(any(f"UID:{uid}".encode("ascii") in content for content in attachments))
 
     def test_scheduling_creates_one_private_event_with_stable_document_link(self):
         meeting = self._meeting(secretary_id=self.reader.id)
@@ -233,9 +225,7 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
                 }
             )
         self._assert_sent_ics(self.reader.email, uid)
-        cancellations = self.env["mail.mail"].search(
-            [("email_to", "=", self.other.email)]
-        )
+        cancellations = self.env["mail.mail"].search([("email_to", "=", self.other.email)])
         self.assertTrue(
             any(
                 "METHOD:CANCEL" in attachment.raw.decode("utf-8")
@@ -254,9 +244,7 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
         with self.assertRaises(AccessError):
             event.with_user(self.editor).unlink()
         with self.assertRaises(AccessError):
-            event.with_user(self.editor).with_context(
-                allow_managed_calendar_edit=True
-            ).write(
+            event.with_user(self.editor).with_context(allow_managed_calendar_edit=True).write(
                 {
                     "community_meeting_id": False,
                 }
@@ -284,9 +272,7 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
         with self.assertRaises(AccessError):
             unmanaged.with_user(self.editor).write({"community_meeting_id": meeting.id})
         with self.assertRaises(AccessError):
-            unmanaged.with_user(self.editor).write(
-                {"community_calendar_uid": "forged@example.test"}
-            )
+            unmanaged.with_user(self.editor).write({"community_calendar_uid": "forged@example.test"})
 
     def test_external_and_cross_company_attendees_are_rejected(self):
         external = self.env["res.partner"].create({"name": "External contact"})
@@ -309,14 +295,10 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
     def test_calendar_sync_validates_a_meeting_batch_before_creating_events(self):
         valid = self._meeting(name="First valid batch invite")
         invalid = self._meeting(name="Invalid batch invite")
-        invalid_partner = self.env["res.partner"].create(
-            {"name": "External batch invite"}
-        )
+        invalid_partner = self.env["res.partner"].create({"name": "External batch invite"})
         attendees = self.env["community.meeting"]._fields["attendee_partner_ids"]
         self.env.cr.execute(
-            f"INSERT INTO {attendees.relation} "
-            f"({attendees.column1}, {attendees.column2}) "
-            "VALUES (%s, %s)",
+            f"INSERT INTO {attendees.relation} ({attendees.column1}, {attendees.column2}) VALUES (%s, %s)",
             [invalid.id, invalid_partner.id],
         )
         invalid.invalidate_recordset(["attendee_partner_ids"])
@@ -335,9 +317,7 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
 
     def test_calendar_sync_creates_events_in_one_batch_per_owner(self):
         self.env["ir.config_parameter"].sudo().set_param("calendar.block_mail", "1")
-        meetings = self._meeting(name="First batch event") | self._meeting(
-            name="Second batch event"
-        )
+        meetings = self._meeting(name="First batch event") | self._meeting(name="Second batch event")
         self.env.cr.execute(
             "UPDATE community_meeting SET state='scheduled' WHERE id IN %s",
             [tuple(meetings.ids)],
@@ -414,9 +394,7 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
         with self.mock_mail_gateway():
             no_email_meeting.action_schedule()
             self.assertFalse(self._mails)
-        self.assertIn(
-            no_email_user.partner_id, no_email_meeting.calendar_event_ids.partner_ids
-        )
+        self.assertIn(no_email_user.partner_id, no_email_meeting.calendar_event_ids.partner_ids)
 
         invalid_email_user = (
             self.env["res.users"]
@@ -436,20 +414,10 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
             attendee_partner_ids=[(6, 0, [invalid_email_user.partner_id.id])],
         )
         invalid_meeting.action_schedule()
-        invalid_event = invalid_meeting.calendar_event_ids.with_context(
-            no_mail_to_attendees=False
-        )
-        self.assertFalse(
-            invalid_event._community_meetings_calendar_cancel_mail(
-                invalid_email_user.partner_id
-            )
-        )
-        cancellation = invalid_event._community_meetings_calendar_cancel_mail(
-            self.other.partner_id
-        )
-        valid_recipient_mail = cancellation.filtered(
-            lambda mail: mail.email_to == self.other.email
-        )
+        invalid_event = invalid_meeting.calendar_event_ids.with_context(no_mail_to_attendees=False)
+        self.assertFalse(invalid_event._community_meetings_calendar_cancel_mail(invalid_email_user.partner_id))
+        cancellation = invalid_event._community_meetings_calendar_cancel_mail(self.other.partner_id)
+        valid_recipient_mail = cancellation.filtered(lambda mail: mail.email_to == self.other.email)
         self.assertTrue(valid_recipient_mail)
         cancellation_ics = valid_recipient_mail.attachment_ids.raw.decode("utf-8")
         self.assertNotIn(invalid_email_user.email, cancellation_ics)
@@ -476,9 +444,7 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
             }
         )
 
-        self.env[
-            "calendar.event"
-        ].sudo()._community_meetings_calendar_uninstall_cleanup()
+        self.env["calendar.event"].sudo()._community_meetings_calendar_uninstall_cleanup()
 
         self.assertFalse(managed.exists())
         self.assertTrue(unmanaged.exists())

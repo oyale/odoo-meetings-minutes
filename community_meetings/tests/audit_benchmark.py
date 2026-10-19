@@ -52,9 +52,7 @@ def measure(label, size, operation):
         operation()
         env.flush_all()
     wall_seconds = time.perf_counter() - started
-    sql = next(
-        collector for collector in profiler.collectors if collector.name == "sql"
-    )
+    sql = next(collector for collector in profiler.collectors if collector.name == "sql")
     entries = sql.entries
     result = {
         "benchmark_run_id": run_id,
@@ -66,17 +64,12 @@ def measure(label, size, operation):
     }
     if label == "todo_validation_valid":
         result["mail_activity_selects"] = sum(
-            'FROM "mail_activity"' in entry["query"]
-            and entry["query"].lstrip().startswith("SELECT")
+            'FROM "mail_activity"' in entry["query"] and entry["query"].lstrip().startswith("SELECT")
             for entry in entries
         )
-        query_counts = Counter(
-            re.sub(r"\s+", " ", entry["query"]).strip() for entry in entries
-        )
+        query_counts = Counter(re.sub(r"\s+", " ", entry["query"]).strip() for entry in entries)
         result["top_sql_shapes"] = [
-            {"count": count, "query": query[:400]}
-            for query, count in query_counts.most_common(12)
-            if count > 1
+            {"count": count, "query": query[:400]} for query, count in query_counts.most_common(12) if count > 1
         ]
     return result
 
@@ -284,13 +277,11 @@ def run(size):
     todo_measurement["action_topic_mapping_sizes"] = action_topic_mapping_sizes
     if lookup_name == "_followup_actions_by_topic":
         assert followup_lookup_batch_sizes == [size], (
-            f"Expected one batched lookup of {size} items, "
-            f"got {followup_lookup_batch_sizes}"
+            f"Expected one batched lookup of {size} items, got {followup_lookup_batch_sizes}"
         )
     if evidence_method_name == "_execution_evidence_by_action":
         assert evidence_check_counts == [size], (
-            f"Expected one per-action evidence batch of {size}, "
-            f"got {evidence_check_counts}"
+            f"Expected one per-action evidence batch of {size}, got {evidence_check_counts}"
         )
     rows.append(todo_measurement)
     invalid_todo = model("community.meeting.agenda.item").create(
@@ -310,9 +301,7 @@ def run(size):
 
     promotion_meetings = new_meetings("promotion", size)
     for meeting_item in promotion_meetings:
-        item = model("community.meeting.agenda.item").create(
-            {"meeting_id": meeting_item.id, "name": "Closed origin"}
-        )
+        item = model("community.meeting.agenda.item").create({"meeting_id": meeting_item.id, "name": "Closed origin"})
         item.write({"disposition": "closed"})
         model("community.meeting.action").create(
             {
@@ -336,14 +325,9 @@ def run(size):
         )
     )
 
-    project = env["project.project"].create(
-        {"name": f"Audit project {size}", "user_id": editor.id}
-    )
+    project = env["project.project"].create({"name": f"Audit project {size}", "user_id": editor.id})
     unlinked_tasks = model("project.task").create(
-        [
-            {"name": f"Unlinked task {size} {index}", "project_id": project.id}
-            for index in range(size)
-        ]
+        [{"name": f"Unlinked task {size} {index}", "project_id": project.id} for index in range(size)]
     )
     rows.append(
         measure(
@@ -357,10 +341,7 @@ def run(size):
         {"meeting_id": task_meeting.id, "name": "Task write point"}
     )
     linked_tasks = model("project.task").create(
-        [
-            {"name": f"Linked task {size} {index}", "project_id": project.id}
-            for index in range(size)
-        ]
+        [{"name": f"Linked task {size} {index}", "project_id": project.id} for index in range(size)]
     )
     model("community.meeting.action").create(
         {
@@ -387,9 +368,7 @@ def run(size):
     )
 
     model("ir.config_parameter").sudo().set_param("calendar.block_mail", "1")
-    calendar_meetings = new_meetings(
-        "calendar", size, attendee_partner_ids=[(4, editor.partner_id.id)]
-    )
+    calendar_meetings = new_meetings("calendar", size, attendee_partner_ids=[(4, editor.partner_id.id)])
     rows.append(
         measure(
             "calendar_attendee_constraint",

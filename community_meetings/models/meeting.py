@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 
@@ -5,14 +7,12 @@ from odoo.exceptions import AccessError, UserError, ValidationError
 class CommunityMeeting(models.Model):
     _name = "community.meeting"
     _description = "Community Meeting"
-    _inherit = ["mail.thread", "mail.activity.mixin"]
+    _inherit: ClassVar[list[str]] = ["mail.thread", "mail.activity.mixin"]
     _order = "start_datetime desc, id desc"
     _check_company_auto = True
 
     name = fields.Char(required=True, tracking=True)
-    code = fields.Char(
-        required=True, readonly=True, copy=False, default="New", tracking=True
-    )
+    code = fields.Char(required=True, readonly=True, copy=False, default="New", tracking=True)
     company_id = fields.Many2one(
         "res.company",
         required=True,
@@ -71,21 +71,15 @@ class CommunityMeeting(models.Model):
         string="Kind",
         required=True,
         ondelete="restrict",
-        default=lambda self: self.env.ref(
-            "community_meetings.kind_operational", raise_if_not_found=False
-        ),
+        default=lambda self: self.env.ref("community_meetings.kind_operational", raise_if_not_found=False),
     )
     series_id = fields.Many2one(
         "community.meeting.series",
         check_company=True,
         ondelete="restrict",
     )
-    series_carryover_policy = fields.Selection(
-        related="series_id.carryover_policy", readonly=True
-    )
-    series_description = fields.Html(
-        related="series_id.description", readonly=True, string="Series description"
-    )
+    series_carryover_policy = fields.Selection(related="series_id.carryover_policy", readonly=True)
+    series_description = fields.Html(related="series_id.description", readonly=True, string="Series description")
     state = fields.Selection(
         [
             ("draft", "Draft"),
@@ -104,10 +98,7 @@ class CommunityMeeting(models.Model):
     time_tracking_enabled = fields.Boolean(
         string="Time tracking",
         compute="_compute_time_tracking_enabled",
-        help=(
-            "Series override of the company setting; standalone meetings follow "
-            "the company."
-        ),
+        help=("Series override of the company setting; standalone meetings follow the company."),
     )
     add_point_policy = fields.Selection(
         [
@@ -117,18 +108,12 @@ class CommunityMeeting(models.Model):
         ],
         string="Add points until",
         compute="_compute_add_point_policy",
-        help=(
-            "Series override of the company setting; standalone meetings follow "
-            "the company."
-        ),
+        help=("Series override of the company setting; standalone meetings follow the company."),
     )
     add_point_allowed = fields.Boolean(
         string="Can add points",
         compute="_compute_add_point_allowed",
-        help=(
-            "Whether new points can still be added to this meeting under the "
-            "current policy."
-        ),
+        help=("Whether new points can still be added to this meeting under the current policy."),
     )
     agenda_item_ids = fields.One2many("community.meeting.agenda.item", "meeting_id")
     # ponytail: display-only "In Progress" derived from scheduled + actual_start;
@@ -168,9 +153,7 @@ class CommunityMeeting(models.Model):
         "origin_meeting_id",
         groups="community_meetings.group_meeting_editor",
     )
-    revision_ids = fields.One2many(
-        "community.meeting.revision", "meeting_id", copy=False
-    )
+    revision_ids = fields.One2many("community.meeting.revision", "meeting_id", copy=False)
     approved_revision_id = fields.Many2one(
         "community.meeting.revision",
         readonly=True,
@@ -178,7 +161,7 @@ class CommunityMeeting(models.Model):
         ondelete="restrict",
     )
 
-    _sql_constraints = [
+    _sql_constraints: ClassVar[list[tuple[str, str, str]]] = [
         (
             "code_company_unique",
             "unique(company_id, code)",
@@ -191,9 +174,7 @@ class CommunityMeeting(models.Model):
         for meeting in self:
             series_mode = meeting.series_id.time_tracking or "inherit"
             meeting.time_tracking_enabled = (
-                meeting.company_id.meeting_time_tracking
-                if series_mode == "inherit"
-                else series_mode == "on"
+                meeting.company_id.meeting_time_tracking if series_mode == "inherit" else series_mode == "on"
             )
 
     @api.depends("series_id.add_point_policy", "company_id.meeting_add_point_policy")
@@ -201,9 +182,7 @@ class CommunityMeeting(models.Model):
         for meeting in self:
             series_mode = meeting.series_id.add_point_policy or "inherit"
             meeting.add_point_policy = (
-                meeting.company_id.meeting_add_point_policy
-                if series_mode == "inherit"
-                else series_mode
+                meeting.company_id.meeting_add_point_policy if series_mode == "inherit" else series_mode
             )
 
     @api.depends("state", "actual_start_datetime", "add_point_policy")
@@ -216,29 +195,20 @@ class CommunityMeeting(models.Model):
             elif meeting.add_point_policy == "draft":
                 meeting.add_point_allowed = False
             else:  # scheduled or ongoing
-                meeting.add_point_allowed = (
-                    meeting.add_point_policy == "ongoing"
-                    or not meeting.actual_start_datetime
-                )
+                meeting.add_point_allowed = meeting.add_point_policy == "ongoing" or not meeting.actual_start_datetime
 
     @api.depends("state", "actual_start_datetime")
     def _compute_display_state(self):
         for meeting in self:
             meeting.display_state = (
-                "in_progress"
-                if meeting.state == "scheduled" and meeting.actual_start_datetime
-                else meeting.state
+                "in_progress" if meeting.state == "scheduled" and meeting.actual_start_datetime else meeting.state
             )
 
-    @api.depends(
-        "actual_start_datetime", "actual_end_datetime", "actual_paused_seconds"
-    )
+    @api.depends("actual_start_datetime", "actual_end_datetime", "actual_paused_seconds")
     def _compute_actual_duration_minutes(self):
         for meeting in self:
             if meeting.actual_start_datetime and meeting.actual_end_datetime:
-                seconds = (
-                    meeting.actual_end_datetime - meeting.actual_start_datetime
-                ).total_seconds()
+                seconds = (meeting.actual_end_datetime - meeting.actual_start_datetime).total_seconds()
                 seconds -= meeting.actual_paused_seconds
                 meeting.actual_duration_minutes = max(0, round(seconds / 60))
             else:
@@ -247,20 +217,14 @@ class CommunityMeeting(models.Model):
     @api.constrains("start_datetime", "end_datetime")
     def _check_end_after_start(self):
         for meeting in self:
-            if (
-                meeting.start_datetime
-                and meeting.end_datetime
-                and meeting.end_datetime < meeting.start_datetime
-            ):
+            if meeting.start_datetime and meeting.end_datetime and meeting.end_datetime < meeting.start_datetime:
                 raise ValidationError(_("The meeting end must be after its start."))
 
     @api.onchange("start_datetime")
     def _onchange_start_datetime(self):
         for meeting in self:
             if meeting.start_datetime and not meeting.end_datetime:
-                meeting.end_datetime = fields.Datetime.add(
-                    meeting.start_datetime, hours=1
-                )
+                meeting.end_datetime = fields.Datetime.add(meeting.start_datetime, hours=1)
 
     @api.onchange("series_id")
     def _onchange_series_id(self):
@@ -276,12 +240,7 @@ class CommunityMeeting(models.Model):
                 or meeting.series_id.meeting_kind_id != meeting.meeting_kind_id
                 or not meeting.series_id.active
             ):
-                raise ValidationError(
-                    _(
-                        "The meeting series must be active and match the meeting "
-                        "company and kind."
-                    )
-                )
+                raise ValidationError(_("The meeting series must be active and match the meeting company and kind."))
 
     def _prepare_notice_values(self):
         """Return core notice values; extensions may add their own fields."""
@@ -324,38 +283,22 @@ class CommunityMeeting(models.Model):
             raise AccessError(_("You are not allowed to create meetings."))
         for vals in vals_list:
             if vals.get("code") not in (None, False, "New"):
-                raise ValidationError(
-                    _("Meeting references are assigned by the system.")
-                )
+                raise ValidationError(_("Meeting references are assigned by the system."))
             if vals.get("approved_revision_id") or vals.get("revision_ids"):
-                raise ValidationError(
-                    _(
-                        "Approved revisions cannot be assigned during meeting "
-                        "creation."
-                    )
-                )
+                raise ValidationError(_("Approved revisions cannot be assigned during meeting creation."))
             if vals.get("code", "New") == "New":
                 # Editors may create meetings without gaining general sequence
                 # access.
                 code = self.env["ir.sequence"].sudo().next_by_code("community.meeting")
                 if not code:
-                    raise ValidationError(
-                        _("The meeting reference sequence is not configured.")
-                    )
+                    raise ValidationError(_("The meeting reference sequence is not configured."))
                 vals["code"] = code
             if vals.get("state", "draft") != "draft":
                 raise ValidationError(_("Meetings must be created as drafts."))
-            if vals.get(
-                "organizer_id", self.env.uid
-            ) != self.env.uid and not self.env.user.has_group(
+            if vals.get("organizer_id", self.env.uid) != self.env.uid and not self.env.user.has_group(
                 "community_meetings.group_meeting_manager"
             ):
-                raise UserError(
-                    _(
-                        "Only a meeting manager can create a meeting for another "
-                        "organizer."
-                    )
-                )
+                raise UserError(_("Only a meeting manager can create a meeting for another organizer."))
             if vals.get("series_id") and "meeting_kind_id" not in vals:
                 series = self.env["community.meeting.series"].browse(vals["series_id"])
                 if series:
@@ -367,9 +310,7 @@ class CommunityMeeting(models.Model):
     def _can_change_series(self):
         self.ensure_one()
         return (
-            self.state in ("draft", "scheduled")
-            and not self.actual_start_datetime
-            and not self.approved_revision_id
+            self.state in ("draft", "scheduled") and not self.actual_start_datetime and not self.approved_revision_id
         )
 
     # Preserve the ordering of series, workflow, timing, and permission guards.
@@ -377,28 +318,18 @@ class CommunityMeeting(models.Model):
         if "series_id" in vals:
             self._lock_live_workflow()
             self.invalidate_recordset(["series_id", "approved_revision_id"])
-            destination = (
-                self.env["community.meeting.series"].browse(vals["series_id"]).exists()
-            )
+            destination = self.env["community.meeting.series"].browse(vals["series_id"]).exists()
             if destination and "meeting_kind_id" not in vals:
                 vals["meeting_kind_id"] = destination.meeting_kind_id.id
             for meeting in self:
-                if destination and (
-                    destination.company_id != meeting.company_id
-                    or not destination.active
-                ):
-                    raise ValidationError(
-                        _("Choose an active series in the meeting's company.")
-                    )
+                if destination and (destination.company_id != meeting.company_id or not destination.active):
+                    raise ValidationError(_("Choose an active series in the meeting's company."))
                 if (
                     meeting.series_id.id != (destination.id if destination else False)
                     and not meeting._can_change_series()
                 ):
                     raise UserError(
-                        _(
-                            "The series can only change before the meeting starts "
-                            "and before its minutes are approved."
-                        )
+                        _("The series can only change before the meeting starts and before its minutes are approved.")
                     )
         if "state" in vals:
             raise UserError(_("Use a meeting workflow action to change its state."))
@@ -410,30 +341,22 @@ class CommunityMeeting(models.Model):
             "actual_paused_seconds",
             "actual_end_datetime",
         }.intersection(vals):
-            raise UserError(
-                _("Actual meeting times are recorded through the meeting workflow.")
-            )
+            raise UserError(_("Actual meeting times are recorded through the meeting workflow."))
         if {"approved_revision_id", "revision_ids"}.intersection(vals):
             raise UserError(_("Use the approval workflow to manage meeting revisions."))
-        if "company_id" in vals and any(
-            meeting.company_id.id != vals["company_id"] for meeting in self
-        ):
+        if "company_id" in vals and any(meeting.company_id.id != vals["company_id"] for meeting in self):
             raise UserError(_("A meeting cannot be moved to another company."))
         protected_fields = {
             "organizer_id",
             "editor_user_ids",
             "reader_user_ids",
         }.intersection(vals)
-        if protected_fields and not self.env.user.has_group(
-            "community_meetings.group_meeting_manager"
+        if (
+            protected_fields
+            and not self.env.user.has_group("community_meetings.group_meeting_manager")
+            and any(meeting.organizer_id != self.env.user for meeting in self)
         ):
-            if any(meeting.organizer_id != self.env.user for meeting in self):
-                raise UserError(
-                    _(
-                        "Only the organizer or a meeting manager can change "
-                        "meeting access."
-                    )
-                )
+            raise UserError(_("Only the organizer or a meeting manager can change meeting access."))
         if any(meeting.state in ("approved", "cancelled") for meeting in self):
             raise UserError(_("Approved or cancelled meetings cannot be edited."))
         return super().write(vals)
@@ -442,9 +365,7 @@ class CommunityMeeting(models.Model):
         for meeting in self:
             meeting.check_access("write")
             if meeting.state not in allowed:
-                raise UserError(
-                    _("This workflow action is not allowed from the current state.")
-                )
+                raise UserError(_("This workflow action is not allowed from the current state."))
             if not (
                 self.env.user.has_group("community_meetings.group_meeting_editor")
                 or self.env.user.has_group("community_meetings.group_meeting_manager")
@@ -454,9 +375,7 @@ class CommunityMeeting(models.Model):
 
     def action_schedule(self):
         if any(not meeting.start_datetime for meeting in self):
-            raise ValidationError(
-                _("Set a meeting date and time before scheduling it.")
-            )
+            raise ValidationError(_("Set a meeting date and time before scheduling it."))
         result = self._transition(("draft",), "scheduled")
         self.env["community.meeting.carryover"]._process_new_meetings(self)
         return result
@@ -465,9 +384,7 @@ class CommunityMeeting(models.Model):
         result = self._transition(("scheduled",), "held")
         items = self.mapped("agenda_item_ids")
         items.filtered("actual_started_at")._pause_timing()
-        unfinished = items.filtered(
-            lambda item: item.has_started and item.disposition in ("open", "deferred")
-        )
+        unfinished = items.filtered(lambda item: item.has_started and item.disposition in ("open", "deferred"))
         if unfinished:
             unfinished.write({"review_next_meeting": True})
         now = fields.Datetime.now()
@@ -498,9 +415,7 @@ class CommunityMeeting(models.Model):
             return True
         actions_by_meeting = {}
         for action in actions:
-            actions_by_meeting.setdefault(
-                action.meeting_id.id, self.env["community.meeting.action"]
-            )
+            actions_by_meeting.setdefault(action.meeting_id.id, self.env["community.meeting.action"])
             actions_by_meeting[action.meeting_id.id] |= action
         existing_action_ids = set(
             self.env["community.meeting.topic"]
@@ -516,9 +431,7 @@ class CommunityMeeting(models.Model):
         )
         values_list = []
         for meeting in self:
-            for action in actions_by_meeting.get(
-                meeting.id, self.env["community.meeting.action"]
-            ):
+            for action in actions_by_meeting.get(meeting.id, self.env["community.meeting.action"]):
                 if action.id not in existing_action_ids:
                     responsible = action.responsible_user_id.partner_id
                     values_list.append(
@@ -529,11 +442,7 @@ class CommunityMeeting(models.Model):
                             "origin_action_id": action.id,
                             "company_id": meeting.company_id.id,
                             "series_id": meeting.series_id.id,
-                            "presenter_partner_id": (
-                                responsible.id
-                                if responsible
-                                else self.env.user.partner_id.id
-                            ),
+                            "presenter_partner_id": (responsible.id if responsible else self.env.user.partner_id.id),
                         }
                     )
         self.env["community.meeting.topic"].create(values_list)
@@ -553,10 +462,7 @@ class CommunityMeeting(models.Model):
             ],
             order="start_datetime, id",
         )
-        return [
-            {"id": m.id, "code": m.code, "name": m.name, "state": m.state}
-            for m in meetings
-        ]
+        return [{"id": m.id, "code": m.code, "name": m.name, "state": m.state} for m in meetings]
 
     def _record_approved_previous_minutes(self):
         """Register this approval on the minutes-approval point of later meetings.
@@ -578,9 +484,7 @@ class CommunityMeeting(models.Model):
                 ]
             )
         )
-        points = later.agenda_item_ids.filtered(
-            lambda item: item.kind == "minutes_approval"
-        )
+        points = later.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
         approvals = self.env["community.meeting.minutes.approval"].sudo()
         for point in points:
             if not approvals.search_count(
@@ -621,15 +525,11 @@ class CommunityMeeting(models.Model):
                 "SELECT id FROM community_meeting WHERE id = %s FOR UPDATE",
                 [meeting.id],
             )
-            meeting.invalidate_recordset(
-                ["state", "actual_start_datetime", "actual_paused_at"]
-            )
+            meeting.invalidate_recordset(["state", "actual_start_datetime", "actual_paused_at"])
             if meeting.state != "scheduled":
                 raise UserError(_("Only a scheduled meeting can be started."))
             if not meeting.actual_start_datetime:
-                super(CommunityMeeting, meeting).write(
-                    {"actual_start_datetime": fields.Datetime.now()}
-                )
+                super(CommunityMeeting, meeting).write({"actual_start_datetime": fields.Datetime.now()})
         return True
 
     def action_pause_meeting(self):
@@ -651,18 +551,12 @@ class CommunityMeeting(models.Model):
                     "actual_paused_at",
                 ]
             )
-            if (
-                meeting.state != "scheduled"
-                or not meeting.actual_start_datetime
-                or meeting.actual_end_datetime
-            ):
+            if meeting.state != "scheduled" or not meeting.actual_start_datetime or meeting.actual_end_datetime:
                 raise UserError(_("Only a running meeting can be paused."))
             if meeting.actual_paused_at:
                 raise UserError(_("This meeting is already paused."))
             meeting.agenda_item_ids.filtered("actual_started_at")._pause_timing()
-            super(CommunityMeeting, meeting).write(
-                {"actual_paused_at": fields.Datetime.now()}
-            )
+            super(CommunityMeeting, meeting).write({"actual_paused_at": fields.Datetime.now()})
         return True
 
     def action_resume_meeting(self):
@@ -685,11 +579,7 @@ class CommunityMeeting(models.Model):
                     "actual_paused_seconds",
                 ]
             )
-            if (
-                meeting.state != "scheduled"
-                or not meeting.actual_paused_at
-                or meeting.actual_end_datetime
-            ):
+            if meeting.state != "scheduled" or not meeting.actual_paused_at or meeting.actual_end_datetime:
                 raise UserError(_("Only a paused meeting can be resumed."))
             paused_seconds = meeting.actual_paused_seconds + max(
                 0,
@@ -728,13 +618,9 @@ class CommunityMeeting(models.Model):
         editorial = self.env.user.has_group("community_meetings.group_meeting_editor")
         return {
             "timezone": self.series_id.timezone or self.env.user.tz or "UTC",
-            "can_edit": editorial
-            and self.has_access("write")
-            and self.state not in ("approved", "cancelled"),
+            "can_edit": editorial and self.has_access("write") and self.state not in ("approved", "cancelled"),
             "can_view_editorial": editorial and self.has_access("write"),
-            "can_approve": self.env.user.has_group(
-                "community_meetings.group_meeting_approver"
-            ),
+            "can_approve": self.env.user.has_group("community_meetings.group_meeting_approver"),
             "time_tracking": self.time_tracking_enabled,
             "can_add_point": self.add_point_allowed,
         }
@@ -762,9 +648,7 @@ class CommunityMeeting(models.Model):
                 else False,
                 "body": record.body,
                 "kind": record.reason_id.name or "",
-                "author_display_name": record.author_display_name
-                or record.author_partner_id.name
-                or "",
+                "author_display_name": record.author_display_name or record.author_partner_id.name or "",
             }
             for record in records
         ]
@@ -812,20 +696,14 @@ class CommunityMeeting(models.Model):
         revisions = self.env["community.meeting.revision"]
         for meeting in self:
             if not self.env.user.has_group("community_meetings.group_meeting_approver"):
-                raise AccessError(
-                    _("Only an authorized meeting approver can approve minutes.")
-                )
+                raise AccessError(_("Only an authorized meeting approver can approve minutes."))
             meeting.check_access("read")
             if meeting.state != "minutes_draft":
                 raise UserError(_("Only draft minutes can be approved."))
             if not meeting.agenda_item_ids:
-                raise ValidationError(
-                    _("Add at least one agenda item before approving the minutes.")
-                )
+                raise ValidationError(_("Add at least one agenda item before approving the minutes."))
             meeting._validate_before_approval()
-            revision = self.env["community.meeting.revision"]._create_approved_revision(
-                meeting
-            )
+            revision = self.env["community.meeting.revision"]._create_approved_revision(meeting)
             meeting._set_approved_revision(revision)
             meeting._record_approved_previous_minutes()
             revisions |= revision

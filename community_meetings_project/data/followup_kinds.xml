@@ -1,12 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo noupdate="1">
     <record id="followup_kind_project_task" model="community.meeting.followup.kind">
         <field name="name">Project task</field>
         <field name="code">project_task</field>
-        <field name="sequence">20</field>
+        <field name="sequence" eval="20" />
     </record>
     <record id="followup_kind_project_todo" model="community.meeting.followup.kind">
         <field name="name">To-do</field>
         <field name="code">project_todo</field>
-        <field name="sequence">30</field>
+        <field name="sequence" eval="30" />
     </record>
 </odoo>

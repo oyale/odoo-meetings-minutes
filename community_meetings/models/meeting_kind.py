@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from odoo import _, fields, models
 from odoo.exceptions import UserError
 
@@ -15,19 +17,27 @@ class CommunityMeetingKind(models.Model):
     sequence = fields.Integer(default=10)
     active = fields.Boolean(default=True)
 
-    _sql_constraints = [
+    _sql_constraints: ClassVar[list[tuple[str, str, str]]] = [
         ("code_unique", "unique(code)", "Meeting kind codes must be unique."),
         ("name_unique", "unique(name)", "Meeting kind names must be unique."),
     ]
 
     def _is_in_use(self):
         return bool(
-            self.env["community.meeting.series"].sudo().search_count([
-                ("meeting_kind_id", "in", self.ids),
-            ])
-            or self.env["community.meeting"].sudo().search_count([
-                ("meeting_kind_id", "in", self.ids),
-            ])
+            self.env["community.meeting.series"]
+            .sudo()
+            .search_count(
+                [
+                    ("meeting_kind_id", "in", self.ids),
+                ]
+            )
+            or self.env["community.meeting"]
+            .sudo()
+            .search_count(
+                [
+                    ("meeting_kind_id", "in", self.ids),
+                ]
+            )
         )
 
     def write(self, vals):
@@ -36,4 +46,6 @@ class CommunityMeetingKind(models.Model):
         return super().write(vals)
 
     def unlink(self):
-        raise UserError(_("Meeting kinds are shared configuration and cannot be deleted. Archive unused kinds instead."))
+        raise UserError(
+            _("Meeting kinds are shared configuration and cannot be deleted. Archive unused kinds instead.")
+        )

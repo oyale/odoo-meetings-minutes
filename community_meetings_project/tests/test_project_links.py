@@ -26,9 +26,7 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
                 ],
             }
         )
-        cls.project = cls.env["project.project"].create(
-            {"name": "Meeting Link Test Project"}
-        )
+        cls.project = cls.env["project.project"].create({"name": "Meeting Link Test Project"})
         cls.tasks = cls.env["project.task"].create(
             [
                 {
@@ -82,11 +80,7 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         )
 
     def test_project_todo_container_creates_private_task(self):
-        meeting = (
-            self.env["community.meeting"]
-            .with_user(self.editor)
-            .create({"name": "Todo container"})
-        )
+        meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "Todo container"})
         item = (
             self.env["community.meeting.agenda.item"]
             .with_user(self.editor)
@@ -183,23 +177,13 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
             )
         )
 
-        self.assertEqual(
-            set(agenda.with_user(self.editor).project_task_ids.ids), set(self.tasks.ids)
-        )
-        self.assertEqual(
-            resolution.with_user(self.editor).project_task_ids, self.tasks[0]
-        )
+        self.assertEqual(set(agenda.with_user(self.editor).project_task_ids.ids), set(self.tasks.ids))
+        self.assertEqual(resolution.with_user(self.editor).project_task_ids, self.tasks[0])
         self.assertEqual(action.with_user(self.editor).project_task_ids, self.tasks[0])
-        reverse = (
-            self.tasks[0].with_user(self.editor).action_view_community_meeting_links()
-        )
+        reverse = self.tasks[0].with_user(self.editor).action_view_community_meeting_links()
         self.assertEqual(reverse["res_model"], "community.meeting.project.task.links")
-        self.assertEqual(
-            reverse["context"]["default_agenda_item_ids"][0][2], agenda.ids
-        )
-        self.assertEqual(
-            reverse["context"]["default_resolution_ids"][0][2], resolution.ids
-        )
+        self.assertEqual(reverse["context"]["default_agenda_item_ids"][0][2], agenda.ids)
+        self.assertEqual(reverse["context"]["default_resolution_ids"][0][2], resolution.ids)
         self.assertEqual(reverse["context"]["default_action_ids"][0][2], action.ids)
 
     def test_todo_cannot_close_without_project_task_on_followup_action(self):
@@ -231,9 +215,7 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         with self.assertRaises(ValidationError), self.cr.savepoint():
             item.with_user(self.editor).write({"disposition": "closed"})
 
-        action.with_user(self.editor).write(
-            {"project_task_ids": [(4, self.tasks[0].id)]}
-        )
+        action.with_user(self.editor).write({"project_task_ids": [(4, self.tasks[0].id)]})
         item.with_user(self.editor).write({"disposition": "closed"})
         with self.assertRaises(ValidationError), self.cr.savepoint():
             self.tasks[0].unlink()
@@ -286,9 +268,7 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
             batch_sizes.append(len(records))
             return original_lookup(records)
 
-        with patch.object(
-            agenda_model, "_followup_actions_by_topic", record_lookup_batch
-        ):
+        with patch.object(agenda_model, "_followup_actions_by_topic", record_lookup_batch):
             items.write({"disposition": "closed"})
 
         self.assertEqual(batch_sizes, [size])
@@ -404,9 +384,7 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
                 }
             )
         )
-        wizard_model = self.env["community.meeting.project.task.wizard"].with_user(
-            self.editor
-        )
+        wizard_model = self.env["community.meeting.project.task.wizard"].with_user(self.editor)
         defaults = wizard_model.with_context(default_action_id=action.id).default_get(
             ["action_id", "project_id", "has_default_project"]
         )
@@ -442,9 +420,7 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
             )
         )
 
-        candidates = self.env["community.meeting"]._carryover_candidates(
-            self.series, self.meetings[1].start_datetime
-        )
+        candidates = self.env["community.meeting"]._carryover_candidates(self.series, self.meetings[1].start_datetime)
 
         self.assertIn(source, candidates)
         self.assertFalse(source.review_next_meeting)
@@ -487,11 +463,7 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         )
 
     def test_project_addon_keeps_core_followup_sufficient_by_default(self):
-        meeting = (
-            self.env["community.meeting"]
-            .with_user(self.editor)
-            .create({"name": "Core policy"})
-        )
+        meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "Core policy"})
         item = (
             self.env["community.meeting.agenda.item"]
             .with_user(self.editor)
@@ -765,9 +737,7 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
                         0,
                         [
                             self.env.ref("base.group_user").id,
-                            self.env.ref(
-                                "community_meetings.group_meeting_approver"
-                            ).id,
+                            self.env.ref("community_meetings.group_meeting_approver").id,
                         ],
                     )
                 ],
@@ -853,9 +823,7 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         self.assertEqual(revision.pdf_attachment_id.raw, pdf_before)
 
     def test_series_project_is_lazy_and_existing_task_can_be_external(self):
-        self.editor.write(
-            {"groups_id": [(4, self.env.ref("project.group_project_manager").id)]}
-        )
+        self.editor.write({"groups_id": [(4, self.env.ref("project.group_project_manager").id)]})
         self.series.write({"meeting_project_mode": "series"})
         meeting = (
             self.env["community.meeting"]
