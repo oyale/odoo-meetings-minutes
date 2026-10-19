@@ -19,13 +19,12 @@ across meetings, with optional Project and Calendar integrations.
 
 Available addons
 ----------------
-
 addon | version | maintainers | summary
 --- | --- | --- | ---
-[community_meetings](community_meetings/) | 18.0.6.2.1 | [oyale](https://github.com/oyale) | Operational meetings, agendas, resolutions and minutes
-[community_meetings_project](community_meetings_project/) | 18.0.3.1.1 | [oyale](https://github.com/oyale) | Link existing Odoo Project tasks to meetings
-[community_meetings_calendar](community_meetings_calendar/) | 18.0.1.0.0 | [oyale](https://github.com/oyale) | Create private Calendar invitations for scheduled community meetings
-[community_meetings_extension_demo](community_meetings_extension_demo/) | 18.0.1.0.0 | [oyale](https://github.com/oyale) | Synthetic example of meeting-kind and snapshot extension hooks
+[community_meetings](community_meetings/) | 18.0.6.2.1 | [![oyale](https://github.com/oyale.png?size=30px)](https://github.com/oyale) | Operational meetings, agendas, resolutions and minutes
+[community_meetings_calendar](community_meetings_calendar/) | 18.0.1.0.0 | [![oyale](https://github.com/oyale.png?size=30px)](https://github.com/oyale) | Create private Calendar invitations for scheduled community meetings
+[community_meetings_extension_demo](community_meetings_extension_demo/) | 18.0.1.0.0 | [![oyale](https://github.com/oyale.png?size=30px)](https://github.com/oyale) | Synthetic example of meeting-kind and snapshot extension hooks
+[community_meetings_project](community_meetings_project/) | 18.0.3.1.1 | [![oyale](https://github.com/oyale.png?size=30px)](https://github.com/oyale) | Link existing Odoo Project tasks to meetings
 
 [//]: # (end addons)
 
@@ -61,19 +60,27 @@ for user-facing changes between releases.
 
 ## Preparing a release
 
-After bumping the versions of changed addons in their manifests, use Python
-3.11 or newer and Towncrier 23.6 or newer to prepare the changelog. Preview it,
-then run the same command without `--draft` to write `CHANGELOG.md` and remove
-the consumed news fragments:
+After bumping the versions of changed addons in their manifests, refresh the
+addon version table in this README:
 
 ```console
-python3.11 .github/scripts/prepare_release.py --version 18.0.<date-or-sequence>.<revision> --draft
-python3.11 .github/scripts/prepare_release.py --version 18.0.<date-or-sequence>.<revision>
+pre-commit run oca-gen-addons-table --hook-stage manual
 ```
 
-Commit the changelog, manifest versions, and fragment removals together before
-tagging the release. The preparation command refuses to add the same release
-version twice.
+Then use Python 3.11 or newer and Towncrier 23.6 or newer to prepare the
+changelog. Preview it, then run the same command without `--draft` to write
+`CHANGELOG.md` and remove the consumed news fragments:
+
+```console
+python3.11 .github/scripts/prepare_release.py \
+  --version 18.0.<date-or-sequence>.<revision> --draft
+python3.11 .github/scripts/prepare_release.py \
+  --version 18.0.<date-or-sequence>.<revision>
+```
+
+Commit the changelog, manifest versions, generated addon table, and fragment
+removals together before tagging the release. The preparation command refuses
+to add the same release version twice.
 GitHub Pages builds the bilingual user and administrator documentation from
 `docs/user/` and `docs/user_es/` on every push to `18.0`.
 See [ROADMAP.md](ROADMAP.md) for planned user-facing improvements.

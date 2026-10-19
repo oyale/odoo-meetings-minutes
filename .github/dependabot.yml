@@ -1,6 +1,19 @@
 version: 2
 
 updates:
+  - package-ecosystem: pre-commit
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      pre-commit:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+    commit-message:
+      prefix: ci
+
   # Odoo and OCB CI images are intentionally pinned to the 18.0 series.
   # Update those images only as part of an explicit Odoo-version migration.
   - package-ecosystem: github-actions
