@@ -15,3 +15,4 @@ from . import test_optional_timing
 from . import test_add_point_policy
 from . import test_structural_estimates
 from . import test_live_access
+from . import test_audit_batching

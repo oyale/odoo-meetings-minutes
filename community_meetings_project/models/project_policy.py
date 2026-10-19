@@ -194,7 +194,12 @@ class Agenda(models.Model):
                 )
             prepared.append(vals)
         records = super().create(prepared)
-        records._check_closed_todo_project_tasks(records)
+        # These participations were just inserted and cannot be closed by a
+        # concurrent transaction yet. Only rows already closed need evidence;
+        # task removal must still lock existing open participations.
+        records._check_closed_todo_project_tasks(
+            records.filtered(lambda item: item.disposition == "closed")
+        )
         return records
 
     def write(self, vals):
@@ -225,13 +230,13 @@ class Agenda(models.Model):
                     policy["meeting_task_scope"],
                     item.meeting_id._meeting_project().id
                     if policy["meeting_task_scope"] == "configured"
-                    else False
+                    else False,
                 )
             groups.setdefault(snapshot, self.browse())
             groups[snapshot] |= item
         for snapshot, items in groups.items():
             values = dict(vals)
             if snapshot is not None:
-                values.update(dict(zip(snapshot_fields, snapshot)))
+                values.update(dict(zip(snapshot_fields, snapshot, strict=False)))
             super(Agenda, items).write(values)
         return True
