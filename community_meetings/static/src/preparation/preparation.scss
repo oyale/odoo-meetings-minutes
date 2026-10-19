@@ -410,6 +410,8 @@
         .o_meeting_review_total { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; margin: -0.15rem 0 0.75rem; padding: 0.55rem 0.7rem; border-radius: 0.6rem; color: #54418a; background: #f2eeff; font-size: 0.82rem; }
         .o_meeting_review_points .o_meeting_review_total { align-items: baseline; flex-direction: row; }
         .o_meeting_review_total strong { font-size: 1rem; }
+        .o_meeting_review_over_budget { display: flex; align-items: flex-start; gap: 0.55rem; margin: -0.35rem 0 0.75rem; padding: 0.65rem 0.75rem; border: 1px solid #f0cf8b; border-radius: 0.6rem; color: #704800; background: #fff7e5; font-size: 0.86rem; }
+        .o_meeting_review_over_budget i { margin-top: 0.15rem; }
     }
 }
 .modal-dialog:has(.o_meeting_create_wizard) { max-width: 900px; }

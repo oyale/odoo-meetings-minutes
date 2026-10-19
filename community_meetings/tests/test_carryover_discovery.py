@@ -55,6 +55,34 @@ class TestCarryoverDiscovery(TransactionCase):
         self.assertIn("&lt;img", summary)
         self.assertNotIn("<img", summary)
 
+    def test_review_duration_warning_updates_with_agenda_and_duration(self):
+        wizard = self.env["community.meeting.create.wizard"].create({
+            "name": "Duration warning", "duration_hours": 1,
+        })
+        point = self.env["community.meeting.point.wizard"].create({
+            "creation_wizard_id": wizard.id, "name": "Long point",
+            "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+            "estimated_minutes": 75, "included": True,
+        })
+        marker = "o_meeting_review_over_budget"
+        self.assertIn(marker, str(wizard.review_summary))
+        self.assertIn("by 15 min.", str(wizard.review_summary))
+        wizard.duration_hours = 1.25
+        self.assertNotIn(marker, str(wizard.review_summary))
+        wizard.duration_hours = 1
+        point.included = False
+        self.assertNotIn(marker, str(wizard.review_summary))
+        point.included = True
+        self.assertIn(marker, str(wizard.review_summary))
+        point.estimated_minutes = 60
+        self.assertNotIn(marker, str(wizard.review_summary))
+        series = self.env["community.meeting.series"].with_user(self.editor).create({
+            "name": "Automatic point warning", "has_next_meeting_point": True,
+            "has_minutes_approval_point": False,
+        })
+        wizard.series_id = series
+        self.assertIn("by 5 min.", str(wizard.review_summary))
+
     def test_dismissed_source_with_followup_is_not_offered_and_finish_succeeds(self):
         item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
             "meeting_id": self.source.id, "name": "Ongoing work",

@@ -46,6 +46,12 @@ meeting's agenda, including structural points added automatically.
 
 ![Meeting wizard: final review](../img/meeting-review.png)
 
+If the agenda exceeds the planned duration, the review shows a warning with the
+number of minutes over budget. This includes accepted points from earlier
+meetings and automatic points. Go back to **When** to extend the duration, or
+adjust the included points. The warning disappears once the agenda fits within
+the planned time.
+
 ## Reading a meeting (reader track)
 
 Readers open meetings from **Meetings → Meetings** (or the calendar). They see

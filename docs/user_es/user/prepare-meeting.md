@@ -47,6 +47,14 @@ reunión, incluidos los puntos estructurales que se añaden automáticamente.
 
 ![Asistente de reunión: revisión final](../img/meeting-review.png)
 
+Si la agenda supera la duración prevista, la revisión muestra un aviso con los
+minutos de exceso. El cálculo incluye los puntos aceptados de reuniones
+anteriores y los puntos automáticos. Vuelve a **Cuándo** para ampliar la duración
+o ajusta los puntos incluidos. El aviso desaparece cuando la agenda cabe en el
+tiempo previsto.
+
+![Revisión: la agenda supera la duración prevista en 15 minutos](../img/meeting-duration-warning.png)
+
 ## Leer una reunión (itinerario lector)
 
 Los lectores abren las reuniones desde **Meetings → Reuniones** (o el calendario).

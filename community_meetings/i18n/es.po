@@ -10543,3 +10543,9 @@ msgstr "Horas:minutos"
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Min."
 msgstr "Min."
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/creation_wizard.py:0
+msgid "The selected agenda exceeds the estimated meeting duration by %(minutes)s min."
+msgstr "La agenda seleccionada supera la duración estimada de la reunión en %(minutes)s min."

@@ -207,6 +207,21 @@ class MeetingCreateWizard(models.TransientModel):
                     ).format(_("Next meeting"), _("Added automatically"))
                 )
             selected_minutes = wizard.selected_minutes + automatic_minutes
+            planned_minutes = round(wizard.duration_hours * 60)
+            overrun_minutes = max(0, selected_minutes - planned_minutes)
+            overrun_warning = (
+                Markup(
+                    '<div class="o_meeting_review_over_budget" role="alert">'
+                    '<i class="fa fa-exclamation-triangle" aria-hidden="true"/><span>{}</span></div>'
+                ).format(
+                    _(
+                        "The selected agenda exceeds the estimated meeting duration by %(minutes)s min.",
+                        minutes=overrun_minutes,
+                    )
+                )
+                if overrun_minutes
+                else Markup("")
+            )
             wizard.review_summary = Markup(
                 '<div class="o_meeting_review_summary">'
                 '<section class="o_meeting_review_card o_meeting_review_meeting">'
@@ -219,7 +234,7 @@ class MeetingCreateWizard(models.TransientModel):
                 '<div class="o_meeting_review_total"><span>{}</span><strong>{} min</strong></div><ul>{}</ul></section>'
                 '<section class="o_meeting_review_card o_meeting_review_agenda">'
                 '<header><span class="o_meeting_review_icon"><i class="fa fa-list-ul" aria-hidden="true"/></span><h3>{}</h3></header>'
-                '<div class="o_meeting_review_total"><span>{}</span><strong>{} min</strong></div><ul>{}</ul></section></div>'
+                '<div class="o_meeting_review_total"><span>{}</span><strong>{} min</strong></div>{}<ul>{}</ul></section></div>'
             ).format(
                 _("Meeting"),
                 _("Series"),
@@ -241,6 +256,7 @@ class MeetingCreateWizard(models.TransientModel):
                 _("Agenda points for this meeting"),
                 _("Estimated total time"),
                 selected_minutes,
+                overrun_warning,
                 Markup("").join(agenda)
                 if agenda
                 else Markup("<li>{}</li>").format(_("None")),
