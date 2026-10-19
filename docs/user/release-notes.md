@@ -7,6 +7,72 @@ Fragment-based release notes start after the published baseline tag
 `18.0.20261018.1`; earlier history is not reconstructed.
 
 <!-- towncrier release notes start -->
+Odoo Meetings Minutes 18.0.20261019.1 (2026-10-19)
+==================================================
+Community Meetings
+------------------
+
+Features
+~~~~~~~~
+
+- The Add Point wizard offers visual agenda type cards with behavior guidance. The New Meeting and New Series wizards group choices with contextual help, clear field labels, and scannable reviews.
+- The meeting creation review warns when the selected agenda, including automatic points, exceeds the estimated meeting duration.
+
+
+Calendar Integration
+--------------------
+
+No significant changes.
+
+
+Project Integration
+-------------------
+
+Features
+~~~~~~~~
+
+- The Project task wizard now shows the linked follow-up's title, owners and deadline as read-only context, and separates existing task selection from creating a new task.
+
+
+Extension Demo
+--------------
+
+No significant changes.
+
+
+Odoo Meetings Minutes 18.0.20261019.1 (2026-10-19)
+==================================================
+Community Meetings
+------------------
+
+Features
+~~~~~~~~
+
+- The Add Point wizard offers visual agenda type cards with behavior guidance. The New Meeting and New Series wizards group choices with contextual help, clear field labels, and scannable reviews.
+- The meeting creation review warns when the selected agenda, including automatic points, exceeds the estimated meeting duration.
+
+
+Calendar Integration
+--------------------
+
+No significant changes.
+
+
+Project Integration
+-------------------
+
+Features
+~~~~~~~~
+
+- The Project task wizard now shows the linked follow-up's title, owners and deadline as read-only context, and separates existing task selection from creating a new task.
+
+
+Extension Demo
+--------------
+
+No significant changes.
+
+
 Odoo Meetings Minutes 18.0.20261018.2 (2026-10-18)
 ==================================================
 Community Meetings
