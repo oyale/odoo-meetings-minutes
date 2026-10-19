@@ -81,6 +81,18 @@
     .o_live_subsection { margin-top: 20px; }
     .o_live_subsection h3 { font-size: 1rem; }
     .o_live_discussion_notes { padding: 14px 16px 16px; border: 1px solid var(--border-color, #ddd); border-radius: 8px; background: var(--table-bg, #f8f9fa); }
+    .o_live_previous_discussion {
+        padding: 14px 16px;
+        border: 1px solid var(--border-color, #ddd);
+        border-radius: 8px;
+        background: var(--table-bg, #f8f9fa);
+        overflow-wrap: anywhere;
+        .o_live_notes_heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+        details + details { margin-top: 8px; }
+        summary { cursor: pointer; padding: 4px 0; }
+        .o_live_previous_discussion_content { overflow-x: auto; max-width: 100%; padding: 8px 0; }
+        table { max-width: 100%; }
+    }
     .o_live_notes_heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
     .o_live_notes_heading .form-label { margin: 0; font-size: 1.05rem; font-weight: 600; }
     .o_live_richtext { min-height: 160px; overflow: auto; border: 1px solid var(--border-color, #ddd); border-radius: 6px; background: var(--body-bg, #fff); }
@@ -202,6 +214,7 @@
         .o_live_followup_task_title .form-label { grid-column: auto; }
         .o_live_followup_task_title .badge { justify-self: start; }
         .o_live_discussion_notes { padding: 12px; }
+        .o_live_previous_discussion { padding: 12px; }
         .o_live_related_list { align-items: stretch; flex-direction: column; }
         .o_live_relation { display: flex; width: 100%; }
         .o_live_related_point { justify-content: flex-start; width: 100%; flex-wrap: wrap; }

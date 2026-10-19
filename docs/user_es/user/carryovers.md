@@ -14,7 +14,7 @@ mueve un acuerdo) en una reunión posterior.
 
 ## El asistente de arrastre
 
-![Asistente de arrastre](img/carryover-wizard.png)
+![Asistente de arrastre](../img/carryover-wizard.png)
 
 - **Serie de destino** (obligatoria para acuerdos/actas) o **reunión de destino**
   (para puntos y seguimientos).
@@ -48,6 +48,14 @@ que esta es la vía para mover un punto fuera de su ámbito original.
 - **Descartar** — se rechaza la oferta; con política *Revisión* puede ofrecerse de
   nuevo más adelante, y *Descartar* en el asistente de creación la descarta para
   siempre.
+
+El punto continuado puede mostrar sus **notas de debate anteriores** como
+contexto de solo lectura, con la reunión de origen identificada. Las notas se
+conservan en la participación original y no se copian al acta nueva. Un editor
+puede elegir **Empezar sin notas anteriores** para dejar de mostrar el debate
+previo en esta continuación y en las siguientes; las notas originales se
+conservan. Este control no se aplica a los puntos *Aprobación del acta* ni
+*Próxima reunión*.
 
 ## Documentación relacionada
 

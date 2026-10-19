@@ -15,7 +15,7 @@ moves an agreement) in a later meeting.
 
 ## The carryover wizard
 
-![Carryover wizard](img/carryover-wizard.png)
+![Carryover wizard](../img/carryover-wizard.png)
 
 - **Destination series** (mandatory for agreements/resolutions) or
   **destination meeting** (for points and follow-ups).
@@ -47,6 +47,13 @@ the way to move a point out of its original scope.
   the same point (identity preserved).
 - **Dismiss** — the offer is rejected; under policy *Review* it may be offered
   again later, *Discard* in the creation wizard drops it permanently.
+
+The continued point can show its earlier **discussion notes** as read-only
+context, labelled with the source meeting. These notes stay on the original
+participation and are not copied into the new meeting's minutes. An editor can
+choose **Start without previous notes** to stop showing earlier discussion in
+this continuation and later ones; the source notes remain intact. This control
+does not apply to *Minutes approval* or *Next meeting* points.
 
 ## Related docs
 

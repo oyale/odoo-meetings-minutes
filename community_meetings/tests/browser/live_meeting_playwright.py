@@ -11,6 +11,7 @@ import os
 import time
 import unittest
 from datetime import datetime, timedelta
+from pathlib import Path
 from urllib.parse import urljoin
 
 from playwright.sync_api import expect, sync_playwright
@@ -99,6 +100,9 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         if state not in ("draft", "scheduled"):
             # The standard workflow does not allow deleting terminal meetings.
             return
+        transfers = self.rpc("community.meeting.carryover", "search", [["|", ("origin_meeting_id", "=", self.meeting_id), ("destination_meeting_id", "=", self.meeting_id)]])
+        if transfers:
+            return
         self.rpc("community.meeting", "action_cancel", [[self.meeting_id]])
         resolutions = self.rpc("community.meeting.resolution", "search", [[("meeting_id", "=", self.meeting_id)]])
         if resolutions:
@@ -146,6 +150,73 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         main.evaluate("el => { el.scrollTop = el.scrollHeight; }")
         self.assertGreater(main.evaluate("el => el.scrollTop"), 0)
         self.assertFalse(self.page.get_by_text("Meeting level records", exact=True).count())
+
+    def test_previous_discussion_is_read_only_and_can_be_cleared_or_restored(self):
+        destination = self.record("community.meeting", self.meeting_id, ["start_datetime"])
+        source_start = datetime.strptime(destination["start_datetime"], "%Y-%m-%d %H:%M:%S") - timedelta(days=1)
+        source_meeting = self.rpc("community.meeting", "create", [{
+            "name": "Earlier discussion source",
+            "start_datetime": source_start.strftime("%Y-%m-%d %H:%M:%S"),
+        }])
+        self.addCleanup(self.cleanup_meeting_record, source_meeting)
+        source_item = self.rpc("community.meeting.agenda.item", "create", [{
+            "meeting_id": source_meeting,
+            "name": "Earlier discussion source",
+        }])
+        self.rpc("community.meeting.agenda.item", "write", [[source_item], {
+            "discussion_notes": "<p>Context from the earlier meeting</p>",
+        }])
+        transfer = self.rpc("community.meeting.carryover", "create", [{
+            "origin_model": "agenda_item",
+            "origin_record_id": source_item,
+            "destination_meeting_id": self.meeting_id,
+        }])
+        self.rpc("community.meeting.carryover", "action_accept", [[transfer]])
+        current_item = self.record("community.meeting.carryover", transfer, ["destination_item_id"])["destination_item_id"][0]
+        item_state = self.record("community.meeting.agenda.item", current_item, ["name", "discussion_history", "previous_discussion_html"])
+        self.assertIn("Context from the earlier meeting", item_state["previous_discussion_html"], repr(item_state))
+
+        self.page.reload(wait_until="domcontentloaded")
+        expect(self.page.locator(".o_community_live_meeting")).to_be_visible(timeout=20000)
+        carried_card = self.page.locator("#agenda-card-%s" % current_item)
+        expect(carried_card).to_be_visible(timeout=20000)
+        if carried_card.locator(".o_live_expand").get_attribute("aria-expanded") == "false":
+            carried_card.locator(".o_live_expand").click()
+        history = carried_card.locator(".o_live_previous_discussion")
+        expect(history).to_be_visible(timeout=20000)
+        expect(history.get_by_text("Context from the earlier meeting")).to_be_visible()
+        expect(history.get_by_text("Read-only context from earlier meetings. It is not added to these minutes.")).to_be_visible()
+
+        screenshot_dir = Path(os.environ.get("MM_SCREENSHOT_DIR", "/tmp"))
+        screenshot_dir.mkdir(parents=True, exist_ok=True)
+        history.screenshot(path=str(screenshot_dir / "discussion-history-desktop.png"))
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        self.assertLessEqual(
+            self.page.evaluate("document.documentElement.scrollWidth"),
+            self.page.evaluate("window.innerWidth"),
+        )
+        history.screenshot(path=str(screenshot_dir / "discussion-history-mobile.png"))
+        self.page.set_viewport_size({"width": 1440, "height": 1000})
+
+        history.get_by_role("button", name="Start without previous notes").click()
+        dialog = self.page.locator(".modal").last
+        expect(dialog.get_by_text("The original notes and this meeting’s notes are preserved.")).to_be_visible()
+        dialog.get_by_role("button", name="Start without previous notes").click()
+        expect(history.get_by_text("This point starts without earlier discussion.")).to_be_visible()
+        self.assertTrue(self.record("community.meeting.agenda.item", current_item, ["discard_previous_discussion"])["discard_previous_discussion"])
+
+        history.get_by_role("button", name="Show previous notes").click()
+        expect(history.get_by_text("Context from the earlier meeting")).to_be_visible()
+        self.assertFalse(self.record("community.meeting.agenda.item", current_item, ["discard_previous_discussion"])["discard_previous_discussion"])
+
+    def cleanup_meeting_record(self, meeting_id):
+        state = self.record("community.meeting", meeting_id, ["state"])["state"]
+        if state in ("draft", "scheduled"):
+            transfers = self.rpc("community.meeting.carryover", "search", [["|", ("origin_meeting_id", "=", meeting_id), ("destination_meeting_id", "=", meeting_id)]])
+            if transfers:
+                return
+            self.rpc("community.meeting", "action_cancel", [[meeting_id]])
+            self.rpc("community.meeting", "unlink", [[meeting_id]])
 
     def test_information_point_can_be_marked_done(self):
         card = self.card("information")

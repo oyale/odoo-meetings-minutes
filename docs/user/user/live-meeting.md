@@ -5,7 +5,7 @@ during the meeting while taking notes at the same time. Open it from any
 scheduled/held meeting: the ▶ button on the list or **Open Live Meeting** on
 the form.
 
-![Live meeting overview](img/live-meeting.png)
+![Live meeting overview](../img/live-meeting.png)
 
 ## Topbar
 
@@ -51,6 +51,11 @@ arrows, **Pending only** filter, **Expand/Collapse all**.
    editable only while this point's timer is running (or after the meeting,
    while drafting minutes). Without timers, always editable until the meeting
    finishes.
+   Earlier discussion, when available, appears above as read-only context and
+   is never added to the current minutes. Editors can start without it; original
+   notes remain on their source meetings.
+
+![Earlier discussion shown as read-only context](../img/discussion-history.png)
 3. **Record outcomes**:
    - *Information* — mark **Done**.
    - *Discussion* — **Done** when resolved, or **Postpone**.

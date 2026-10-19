@@ -10665,6 +10665,78 @@ msgid "A previous occurrence must use the same recurring template."
 msgstr "La ocurrencia anterior debe usar la misma plantilla recurrente."
 
 #. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__discard_previous_discussion
+msgid "Start without previous notes"
+msgstr "Empezar sin notas anteriores"
+
+#. module: community_meetings
+#: model:ir.model.fields,help:community_meetings.field_community_meeting_agenda_item__discard_previous_discussion
+msgid "Hide earlier discussion here and stop carrying it into later meetings. Original notes are preserved."
+msgstr "Oculta aquí el debate anterior y deja de arrastrarlo a reuniones posteriores. Las notas originales se conservan."
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__discussion_history
+msgid "Discussion History"
+msgstr "Historial de debate"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__previous_discussion_html
+msgid "Previous discussion"
+msgstr "Debate anterior"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__has_previous_discussion
+msgid "Has Previous Discussion"
+msgstr "Tiene debate anterior"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_agenda_template__show_previous_discussion
+msgid "Show previous discussion"
+msgstr "Mostrar debate anterior"
+
+#. module: community_meetings
+#: model:ir.model.fields,help:community_meetings.field_community_meeting_series_agenda_template__show_previous_discussion
+msgid "New occurrences show earlier discussion as read-only context. Minutes approval and next meeting points always start fresh."
+msgstr "Las nuevas ocurrencias muestran el debate anterior como contexto de solo lectura. Los puntos de aprobación del acta y próxima reunión siempre empiezan de cero."
+
+#. module: community_meetings
+msgid "Read-only context from earlier meetings. It is not added to these minutes."
+msgstr "Contexto de solo lectura de reuniones anteriores. No se añade a esta acta."
+
+#. module: community_meetings
+msgid "This point starts without earlier discussion. Its notes remain available on the original meeting."
+msgstr "Este punto empieza sin debate anterior. Sus notas siguen disponibles en la reunión original."
+
+#. module: community_meetings
+msgid "Show previous notes"
+msgstr "Mostrar notas anteriores"
+
+#. module: community_meetings
+msgid "Open source meeting"
+msgstr "Abrir reunión de origen"
+
+#. module: community_meetings
+msgid "Start without previous notes?"
+msgstr "¿Empezar sin notas anteriores?"
+
+#. module: community_meetings
+msgid "Earlier discussion will be hidden for this point and later continuations. The original notes and this meeting’s notes are preserved."
+msgstr "El debate anterior se ocultará para este punto y sus continuaciones posteriores. Se conservan las notas originales y las de esta reunión."
+
+#. module: community_meetings
+msgid "Keep previous notes"
+msgstr "Mantener notas anteriores"
+
+#. module: community_meetings
+msgid "New occurrences show earlier discussion as read-only context. Changing this setting affects future occurrences only."
+msgstr "Las nuevas ocurrencias muestran el debate anterior como contexto de solo lectura. Este ajuste solo afecta a futuras ocurrencias."
+
+#. module: community_meetings
+msgid "Earlier notes are read-only context and are not added to these minutes. Starting without them preserves the original notes and stops the history here."
+msgstr "Las notas anteriores son contexto de solo lectura y no se añaden a esta acta. Empezar sin ellas conserva las notas originales y corta aquí el historial."
+
+
+#. module: community_meetings
 msgid "Previous occurrence"
 msgstr "Ocurrencia anterior"
 

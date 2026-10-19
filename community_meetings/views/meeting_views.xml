@@ -117,6 +117,13 @@
                                         <notebook>
                                             <page string="Planned Topic"><field name="description"/></page>
                                             <page string="Discussion"><field name="discussion_notes"/></page>
+                                            <page string="Previous discussion" invisible="not has_previous_discussion">
+                                                <field name="has_previous_discussion" invisible="1"/>
+                                                <field name="discard_previous_discussion" groups="community_meetings.group_meeting_editor"/>
+                                                <field name="discard_previous_discussion" readonly="1" groups="community_meetings.group_meeting_reader,!community_meetings.group_meeting_editor"/>
+                                                <div class="text-muted">Earlier notes are read-only context and are not added to these minutes. Starting without them preserves the original notes and stops the history here.</div>
+                                                <field name="previous_discussion_html" widget="html" readonly="1"/>
+                                            </page>
                                         </notebook>
                                     </sheet>
                                 </form>

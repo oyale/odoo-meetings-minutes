@@ -17,3 +17,5 @@ from . import test_add_point_policy
 from . import test_structural_estimates
 from . import test_live_access
 from . import test_audit_batching
+from . import test_discussion_history
+from . import test_discussion_history_benchmark

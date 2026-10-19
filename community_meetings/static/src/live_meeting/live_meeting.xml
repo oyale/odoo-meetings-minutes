@@ -126,6 +126,22 @@
                         </section>
                         <section t-if="item.description" class="o_live_planned" aria-label="Point description"><h3>Point description</h3><div t-out="safeHtml(item.description)"/></section>
                         <div t-att-id="'agenda-panel-' + item.id" t-att-class="'o_live_card_body ' + (state.expanded[item.id] ? '' : 'd-none')">
+                            <section t-if="item.discussion_history?.available" class="o_live_subsection o_live_previous_discussion" aria-label="Previous discussion">
+                                <div class="o_live_notes_heading">
+                                    <h3 class="h6 mb-0"><i class="fa fa-history" aria-hidden="true"/> Previous discussion</h3>
+                                    <button t-if="canEditDiscussionHistory(item) and !item.discard_previous_discussion" class="btn btn-sm btn-outline-secondary" t-on-click="(ev) => { ev.stopPropagation(); this.setDiscussionHistory(item, true); }">Start without previous notes</button>
+                                    <button t-if="canEditDiscussionHistory(item) and item.discard_previous_discussion" class="btn btn-sm btn-outline-primary" t-on-click="(ev) => { ev.stopPropagation(); this.setDiscussionHistory(item, false); }">Show previous notes</button>
+                                </div>
+                                <p t-if="item.discard_previous_discussion" class="text-muted mb-0">This point starts without earlier discussion. Its notes remain available on the original meeting.</p>
+                                <t t-else="">
+                                    <p class="text-muted mb-2">Read-only context from earlier meetings. It is not added to these minutes.</p>
+                                    <details t-foreach="item.discussion_history.entries" t-as="entry" t-key="entry.item_id" t-att-open="entry_index === 0 ? true : undefined">
+                                        <summary><t t-out="entry.meeting_code"/> — <t t-out="entry.meeting_name"/><span class="text-muted ms-2"><t t-out="historyDate(entry)"/></span></summary>
+                                        <div class="o_live_previous_discussion_content" t-out="safeHtml(entry.notes)"/>
+                                        <button class="btn btn-sm btn-link px-0" t-on-click="(ev) => { ev.stopPropagation(); this.openMeeting(entry.meeting_id); }">Open source meeting</button>
+                                    </details>
+                                </t>
+                            </section>
                             <div t-if="item.has_started or draftingMinutes or timingEnabled" class="o_live_subsection o_live_discussion_notes">
                                 <div class="o_live_notes_heading">
                                     <label class="form-label" t-att-for="'discussion-' + item.id"><i class="fa fa-pencil-square-o" aria-hidden="true"/> Discussion notes</label>

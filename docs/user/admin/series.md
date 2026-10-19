@@ -115,6 +115,11 @@ priority and estimate, reorder them, or deactivate them. Active templates are
 proposed and selected by default when preparing each new meeting in the series.
 An estimate of zero uses the series or company default. These settings affect
 meetings created afterwards; they do not rewrite meetings that already exist.
+Each template can also **Show previous discussion** in new occurrences. This is
+on by default. Turn it off when a recurring point should start without the
+earlier notes; the choice is saved on each occurrence, so later template edits
+do not change meetings already prepared. Automatic *Minutes approval* and *Next
+meeting* points do not use discussion history.
 
 ![Recurring agenda templates on a series](../img/series-form.png)
 

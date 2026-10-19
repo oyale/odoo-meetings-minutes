@@ -5,7 +5,7 @@ para proyectarse durante la reunión mientras se toman notas a la vez. Ábrela d
 cualquier reunión programada/celebrada: el botón ▶ en la lista o **Open Live
 Meeting** en el formulario.
 
-![Reunión en vivo](img/live-meeting.png)
+![Reunión en vivo](../img/live-meeting.png)
 
 ## Barra superior
 
@@ -50,6 +50,9 @@ anterior/siguiente, filtro **Solo pendientes**, **Expandir/Contraer todo**.
 2. **Notas de discusión** — texto enriquecido, autoguardado. Con cronómetros, solo
    se editan con el cronómetro del punto en marcha (o tras la reunión, redactando el
    acta). Sin cronómetros, siempre editables hasta que la reunión termine.
+   Cuando haya notas de reuniones anteriores, aparecen encima como contexto de
+   solo lectura y nunca se añaden al acta actual. Los editores pueden empezar sin
+   ese contexto; las notas originales permanecen en sus reuniones.
 3. **Registrar resultados**:
    - *Información* — marca **Hecho**.
    - *Discusión* — **Hecho** al resolverse, o **Posponer**.

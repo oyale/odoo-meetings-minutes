@@ -79,6 +79,7 @@
                                     <field name="agenda_type_id"/>
                                     <field name="priority"/>
                                     <field name="estimated_minutes"/>
+                                    <field name="show_previous_discussion" optional="show" invisible="agenda_type_id.behavior in ['minutes_approval', 'next_meeting']"/>
                                 </list>
                                 <form string="Recurring agenda point">
                                     <sheet>
@@ -89,6 +90,8 @@
                                             <field name="priority"/>
                                             <field name="estimated_minutes" widget="meeting_point_minutes"/>
                                             <field name="presenter_partner_id"/>
+                                            <field name="show_previous_discussion" invisible="agenda_type_id.behavior in ['minutes_approval', 'next_meeting']"/>
+                                            <div class="text-muted" invisible="agenda_type_id.behavior in ['minutes_approval', 'next_meeting']">New occurrences show earlier discussion as read-only context. Changing this setting affects future occurrences only.</div>
                                             <field name="active" widget="boolean_toggle"/>
                                             <field name="sequence"/>
                                         </group>

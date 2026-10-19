@@ -104,3 +104,41 @@ class TestSeriesRecurringPoints(TransactionCase):
         self.template.name = "Updated future title"
         self.assertEqual(first_topic.name, "Review metrics")
         self.assertEqual(second_topic.name, "Review metrics")
+
+    def test_occurrence_copies_history_preference_at_creation(self):
+        self.template.show_previous_discussion = False
+        first = self._prepare_meeting("2026-11-02 10:00:00")
+        first_item = first.agenda_item_ids.filtered(lambda row: row.topic_id.recurring_template_id)
+        self.assertTrue(first_item.discard_previous_discussion)
+
+        self.template.show_previous_discussion = True
+        second = self._prepare_meeting("2026-11-09 10:00:00")
+        second_item = second.agenda_item_ids.filtered(lambda row: row.topic_id.recurring_template_id)
+        self.assertFalse(second_item.discard_previous_discussion)
+
+    def test_previous_discussion_is_read_only_context_and_cutoff_stops_chain(self):
+        first = self._prepare_meeting("2026-11-02 10:00:00")
+        first_item = first.agenda_item_ids.filtered(lambda row: row.topic_id.recurring_template_id)
+        first_item.discussion_notes = "<p>Earlier discussion</p>"
+
+        second = self._prepare_meeting("2026-11-09 10:00:00")
+        second_item = second.agenda_item_ids.filtered(lambda row: row.topic_id.recurring_template_id)
+        self.assertIn("Earlier discussion", second_item.previous_discussion_html)
+        self.assertFalse(second_item.discussion_notes)
+        second_item.discussion_notes = "<p>Current discussion</p>"
+        second_item.discard_previous_discussion = True
+        self.assertFalse(second_item.previous_discussion_html)
+
+        third = self._prepare_meeting("2026-11-16 10:00:00")
+        third_item = third.agenda_item_ids.filtered(lambda row: row.topic_id.recurring_template_id)
+        self.assertIn("Current discussion", third_item.previous_discussion_html)
+        self.assertNotIn("Earlier discussion", third_item.previous_discussion_html)
+
+    def test_automatic_recurring_points_never_show_previous_discussion(self):
+        self.template.agenda_type_id = self.env.ref("community_meetings.agenda_type_next_meeting")
+        first = self._prepare_meeting("2026-11-02 10:00:00")
+        first_item = first.agenda_item_ids.filtered(lambda row: row.topic_id.recurring_template_id)
+        first_item.discussion_notes = "<p>Automatic point note</p>"
+        second = self._prepare_meeting("2026-11-09 10:00:00")
+        second_item = second.agenda_item_ids.filtered(lambda row: row.topic_id.recurring_template_id)
+        self.assertFalse(second_item.previous_discussion_html)

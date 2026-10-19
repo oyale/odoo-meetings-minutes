@@ -95,7 +95,7 @@ export class LiveMeeting extends Component {
         const editorial = this.state.capabilities.can_view_editorial;
         const [meetings, items, types, dissents, actions, resolutions, privateNotes] = await Promise.all([
             this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "company_id", "start_datetime", "end_datetime", "actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_end_datetime", "actual_duration_minutes", "organizer_id", "secretary_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id", "duration_minutes", "coordinator_role_label", "secretary_role_label"]),
-            this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "topic_id", "sequence", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "deferral_reason", "deferral_reason_code", "deferral_blocked_by", "presenter_partner_id", "priority", "deadline", "estimated_minutes", "actual_minutes", "actual_seconds", "actual_started_at", "has_started", "review_next_meeting", "is_followup", "topic_state", "topic_outcome", "next_meeting_datetime"], { order: "sequence, id" }),
+            this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "topic_id", "sequence", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "discussion_history", "discard_previous_discussion", "deferral_reason", "deferral_reason_code", "deferral_blocked_by", "presenter_partner_id", "priority", "deadline", "estimated_minutes", "actual_minutes", "actual_seconds", "actual_started_at", "has_started", "review_next_meeting", "is_followup", "topic_state", "topic_outcome", "next_meeting_datetime"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.agenda.type", [], ["name", "behavior", "active"], { order: "sequence, name", context: { active_test: false } }),
             editorial ? this.orm.searchRead("community.meeting.dissent", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "body", "reason_id", "author_display_name", "author_partner_id"], { order: "sequence, id" }) : this.orm.call("community.meeting", "get_live_published_dissents", [[this.meetingId]]),
             this.orm.searchRead("community.meeting.action", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "name", "description", "responsible_user_id", "deadline", "state"], { order: "deadline, id" }),
@@ -396,6 +396,40 @@ export class LiveMeeting extends Component {
         if (this.locked) return false;
         if (!this.timingEnabled) return !this.meetingPaused;
         return this.draftingMinutes || (!this.meetingPaused && Boolean(item.actual_started_at));
+    }
+    canEditDiscussionHistory(item) {
+        if (this.locked || this.meetingPaused || !this.state.capabilities?.can_edit) return false;
+        if (this.state.meeting.state === "draft" || !this.state.meeting.actual_start_datetime) return true;
+        return this.draftingMinutes || !this.timingEnabled || Boolean(item.actual_started_at);
+    }
+    historyDate(entry) {
+        const date = DateTime.fromSQL(entry.date, { zone: "utc" });
+        return date.isValid ? date.setZone(this.state.capabilities?.timezone || "UTC").toLocaleString(DateTime.DATETIME_MED) : "";
+    }
+    setDiscussionHistory(item, discard) {
+        if (!this.canEditDiscussionHistory(item)) return;
+        const next = async () => {
+            if (!await this.flushEditors()) return;
+            const success = await this.write(`item:${item.id}`, "community.meeting.agenda.item", [item.id], {
+                discard_previous_discussion: discard,
+            }, async () => {
+                const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], [
+                    "discard_previous_discussion", "discussion_history",
+                ]);
+                Object.assign(item, saved);
+            });
+            return success;
+        };
+        if (!discard) return next();
+        this.dialog.add(ConfirmationDialog, {
+            title: _t("Start without previous notes?"),
+            body: _t("Earlier discussion will be hidden for this point and later continuations. The original notes and this meeting’s notes are preserved."),
+            confirmLabel: _t("Start without previous notes"),
+            cancelLabel: _t("Keep previous notes"),
+            confirmClass: "btn-warning",
+            confirm: next,
+            cancel: () => {},
+        });
     }
     canEditNextMeetingDate(item) {
         if (this.locked || this.state.meeting.state !== "scheduled" || this.meetingPaused) return false;

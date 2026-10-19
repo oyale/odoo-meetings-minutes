@@ -122,6 +122,13 @@ activas se proponen y aparecen seleccionadas al preparar cada nueva reunión de
 la serie. Estos ajustes afectan a las reuniones que se creen después; no
 reescriben las reuniones existentes.
 
+Cada plantilla permite activar **Mostrar debate anterior** en las nuevas
+ocurrencias; viene activado. Desactívalo si ese punto recurrente debe empezar
+sin las notas previas. La elección se guarda en cada ocurrencia y los cambios
+posteriores de la plantilla no modifican reuniones ya preparadas. Los puntos
+automáticos *Aprobación del acta* y *Próxima reunión* no muestran historial de
+debate.
+
 ![Plantillas de agenda recurrentes de una serie](../img/series-form.png)
 
 ## Botones y propuestas

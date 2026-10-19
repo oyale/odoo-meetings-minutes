@@ -101,4 +101,10 @@ class MeetingSeriesAgendaTemplate(models.Model):
                 "previous_occurrence_id": previous_item.topic_id.id or False,
             }
         )
-        return self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "topic_id": topic.id})
+        return self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": meeting.id,
+                "topic_id": topic.id,
+                "discard_previous_discussion": not self.show_previous_discussion,
+            }
+        )
