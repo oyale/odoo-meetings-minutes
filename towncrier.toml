@@ -1,10 +1,10 @@
 [tool.towncrier]
-# Follow OCA's per-addon `readme/newsfragments` convention. Write fragments in
-# Markdown; the generated changelog is part of the bilingual HTML user guide.
+# Keep per-addon fragments and publish their combined release history at root.
 name = "Odoo Meetings Minutes"
 directory = "."
-filename = "docs/user/release-notes.md"
+filename = "CHANGELOG.md"
 start_string = "<!-- towncrier release notes start -->"
+title_format = "## {name} {version} ({project_date})"
 
 [[tool.towncrier.section]]
 name = "Community Meetings"
