@@ -11,6 +11,7 @@ header carries a language switcher linking the equivalent page in the other
 language. Only stdlib + `markdown` are required.
 """
 import argparse
+import html as html_lib
 import re
 from pathlib import Path
 
@@ -110,7 +111,8 @@ pre code { background:none; padding:0; }
 h1 { font-size:1.9em; border-bottom:3px solid var(--brand); padding-bottom:.3em; }
 h2 { font-size:1.4em; border-bottom:1px solid var(--line); padding-bottom:.25em; margin-top:2em; }
 h3 { font-size:1.15em; margin-top:1.6em; }
-table { border-collapse:collapse; width:100%; margin:1em 0; }
+.table-wrap { max-width:100%; overflow-x:auto; margin:1em 0; }
+.table-wrap table { border-collapse:collapse; width:100%; margin:0; }
 th, td { border:1px solid var(--line); padding:.5em .75em; text-align:left; vertical-align:top; }
 th { background:var(--soft); }
 blockquote { margin:1em 0; padding:.6em 1em; border-left:4px solid var(--brand);
@@ -139,11 +141,70 @@ main.content { flex:1 1 auto; padding:2em 3em 4em; max-width:980px; min-width:0;
 main.content.single { margin:0 auto; float:none; }
 .pagenav { margin-top:3em; display:flex; justify-content:space-between; gap:1em; }
 .pagenav a { font-weight:600; }
+@media (max-width: 900px) {
+  .wrap { display:block; }
+  nav.side { width:auto; min-height:0; padding:.7em 1em; }
+  nav.side h3 { margin:.5em .4em .25em; }
+  nav.side a { display:inline-block; margin:.1em .15em; }
+  main.content { max-width:none; padding:1.5em 1.25em 3em; }
+  .langbar { flex-wrap:wrap; gap:.5em .8em; padding:.6em 1em; }
+  .langbar .spacer { display:none; }
+  .table-wrap { overflow:visible; }
+  .table-wrap table, .table-wrap tbody { display:block; width:100%; }
+  .table-wrap thead { position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+                      overflow:hidden; clip:rect(0, 0, 0, 0); white-space:nowrap; border:0; }
+  .table-wrap tr { display:block; margin:0 0 1em; border:1px solid var(--line);
+                   border-radius:8px; overflow:hidden; background:var(--bg); }
+  .table-wrap td { display:block; padding:.6em .75em; border:0; border-bottom:1px solid var(--line); }
+  .table-wrap td:last-child { border-bottom:0; }
+  .table-wrap td::before { content:attr(data-label); display:block; margin-bottom:.15em;
+                           color:var(--muted); font-size:.76em; font-weight:700;
+                           text-transform:uppercase; letter-spacing:.03em; }
+  .table-wrap td:first-child { background:var(--soft); font-weight:700; }
+  .table-wrap td:first-child::before { content:none; }
+  .pagenav { flex-wrap:wrap; }
+}
+@media (max-width: 420px) {
+  main.content { padding:1.1em .9em 2.5em; }
+  h1 { font-size:1.6em; }
+  .mermaid { overflow-x:auto; }
+}
 """
 
 
 def md_to_html(text):
-    return markdown.markdown(text, extensions=MD_EXTENSIONS)
+    html = markdown.markdown(text, extensions=MD_EXTENSIONS)
+
+    def wrap_table(match):
+        table = match.group(1)
+        header = re.search(r"<thead\b[^>]*>.*?<tr\b[^>]*>(.*?)</tr>.*?</thead>", table, flags=re.S)
+        labels = []
+        if header:
+            for cell in re.findall(r"<th\b[^>]*>(.*?)</th>", header.group(1), flags=re.S):
+                label = re.sub(r"<[^>]+>", " ", cell)
+                labels.append(html_lib.unescape(" ".join(label.split())))
+
+        def label_row(row_match):
+            index = 0
+
+            def label_cell(cell_match):
+                nonlocal index
+                label = labels[index] if index < len(labels) else ""
+                index += 1
+                attr = ' data-label="%s"' % html_lib.escape(label, quote=True)
+                return cell_match.group(1) + attr + ">"
+
+            row = re.sub(r"(<td\b[^>]*)(>)", label_cell, row_match.group(0))
+            return row
+
+        if labels:
+            body = re.search(r"(<tbody\b[^>]*>)(.*?)(</tbody>)", table, flags=re.S)
+            if body:
+                rows = re.sub(r"<tr\b[^>]*>.*?</tr>", label_row, body.group(2), flags=re.S)
+                table = table[:body.start()] + body.group(1) + rows + body.group(3) + table[body.end():]
+        return '<div class="table-wrap">%s</div>' % table
+
+    return re.sub(r"(<table\b[^>]*>.*?</table>)", wrap_table, html, flags=re.S)
 
 
 def langbar(lang, counterpart_href):
