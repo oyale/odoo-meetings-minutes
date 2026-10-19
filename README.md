@@ -58,32 +58,11 @@ or [guía en español](https://oyale.github.io/odoo-meetings-minutes/html-es/ind
 See the [changelog](CHANGELOG.md)
 for user-facing changes between releases.
 
-## Preparing a release
+## Releases
 
-Run the local release helper from a clean tracked working tree on branch
-`18.0`. It finds addon changes since the latest release tag, increments the
-patch version of changed addons that have not already been bumped, refreshes
-the generated README and metapackage metadata, builds the changelog, and creates
-the release commit. With no options, it prints a dry run:
-
-```console
-python3.11 .github/scripts/release.py
-```
-
-The helper checks required Towncrier fragments and uses today's date for the
-next suite version. It prepares and commits locally with `--apply`, pushes the
-commit with `--push`, or pushes and creates a GitHub Release with `--publish`.
-Publishing the GitHub Release starts the PyPI workflow:
-
-```console
-python3.11 .github/scripts/release.py --apply
-python3.11 .github/scripts/release.py --push
-python3.11 .github/scripts/release.py --publish
-```
-
-Pass `--version 18.0.<date>.<sequence>` to choose the suite version explicitly.
-If a push fails after the release commit is created, rerun with `--push` or
-`--publish` to resume that prepared release.
+Each addon change must include a Towncrier news fragment; GitHub Actions checks
+that requirement for changed addons. Release preparation and publication are
+maintainer operations. Publishing a GitHub Release starts the PyPI workflow.
 GitHub Pages builds the bilingual user and administrator documentation from
 `docs/user/` and `docs/user_es/` on every push to `18.0`.
 See [ROADMAP.md](ROADMAP.md) for planned user-facing improvements.
