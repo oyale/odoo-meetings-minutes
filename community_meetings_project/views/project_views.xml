@@ -103,6 +103,7 @@
         <field name="name">community.meeting.series.wizard.project</field>
         <field name="model">community.meeting.series.wizard</field>
         <field name="inherit_id" ref="community_meetings.view_series_wizard"/>
+        <field name="priority">99</field>
         <field name="arch" type="xml">
             <xpath expr="//div[@name='project_wizard_configuration']" position="replace">
                 <div class="o_meeting_series_panel o_meeting_series_project_panel" invisible="step != 'structure'">

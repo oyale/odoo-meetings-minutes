@@ -26,18 +26,25 @@ class SeriesWizard(models.TransientModel):
                 name = (self.new_project_name or series.name or "").strip()
                 if not name:
                     raise ValidationError(_("Enter a name for the new project."))
-                project = self.env["project.project"].create({
-                    "name": name, "company_id": series.company_id.id,
-                })
+                project = self.env["project.project"].create(
+                    {
+                        "name": name,
+                        "company_id": series.company_id.id,
+                    }
+                )
             else:
                 project = self.project_id
                 if not project:
                     raise ValidationError(_("Choose a project or create a new one."))
                 project.check_access("read")
                 if project.company_id and project.company_id != series.company_id:
-                    raise ValidationError(_("The project must belong to the series company."))
-            series.write({
-                "meeting_project_id": project.id,
-                "meeting_project_mode": "series",
-            })
+                    raise ValidationError(
+                        _("The project must belong to the series company.")
+                    )
+            series.write(
+                {
+                    "meeting_project_id": project.id,
+                    "meeting_project_mode": "series",
+                }
+            )
         return result

@@ -51,15 +51,15 @@
     <div class="o_meeting_create_panel o_meeting_when_panel">
         <div class="o_meeting_when_grid">
             <div class="o_meeting_when_field o_meeting_when_name">
-                <label for="name"><span class="o_meeting_when_icon"><i class="fa fa-pencil" aria-hidden="true"/></span><span><strong>Meeting name</strong><small>Give this meeting a clear name</small></span></label>
+                <label for="name"><span class="o_meeting_when_icon"><i class="fa fa-pencil" title="Meeting title" aria-hidden="true"/></span><span><strong>Meeting name</strong><small>Give this meeting a clear name</small></span></label>
                 <field name="name" nolabel="1" placeholder="e.g. Weekly sync"/>
             </div>
             <div class="o_meeting_when_field">
-                <div class="o_meeting_when_heading"><span class="o_meeting_when_icon"><i class="fa fa-calendar" aria-hidden="true"/></span><label for="start_datetime"><strong>Start date and time</strong><small>When should the meeting begin?</small></label></div>
+                <div class="o_meeting_when_heading"><span class="o_meeting_when_icon"><i class="fa fa-calendar" title="Estimated Start Datetime" aria-hidden="true"/></span><label for="start_datetime"><strong>Start date and time</strong><small>When should the meeting begin?</small></label></div>
                 <field name="start_datetime" nolabel="1"/>
             </div>
             <div class="o_meeting_when_field">
-                <div class="o_meeting_when_heading"><span class="o_meeting_when_icon"><i class="fa fa-clock-o" aria-hidden="true"/></span><label for="duration_hours"><strong>Estimated duration</strong><small>Hours:minutes (1:00 = 1 hour).</small></label></div>
+                <div class="o_meeting_when_heading"><span class="o_meeting_when_icon"><i class="fa fa-clock-o" title="Approximate duration" aria-hidden="true"/></span><label for="duration_hours"><strong>Estimated duration</strong><small>Hours:minutes (1:00 = 1 hour).</small></label></div>
                 <div class="o_meeting_duration_value"><field name="duration_hours" widget="float_time" nolabel="1"/><label class="o_meeting_duration_unit" for="duration_hours" string="Hours:minutes"/></div>
             </div>
         </div>
@@ -91,7 +91,7 @@
 <div class="oe_title" invisible="topic_id"><label for="name" string="What is this point about?"/><h1><field name="name" placeholder="A clear one-line title"/></h1></div>
 <group invisible="topic_id"><field name="agenda_type_id" widget="meeting_agenda_type_rich"/></group>
 <div class="o_meeting_point_responsible">
-    <div class="o_meeting_point_responsible_intro"><span class="o_meeting_point_responsible_icon"><i class="fa fa-user-circle-o" aria-hidden="true"/></span><div><strong>Responsible</strong><small>Who will present this point and guide the discussion?</small></div></div>
+    <div class="o_meeting_point_responsible_intro"><span class="o_meeting_point_responsible_icon"><i class="fa fa-user-circle-o" title="Responsible" aria-hidden="true"/></span><div><strong>Responsible</strong><small>Who will present this point and guide the discussion?</small></div></div>
     <field name="presenter_partner_id" nolabel="1" placeholder="Choose a responsible person"/>
 </div>
 <div class="o_meeting_point_description" invisible="topic_id">
@@ -106,7 +106,7 @@
 </div>
 <field name="presenter_loaded" invisible="1"/>
 <div class="o_meeting_point_related">
-    <div class="o_meeting_point_related_heading"><span class="o_meeting_point_related_icon"><i class="fa fa-link" aria-hidden="true"/></span><div><strong>Related points</strong><small>Link background or earlier points that help explain this one.</small></div></div>
+    <div class="o_meeting_point_related_heading"><span class="o_meeting_point_related_icon"><i class="fa fa-link" title="Related points" aria-hidden="true"/></span><div><strong>Related points</strong><small>Link background or earlier points that help explain this one.</small></div></div>
     <field name="related_topic_ids" nolabel="1" widget="many2many_tags" domain="[('company_id', '=', company_id), ('id', '!=', topic_id)]" placeholder="Search for related points"/>
 </div>
 <field name="more_options" widget="meeting_point_more_options" class="o_meeting_point_more_toggle" nolabel="1" invisible="topic_id"/>

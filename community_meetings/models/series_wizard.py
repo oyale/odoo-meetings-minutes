@@ -1,4 +1,5 @@
 import pytz
+
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
@@ -64,7 +65,8 @@ class MeetingSeriesWizard(models.TransientModel):
     )
     active = fields.Boolean(default=True)
     coordinator_user_ids = fields.Many2many(
-        "res.users", "community_meeting_series_wizard_coordinator_rel",
+        "res.users",
+        "community_meeting_series_wizard_coordinator_rel",
         string="Coordinators",
     )
     carryover_policy = fields.Selection(
@@ -81,15 +83,14 @@ class MeetingSeriesWizard(models.TransientModel):
     )
     duration_hours = fields.Float(string="Default duration", default=1.0, required=True)
     attendee_partner_ids = fields.Many2many(
-        "res.partner", "community_meeting_series_wizard_attendee_rel",
+        "res.partner",
+        "community_meeting_series_wizard_attendee_rel",
         string="Usual attendees",
     )
     meeting_name_pattern = fields.Char(
         string="Meeting title pattern", default="{date} {series}", required=True
     )
-    has_minutes_approval_point = fields.Boolean(
-        string="Add a minutes approval point"
-    )
+    has_minutes_approval_point = fields.Boolean(string="Add a minutes approval point")
     has_next_meeting_point = fields.Boolean(string="Add a next meeting point")
     next_meeting_rule = fields.Selection(
         [
@@ -101,8 +102,12 @@ class MeetingSeriesWizard(models.TransientModel):
     )
     next_meeting_weekday = fields.Selection(
         [
-            ("0", "Monday"), ("1", "Tuesday"), ("2", "Wednesday"),
-            ("3", "Thursday"), ("4", "Friday"), ("5", "Saturday"),
+            ("0", "Monday"),
+            ("1", "Tuesday"),
+            ("2", "Wednesday"),
+            ("3", "Thursday"),
+            ("4", "Friday"),
+            ("5", "Saturday"),
             ("6", "Sunday"),
         ],
         string="Weekday",
@@ -117,7 +122,9 @@ class MeetingSeriesWizard(models.TransientModel):
             "type": "ir.actions.act_window",
             "name": _("New Meeting Series"),
             "res_model": self._name,
-            "views": [(self.env.ref("community_meetings.view_series_wizard").id, "form")],
+            "views": [
+                (self.env.ref("community_meetings.view_series_wizard").id, "form")
+            ],
             "target": "new",
             "context": context,
         }
@@ -143,7 +150,9 @@ class MeetingSeriesWizard(models.TransientModel):
 
     time_tracking = fields.Selection(
         [("inherit", "Company default"), ("on", "On"), ("off", "Off")],
-        default="inherit", required=True, string="Time tracking",
+        default="inherit",
+        required=True,
+        string="Time tracking",
     )
     use_company_time_tracking = fields.Boolean(
         default=True,
@@ -162,19 +171,27 @@ class MeetingSeriesWizard(models.TransientModel):
             ("scheduled", "Before it starts"),
             ("ongoing", "While it runs"),
         ],
-        default="inherit", required=True, string="When points can be added",
+        default="inherit",
+        required=True,
+        string="When points can be added",
     )
     use_company_add_point_policy = fields.Boolean(
         default=True,
         string="Company point-policy default",
     )
     add_point_policy_override = fields.Selection(
-        [("draft", "Draft only"), ("scheduled", "Before it starts"), ("ongoing", "While it runs")],
+        [
+            ("draft", "Draft only"),
+            ("scheduled", "Before it starts"),
+            ("ongoing", "While it runs"),
+        ],
         compute="_compute_add_point_policy_override",
         inverse="_inverse_add_point_policy_override",
         string="Adding points for this series",
     )
-    default_estimated_minutes = fields.Integer(string="Default point estimate (minutes)")
+    default_estimated_minutes = fields.Integer(
+        string="Default point estimate (minutes)"
+    )
     use_company_estimated_minutes = fields.Boolean(
         compute="_compute_use_company_estimated_minutes",
         inverse="_inverse_use_company_estimated_minutes",
@@ -197,7 +214,9 @@ class MeetingSeriesWizard(models.TransientModel):
             wizard.time_tracking_override = (
                 wizard.time_tracking
                 if wizard.time_tracking != "inherit"
-                else "on" if wizard.company_id.meeting_time_tracking else "off"
+                else "on"
+                if wizard.company_id.meeting_time_tracking
+                else "off"
             )
 
     def _inverse_time_tracking_override(self):

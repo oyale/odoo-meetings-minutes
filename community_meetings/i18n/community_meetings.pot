@@ -499,7 +499,6 @@ msgstr ""
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__add_point_policy
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__add_point_policy
 msgid "Add Point Policy"
 msgstr ""
 
@@ -3551,7 +3550,6 @@ msgstr ""
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__series_carryover_policy
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__carryover_policy
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__carryover_policy
 msgid "Carryover Policy"
 msgstr ""
 
@@ -3764,8 +3762,6 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__add_point_policy__inherit
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__time_tracking__inherit
 #: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__use_company_time_tracking
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__use_company_add_point_policy
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
 msgid "Company default"
 msgstr ""
@@ -3877,11 +3873,6 @@ msgstr ""
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__coordinator_role_label
 msgid "Coordinator Role Label"
-msgstr ""
-
-#. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__coordinator_user_ids
-msgid "Coordinator User"
 msgstr ""
 
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__coordinator_user_ids
@@ -5673,16 +5664,6 @@ msgid "Has Message"
 msgstr ""
 
 #. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__has_minutes_approval_point
-msgid "Has Minutes Approval Point"
-msgstr ""
-
-#. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__has_next_meeting_point
-msgid "Has Next Meeting Point"
-msgstr ""
-
-#. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__has_started
 msgid "Has Started"
 msgstr ""
@@ -6251,11 +6232,6 @@ msgid "Meeting Manager"
 msgstr ""
 
 #. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__meeting_name_pattern
-msgid "Meeting Name Pattern"
-msgstr ""
-
-#. module: community_meetings
 #: model:ir.model,name:community_meetings.model_community_meeting_topic
 msgid "Meeting Point"
 msgstr ""
@@ -6563,7 +6539,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_followup_kind__name
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_kind__name
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__name
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__name
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__name
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Name"
@@ -6666,26 +6641,6 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_item__kind__next_meeting
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_type__behavior__next_meeting
 msgid "Next Meeting"
-msgstr ""
-
-#. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__next_meeting_day_of_month
-msgid "Next Meeting Day Of Month"
-msgstr ""
-
-#. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__next_meeting_interval_days
-msgid "Next Meeting Interval Days"
-msgstr ""
-
-#. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__next_meeting_rule
-msgid "Next Meeting Rule"
-msgstr ""
-
-#. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__next_meeting_weekday
-msgid "Next Meeting Weekday"
 msgstr ""
 
 #. module: community_meetings
@@ -9059,7 +9014,6 @@ msgstr ""
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__time_tracking
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__time_tracking
 msgid "Time Tracking"
 msgstr ""
 
@@ -9077,11 +9031,6 @@ msgstr ""
 #: code:addons/community_meetings/models/meeting.py:0
 #: code:addons/community_meetings/models/topic.py:0
 msgid "Time tracking is disabled for this meeting."
-msgstr ""
-
-#. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__timezone
-msgid "Timezone"
 msgstr ""
 
 #. module: community_meetings
@@ -10061,18 +10010,8 @@ msgid "Accepted points from earlier meetings count toward this estimate. The ser
 msgstr ""
 
 #. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__use_company_time_tracking
-msgid "Use the company time-tracking setting"
-msgstr ""
-
-#. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__time_tracking_override
 msgid "Time tracking for this series"
-msgstr ""
-
-#. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__use_company_add_point_policy
-msgid "Use the company rule for adding points"
 msgstr ""
 
 #. module: community_meetings
@@ -10189,7 +10128,6 @@ msgstr ""
 msgid "Company default point estimate"
 msgstr ""
 
-
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
 msgid "Automatic points"
@@ -10200,7 +10138,6 @@ msgstr ""
 #: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
 msgid "Add an existing point or configure follow-ups."
 msgstr ""
-
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
