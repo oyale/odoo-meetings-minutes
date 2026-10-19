@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
@@ -8,7 +10,9 @@ class CommunityMeetingEditorNote(models.Model):
     _order = "id"
     _check_company_auto = True
 
-    meeting_id = fields.Many2one("community.meeting", required=True, ondelete="cascade", index=True, check_company=True)
+    meeting_id = fields.Many2one(
+        "community.meeting", required=True, ondelete="cascade", index=True, check_company=True
+    )
     company_id = fields.Many2one(related="meeting_id.company_id", store=True, index=True)
     agenda_item_id = fields.Many2one("community.meeting.agenda.item", ondelete="cascade", check_company=True)
     content = fields.Html(required=True)
@@ -54,7 +58,9 @@ class CommunityMeetingDissentReason(models.Model):
     sequence = fields.Integer(default=10)
     active = fields.Boolean(default=True)
 
-    _sql_constraints = [("name_unique", "unique(name)", "Dissent reason names must be unique.")]
+    _sql_constraints: ClassVar[list[tuple[str, str, str]]] = [
+        ("name_unique", "unique(name)", "Dissent reason names must be unique.")
+    ]
 
 
 class CommunityMeetingDissent(models.Model):
@@ -63,7 +69,9 @@ class CommunityMeetingDissent(models.Model):
     _order = "sequence, id"
     _check_company_auto = True
 
-    meeting_id = fields.Many2one("community.meeting", required=True, ondelete="cascade", index=True, check_company=True)
+    meeting_id = fields.Many2one(
+        "community.meeting", required=True, ondelete="cascade", index=True, check_company=True
+    )
     company_id = fields.Many2one(related="meeting_id.company_id", store=True, index=True)
     agenda_item_id = fields.Many2one("community.meeting.agenda.item", ondelete="restrict", check_company=True)
     resolution_id = fields.Many2one("community.meeting.resolution", ondelete="restrict", check_company=True)
@@ -73,11 +81,11 @@ class CommunityMeetingDissent(models.Model):
     recorded_by_id = fields.Many2one("res.users", required=True, default=lambda self: self.env.user, readonly=True)
     recorded_at = fields.Datetime(required=True, default=fields.Datetime.now, readonly=True)
     reason_id = fields.Many2one(
-        "community.meeting.dissent.reason", string="Statement type", required=True,
+        "community.meeting.dissent.reason",
+        string="Statement type",
+        required=True,
         ondelete="restrict",
-        default=lambda self: self.env.ref(
-            "community_meetings.dissent_reason_dissent", raise_if_not_found=False
-        ),
+        default=lambda self: self.env.ref("community_meetings.dissent_reason_dissent", raise_if_not_found=False),
     )
     sequence = fields.Integer(default=10)
     include_in_minutes = fields.Boolean(default=True)
@@ -91,7 +99,11 @@ class CommunityMeetingDissent(models.Model):
                 raise ValidationError(_("A dissent's agenda item must belong to the same meeting."))
             if dissent.resolution_id and dissent.resolution_id.meeting_id != dissent.meeting_id:
                 raise ValidationError(_("A dissent's resolution must belong to the same meeting."))
-            if dissent.resolution_id and dissent.agenda_item_id and dissent.resolution_id.agenda_item_id != dissent.agenda_item_id:
+            if (
+                dissent.resolution_id
+                and dissent.agenda_item_id
+                and dissent.resolution_id.agenda_item_id != dissent.agenda_item_id
+            ):
                 raise ValidationError(_("A dissent's resolution must belong to the selected agenda item."))
 
     @api.model_create_multi

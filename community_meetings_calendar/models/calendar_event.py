@@ -1,5 +1,6 @@
 import base64
 import re
+from typing import ClassVar
 
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError
@@ -18,7 +19,7 @@ class CalendarEvent(models.Model):
     )
     community_calendar_uid = fields.Char(copy=False, index=True)
 
-    _sql_constraints = [
+    _sql_constraints: ClassVar[list[tuple[str, str, str]]] = [
         (
             "community_meeting_calendar_event_unique",
             "unique(community_meeting_id)",
@@ -33,10 +34,7 @@ class CalendarEvent(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        if any(
-            values.get("community_meeting_id") or values.get("community_calendar_uid")
-            for values in vals_list
-        ):
+        if any(values.get("community_meeting_id") or values.get("community_calendar_uid") for values in vals_list):
             raise AccessError(_("Meeting Calendar events are managed from the meeting."))
         return super().create(vals_list)
 
@@ -69,15 +67,15 @@ class CalendarEvent(models.Model):
     @api.model_create_multi
     def _community_meetings_calendar_create(self, vals_list):
         """Create integration-owned events through a non-RPC server path."""
-        return super(CalendarEvent, self).create(vals_list)
+        return super().create(vals_list)
 
     def _community_meetings_calendar_write(self, values):
         """Update integration-owned events through a non-RPC server path."""
-        return super(CalendarEvent, self).write(values)
+        return super().write(values)
 
     def _community_meetings_calendar_unlink(self):
         """Delete integration-owned events through a non-RPC server path."""
-        return super(CalendarEvent, self).unlink()
+        return super().unlink()
 
     @api.model
     def _community_meetings_calendar_uninstall_cleanup(self):
@@ -141,7 +139,7 @@ class CalendarEvent(models.Model):
         now = fields.Datetime.now().strftime("%Y%m%dT%H%M%SZ")
         start = fields.Datetime.to_datetime(self.start).strftime("%Y%m%dT%H%M%SZ")
         stop = fields.Datetime.to_datetime(self.stop).strftime("%Y%m%dT%H%M%SZ")
-        organizer_line = "ORGANIZER:mailto:%s" % organizer_email if organizer_email else None
+        organizer_line = f"ORGANIZER:mailto:{organizer_email}" if organizer_email else None
 
         for partner in attendees:
             recipient = partner.email or ""
@@ -154,41 +152,46 @@ class CalendarEvent(models.Model):
                 "CALSCALE:GREGORIAN",
                 "METHOD:CANCEL",
                 "BEGIN:VEVENT",
-                "UID:%s" % self.community_calendar_uid,
+                f"UID:{self.community_calendar_uid}",
                 "SEQUENCE:1",
-                "DTSTAMP:%s" % now,
-                "DTSTART:%s" % start,
-                "DTEND:%s" % stop,
-                "SUMMARY:%s" % self._ical_escape(self.name),
+                f"DTSTAMP:{now}",
+                f"DTSTART:{start}",
+                f"DTEND:{stop}",
+                f"SUMMARY:{self._ical_escape(self.name)}",
                 "STATUS:CANCELLED",
             ]
             if self.location:
-                lines.append("LOCATION:%s" % self._ical_escape(self.location))
+                lines.append(f"LOCATION:{self._ical_escape(self.location)}")
             if organizer_line:
                 lines.append(organizer_line)
             for attendee in attendees:
                 if attendee.email and single_email_re.fullmatch(attendee.email):
-                    lines.append(
-                        "ATTENDEE;CN=%s:mailto:%s"
-                        % (self._ical_escape(attendee.name), attendee.email)
-                    )
+                    lines.append(f"ATTENDEE;CN={self._ical_escape(attendee.name)}:mailto:{attendee.email}")
             lines.extend(["END:VEVENT", "END:VCALENDAR", ""])
             ics = "\r\n".join(self._ical_fold(line) for line in lines).encode("utf-8")
-            mail = mail_model.create({
-                "email_from": sender,
-                "email_to": recipient,
-                "subject": _("Cancelled: %s", self.name),
-                "body_html": _("The meeting %(meeting)s was cancelled.", meeting=self.name),
-                "auto_delete": True,
-            })
-            attachment = self.env["ir.attachment"].sudo().create({
-                "name": "meeting-cancellation.ics",
-                "type": "binary",
-                "datas": base64.b64encode(ics),
-                "mimetype": "text/calendar; method=CANCEL; charset=UTF-8",
-                "res_model": "mail.mail",
-                "res_id": mail.id,
-            })
+            mail = mail_model.create(
+                {
+                    "email_from": sender,
+                    "email_to": recipient,
+                    "subject": _("Cancelled: %s", self.name),
+                    "body_html": _("The meeting %(meeting)s was cancelled.", meeting=self.name),
+                    "auto_delete": True,
+                }
+            )
+            attachment = (
+                self.env["ir.attachment"]
+                .sudo()
+                .create(
+                    {
+                        "name": "meeting-cancellation.ics",
+                        "type": "binary",
+                        "datas": base64.b64encode(ics),
+                        "mimetype": "text/calendar; method=CANCEL; charset=UTF-8",
+                        "res_model": "mail.mail",
+                        "res_id": mail.id,
+                    }
+                )
+            )
             mail.attachment_ids = [(4, attachment.id)]
             created_mails |= mail
         return created_mails

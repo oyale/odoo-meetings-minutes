@@ -127,9 +127,7 @@ class TestProjectTaskConcurrency(TransactionCase):
                     closing_started.set()
                     try:
                         with mute_logger("odoo.sql_db"):
-                            env["community.meeting.agenda.item"].browse(
-                                ids["item"]
-                            ).write({"disposition": "closed"})
+                            env["community.meeting.agenda.item"].browse(ids["item"]).write({"disposition": "closed"})
                         cr.commit()
                         return "closed"
                     except SerializationFailure:
@@ -141,9 +139,7 @@ class TestProjectTaskConcurrency(TransactionCase):
 
         try:
             with (
-                patch.object(
-                    checker, "_check_closed_todo_project_tasks", pause_after_validation
-                ),
+                patch.object(checker, "_check_closed_todo_project_tasks", pause_after_validation),
                 ThreadPoolExecutor(max_workers=2) as workers,
             ):
                 deletion = workers.submit(delete_task)
@@ -171,9 +167,7 @@ class TestProjectTaskConcurrency(TransactionCase):
                 env = api.Environment(cr, SUPERUSER_ID, context)
                 self.assertFalse(env["project.task"].browse(ids["task"]).exists())
                 self.assertEqual(
-                    env["community.meeting.agenda.item"]
-                    .browse(ids["item"])
-                    .disposition,
+                    env["community.meeting.agenda.item"].browse(ids["item"]).disposition,
                     "open",
                 )
         finally:

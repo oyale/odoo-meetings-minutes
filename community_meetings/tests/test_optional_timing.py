@@ -23,24 +23,16 @@ class TestOptionalTiming(TransactionCase):
                 ],
             }
         )
-        cls.series = (
-            cls.env["community.meeting.series"]
-            .with_user(cls.editor)
-            .create({"name": "Timing series"})
-        )
+        cls.series = cls.env["community.meeting.series"].with_user(cls.editor).create({"name": "Timing series"})
 
     def test_company_default_on(self):
-        meeting = (
-            self.env["community.meeting"].with_user(self.editor).create({"name": "M"})
-        )
+        meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "M"})
         self.assertTrue(meeting.time_tracking_enabled)
 
     def test_series_off_overrides_company(self):
         self.series.time_tracking = "off"
         meeting = (
-            self.env["community.meeting"]
-            .with_user(self.editor)
-            .create({"name": "M", "series_id": self.series.id})
+            self.env["community.meeting"].with_user(self.editor).create({"name": "M", "series_id": self.series.id})
         )
         self.assertFalse(meeting.time_tracking_enabled)
 
@@ -48,18 +40,14 @@ class TestOptionalTiming(TransactionCase):
         self.env.company.meeting_time_tracking = False
         self.series.time_tracking = "on"
         meeting = (
-            self.env["community.meeting"]
-            .with_user(self.editor)
-            .create({"name": "M", "series_id": self.series.id})
+            self.env["community.meeting"].with_user(self.editor).create({"name": "M", "series_id": self.series.id})
         )
         self.assertTrue(meeting.time_tracking_enabled)
 
     def test_series_inherit_follows_company(self):
         self.series.time_tracking = "inherit"
         meeting = (
-            self.env["community.meeting"]
-            .with_user(self.editor)
-            .create({"name": "M", "series_id": self.series.id})
+            self.env["community.meeting"].with_user(self.editor).create({"name": "M", "series_id": self.series.id})
         )
         self.assertTrue(meeting.time_tracking_enabled)
         self.env.company.meeting_time_tracking = False
@@ -111,9 +99,7 @@ class TestOptionalTiming(TransactionCase):
 
     def test_capabilities_include_time_tracking(self):
         meeting = (
-            self.env["community.meeting"]
-            .with_user(self.editor)
-            .create({"name": "Cap", "series_id": self.series.id})
+            self.env["community.meeting"].with_user(self.editor).create({"name": "Cap", "series_id": self.series.id})
         )
         self.series.time_tracking = "off"
         meeting.invalidate_recordset(["time_tracking_enabled"])

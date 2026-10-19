@@ -78,5 +78,5 @@
         <field name="view_id" ref="view_community_meeting_carryover_wizard"/>
         <field name="target">new</field>
     </record>
-    <menuitem id="menu_community_meeting_carryovers" name="Agenda Carryovers" parent="community_meetings.menu_community_meetings_root" action="action_community_meeting_carryovers" sequence="30" groups="community_meetings.group_meeting_editor"/>
+    <menuitem id="menu_community_meeting_carryovers" name="Agenda Carryovers" parent="community_meetings.menu_community_meetings_root" action="action_community_meeting_carryovers" sequence="30" groups="community_meetings.group_meeting_editor" active="False"/>
 </odoo>

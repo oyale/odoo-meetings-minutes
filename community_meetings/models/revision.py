@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import json
+from typing import ClassVar
 
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
@@ -20,9 +21,7 @@ class CommunityMeetingRevision(models.Model):
         index=True,
         check_company=True,
     )
-    company_id = fields.Many2one(
-        related="meeting_id.company_id", store=True, index=True
-    )
+    company_id = fields.Many2one(related="meeting_id.company_id", store=True, index=True)
     revision_number = fields.Integer(required=True, readonly=True)
     created_by_id = fields.Many2one("res.users", required=True, readonly=True)
     created_at = fields.Datetime(required=True, readonly=True)
@@ -30,9 +29,7 @@ class CommunityMeetingRevision(models.Model):
     approved_at = fields.Datetime(required=True, readonly=True)
     snapshot_json = fields.Text(required=True, readonly=True)
     snapshot_sha256 = fields.Char(required=True, readonly=True, size=64, index=True)
-    pdf_attachment_id = fields.Many2one(
-        "ir.attachment", readonly=True, ondelete="restrict"
-    )
+    pdf_attachment_id = fields.Many2one("ir.attachment", readonly=True, ondelete="restrict")
     pdf_sha256 = fields.Char(readonly=True, size=64)
     status = fields.Selection(
         [("approved", "Approved"), ("superseded", "Superseded")],
@@ -41,11 +38,9 @@ class CommunityMeetingRevision(models.Model):
         default="approved",
         index=True,
     )
-    previous_revision_id = fields.Many2one(
-        "community.meeting.revision", readonly=True, ondelete="restrict"
-    )
+    previous_revision_id = fields.Many2one("community.meeting.revision", readonly=True, ondelete="restrict")
 
-    _sql_constraints = [
+    _sql_constraints: ClassVar[list[tuple[str, str, str]]] = [
         (
             "meeting_revision_unique",
             "unique(meeting_id, revision_number)",
@@ -67,9 +62,7 @@ class CommunityMeetingRevision(models.Model):
                     "sequence": item.sequence,
                     "topic_id": item.topic_id.id,
                     "priority": item.priority,
-                    "deadline": fields.Date.to_string(item.deadline)
-                    if item.deadline
-                    else "",
+                    "deadline": fields.Date.to_string(item.deadline) if item.deadline else "",
                     "estimated_minutes": item.estimated_minutes,
                     "name": item.name,
                     "kind": item.kind,
@@ -115,16 +108,10 @@ class CommunityMeetingRevision(models.Model):
                 "kind": dissent.reason_id.name or "",
                 "body": self._clean_html(dissent.body),
                 "author": dissent.author_display_name
-                or (
-                    dissent.author_partner_id.name if dissent.author_partner_id else ""
-                ),
+                or (dissent.author_partner_id.name if dissent.author_partner_id else ""),
                 "scope": dissent.resolution_id.title
                 if dissent.resolution_id
-                else (
-                    dissent.agenda_item_id.name
-                    if dissent.agenda_item_id
-                    else meeting.name
-                ),
+                else (dissent.agenda_item_id.name if dissent.agenda_item_id else meeting.name),
             }
             for dissent in included_dissents
         ]
@@ -146,13 +133,10 @@ class CommunityMeetingRevision(models.Model):
                 "origin_name": transfer.origin_name,
                 "status": transfer.status,
                 "reason": transfer.reason or "",
-                "destination": transfer.destination_meeting_id.code
-                if transfer.destination_meeting_id
-                else "",
+                "destination": transfer.destination_meeting_id.code if transfer.destination_meeting_id else "",
                 "destination_series": {
                     "id": (transfer.destination_series_id or transfer.series_id).id,
-                    "name": (transfer.destination_series_id or transfer.series_id).name
-                    or "",
+                    "name": (transfer.destination_series_id or transfer.series_id).name or "",
                 },
             }
             for transfer in carryover_records
@@ -166,12 +150,8 @@ class CommunityMeetingRevision(models.Model):
                 "organizer": meeting.organizer_id.name,
                 "secretary": meeting.secretary_id.name or "",
                 "attendees": sorted(meeting.attendee_partner_ids.mapped("name")),
-                "start_datetime": fields.Datetime.to_string(meeting.start_datetime)
-                if meeting.start_datetime
-                else "",
-                "end_datetime": fields.Datetime.to_string(meeting.end_datetime)
-                if meeting.end_datetime
-                else "",
+                "start_datetime": fields.Datetime.to_string(meeting.start_datetime) if meeting.start_datetime else "",
+                "end_datetime": fields.Datetime.to_string(meeting.end_datetime) if meeting.end_datetime else "",
                 "location": meeting.location or "",
                 "meeting_url": meeting.meeting_url or "",
                 "description": self._clean_html(meeting.description),
@@ -185,31 +165,21 @@ class CommunityMeetingRevision(models.Model):
                     "status": resolution.status,
                     "decision_outcome": resolution.decision_outcome or "",
                 }
-                for resolution in meeting.resolution_ids.filtered(
-                    lambda row: not row.agenda_item_id
-                ).sorted("id")
+                for resolution in meeting.resolution_ids.filtered(lambda row: not row.agenda_item_id).sorted("id")
             ],
             "actions": [
                 {
                     "name": action.name,
                     "description": self._clean_html(action.description),
-                    "resolution": action.resolution_id.title
-                    if action.resolution_id
-                    else "",
-                    "agenda_item": action.agenda_item_id.name
-                    if action.agenda_item_id
-                    else "",
+                    "resolution": action.resolution_id.title if action.resolution_id else "",
+                    "agenda_item": action.agenda_item_id.name if action.agenda_item_id else "",
                     "responsible": action.responsible_user_id.name or "",
                     "responsibles": sorted(action.responsible_user_ids.mapped("name")),
                     "followup_kind": action.followup_kind,
-                    "deadline": fields.Date.to_string(action.deadline)
-                    if action.deadline
-                    else "",
+                    "deadline": fields.Date.to_string(action.deadline) if action.deadline else "",
                     "state": action.state,
                 }
-                for action in meeting.action_ids.sorted(
-                    lambda row: (row.deadline or fields.Date.today(), row.id)
-                )
+                for action in meeting.action_ids.sorted(lambda row: (row.deadline or fields.Date.today(), row.id))
             ],
             "dissents": dissents,
             "carryovers": carryovers,
@@ -218,9 +188,7 @@ class CommunityMeetingRevision(models.Model):
                 "approved_at": fields.Datetime.to_string(approved_at),
             },
         }
-        snapshot["extensions"] = self._get_snapshot_extensions(
-            meeting, approver, approved_at
-        )
+        snapshot["extensions"] = self._get_snapshot_extensions(meeting, approver, approved_at)
         return snapshot
 
     @api.model
@@ -231,9 +199,7 @@ class CommunityMeetingRevision(models.Model):
     @api.model
     def _create_approved_revision(self, meeting):
         if not self.env.user.has_group("community_meetings.group_meeting_approver"):
-            raise AccessError(
-                _("Only an authorized approver can create a minutes revision.")
-            )
+            raise AccessError(_("Only an authorized approver can create a minutes revision."))
         meeting.check_access("read")
         self.env.cr.execute(
             "SELECT id FROM community_meeting WHERE id = %s FOR UPDATE",
@@ -246,9 +212,7 @@ class CommunityMeetingRevision(models.Model):
             raise ValidationError(_("Add at least one agenda item before approval."))
         approved_at = fields.Datetime.now()
         snapshot = self._build_snapshot(meeting, self.env.user, approved_at)
-        snapshot_json = json.dumps(
-            snapshot, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-        )
+        snapshot_json = json.dumps(snapshot, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         digest = hashlib.sha256(snapshot_json.encode("utf-8")).hexdigest()
         previous = meeting.revision_ids.sorted("revision_number")[-1:] or self.browse()
         revision_number = previous.revision_number + 1 if previous else 1
@@ -274,9 +238,7 @@ class CommunityMeetingRevision(models.Model):
                 force_report_rendering=True,
                 report_pdf_no_attachment=True,
             )
-            ._render_qweb_pdf(
-                "community_meetings.report_revision_document", revision.ids
-            )
+            ._render_qweb_pdf("community_meetings.report_revision_document", revision.ids)
         )
         if report_type != "pdf" or not pdf.startswith(b"%PDF"):
             raise UserError(_("The approved minutes PDF could not be rendered."))
@@ -302,9 +264,7 @@ class CommunityMeetingRevision(models.Model):
             }
         )
         if previous:
-            super(CommunityMeetingRevision, previous.sudo()).write(
-                {"status": "superseded"}
-            )
+            super(CommunityMeetingRevision, previous.sudo()).write({"status": "superseded"})
         return revision.with_env(self.env)
 
     def write(self, vals):

@@ -28,9 +28,7 @@ class TestAuditBatching(TransactionCase):
                 ],
             }
         )
-        cls.project = cls.env["project.project"].create(
-            {"name": "Meeting Link Test Project"}
-        )
+        cls.project = cls.env["project.project"].create({"name": "Meeting Link Test Project"})
         cls.tasks = cls.env["project.task"].create(
             [
                 {
@@ -96,9 +94,7 @@ class TestAuditBatching(TransactionCase):
             return original_lock(topics)
 
         with patch.object(topic_class, "_lock_workflow", record_lock):
-            self.env[
-                "community.meeting.project.task.mixin"
-            ]._check_closed_todo_project_tasks(self.item)
+            self.env["community.meeting.project.task.mixin"]._check_closed_todo_project_tasks(self.item)
 
         self.assertEqual(locked, self.item.topic_id.ids)
 
@@ -169,9 +165,7 @@ class TestAuditBatching(TransactionCase):
             result = original(records)
             return {key: value and key != native.id for key, value in result.items()}
 
-        with patch.object(
-            FollowupActivity, "_default_execution_evidence_by_action", parent_extension
-        ):
+        with patch.object(FollowupActivity, "_default_execution_evidence_by_action", parent_extension):
             evidence = (native | project)._execution_evidence_by_action()
 
         self.assertEqual(delegated, native.ids)

@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from odoo import fields, models
 
 
@@ -11,7 +13,7 @@ class CommunityMeetingFollowupKind(models.Model):
     sequence = fields.Integer(default=10)
     active = fields.Boolean(default=True)
 
-    _sql_constraints = [
+    _sql_constraints: ClassVar[list[tuple[str, str, str]]] = [
         (
             "community_meeting_followup_kind_code_uniq",
             "unique(code)",

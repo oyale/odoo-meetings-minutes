@@ -147,17 +147,13 @@ class TestMeetingRevisions(TransactionCase):
     def _approve_without_rendering_pdf(self, meeting):
         report_model = self.env["ir.actions.report"]
         pdf_fixture = b"%PDF-1.4\n% wkhtmltopdf is smoke-tested separately in CI.\n"
-        with patch.object(
-            type(report_model), "_render_qweb_pdf", return_value=(pdf_fixture, "pdf")
-        ):
+        with patch.object(type(report_model), "_render_qweb_pdf", return_value=(pdf_fixture, "pdf")):
             return meeting.action_approve_minutes()
 
     def test_approve_minutes_recordset_approves_all(self):
         first = self._drafted_meeting("First recordset approval")
         second = self._drafted_meeting("Second recordset approval")
-        revisions = self._approve_without_rendering_pdf(
-            (first | second).with_user(self.approver)
-        )
+        revisions = self._approve_without_rendering_pdf((first | second).with_user(self.approver))
         # F1: the loop must not return early; both meetings get approved.
         self.assertEqual(len(revisions), 2)
         self.assertEqual(first.state, "approved")
@@ -165,11 +161,7 @@ class TestMeetingRevisions(TransactionCase):
 
     def test_snapshot_records_pending_destination_series(self):
         meeting = self._drafted_meeting("Pending follow-up destination")
-        destination = (
-            self.env["community.meeting.series"]
-            .with_user(self.editor)
-            .create({"name": "Future assembly"})
-        )
+        destination = self.env["community.meeting.series"].with_user(self.editor).create({"name": "Future assembly"})
         resolution = (
             self.env["community.meeting.resolution"]
             .with_user(self.editor)
@@ -206,13 +198,9 @@ class TestMeetingRevisions(TransactionCase):
         snapshot = json.loads(before_json)
         self.assertEqual(report_type, "html")
         self.assertIn(b"Review open actions", rendered_html)
-        self.assertEqual(
-            snapshot["agenda"][0]["discussion"], "<p>Initial discussion</p>"
-        )
+        self.assertEqual(snapshot["agenda"][0]["discussion"], "<p>Initial discussion</p>")
         self.assertEqual(snapshot["agenda"][1]["decision_result"], "approved")
-        self.assertEqual(
-            snapshot["agenda"][1]["resolutions"][0]["decision_outcome"], "approved"
-        )
+        self.assertEqual(snapshot["agenda"][1]["resolutions"][0]["decision_outcome"], "approved")
         self.assertEqual(snapshot["agenda"][1]["decision_result_label"], "Approved")
         self.assertTrue(before_pdf.startswith(b"%PDF"))
         self.assertEqual(len(revision.snapshot_sha256), 64)
@@ -240,9 +228,7 @@ class TestMeetingRevisions(TransactionCase):
         self,
     ):
         meeting, _action, first = self._approved_meeting()
-        decision = meeting.agenda_item_ids.filtered(
-            lambda item: item.kind == "decision"
-        )
+        decision = meeting.agenda_item_ids.filtered(lambda item: item.kind == "decision")
         with self.assertRaises(UserError):
             decision.with_user(self.manager).write({"kind": "information"})
 
@@ -254,9 +240,5 @@ class TestMeetingRevisions(TransactionCase):
 
         self.assertEqual(first.status, "superseded")
         self.assertEqual(second.revision_number, 2)
-        self.assertEqual(
-            json.loads(first.snapshot_json)["agenda"][1]["decision_result"], "approved"
-        )
-        self.assertEqual(
-            json.loads(second.snapshot_json)["agenda"][1]["kind"], "information"
-        )
+        self.assertEqual(json.loads(first.snapshot_json)["agenda"][1]["decision_result"], "approved")
+        self.assertEqual(json.loads(second.snapshot_json)["agenda"][1]["kind"], "information")

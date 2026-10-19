@@ -1,5 +1,6 @@
 import calendar
 from datetime import timedelta
+from typing import ClassVar
 
 import pytz
 
@@ -32,9 +33,7 @@ class CommunityMeetingSeries(models.Model):
         string="Kind",
         required=True,
         ondelete="restrict",
-        default=lambda self: self.env.ref(
-            "community_meetings.kind_operational", raise_if_not_found=False
-        ),
+        default=lambda self: self.env.ref("community_meetings.kind_operational", raise_if_not_found=False),
     )
     description = fields.Html(translate=True)
     coordinator_user_ids = fields.Many2many(
@@ -73,10 +72,7 @@ class CommunityMeetingSeries(models.Model):
             ("interval_days", "After N days"),
         ],
         string="Next meeting default",
-        help=(
-            "Default rule used to propose the next meeting date for 'Next Meeting' "
-            "points."
-        ),
+        help=("Default rule used to propose the next meeting date for 'Next Meeting' points."),
     )
     next_meeting_weekday = fields.Selection(
         [
@@ -122,18 +118,12 @@ class CommunityMeetingSeries(models.Model):
                 month += 1
                 if month > 12:
                     month, year = 1, year + 1
-            day = min(
-                self.next_meeting_day_of_month, calendar.monthrange(year, month)[1]
-            )
+            day = min(self.next_meeting_day_of_month, calendar.monthrange(year, month)[1])
             target = base.replace(year=year, month=month, day=day)
         if target is None:
             return False
         try:
-            return (
-                zone.localize(target, is_dst=None)
-                .astimezone(pytz.UTC)
-                .replace(tzinfo=None)
-            )
+            return zone.localize(target, is_dst=None).astimezone(pytz.UTC).replace(tzinfo=None)
         except (pytz.AmbiguousTimeError, pytz.NonExistentTimeError) as error:
             raise ValidationError(
                 _(
@@ -142,20 +132,12 @@ class CommunityMeetingSeries(models.Model):
                 )
             ) from error
 
-    @api.constrains(
-        "next_meeting_rule", "next_meeting_interval_days", "next_meeting_day_of_month"
-    )
+    @api.constrains("next_meeting_rule", "next_meeting_interval_days", "next_meeting_day_of_month")
     def _check_next_meeting_rule(self):
         for series in self:
-            if (
-                series.next_meeting_rule == "interval_days"
-                and series.next_meeting_interval_days <= 0
-            ):
+            if series.next_meeting_rule == "interval_days" and series.next_meeting_interval_days <= 0:
                 raise ValidationError(_("The interval must be positive."))
-            if (
-                series.next_meeting_rule == "day_of_month"
-                and not 1 <= series.next_meeting_day_of_month <= 31
-            ):
+            if series.next_meeting_rule == "day_of_month" and not 1 <= series.next_meeting_day_of_month <= 31:
                 raise ValidationError(_("Choose a day of month between 1 and 31."))
 
     def _proposed_next_meeting_datetime(self):
@@ -202,7 +184,7 @@ class CommunityMeetingSeries(models.Model):
             },
         }
 
-    _sql_constraints = [
+    _sql_constraints: ClassVar[list[tuple[str, str, str]]] = [
         (
             "name_company_unique",
             "unique(company_id, name)",
@@ -217,34 +199,24 @@ class CommunityMeetingSeries(models.Model):
         for vals in vals_list:
             coordinators = vals.get("coordinator_user_ids", [])
             commands = coordinators if isinstance(coordinators, list) else []
-            if (
-                not self.env.user.has_group("community_meetings.group_meeting_manager")
-                and not commands
-            ):
+            if not self.env.user.has_group("community_meetings.group_meeting_manager") and not commands:
                 vals["coordinator_user_ids"] = [(4, self.env.uid)]
         return super().create(vals_list)
 
     def write(self, vals):
-        if "company_id" in vals and any(
-            series.company_id.id != vals["company_id"] for series in self
-        ):
+        if "company_id" in vals and any(series.company_id.id != vals["company_id"] for series in self):
             raise UserError(_("A meeting series cannot be moved to another company."))
-        if not self.env.user.has_group(
-            "community_meetings.group_meeting_manager"
-        ) and any(self.env.user not in series.coordinator_user_ids for series in self):
-            raise UserError(
-                _("Only a series coordinator or meeting manager can edit this series.")
-            )
-        if "meeting_kind_id" in vals and self.env[
-            "community.meeting"
-        ].sudo().search_count([("series_id", "in", self.ids)]):
+        if not self.env.user.has_group("community_meetings.group_meeting_manager") and any(
+            self.env.user not in series.coordinator_user_ids for series in self
+        ):
+            raise UserError(_("Only a series coordinator or meeting manager can edit this series."))
+        if "meeting_kind_id" in vals and self.env["community.meeting"].sudo().search_count(
+            [("series_id", "in", self.ids)]
+        ):
             raise UserError(_("The kind of a series with meetings cannot be changed."))
         return super().write(vals)
 
     def unlink(self):
-        if any(
-            self.env["community.meeting"].search_count([("series_id", "=", series.id)])
-            for series in self
-        ):
+        if any(self.env["community.meeting"].search_count([("series_id", "=", series.id)]) for series in self):
             raise ValidationError(_("A series with meetings cannot be deleted."))
         return super().unlink()

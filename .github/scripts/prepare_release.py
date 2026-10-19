@@ -28,9 +28,7 @@ def add_version_table(changelog, version):
     index = next((i for i, line in enumerate(lines) if line.startswith(heading)), None)
     if index is None:
         raise SystemExit(f"Towncrier did not generate the {version} heading.")
-    sections = tomllib.loads(CONFIG.read_text(encoding="utf-8"))["tool"]["towncrier"][
-        "section"
-    ]
+    sections = tomllib.loads(CONFIG.read_text(encoding="utf-8"))["tool"]["towncrier"]["section"]
     table = [
         "### Addon versions",
         "",
@@ -48,9 +46,7 @@ def towncrier_command():
     command = shutil.which("towncrier")
     if not command:
         raise SystemExit("Towncrier is required; install towncrier==23.11.0.")
-    result = subprocess.run(
-        [command, "--version"], check=True, capture_output=True, text=True
-    )
+    result = subprocess.run([command, "--version"], check=True, capture_output=True, text=True)
     match = re.search(r"(\d+)\.(\d+)", result.stdout)
     if not match or tuple(map(int, match.groups())) < MIN_TOWNCRIER:
         raise SystemExit("Towncrier 23.6 or newer is required for Markdown output.")
@@ -59,9 +55,7 @@ def towncrier_command():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--version", required=True, help="Suite version, e.g. 18.0.20261019.2"
-    )
+    parser.add_argument("--version", required=True, help="Suite version, e.g. 18.0.20261019.2")
     parser.add_argument(
         "--draft",
         action="store_true",
@@ -74,9 +68,7 @@ def main():
         raise SystemExit("CHANGELOG.md is missing its release notes history.")
     release_heading = f"## Odoo Meetings Minutes {args.version} ("
     if release_heading in CHANGELOG.read_text(encoding="utf-8"):
-        raise SystemExit(
-            f"{args.version} is already in CHANGELOG.md; refusing a duplicate."
-        )
+        raise SystemExit(f"{args.version} is already in CHANGELOG.md; refusing a duplicate.")
 
     command = towncrier_command()
     invocation = [command, "build", f"--version={args.version}"]

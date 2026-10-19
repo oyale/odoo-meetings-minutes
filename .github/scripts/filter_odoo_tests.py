@@ -27,9 +27,7 @@ def affects_odoo(paths: list[str]) -> bool:
                 continue
 
             addon_path = path[len(prefix) :]
-            if addon_path in DOCUMENTATION_FILES or addon_path.startswith(
-                DOCUMENTATION_DIRECTORIES
-            ):
+            if addon_path in DOCUMENTATION_FILES or addon_path.startswith(DOCUMENTATION_DIRECTORIES):
                 continue
             return True
 
@@ -69,11 +67,7 @@ def changed_paths() -> list[str] | None:
 def main() -> None:
     paths = changed_paths()
     run_tests = paths is None or affects_odoo(paths)
-    message = (
-        "Running Odoo test matrix."
-        if run_tests
-        else "Skipping Odoo tests: documentation-only changes."
-    )
+    message = "Running Odoo test matrix." if run_tests else "Skipping Odoo tests: documentation-only changes."
     print(message)
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
         output.write(f"run_tests={str(run_tests).lower()}\n")

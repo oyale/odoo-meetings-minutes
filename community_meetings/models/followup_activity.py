@@ -23,9 +23,7 @@ class Company(models.Model):
     meeting_default_activity_type_id = fields.Many2one(
         "mail.activity.type",
         string="Default Odoo activity type",
-        default=lambda self: self.env.ref(
-            "mail.mail_activity_data_todo", raise_if_not_found=False
-        ),
+        default=lambda self: self.env.ref("mail.mail_activity_data_todo", raise_if_not_found=False),
     )
 
 
@@ -61,9 +59,7 @@ class MeetingSeries(models.Model):
         default="inherit",
         required=True,
     )
-    default_activity_type_id = fields.Many2one(
-        "mail.activity.type", string="Default Odoo activity type"
-    )
+    default_activity_type_id = fields.Many2one("mail.activity.type", string="Default Odoo activity type")
 
 
 class Meeting(models.Model):
@@ -105,11 +101,7 @@ class Meeting(models.Model):
             item.topic_id if item else False,
             item if item else False,
         ):
-            if (
-                record
-                and record.followup_default_kind
-                and record.followup_default_kind != "inherit"
-            ):
+            if record and record.followup_default_kind and record.followup_default_kind != "inherit":
                 kind = record.followup_default_kind
         if kind not in allowed:
             kind = allowed[0]
@@ -186,15 +178,11 @@ class FollowupActivity(models.Model):
         readonly=True,
         copy=False,
     )
-    completed_user_ids = fields.Many2many(
-        "res.users", "meeting_followup_completed_rel", readonly=True, copy=False
-    )
+    completed_user_ids = fields.Many2many("res.users", "meeting_followup_completed_rel", readonly=True, copy=False)
     followup_activity_type_id = fields.Many2one(
         "mail.activity.type",
         string="Odoo activity type",
-        default=lambda self: self.env.ref(
-            "mail.mail_activity_data_todo", raise_if_not_found=False
-        ),
+        default=lambda self: self.env.ref("mail.mail_activity_data_todo", raise_if_not_found=False),
     )
     followup_activity_id = fields.Many2one(
         "mail.activity",
@@ -210,8 +198,7 @@ class FollowupActivity(models.Model):
         activity_ids = set(activities.ids)
         return {
             action.id: bool(
-                activity_ids.intersection(action.followup_activity_ids.ids)
-                or action.followup_activity_completed_on
+                activity_ids.intersection(action.followup_activity_ids.ids) or action.followup_activity_completed_on
             )
             for action in self
         }
@@ -226,10 +213,7 @@ class FollowupActivity(models.Model):
         A legacy override may call super(): the singleton entry point therefore
         calls the default batch hook, never this compatibility dispatcher.
         """
-        if (
-            type(self)._has_execution_evidence
-            is not FollowupActivity._has_execution_evidence
-        ):
+        if type(self)._has_execution_evidence is not FollowupActivity._has_execution_evidence:
             return {action.id: action._has_execution_evidence() for action in self}
         return self._default_execution_evidence_by_action()
 
@@ -253,9 +237,7 @@ class FollowupActivity(models.Model):
                 continue
             activity_type = action.followup_activity_type_id
             if not activity_type:
-                raise ValidationError(
-                    _("Choose an Odoo activity type for this follow-up.")
-                )
+                raise ValidationError(_("Choose an Odoo activity type for this follow-up."))
             activities.filtered(
                 lambda a, owners=owners, action=action: (
                     a.user_id not in owners or a.user_id in action.completed_user_ids
@@ -264,21 +246,15 @@ class FollowupActivity(models.Model):
             for owner in owners - action.completed_user_ids:
                 if not action.with_user(owner).has_access("read"):
                     raise ValidationError(
-                        _(
-                            "Each responsible person must have access to the meeting. "
-                            "Share it first."
-                        )
+                        _("Each responsible person must have access to the meeting. Share it first.")
                     )
                 values = {
                     "user_id": owner.id,
                     "summary": action.name,
-                    "date_deadline": action.deadline
-                    or fields.Date.context_today(action),
+                    "date_deadline": action.deadline or fields.Date.context_today(action),
                     "activity_type_id": activity_type.id,
                 }
-                activity = action.followup_activity_ids.filtered(
-                    lambda a, owner=owner: a.user_id == owner
-                )
+                activity = action.followup_activity_ids.filtered(lambda a, owner=owner: a.user_id == owner)
                 if activity:
                     activity.write(values)
                 else:
@@ -289,12 +265,8 @@ class FollowupActivity(models.Model):
                             "res_id": action.id,
                         }
                     )
-                    super(FollowupActivity, action).write(
-                        {"followup_activity_ids": [(4, activity.id)]}
-                    )
-            super(FollowupActivity, action).write(
-                {"followup_activity_id": action.followup_activity_ids[:1].id}
-            )
+                    super(FollowupActivity, action).write({"followup_activity_ids": [(4, activity.id)]})
+            super(FollowupActivity, action).write({"followup_activity_id": action.followup_activity_ids[:1].id})
 
     def _sync_followup_artifacts(self):
         for action in self:
@@ -325,9 +297,7 @@ class FollowupActivity(models.Model):
         if self.state in ("done", "cancelled"):
             raise UserError(_("Only open follow-ups can be converted."))
         if self.meeting_id.state in ("approved", "cancelled"):
-            raise UserError(
-                _("Follow-ups in approved or cancelled meetings cannot be converted.")
-            )
+            raise UserError(_("Follow-ups in approved or cancelled meetings cannot be converted."))
         allowed = self.agenda_item_id.get_followup_defaults()["allowed_kinds"]
         if kind not in allowed:
             raise UserError(_("This follow-up type is not allowed for this point."))
@@ -348,31 +318,21 @@ class FollowupActivity(models.Model):
                 "completed_user_ids",
                 "followup_activity_completed_on",
             }.intersection(vals):
-                raise ValidationError(
-                    _("Activity bookkeeping is managed by the follow-up workflow.")
-                )
-            item = self.env["community.meeting.agenda.item"].browse(
-                vals.get("agenda_item_id")
-            )
+                raise ValidationError(_("Activity bookkeeping is managed by the follow-up workflow."))
+            item = self.env["community.meeting.agenda.item"].browse(vals.get("agenda_item_id"))
             if item:
                 defaults = item.get_followup_defaults()
                 vals.setdefault("followup_kind", defaults["kind"])
                 if vals["followup_kind"] not in defaults["allowed_kinds"]:
-                    raise ValidationError(
-                        _("This follow-up type is not allowed for this point.")
-                    )
-                vals.setdefault(
-                    "followup_activity_type_id", defaults["activity_type_id"]
-                )
+                    raise ValidationError(_("This follow-up type is not allowed for this point."))
+                vals.setdefault("followup_activity_type_id", defaults["activity_type_id"])
             if "responsible_user_ids" not in vals:
                 owner = vals.get("responsible_user_id", self.env.uid)
                 vals["responsible_user_ids"] = [(6, 0, [owner] if owner else [])]
             prepared.append(vals)
         records = super().create(prepared)
         for action in records:
-            super(FollowupActivity, action).write(
-                {"responsible_user_id": action.responsible_user_ids[:1].id}
-            )
+            super(FollowupActivity, action).write({"responsible_user_id": action.responsible_user_ids[:1].id})
         records._sync_followup_artifacts()
         return records
 
@@ -390,26 +350,20 @@ class FollowupActivity(models.Model):
             "completed_user_ids",
             "followup_activity_completed_on",
         }.intersection(values):
-            raise ValidationError(
-                _("Activity bookkeeping is managed by the follow-up workflow.")
-            )
+            raise ValidationError(_("Activity bookkeeping is managed by the follow-up workflow."))
         if "responsible_user_id" in values and "responsible_user_ids" not in values:
             values["responsible_user_ids"] = [
                 (
                     6,
                     0,
-                    [values["responsible_user_id"]]
-                    if values["responsible_user_id"]
-                    else [],
+                    [values["responsible_user_id"]] if values["responsible_user_id"] else [],
                 )
             ]
         if "followup_kind" in values:
             for action in self:
                 defaults = action.agenda_item_id.get_followup_defaults()
                 if values["followup_kind"] not in defaults["allowed_kinds"]:
-                    raise ValidationError(
-                        _("This follow-up type is not allowed for this point.")
-                    )
+                    raise ValidationError(_("This follow-up type is not allowed for this point."))
         if values.get("state") == "done":
             values.setdefault("completed_on", fields.Date.context_today(self))
         elif "state" in values:
@@ -417,13 +371,9 @@ class FollowupActivity(models.Model):
         result = super().write(values)
         if "responsible_user_ids" in values:
             for action in self:
-                super(FollowupActivity, action).write(
-                    {"responsible_user_id": action.responsible_user_ids[:1].id}
-                )
+                super(FollowupActivity, action).write({"responsible_user_id": action.responsible_user_ids[:1].id})
         if reopening:
-            super(FollowupActivity, reopening).write(
-                {"completed_user_ids": [(5, 0, 0)]}
-            )
+            super(FollowupActivity, reopening).write({"completed_user_ids": [(5, 0, 0)]})
         if {
             "state",
             "responsible_user_id",
@@ -435,9 +385,7 @@ class FollowupActivity(models.Model):
         }.intersection(values):
             self._sync_followup_artifacts()
         if reopening:
-            super(FollowupActivity, reopening).write(
-                {"followup_activity_completed_on": False}
-            )
+            super(FollowupActivity, reopening).write({"followup_activity_completed_on": False})
         return result
 
     def unlink(self):
@@ -489,10 +437,7 @@ class MailActivity(models.Model):
             if not any(
                 action._has_execution_evidence()
                 if action not in linked or action.followup_kind != "activity"
-                else bool(
-                    action.followup_activity_completed_on
-                    or (action.followup_activity_ids.exists() - self)
-                )
+                else bool(action.followup_activity_completed_on or (action.followup_activity_ids.exists() - self))
                 for action in actions
             ):
                 raise ValidationError(
@@ -505,13 +450,9 @@ class MailActivity(models.Model):
         return super().unlink()
 
     def _action_done(self, feedback=False, attachment_ids=None):
-        meeting_activities = self.filtered(
-            lambda a: a.res_model == "community.meeting.action"
-        )
+        meeting_activities = self.filtered(lambda a: a.res_model == "community.meeting.action")
         if not meeting_activities:
-            return super()._action_done(
-                feedback=feedback, attachment_ids=attachment_ids
-            )
+            return super()._action_done(feedback=feedback, attachment_ids=attachment_ids)
         followups = self.env["community.meeting.action"].search(
             [("followup_activity_ids", "in", meeting_activities.ids)]
         )
@@ -521,58 +462,38 @@ class MailActivity(models.Model):
             owned = meeting_activities.filtered(
                 lambda activity, action=action: activity in action.followup_activity_ids
             )
-            if any(
-                activity.user_id != self.env.user for activity in owned
-            ) and not action.has_access("write"):
-                raise AccessError(
-                    _("You can only complete your own follow-up activities.")
-                )
+            if any(activity.user_id != self.env.user for activity in owned) and not action.has_access("write"):
+                raise AccessError(_("You can only complete your own follow-up activities."))
         completed = {
-            a.id: meeting_activities.filtered(
-                lambda activity, a=a: activity in a.followup_activity_ids
-            ).user_id.ids
+            a.id: meeting_activities.filtered(lambda activity, a=a: activity in a.followup_activity_ids).user_id.ids
             for a in followups
         }
         finished_ids = {
-            a.id: meeting_activities.filtered(
-                lambda activity, a=a: activity in a.followup_activity_ids
-            ).ids
+            a.id: meeting_activities.filtered(lambda activity, a=a: activity in a.followup_activity_ids).ids
             for a in followups
         }
         # Odoo unlinks completed activities internally. Record the durable
         # evidence first so the ordinary unlink guard can distinguish completion
         # from deleting the last open activity on a closed TODO.
         for action in followups:
-            completed_ids = set(action.completed_user_ids.ids) | set(
-                completed[action.id]
-            )
+            completed_ids = set(action.completed_user_ids.ids) | set(completed[action.id])
             if set(action.responsible_user_ids.ids) <= completed_ids:
-                super(FollowupActivity, action.sudo()).write(
-                    {"followup_activity_completed_on": fields.Datetime.now()}
-                )
+                super(FollowupActivity, action.sudo()).write({"followup_activity_completed_on": fields.Datetime.now()})
         result = super()._action_done(feedback=feedback, attachment_ids=attachment_ids)
         for action in followups:
             # Native activity ownership authorizes only these completion fields;
             # it does not grant editorial write access to the meeting/follow-up.
             action = action.sudo()
-            completed_ids = set(action.completed_user_ids.ids) | set(
-                completed[action.id]
-            )
+            completed_ids = set(action.completed_user_ids.ids) | set(completed[action.id])
             all_done = set(action.responsible_user_ids.ids) <= completed_ids
             super(FollowupActivity, action).write(
                 {
                     "completed_user_ids": [(4, uid) for uid in completed[action.id]],
-                    "followup_activity_ids": [
-                        (3, aid) for aid in finished_ids[action.id]
-                    ],
+                    "followup_activity_ids": [(3, aid) for aid in finished_ids[action.id]],
                     "followup_activity_id": action.followup_activity_ids.filtered(
-                        lambda activity, action=action: (
-                            activity.id not in finished_ids[action.id]
-                        )
+                        lambda activity, action=action: activity.id not in finished_ids[action.id]
                     )[:1].id,
-                    "followup_activity_completed_on": fields.Datetime.now()
-                    if all_done
-                    else False,
+                    "followup_activity_completed_on": fields.Datetime.now() if all_done else False,
                 }
             )
             if all_done and action.state not in ("done", "cancelled"):
