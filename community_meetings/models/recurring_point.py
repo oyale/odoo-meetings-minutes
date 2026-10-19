@@ -11,9 +11,7 @@ class MeetingSeriesAgendaTemplate(models.Model):
     _order = "sequence, id"
     _check_company_auto = True
 
-    series_id = fields.Many2one(
-        "community.meeting.series", required=True, ondelete="cascade", check_company=True
-    )
+    series_id = fields.Many2one("community.meeting.series", required=True, ondelete="cascade", check_company=True)
     company_id = fields.Many2one(related="series_id.company_id", store=True, index=True)
     sequence = fields.Integer(default=10)
     active = fields.Boolean(default=True)
@@ -27,9 +25,7 @@ class MeetingSeriesAgendaTemplate(models.Model):
         ondelete="restrict",
     )
     priority = fields.Selection(PRIORITIES, default="1", required=True)
-    estimated_minutes = fields.Integer(
-        help="Leave at zero to use the series or company default."
-    )
+    estimated_minutes = fields.Integer(help="Leave at zero to use the series or company default.")
     presenter_partner_id = fields.Many2one("res.partner", string="Responsible")
     followup_allowed_kinds = fields.Many2many(
         "community.meeting.followup.kind",
@@ -95,8 +91,7 @@ class MeetingSeriesAgendaTemplate(models.Model):
                 "description": self.description,
                 "agenda_type_id": self.agenda_type_id.id,
                 "priority": self.priority,
-                "estimated_minutes": self.estimated_minutes
-                or self.series_id._point_estimated_minutes_default(),
+                "estimated_minutes": self.estimated_minutes or self.series_id._point_estimated_minutes_default(),
                 "presenter_partner_id": self.presenter_partner_id.id or False,
                 "followup_allowed_kinds": [(6, 0, self.followup_allowed_kinds.ids)],
                 "followup_default_kind": self.followup_default_kind,
@@ -106,6 +101,4 @@ class MeetingSeriesAgendaTemplate(models.Model):
                 "previous_occurrence_id": previous_item.topic_id.id or False,
             }
         )
-        return self.env["community.meeting.agenda.item"].create(
-            {"meeting_id": meeting.id, "topic_id": topic.id}
-        )
+        return self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "topic_id": topic.id})

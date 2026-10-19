@@ -26,31 +26,21 @@ class MeetingCreateWizard(models.TransientModel):
         required=True,
     )
     series_id = fields.Many2one("community.meeting.series")
-    company_id = fields.Many2one(
-        "res.company", default=lambda self: self.env.company, required=True
-    )
+    company_id = fields.Many2one("res.company", default=lambda self: self.env.company, required=True)
     name = fields.Char(string="Meeting title")
     suggested_name = fields.Char()
-    start_datetime = fields.Datetime(
-        string="Estimated Start Datetime", default=fields.Datetime.now
-    )
+    start_datetime = fields.Datetime(string="Estimated Start Datetime", default=fields.Datetime.now)
     duration_hours = fields.Float(string="Approximate duration", default=1.0)
     attendee_partner_ids = fields.Many2many("res.partner", string="Attendees")
     defaults_applied = fields.Boolean()
     last_default_duration = fields.Float(default=1.0)
     last_default_start = fields.Datetime()
-    last_default_attendee_ids = fields.Many2many(
-        "res.partner", "community_meeting_wizard_defaults_rel"
-    )
+    last_default_attendee_ids = fields.Many2many("res.partner", "community_meeting_wizard_defaults_rel")
     line_ids = fields.One2many("community.meeting.point.wizard", "creation_wizard_id")
     carry_line_ids = fields.One2many("community.meeting.carry.review.line", "wizard_id")
     created_meeting_id = fields.Many2one("community.meeting", readonly=True)
-    token = fields.Char(
-        default=lambda self: str(uuid.uuid4()), readonly=True, required=True
-    )
-    review_summary = fields.Html(
-        compute="_compute_review_summary", string="Review", sanitize=True
-    )
+    token = fields.Char(default=lambda self: str(uuid.uuid4()), readonly=True, required=True)
+    review_summary = fields.Html(compute="_compute_review_summary", string="Review", sanitize=True)
     selected_minutes = fields.Integer(compute="_compute_selected_minutes")
 
     @api.model
@@ -75,9 +65,7 @@ class MeetingCreateWizard(models.TransientModel):
     @api.model
     def default_get(self, fields_list):
         defaults = super().default_get(fields_list)
-        if "last_default_start" in fields_list and not defaults.get(
-            "last_default_start"
-        ):
+        if "last_default_start" in fields_list and not defaults.get("last_default_start"):
             defaults["last_default_start"] = defaults.get("start_datetime")
         return defaults
 
@@ -86,16 +74,11 @@ class MeetingCreateWizard(models.TransientModel):
         if self.series_id:
             if self.duration_hours == self.last_default_duration:
                 self.duration_hours = self.series_id.duration_hours
-            if set(self.attendee_partner_ids.ids) == set(
-                self.last_default_attendee_ids.ids
-            ):
+            if set(self.attendee_partner_ids.ids) == set(self.last_default_attendee_ids.ids):
                 self.attendee_partner_ids = self.series_id.attendee_partner_ids
             self.company_id = self.series_id.company_id
             proposed = self.series_id._proposed_next_meeting_datetime()
-            if proposed and (
-                not self.start_datetime
-                or self.start_datetime == self.last_default_start
-            ):
+            if proposed and (not self.start_datetime or self.start_datetime == self.last_default_start):
                 self.start_datetime = proposed
             self.last_default_start = self.start_datetime
             self._suggest_series_name()
@@ -140,16 +123,11 @@ class MeetingCreateWizard(models.TransientModel):
         for wizard in self:
             when = _("Not set")
             if wizard.start_datetime:
-                when = fields.Datetime.context_timestamp(
-                    wizard, wizard.start_datetime
-                ).strftime("%Y-%m-%d %H:%M")
-            attendees = ", ".join(
-                wizard.attendee_partner_ids.mapped("display_name")
-            ) or _("None")
+                when = fields.Datetime.context_timestamp(wizard, wizard.start_datetime).strftime("%Y-%m-%d %H:%M")
+            attendees = ", ".join(wizard.attendee_partner_ids.mapped("display_name")) or _("None")
             carried = [
                 Markup(
-                    '<li class="o_meeting_review_carryover"><strong>{}</strong>'
-                    "<span>{} min · {} · {} · {}</span></li>"
+                    '<li class="o_meeting_review_carryover"><strong>{}</strong><span>{} min · {} · {} · {}</span></li>'
                 ).format(
                     line.name or "",
                     line.estimated_minutes or 0,
@@ -159,14 +137,10 @@ class MeetingCreateWizard(models.TransientModel):
                 )
                 for line in wizard.carry_line_ids
             ]
-            included_carryovers = wizard.carry_line_ids.filtered(
-                lambda line: line.decision == "include"
-            )
+            included_carryovers = wizard.carry_line_ids.filtered(lambda line: line.decision == "include")
             carryover_minutes = sum(included_carryovers.mapped("estimated_minutes"))
             agenda = [
-                Markup(
-                    "<li><strong>{}</strong><span>{} min · {} · {}</span></li>"
-                ).format(
+                Markup("<li><strong>{}</strong><span>{} min · {} · {}</span></li>").format(
                     line.name or line.topic_id.display_name or "",
                     line.estimated_minutes or 0,
                     line.agenda_type_id.display_name or "",
@@ -176,8 +150,7 @@ class MeetingCreateWizard(models.TransientModel):
             ]
             agenda.extend(
                 Markup(
-                    '<li class="o_meeting_review_recurring"><strong>{}</strong>'
-                    "<span>{} min · {} · {}</span></li>"
+                    '<li class="o_meeting_review_recurring"><strong>{}</strong><span>{} min · {} · {}</span></li>'
                 ).format(
                     line.name or "",
                     line.estimated_minutes or 0,
@@ -187,17 +160,13 @@ class MeetingCreateWizard(models.TransientModel):
                 for line in wizard.recurring_line_ids.filtered("included")
             )
             agenda.extend(
-                Markup(
-                    "<li><strong>{}</strong><span>{} min · {} · {}</span></li>"
-                ).format(
+                Markup("<li><strong>{}</strong><span>{} min · {} · {}</span></li>").format(
                     line.name or "",
                     line.estimated_minutes or 0,
                     line.agenda_type_id.display_name or _("Point"),
                     self._priority_label(line.priority),
                 )
-                for line in wizard.carry_line_ids.filtered(
-                    lambda row: row.decision == "include"
-                )
+                for line in wizard.carry_line_ids.filtered(lambda row: row.decision == "include")
             )
             automatic_minutes = 0
             if wizard.series_id.has_minutes_approval_point and wizard.start_datetime:
@@ -213,8 +182,7 @@ class MeetingCreateWizard(models.TransientModel):
                     automatic_minutes += minutes
                     agenda.append(
                         Markup(
-                            '<li class="o_meeting_review_automatic"><strong>{}</strong>'
-                            "<span>{} min · {}</span></li>"
+                            '<li class="o_meeting_review_automatic"><strong>{}</strong><span>{} min · {}</span></li>'
                         ).format(
                             _("Approve previous minutes"),
                             minutes,
@@ -225,8 +193,7 @@ class MeetingCreateWizard(models.TransientModel):
                 automatic_minutes += 5
                 agenda.append(
                     Markup(
-                        '<li class="o_meeting_review_automatic"><strong>{}</strong>'
-                        "<span>5 min · {}</span></li>"
+                        '<li class="o_meeting_review_automatic"><strong>{}</strong><span>5 min · {}</span></li>'
                     ).format(_("Next meeting"), _("Added automatically"))
                 )
             selected_minutes = wizard.selected_minutes + automatic_minutes
@@ -239,8 +206,7 @@ class MeetingCreateWizard(models.TransientModel):
                     'aria-hidden="true"/><span>{}</span></div>'
                 ).format(
                     _(
-                        "The selected agenda exceeds the estimated meeting duration by "
-                        "%(minutes)s min.",
+                        "The selected agenda exceeds the estimated meeting duration by %(minutes)s min.",
                         minutes=overrun_minutes,
                     )
                 )
@@ -281,16 +247,12 @@ class MeetingCreateWizard(models.TransientModel):
                 _("Points from earlier meetings"),
                 _("Estimated total time"),
                 carryover_minutes,
-                Markup("").join(carried)
-                if carried
-                else Markup("<li>{}</li>").format(_("None")),
+                Markup("").join(carried) if carried else Markup("<li>{}</li>").format(_("None")),
                 _("Agenda points for this meeting"),
                 _("Estimated total time"),
                 selected_minutes,
                 overrun_warning,
-                Markup("").join(agenda)
-                if agenda
-                else Markup("<li>{}</li>").format(_("None")),
+                Markup("").join(agenda) if agenda else Markup("<li>{}</li>").format(_("None")),
             )
 
     @api.depends(
@@ -304,16 +266,12 @@ class MeetingCreateWizard(models.TransientModel):
     )
     def _compute_selected_minutes(self):
         for wizard in self:
-            wizard.selected_minutes = sum(
-                wizard.line_ids.filtered("included").mapped("estimated_minutes")
-            ) + sum(
-                wizard.carry_line_ids.filtered(
-                    lambda line: line.decision == "include"
-                ).mapped("estimated_minutes")
-            ) + sum(
-                wizard.recurring_line_ids.filtered("included").mapped(
-                    "estimated_minutes"
+            wizard.selected_minutes = (
+                sum(wizard.line_ids.filtered("included").mapped("estimated_minutes"))
+                + sum(
+                    wizard.carry_line_ids.filtered(lambda line: line.decision == "include").mapped("estimated_minutes")
                 )
+                + sum(wizard.recurring_line_ids.filtered("included").mapped("estimated_minutes"))
             )
 
     @api.model
@@ -339,15 +297,11 @@ class MeetingCreateWizard(models.TransientModel):
             self.write(
                 {
                     "duration_hours": self.series_id.duration_hours,
-                    "attendee_partner_ids": [
-                        (6, 0, self.series_id.attendee_partner_ids.ids)
-                    ],
+                    "attendee_partner_ids": [(6, 0, self.series_id.attendee_partner_ids.ids)],
                     "defaults_applied": True,
                     "company_id": self.series_id.company_id.id,
                     "last_default_duration": self.series_id.duration_hours,
-                    "last_default_attendee_ids": [
-                        (6, 0, self.series_id.attendee_partner_ids.ids)
-                    ],
+                    "last_default_attendee_ids": [(6, 0, self.series_id.attendee_partner_ids.ids)],
                 }
             )
         return self._reload()
@@ -357,18 +311,12 @@ class MeetingCreateWizard(models.TransientModel):
         if self.step == "when":
             self._suggest_series_name()
         steps = ["series", "when", "people", "carryover", "agenda", "review"]
-        if self.step == "when" and (
-            not self.name or not self.start_datetime or self.duration_hours <= 0
-        ):
+        if self.step == "when" and (not self.name or not self.start_datetime or self.duration_hours <= 0):
             raise ValidationError(_("Enter a title, start time and positive duration."))
         if self.step == "people":
-            choices = {
-                line.candidate_key: line.decision for line in self.carry_line_ids
-            }
+            choices = {line.candidate_key: line.decision for line in self.carry_line_ids}
             self.carry_line_ids.unlink()
-            candidates = self.env["community.meeting"]._agenda_candidates(
-                self.series_id, self.start_datetime
-            )
+            candidates = self.env["community.meeting"]._agenda_candidates(self.series_id, self.start_datetime)
             self.carry_line_ids = [
                 (
                     0,
@@ -394,9 +342,7 @@ class MeetingCreateWizard(models.TransientModel):
 
     def action_add_point(self):
         self.ensure_one()
-        return self.env["community.meeting.point.wizard"]._open(
-            {"default_creation_wizard_id": self.id}
-        )
+        return self.env["community.meeting.point.wizard"]._open({"default_creation_wizard_id": self.id})
 
     def action_finish(self):
         self.ensure_one()
@@ -411,9 +357,7 @@ class MeetingCreateWizard(models.TransientModel):
             meeting = self.created_meeting_id
         else:
             if not self.name or not self.start_datetime or self.duration_hours <= 0:
-                raise ValidationError(
-                    _("Enter a title, start time and positive duration.")
-                )
+                raise ValidationError(_("Enter a title, start time and positive duration."))
             values = {
                 "name": self.name,
                 "series_id": self.series_id.id,
@@ -427,27 +371,17 @@ class MeetingCreateWizard(models.TransientModel):
                 values["meeting_kind_id"] = self.series_id.meeting_kind_id.id
             meeting = (
                 self.env["community.meeting"]
-                .with_context(
-                    review_carryovers_in_wizard=True, defer_carryover_processing=True
-                )
+                .with_context(review_carryovers_in_wizard=True, defer_carryover_processing=True)
                 .create(values)
             )
             for line in self.line_ids.filtered("included"):
-                item = self.env["community.meeting.agenda.item"].create(
-                    line._item_values(meeting)
-                )
+                item = self.env["community.meeting.agenda.item"].create(line._item_values(meeting))
                 line._write_related_points(item.topic_id)
-            for line in self.recurring_line_ids.filtered("included").sorted(
-                lambda row: (row.sequence, row.id)
-            ):
+            for line in self.recurring_line_ids.filtered("included").sorted(lambda row: (row.sequence, row.id)):
                 line.template_id._create_occurrence(meeting)
-            for line in self.carry_line_ids.filtered(
-                lambda line: line.decision == "include"
-            ):
+            for line in self.carry_line_ids.filtered(lambda line: line.decision == "include"):
                 meeting._include_agenda_candidate({"key": line.candidate_key})
-            for line in self.carry_line_ids.filtered(
-                lambda line: line.decision == "discard"
-            ):
+            for line in self.carry_line_ids.filtered(lambda line: line.decision == "discard"):
                 meeting._discard_agenda_candidate(line.candidate_key)
             self.created_meeting_id = meeting
         return {
@@ -464,9 +398,7 @@ class CarryReviewLine(models.TransientModel):
     _name = "community.meeting.carry.review.line"
     _description = "Review Continuing Point"
 
-    wizard_id = fields.Many2one(
-        "community.meeting.create.wizard", required=True, ondelete="cascade"
-    )
+    wizard_id = fields.Many2one("community.meeting.create.wizard", required=True, ondelete="cascade")
     candidate_key = fields.Char(required=True)
     source_id = fields.Many2one("community.meeting.agenda.item")
     transfer_id = fields.Many2one("community.meeting.carryover")
@@ -475,9 +407,7 @@ class CarryReviewLine(models.TransientModel):
     origin_meeting_id = fields.Many2one("community.meeting")
     reason = fields.Text()
     presentation_reason = fields.Text(compute="_compute_point_context")
-    agenda_type_id = fields.Many2one(
-        "community.meeting.agenda.type", compute="_compute_point_context"
-    )
+    agenda_type_id = fields.Many2one("community.meeting.agenda.type", compute="_compute_point_context")
     priority = fields.Selection(PRIORITIES, compute="_compute_point_context")
     estimated_minutes = fields.Integer(compute="_compute_point_context")
     decision = fields.Selection(
@@ -515,12 +445,7 @@ class CarryReviewLine(models.TransientModel):
                     ],
                     limit=1,
                 )
-            if (
-                not topic
-                and source
-                and series
-                and source.meeting_id.series_id == series
-            ):
+            if not topic and source and series and source.meeting_id.series_id == series:
                 topic = source.topic_id
             line.agenda_type_id = (
                 topic.agenda_type_id
@@ -533,9 +458,9 @@ class CarryReviewLine(models.TransientModel):
             line.priority = topic.priority if topic else "1"
             reason = line.reason or line.transfer_id.reason
             if not reason and line.transfer_id.inclusion_reason:
-                reason = dict(
-                    line.transfer_id._fields["inclusion_reason"].selection
-                ).get(line.transfer_id.inclusion_reason)
+                reason = dict(line.transfer_id._fields["inclusion_reason"].selection).get(
+                    line.transfer_id.inclusion_reason
+                )
             if not reason:
                 reason = (
                     _("Proposed point")
@@ -558,9 +483,7 @@ class PointWizard(models.TransientModel):
     _description = "Add an Agenda Point"
 
     meeting_id = fields.Many2one("community.meeting")
-    creation_wizard_id = fields.Many2one(
-        "community.meeting.create.wizard", ondelete="cascade"
-    )
+    creation_wizard_id = fields.Many2one("community.meeting.create.wizard", ondelete="cascade")
     series_id = fields.Many2one("community.meeting.series", compute="_compute_scope")
     company_id = fields.Many2one("res.company", compute="_compute_scope")
     topic_id = fields.Many2one("community.meeting.topic", string="Existing point")
@@ -602,15 +525,11 @@ class PointWizard(models.TransientModel):
     def default_get(self, fields_list):
         defaults = super().default_get(fields_list)
         if "estimated_minutes" in fields_list and not defaults.get("estimated_minutes"):
-            meeting_id = defaults.get("meeting_id") or self.env.context.get(
-                "default_meeting_id"
+            meeting_id = defaults.get("meeting_id") or self.env.context.get("default_meeting_id")
+            series_id = defaults.get("proposal_series_id") or self.env.context.get("default_proposal_series_id")
+            creation_wizard_id = defaults.get("creation_wizard_id") or self.env.context.get(
+                "default_creation_wizard_id"
             )
-            series_id = defaults.get("proposal_series_id") or self.env.context.get(
-                "default_proposal_series_id"
-            )
-            creation_wizard_id = defaults.get(
-                "creation_wizard_id"
-            ) or self.env.context.get("default_creation_wizard_id")
             creation_wizard = (
                 self.env["community.meeting.create.wizard"].browse(creation_wizard_id)
                 if creation_wizard_id
@@ -620,9 +539,7 @@ class PointWizard(models.TransientModel):
                 series_id = creation_wizard.series_id.id
             if series_id:
                 defaults["estimated_minutes"] = (
-                    self.env["community.meeting.series"]
-                    .browse(series_id)
-                    ._point_estimated_minutes_default()
+                    self.env["community.meeting.series"].browse(series_id)._point_estimated_minutes_default()
                 )
             elif meeting_id:
                 meeting = self.env["community.meeting"].browse(meeting_id)
@@ -632,9 +549,7 @@ class PointWizard(models.TransientModel):
                     else meeting.company_id.meeting_estimated_minutes
                 )
             elif creation_wizard:
-                defaults["estimated_minutes"] = (
-                    creation_wizard.company_id.meeting_estimated_minutes
-                )
+                defaults["estimated_minutes"] = creation_wizard.company_id.meeting_estimated_minutes
         return defaults
 
     presenter_partner_id = fields.Many2one("res.partner", string="Responsible")
@@ -703,9 +618,7 @@ class PointWizard(models.TransientModel):
             "type": "ir.actions.act_window",
             "name": _("Add Point"),
             "res_model": self._name,
-            "views": [
-                (self.env.ref("community_meetings.view_point_wizard").id, "form")
-            ],
+            "views": [(self.env.ref("community_meetings.view_point_wizard").id, "form")],
             "target": "new",
             "context": context,
         }
@@ -714,10 +627,7 @@ class PointWizard(models.TransientModel):
         self.ensure_one()
         if self.topic_id:
             vals = {"meeting_id": meeting.id, "topic_id": self.topic_id.id}
-            if (
-                self.presenter_loaded
-                and self.presenter_partner_id != self.topic_id.presenter_partner_id
-            ):
+            if self.presenter_loaded and self.presenter_partner_id != self.topic_id.presenter_partner_id:
                 vals["presenter_partner_id"] = self.presenter_partner_id.id or False
             return vals
         if not self.name or not self.agenda_type_id:
@@ -775,9 +685,7 @@ class PointWizard(models.TransientModel):
             raise ValidationError(_("Estimated minutes cannot be negative."))
         if self.meeting_id:
             if not self.meeting_id.add_point_allowed:
-                raise ValidationError(
-                    _("New points cannot be added to this meeting anymore.")
-                )
+                raise ValidationError(_("New points cannot be added to this meeting anymore."))
             if not self.created_item_id:
                 self.created_item_id = self.env["community.meeting.agenda.item"].create(
                     self._item_values(self.meeting_id)
@@ -787,9 +695,7 @@ class PointWizard(models.TransientModel):
             raise UserError(_("Choose a meeting first."))
         self.included = True
         return (
-            self.creation_wizard_id._reload()
-            if self.creation_wizard_id
-            else {"type": "ir.actions.act_window_close"}
+            self.creation_wizard_id._reload() if self.creation_wizard_id else {"type": "ir.actions.act_window_close"}
         )
 
     def _proposal_values(self):
@@ -799,8 +705,7 @@ class PointWizard(models.TransientModel):
             "agenda_type_id": self.agenda_type_id.id,
             "priority": self.priority,
             "deadline": self.deadline,
-            "estimated_minutes": self.estimated_minutes
-            or self.proposal_series_id._point_estimated_minutes_default(),
+            "estimated_minutes": self.estimated_minutes or self.proposal_series_id._point_estimated_minutes_default(),
             "followup_allowed_kinds": [(6, 0, self.followup_allowed_kinds.ids)],
             "followup_default_kind": self.followup_default_kind,
             "series_id": self.proposal_series_id.id,
@@ -813,9 +718,7 @@ class PointWizard(models.TransientModel):
     def action_cancel(self):
         self.ensure_one()
         return (
-            self.creation_wizard_id._reload()
-            if self.creation_wizard_id
-            else {"type": "ir.actions.act_window_close"}
+            self.creation_wizard_id._reload() if self.creation_wizard_id else {"type": "ir.actions.act_window_close"}
         )
 
     def action_save_another(self):

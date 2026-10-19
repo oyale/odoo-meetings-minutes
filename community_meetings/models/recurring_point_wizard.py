@@ -4,16 +4,12 @@ from odoo import api, fields, models
 class MeetingCreateWizard(models.TransientModel):
     _inherit = "community.meeting.create.wizard"
 
-    recurring_line_ids = fields.One2many(
-        "community.meeting.recurring.point.review.line", "wizard_id"
-    )
+    recurring_line_ids = fields.One2many("community.meeting.recurring.point.review.line", "wizard_id")
 
     def _load_recurring_points(self):
         for wizard in self:
             previous_choices = {
-                line.template_id.id: line.included
-                for line in wizard.recurring_line_ids
-                if line.template_id
+                line.template_id.id: line.included for line in wizard.recurring_line_ids if line.template_id
             }
             wizard.recurring_line_ids.unlink()
             if not wizard.series_id:
@@ -41,12 +37,8 @@ class MeetingRecurringPointReviewLine(models.TransientModel):
     _description = "Recurring Point for Meeting Preparation"
     _order = "sequence, id"
 
-    wizard_id = fields.Many2one(
-        "community.meeting.create.wizard", required=True, ondelete="cascade"
-    )
-    template_id = fields.Many2one(
-        "community.meeting.series.agenda.template", required=True, ondelete="cascade"
-    )
+    wizard_id = fields.Many2one("community.meeting.create.wizard", required=True, ondelete="cascade")
+    template_id = fields.Many2one("community.meeting.series.agenda.template", required=True, ondelete="cascade")
     included = fields.Boolean(default=True)
     sequence = fields.Integer(related="template_id.sequence")
     name = fields.Char(related="template_id.name")

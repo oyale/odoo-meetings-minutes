@@ -88,9 +88,7 @@ class TestExtensionContract(TransactionCase):
 
         report_model = self.env["ir.actions.report"]
         pdf_fixture = b"%PDF-1.4\n% Extension snapshot contract test.\n"
-        with patch.object(
-            type(report_model), "_render_qweb_pdf", return_value=(pdf_fixture, "pdf")
-        ):
+        with patch.object(type(report_model), "_render_qweb_pdf", return_value=(pdf_fixture, "pdf")):
             revision = meeting.with_user(self.approver).action_approve_minutes()
 
         snapshot = json.loads(revision.snapshot_json)

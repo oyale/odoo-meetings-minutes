@@ -25,8 +25,7 @@ class MeetingRevisionReport(models.AbstractModel):
                     "description_html": Markup(item["description"]),
                     "discussion_html": Markup(item["discussion"]),
                     "resolutions": [
-                        {**resolution, "body_html": Markup(resolution["body"])}
-                        for resolution in item["resolutions"]
+                        {**resolution, "body_html": Markup(resolution["body"])} for resolution in item["resolutions"]
                     ],
                 }
                 for item in snapshot["agenda"]
@@ -36,10 +35,7 @@ class MeetingRevisionReport(models.AbstractModel):
                 for resolution in snapshot["general_resolutions"]
             ],
             "actions": snapshot["actions"],
-            "dissents": [
-                {**dissent, "body_html": Markup(dissent["body"])}
-                for dissent in snapshot["dissents"]
-            ],
+            "dissents": [{**dissent, "body_html": Markup(dissent["body"])} for dissent in snapshot["dissents"]],
         }
 
     @api.model
