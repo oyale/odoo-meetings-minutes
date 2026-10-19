@@ -29,7 +29,7 @@ registro muestra la reunión de origen, el contexto y quién respondió.
 ## Moverlo a otra serie
 
 Un punto puede quedarse fuera del alcance de su serie (p. ej. un punto operativo
-que necesita un debate de reflexión). El asistente de arrastre acepta una **serie
+que necesita un debate de reflexión, o un punto que se debe tratar en una reunión extraordinaria). El asistente de arrastre acepta una **serie
 de destino**:
 
 - **Puntos y seguimientos** — elige la serie de destino y, opcionalmente, una
