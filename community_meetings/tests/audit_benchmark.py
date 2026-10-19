@@ -267,7 +267,7 @@ def run(size):
 
     setattr(agenda_item_class, lookup_name, count_followup_lookups)
     setattr(action_model_class, evidence_method_name, count_execution_evidence)
-    setattr(BaseModel, "mapped", count_action_topic_mapping)
+    BaseModel.mapped = count_action_topic_mapping
     try:
         todo_measurement = measure(
             "todo_validation_valid",
@@ -277,18 +277,20 @@ def run(size):
     finally:
         setattr(agenda_item_class, lookup_name, original_followup_lookup)
         setattr(action_model_class, evidence_method_name, original_execution_evidence)
-        setattr(BaseModel, "mapped", original_mapped)
+        BaseModel.mapped = original_mapped
     todo_measurement["followup_lookup_batch_sizes"] = followup_lookup_batch_sizes
     todo_measurement["evidence_check_counts"] = evidence_check_counts
     todo_measurement["execution_evidence_calls"] = len(evidence_check_counts)
     todo_measurement["action_topic_mapping_sizes"] = action_topic_mapping_sizes
     if lookup_name == "_followup_actions_by_topic":
         assert followup_lookup_batch_sizes == [size], (
-            f"Expected one batched lookup of {size} items, got {followup_lookup_batch_sizes}"
+            f"Expected one batched lookup of {size} items, "
+            f"got {followup_lookup_batch_sizes}"
         )
     if evidence_method_name == "_execution_evidence_by_action":
         assert evidence_check_counts == [size], (
-            f"Expected one per-action evidence batch of {size}, got {evidence_check_counts}"
+            f"Expected one per-action evidence batch of {size}, "
+            f"got {evidence_check_counts}"
         )
     rows.append(todo_measurement)
     invalid_todo = model("community.meeting.agenda.item").create(

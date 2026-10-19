@@ -33,11 +33,13 @@ class CommunityMeeting(models.Model):
         )
         if not all_partners:
             return True
-        linked_users = user_model.search([
-            ("partner_id", "in", all_partners.ids),
-            ("active", "=", True),
-            ("share", "=", False),
-        ])
+        linked_users = user_model.search(
+            [
+                ("partner_id", "in", all_partners.ids),
+                ("active", "=", True),
+                ("share", "=", False),
+            ]
+        )
         users_by_partner = {}
         for user in linked_users:
             users_by_partner.setdefault(user.partner_id.id, self.env["res.users"])
@@ -81,12 +83,21 @@ class CommunityMeeting(models.Model):
             "community_meeting_id": self.id,
         }
         if not event:
-            values["community_calendar_uid"] = "%s@community-meetings" % uuid.uuid4().hex
+            values["community_calendar_uid"] = f"{uuid.uuid4().hex}@community-meetings"
             return values
 
         scalar_fields = (
-            "name", "start", "stop", "location", "user_id", "privacy", "description",
-            "recurrency", "res_model_id", "res_id", "community_meeting_id",
+            "name",
+            "start",
+            "stop",
+            "location",
+            "user_id",
+            "privacy",
+            "description",
+            "recurrency",
+            "res_model_id",
+            "res_id",
+            "community_meeting_id",
         )
         updates = {
             field_name: values[field_name]
@@ -95,7 +106,8 @@ class CommunityMeeting(models.Model):
                 getattr(event, field_name).id
                 if hasattr(getattr(event, field_name), "id")
                 else getattr(event, field_name)
-            ) != values[field_name]
+            )
+            != values[field_name]
         }
         if set(event.partner_ids.ids) != set(self._calendar_attendee_partner_ids().ids):
             updates["partner_ids"] = values["partner_ids"]
@@ -104,21 +116,38 @@ class CommunityMeeting(models.Model):
     def _lock_calendar_event(self):
         for meeting in self.sorted("id"):
             self.env.cr.execute(
-                "SELECT id FROM community_meeting WHERE id = %s FOR UPDATE", [meeting.id]
+                "SELECT id FROM community_meeting WHERE id = %s FOR UPDATE",
+                [meeting.id],
             )
-        self.invalidate_recordset([
-            "state", "start_datetime", "end_datetime", "actual_start_datetime",
-            "organizer_id", "secretary_id", "attendee_partner_ids", "calendar_event_ids",
-        ])
+        self.invalidate_recordset(
+            [
+                "state",
+                "start_datetime",
+                "end_datetime",
+                "actual_start_datetime",
+                "organizer_id",
+                "secretary_id",
+                "attendee_partner_ids",
+                "calendar_event_ids",
+            ]
+        )
 
     def _ensure_calendar_end_datetime(self):
         for meeting in self:
             if not meeting.end_datetime and meeting.start_datetime:
-                duration = meeting.series_id.duration_hours if meeting.series_id else 1.0
+                duration = (
+                    meeting.series_id.duration_hours if meeting.series_id else 1.0
+                )
                 end = fields.Datetime.add(meeting.start_datetime, hours=duration or 1.0)
                 super(CommunityMeeting, meeting).write({"end_datetime": end})
-            if not meeting.start_datetime or not meeting.end_datetime or meeting.end_datetime <= meeting.start_datetime:
-                raise ValidationError(_("The meeting end must be after its start before scheduling."))
+            if (
+                not meeting.start_datetime
+                or not meeting.end_datetime
+                or meeting.end_datetime <= meeting.start_datetime
+            ):
+                raise ValidationError(
+                    _("The meeting end must be after its start before scheduling.")
+                )
 
     def _sync_calendar_event(self):
         """Sync events; callers must hold the meeting row lock."""
@@ -131,14 +160,20 @@ class CommunityMeeting(models.Model):
             if meeting.state != "scheduled":
                 continue
             event = meeting.calendar_event_ids
-            owner_env = self.env["calendar.event"].with_user(meeting.organizer_id).sudo()
+            owner_env = (
+                self.env["calendar.event"].with_user(meeting.organizer_id).sudo()
+            )
             if event:
                 values = meeting._calendar_event_values(event)
                 if not values:
                     continue
                 old_partners = event.partner_ids
-                event.with_user(meeting.organizer_id).sudo()._community_meetings_calendar_write(values)
-                event.invalidate_recordset(["partner_ids", "attendee_ids", "name", "start", "stop", "location"])
+                event.with_user(
+                    meeting.organizer_id
+                ).sudo()._community_meetings_calendar_write(values)
+                event.invalidate_recordset(
+                    ["partner_ids", "attendee_ids", "name", "start", "stop", "location"]
+                )
                 removed = old_partners - event.partner_ids
                 if removed:
                     event._community_meetings_calendar_cancel_mail(removed)
@@ -174,7 +209,9 @@ class CommunityMeeting(models.Model):
             self._lock_calendar_event()
         result = super().write(values)
         if changed:
-            self.filtered(lambda meeting: meeting.state == "scheduled")._sync_calendar_event()
+            self.filtered(
+                lambda meeting: meeting.state == "scheduled"
+            )._sync_calendar_event()
         return result
 
     def action_schedule(self):
@@ -197,6 +234,8 @@ class CommunityMeeting(models.Model):
         self._cancel_calendar_event()
         return result
 
-    @api.constrains("attendee_partner_ids", "organizer_id", "secretary_id", "company_id")
+    @api.constrains(
+        "attendee_partner_ids", "organizer_id", "secretary_id", "company_id"
+    )
     def _constrain_calendar_attendees(self):
         self._check_calendar_attendees()

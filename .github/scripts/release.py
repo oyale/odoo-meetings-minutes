@@ -365,6 +365,15 @@ def show_plan(version: str, tag: str, addons: list[str]) -> None:
         )
 
 
+def release_check_files(tag: str) -> list[str]:
+    """Check committed release contents as well as newly staged metadata."""
+    committed = git(
+        "diff", "--name-only", "--diff-filter=ACMRT", f"{tag}...HEAD"
+    ).splitlines()
+    staged = git("diff", "--cached", "--name-only", "--diff-filter=ACMRT").splitlines()
+    return sorted(path for path in set(committed + staged) if (ROOT / path).is_file())
+
+
 def prepare_commit(version: str, tag: str, addons: list[str]) -> None:
     bumped = []
     for addon in addons:
@@ -402,8 +411,7 @@ def prepare_commit(version: str, tag: str, addons: list[str]) -> None:
     git("add", "--", "CHANGELOG.md", "README.md", "setup/_metapackage/pyproject.toml")
     fragment_paths = [f"{addon}/readme/newsfragments" for addon in ADDONS]
     git("add", "-u", "--", *fragment_paths)
-    changed_files = git("diff", "--cached", "--name-only").splitlines()
-    existing_files = [path for path in changed_files if (ROOT / path).is_file()]
+    existing_files = release_check_files(tag)
     if existing_files:
         precommit = shutil.which("pre-commit")
         if not precommit:

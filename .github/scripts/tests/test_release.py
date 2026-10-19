@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import datetime as dt
 import importlib.util
+import subprocess
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 release_path = Path(__file__).resolve().parents[1] / "release.py"
 release_spec = importlib.util.spec_from_file_location("release", release_path)
@@ -13,6 +16,40 @@ release_spec.loader.exec_module(release)
 
 
 class ReleaseVersionTests(unittest.TestCase):
+    def test_release_checks_include_committed_code_and_staged_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            def git(*args: str) -> str:
+                return subprocess.check_output(
+                    ["git", "-C", str(root), *args], text=True
+                ).strip()
+
+            git("init", "-q")
+            git("config", "user.name", "Release regression")
+            git("config", "user.email", "release@example.test")
+            for name in ("code.py", "removed.py", "unchanged.py", "CHANGELOG.md"):
+                (root / name).write_text("baseline\n")
+            git("add", ".")
+            git("commit", "-qm", "Baseline release")
+            baseline = git("rev-parse", "HEAD")
+
+            (root / "code.py").write_text("committed addon changes\n")
+            (root / "new.py").write_text("new committed code\n")
+            git("add", "code.py", "new.py")
+            git("commit", "-qm", "Addon changes awaiting release")
+            (root / "CHANGELOG.md").write_text("staged release notes\n")
+            (root / "code.py").write_text("staged follow-up changes\n")
+            (root / "untracked.py").write_text("unrelated local file\n")
+            git("add", "CHANGELOG.md", "code.py")
+            git("rm", "-q", "removed.py")
+
+            with patch.object(release, "ROOT", root):
+                self.assertEqual(
+                    release.release_check_files(baseline),
+                    ["CHANGELOG.md", "code.py", "new.py"],
+                )
+
     def test_release_tag_accepts_optional_v_prefix(self) -> None:
         self.assertEqual(release.normalize_tag("v18.0.20261019.1"), "18.0.20261019.1")
 

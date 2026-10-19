@@ -200,9 +200,7 @@ class CommunityMeetingAgendaItem(models.Model):
                 )
             if state["resolutions"] is None:
                 state["resolutions"] = workflow_items._active_workflow_resolutions()
-            self._check_non_decision_resolution(
-                workflow_items, state["resolutions"]
-            )
+            self._check_non_decision_resolution(workflow_items, state["resolutions"])
         if (
             self.decision_result in ("approved", "denied")
             and self.disposition != "closed"

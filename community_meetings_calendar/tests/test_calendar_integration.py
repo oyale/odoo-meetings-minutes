@@ -11,38 +11,74 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.editor = cls.env["res.users"].with_context(no_reset_password=True).create({
-            "name": "Calendar meeting editor",
-            "login": "calendar-meeting-editor-test",
-            "email": "editor@example.test",
-            "groups_id": [(6, 0, [
-                cls.env.ref("base.group_user").id,
-                cls.env.ref("community_meetings.group_meeting_editor").id,
-            ])],
-        })
-        cls.other = cls.env["res.users"].with_context(no_reset_password=True).create({
-            "name": "Calendar meeting attendee",
-            "login": "calendar-meeting-attendee-test",
-            "email": "attendee@example.test",
-            "notification_type": "email",
-            "groups_id": [(6, 0, [cls.env.ref("base.group_user").id])],
-        })
-        cls.reader = cls.env["res.users"].with_context(no_reset_password=True).create({
-            "name": "Calendar meeting reader",
-            "login": "calendar-meeting-reader-test",
-            "email": "reader@example.test",
-            "notification_type": "email",
-            "groups_id": [(6, 0, [
-                cls.env.ref("base.group_user").id,
-                cls.env.ref("community_meetings.group_meeting_reader").id,
-            ])],
-        })
+        cls.editor = (
+            cls.env["res.users"]
+            .with_context(no_reset_password=True)
+            .create(
+                {
+                    "name": "Calendar meeting editor",
+                    "login": "calendar-meeting-editor-test",
+                    "email": "editor@example.test",
+                    "groups_id": [
+                        (
+                            6,
+                            0,
+                            [
+                                cls.env.ref("base.group_user").id,
+                                cls.env.ref(
+                                    "community_meetings.group_meeting_editor"
+                                ).id,
+                            ],
+                        )
+                    ],
+                }
+            )
+        )
+        cls.other = (
+            cls.env["res.users"]
+            .with_context(no_reset_password=True)
+            .create(
+                {
+                    "name": "Calendar meeting attendee",
+                    "login": "calendar-meeting-attendee-test",
+                    "email": "attendee@example.test",
+                    "notification_type": "email",
+                    "groups_id": [(6, 0, [cls.env.ref("base.group_user").id])],
+                }
+            )
+        )
+        cls.reader = (
+            cls.env["res.users"]
+            .with_context(no_reset_password=True)
+            .create(
+                {
+                    "name": "Calendar meeting reader",
+                    "login": "calendar-meeting-reader-test",
+                    "email": "reader@example.test",
+                    "notification_type": "email",
+                    "groups_id": [
+                        (
+                            6,
+                            0,
+                            [
+                                cls.env.ref("base.group_user").id,
+                                cls.env.ref(
+                                    "community_meetings.group_meeting_reader"
+                                ).id,
+                            ],
+                        )
+                    ],
+                }
+            )
+        )
 
     def setUp(self):
         super().setUp()
-        self.env["ir.config_parameter"].sudo().search([
-            ("key", "=", "calendar.block_mail"),
-        ]).unlink()
+        self.env["ir.config_parameter"].sudo().search(
+            [
+                ("key", "=", "calendar.block_mail"),
+            ]
+        ).unlink()
         self.meetings = self.env["community.meeting"].with_user(self.editor)
 
     def _meeting(self, **values):
@@ -57,15 +93,19 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
 
     def _assert_sent_ics(self, email, uid):
         sent = [mail for mail in self._mails if email in str(mail.get("email_to"))]
-        self.assertTrue(sent, "Odoo did not send a Calendar email to %s" % email)
+        self.assertTrue(sent, f"Odoo did not send a Calendar email to {email}")
         attachments = [
             content
             for mail in sent
             for name, content, _mimetype in mail.get("attachments", [])
             if name == "invitation.ics"
         ]
-        self.assertTrue(attachments, "The Calendar email did not contain invitation.ics")
-        self.assertTrue(any(("UID:%s" % uid).encode("ascii") in content for content in attachments))
+        self.assertTrue(
+            attachments, "The Calendar email did not contain invitation.ics"
+        )
+        self.assertTrue(
+            any(f"UID:{uid}".encode("ascii") in content for content in attachments)
+        )
 
     def test_scheduling_creates_one_private_event_with_stable_document_link(self):
         meeting = self._meeting(secretary_id=self.reader.id)
@@ -106,7 +146,7 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
             },
         )
         invitation = event._get_ics_file()[event.id].decode("utf-8")
-        self.assertIn("UID:%s" % event.community_calendar_uid, invitation)
+        self.assertIn(f"UID:{event.community_calendar_uid}", invitation)
         self.assertNotIn("minutes", invitation.lower())
 
         with self.assertRaises(AccessError):
@@ -138,10 +178,16 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
             readable_event.with_user(self.other).action_open_community_meeting()
 
     def test_schedule_fills_end_from_series_and_rejects_invalid_duration(self):
-        series = self.env["community.meeting.series"].with_user(self.editor).create({
-            "name": "Calendar duration",
-            "duration_hours": 1.5,
-        })
+        series = (
+            self.env["community.meeting.series"]
+            .with_user(self.editor)
+            .create(
+                {
+                    "name": "Calendar duration",
+                    "duration_hours": 1.5,
+                }
+            )
+        )
         meeting = self._meeting(series_id=series.id, end_datetime=False)
         meeting.action_schedule()
         self.assertEqual(str(meeting.end_datetime), "2026-12-01 11:30:00")
@@ -153,7 +199,9 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
                 end_datetime="2026-12-02 10:00:00",
             )
 
-    def test_meeting_edits_update_same_event_and_removed_attendee_gets_cancellation(self):
+    def test_meeting_edits_update_same_event_and_removed_attendee_gets_cancellation(
+        self,
+    ):
         meeting = self._meeting()
         with self.mock_mail_gateway():
             meeting.action_schedule()
@@ -163,12 +211,14 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
         old_start = event.start
 
         with self.mock_mail_gateway():
-            meeting.write({
-                "name": "Rescheduled planning",
-                "start_datetime": "2026-12-03 10:00:00",
-                "end_datetime": "2026-12-03 11:00:00",
-                "location": "Room 8",
-            })
+            meeting.write(
+                {
+                    "name": "Rescheduled planning",
+                    "start_datetime": "2026-12-03 10:00:00",
+                    "end_datetime": "2026-12-03 11:00:00",
+                    "location": "Room 8",
+                }
+            )
 
         self.assertEqual(meeting.calendar_event_ids, event)
         self.assertNotEqual(event.start, old_start)
@@ -177,15 +227,22 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
         self._assert_sent_ics(self.other.email, uid)
 
         with self.mock_mail_gateway():
-            self.env["community.meeting"].browse(meeting.id).write({
-                "attendee_partner_ids": [(6, 0, [self.reader.partner_id.id])],
-            })
+            self.env["community.meeting"].browse(meeting.id).write(
+                {
+                    "attendee_partner_ids": [(6, 0, [self.reader.partner_id.id])],
+                }
+            )
         self._assert_sent_ics(self.reader.email, uid)
-        cancellations = self.env["mail.mail"].search([("email_to", "=", self.other.email)])
-        self.assertTrue(any(
-            "METHOD:CANCEL" in attachment.raw.decode("utf-8")
-            for mail in cancellations for attachment in mail.attachment_ids
-        ))
+        cancellations = self.env["mail.mail"].search(
+            [("email_to", "=", self.other.email)]
+        )
+        self.assertTrue(
+            any(
+                "METHOD:CANCEL" in attachment.raw.decode("utf-8")
+                for mail in cancellations
+                for attachment in mail.attachment_ids
+            )
+        )
 
     def test_calendar_rpc_cannot_edit_or_delete_managed_event(self):
         meeting = self._meeting()
@@ -197,25 +254,39 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
         with self.assertRaises(AccessError):
             event.with_user(self.editor).unlink()
         with self.assertRaises(AccessError):
-            event.with_user(self.editor).with_context(allow_managed_calendar_edit=True).write({
-                "community_meeting_id": False,
-            })
+            event.with_user(self.editor).with_context(
+                allow_managed_calendar_edit=True
+            ).write(
+                {
+                    "community_meeting_id": False,
+                }
+            )
         with self.assertRaises(AccessError):
-            self.env["calendar.event"].with_user(self.editor).create({
-                "name": "Forged managed event",
-                "start": "2026-12-01 10:00:00",
-                "stop": "2026-12-01 11:00:00",
-                "community_meeting_id": meeting.id,
-            })
-        unmanaged = self.env["calendar.event"].with_user(self.editor).create({
-            "name": "Unmanaged event",
-            "start": "2020-01-01 10:00:00",
-            "stop": "2020-01-01 11:00:00",
-        })
+            self.env["calendar.event"].with_user(self.editor).create(
+                {
+                    "name": "Forged managed event",
+                    "start": "2026-12-01 10:00:00",
+                    "stop": "2026-12-01 11:00:00",
+                    "community_meeting_id": meeting.id,
+                }
+            )
+        unmanaged = (
+            self.env["calendar.event"]
+            .with_user(self.editor)
+            .create(
+                {
+                    "name": "Unmanaged event",
+                    "start": "2020-01-01 10:00:00",
+                    "stop": "2020-01-01 11:00:00",
+                }
+            )
+        )
         with self.assertRaises(AccessError):
             unmanaged.with_user(self.editor).write({"community_meeting_id": meeting.id})
         with self.assertRaises(AccessError):
-            unmanaged.with_user(self.editor).write({"community_calendar_uid": "forged@example.test"})
+            unmanaged.with_user(self.editor).write(
+                {"community_calendar_uid": "forged@example.test"}
+            )
 
     def test_external_and_cross_company_attendees_are_rejected(self):
         external = self.env["res.partner"].create({"name": "External contact"})
@@ -223,13 +294,15 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
             self._meeting(attendee_partner_ids=[(6, 0, [external.id])])
 
         other_company = self.env["res.company"].create({"name": "Other company"})
-        cross_company = self.env["res.users"].create({
-            "name": "Other company attendee",
-            "login": "calendar-cross-company-test",
-            "company_id": other_company.id,
-            "company_ids": [(6, 0, [other_company.id])],
-            "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
-        })
+        cross_company = self.env["res.users"].create(
+            {
+                "name": "Other company attendee",
+                "login": "calendar-cross-company-test",
+                "company_id": other_company.id,
+                "company_ids": [(6, 0, [other_company.id])],
+                "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
+            }
+        )
         with self.assertRaises(ValidationError):
             self._meeting(attendee_partner_ids=[(6, 0, [cross_company.partner_id.id])])
 
@@ -241,7 +314,8 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
         )
         attendees = self.env["community.meeting"]._fields["attendee_partner_ids"]
         self.env.cr.execute(
-            f"INSERT INTO {attendees.relation} ({attendees.column1}, {attendees.column2}) "
+            f"INSERT INTO {attendees.relation} "
+            f"({attendees.column1}, {attendees.column2}) "
             "VALUES (%s, %s)",
             [invalid.id, invalid_partner.id],
         )
@@ -301,11 +375,12 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
         mails = self.env["mail.mail"].search([("email_to", "=", self.other.email)])
         cancellations = [
             attachment.raw.decode("utf-8")
-            for mail in mails for attachment in mail.attachment_ids
+            for mail in mails
+            for attachment in mail.attachment_ids
             if "METHOD:CANCEL" in attachment.raw.decode("utf-8")
         ]
         self.assertTrue(cancellations)
-        self.assertIn("UID:%s" % uid, cancellations[-1])
+        self.assertIn(f"UID:{uid}", cancellations[-1])
 
     def test_blocked_mail_and_missing_or_invalid_email_do_not_send(self):
         self.env["ir.config_parameter"].sudo().set_param("calendar.block_mail", "1")
@@ -315,15 +390,23 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
             self.assertFalse(self._mails)
         meeting.action_cancel()
 
-        self.env["ir.config_parameter"].sudo().search([
-            ("key", "=", "calendar.block_mail"),
-        ]).unlink()
-        no_email_user = self.env["res.users"].with_context(no_reset_password=True).create({
-            "name": "Calendar attendee without email",
-            "login": "calendar-no-email-test",
-            "email": False,
-            "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
-        })
+        self.env["ir.config_parameter"].sudo().search(
+            [
+                ("key", "=", "calendar.block_mail"),
+            ]
+        ).unlink()
+        no_email_user = (
+            self.env["res.users"]
+            .with_context(no_reset_password=True)
+            .create(
+                {
+                    "name": "Calendar attendee without email",
+                    "login": "calendar-no-email-test",
+                    "email": False,
+                    "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
+                }
+            )
+        )
         no_email_meeting = self._meeting(
             name="Calendar attendee without email",
             attendee_partner_ids=[(6, 0, [no_email_user.partner_id.id])],
@@ -331,23 +414,35 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
         with self.mock_mail_gateway():
             no_email_meeting.action_schedule()
             self.assertFalse(self._mails)
-        self.assertIn(no_email_user.partner_id, no_email_meeting.calendar_event_ids.partner_ids)
+        self.assertIn(
+            no_email_user.partner_id, no_email_meeting.calendar_event_ids.partner_ids
+        )
 
-        invalid_email_user = self.env["res.users"].with_context(no_reset_password=True).create({
-            "name": "Calendar attendee with invalid email",
-            "login": "calendar-invalid-email-test",
-            "email": "not-an-email",
-            "notification_type": "email",
-            "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
-        })
+        invalid_email_user = (
+            self.env["res.users"]
+            .with_context(no_reset_password=True)
+            .create(
+                {
+                    "name": "Calendar attendee with invalid email",
+                    "login": "calendar-invalid-email-test",
+                    "email": "not-an-email",
+                    "notification_type": "email",
+                    "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
+                }
+            )
+        )
         invalid_meeting = self._meeting(
             name="Calendar attendee with invalid email",
             attendee_partner_ids=[(6, 0, [invalid_email_user.partner_id.id])],
         )
         invalid_meeting.action_schedule()
-        invalid_event = invalid_meeting.calendar_event_ids.with_context(no_mail_to_attendees=False)
+        invalid_event = invalid_meeting.calendar_event_ids.with_context(
+            no_mail_to_attendees=False
+        )
         self.assertFalse(
-            invalid_event._community_meetings_calendar_cancel_mail(invalid_email_user.partner_id)
+            invalid_event._community_meetings_calendar_cancel_mail(
+                invalid_email_user.partner_id
+            )
         )
         cancellation = invalid_event._community_meetings_calendar_cancel_mail(
             self.other.partner_id
@@ -373,13 +468,17 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
         meeting = self._meeting()
         meeting.action_schedule()
         managed = meeting.calendar_event_ids
-        unmanaged = self.env["calendar.event"].create({
-            "name": "Unmanaged calendar event",
-            "start": "2020-01-01 10:00:00",
-            "stop": "2020-01-01 11:00:00",
-        })
+        unmanaged = self.env["calendar.event"].create(
+            {
+                "name": "Unmanaged calendar event",
+                "start": "2020-01-01 10:00:00",
+                "stop": "2020-01-01 11:00:00",
+            }
+        )
 
-        self.env["calendar.event"].sudo()._community_meetings_calendar_uninstall_cleanup()
+        self.env[
+            "calendar.event"
+        ].sudo()._community_meetings_calendar_uninstall_cleanup()
 
         self.assertFalse(managed.exists())
         self.assertTrue(unmanaged.exists())
