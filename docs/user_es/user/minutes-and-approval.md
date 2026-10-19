@@ -17,8 +17,17 @@ formulario. La reunión pasa a **Acta en borrador**:
   corregir seguimientos (la [política de añadir
   puntos](../admin/configuration.md#añadir-puntos) limita los puntos de agenda
   nuevos).
-- Las **notas editoriales privadas** quedan fuera del acta — úsalas para remarks
+- Las **notas editoriales privadas** quedan fuera del acta — úsalas para comentarios
   internos y bórralas antes de aprobar si conviene.
+
+Antes de aprobar, usa **Vista previa del acta** en el formulario o en la pantalla
+en vivo para revisar el borrador completo, compuesto con los datos guardados de
+la reunión. La vista indica que aún no está aprobado y señala las secciones de
+origen para volver a ellas y editar. Guarda primero los cambios pendientes de la
+pantalla en vivo. Usa **Notas de la reunión** para el relato general; la
+discusión de los puntos, los acuerdos, los seguimientos y las discrepancias
+incluidas proceden de sus propios registros. El PDF oficial se crea cuando el
+aprobador aprueba el acta.
 
 > **Consejo:** el punto de aprobación del acta de las reuniones *posteriores*
 > listará este acta hasta aprobarla — apruébala pronto para no ensuciar la cola.

@@ -10486,3 +10486,125 @@ msgstr "Min."
 #: code:addons/community_meetings/models/creation_wizard.py:0
 msgid "The selected agenda exceeds the estimated meeting duration by %(minutes)s min."
 msgstr "La agenda seleccionada supera la duración estimada de la reunión en %(minutes)s min."
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Only meeting editors and approvers can preview draft minutes."
+msgstr "Solo los editores y aprobadores de reuniones pueden previsualizar actas en borrador."
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Minutes preview is only available for held meetings or draft minutes."
+msgstr "La vista previa solo está disponible para reuniones celebradas o actas en borrador."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Source: agenda point, agreement and discussion records."
+msgstr "Origen: registros del punto de agenda, sus acuerdos y notas de discusión."
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Draft Minutes Preview"
+msgstr "Vista previa del acta en borrador"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Preview Minutes"
+msgstr "Vista previa del acta"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Save the pending edits before opening the minutes preview."
+msgstr "Guarda los cambios pendientes antes de abrir la vista previa del acta."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Wait for all meeting changes to save before opening the minutes preview."
+msgstr "Espera a que se guarden todos los cambios de la reunión antes de abrir la vista previa del acta."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
+msgid "The meeting could not be identified."
+msgstr "No se pudo identificar la reunión."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
+msgid "The minutes preview could not be loaded."
+msgstr "No se pudo cargar la vista previa del acta."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.xml:0
+msgid "Return to meeting to edit"
+msgstr "Volver a la reunión para editar"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.xml:0
+msgid "Draft preview · saved content"
+msgstr "Vista previa del borrador · contenido guardado"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.xml:0
+msgid "Loading minutes preview…"
+msgstr "Cargando vista previa del acta…"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.xml:0
+msgid "Could not open the minutes preview."
+msgstr "No se pudo abrir la vista previa del acta."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Draft — not approved."
+msgstr "Borrador — sin aprobar."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "This preview reflects current saved meeting data."
+msgstr "Esta vista previa refleja los datos guardados actualmente en la reunión."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Source: meeting purpose in the meeting form."
+msgstr "Origen: propósito de la reunión en el formulario."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Source: agenda points and their discussion notes."
+msgstr "Origen: puntos de agenda y sus notas de discusión."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Source: meeting-wide agreements."
+msgstr "Origen: acuerdos generales de la reunión."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Source: Meeting notes in the form or live screen."
+msgstr "Origen: notas de la reunión en el formulario o la pantalla en vivo."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Source: follow-up records linked to this meeting."
+msgstr "Origen: seguimientos vinculados a esta reunión."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Source: dissents marked for inclusion in the minutes."
+msgstr "Origen: discrepancias marcadas para incluirlas en el acta."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Source: meeting carryover records."
+msgstr "Origen: registros de traspaso de la reunión."

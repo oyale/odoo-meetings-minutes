@@ -53,7 +53,7 @@ class CommunityMeetingRevision(models.Model):
         return str(html_sanitize(value or ""))
 
     @api.model
-    def _build_snapshot(self, meeting, approver, approved_at):
+    def _build_public_content(self, meeting):
         meeting.ensure_one()
         agenda = []
         for item in meeting.agenda_item_ids.sorted(lambda row: (row.sequence, row.id)):
@@ -183,10 +183,15 @@ class CommunityMeetingRevision(models.Model):
             ],
             "dissents": dissents,
             "carryovers": carryovers,
-            "approval": {
-                "approver": approver.name,
-                "approved_at": fields.Datetime.to_string(approved_at),
-            },
+        }
+        return snapshot
+
+    @api.model
+    def _build_snapshot(self, meeting, approver, approved_at):
+        snapshot = self._build_public_content(meeting)
+        snapshot["approval"] = {
+            "approver": approver.name,
+            "approved_at": fields.Datetime.to_string(approved_at),
         }
         snapshot["extensions"] = self._get_snapshot_extensions(meeting, approver, approved_at)
         return snapshot

@@ -48,6 +48,7 @@
                     <button name="action_mark_held" type="object" string="Finish Meeting" invisible="state != 'scheduled' or (not actual_start_datetime and time_tracking_enabled)" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_mark_held" type="object" string="Record as Already Held" invisible="state != 'scheduled' or actual_start_datetime or not time_tracking_enabled" confirm="Mark this meeting as held even though it was never started?" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_draft_minutes" type="object" string="Prepare Minutes" invisible="state != 'held'" groups="community_meetings.group_meeting_editor"/>
+                    <button name="action_preview_minutes" type="object" string="Preview Minutes" invisible="state not in ['held', 'minutes_draft']" groups="community_meetings.group_meeting_editor,community_meetings.group_meeting_approver"/>
                     <button name="action_approve_minutes" type="object" string="Approve Minutes" invisible="state != 'minutes_draft'" groups="community_meetings.group_meeting_approver"/>
                     <button name="action_start_amendment" type="object" string="Start Amendment" invisible="state != 'approved'" groups="community_meetings.group_meeting_manager"/>
                     <button name="action_cancel" type="object" string="Cancel" invisible="state not in ['draft', 'scheduled']" groups="community_meetings.group_meeting_editor"/>

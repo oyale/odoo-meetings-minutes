@@ -612,15 +612,44 @@ class CommunityMeeting(models.Model):
             "params": {"meeting_id": self.id},
         }
 
+    def _check_minutes_preview_access(self):
+        self.ensure_one()
+        self.check_access("read")
+        if not (
+            self.env.user.has_group("community_meetings.group_meeting_editor")
+            or self.env.user.has_group("community_meetings.group_meeting_approver")
+        ):
+            raise AccessError(_("Only meeting editors and approvers can preview draft minutes."))
+        if self.state not in ("held", "minutes_draft"):
+            raise UserError(_("Minutes preview is only available for held meetings or draft minutes."))
+
+    def action_preview_minutes(self):
+        self.ensure_one()
+        self._check_minutes_preview_access()
+        return {
+            "type": "ir.actions.client",
+            "tag": "community_meetings.minutes_preview",
+            "name": _("Draft Minutes Preview"),
+            "target": "current",
+            "params": {"meeting_id": self.id},
+        }
+
+    def get_minutes_preview_html(self):
+        self.ensure_one()
+        self._check_minutes_preview_access()
+        return str(self.env["report.community_meetings.report_revision_document"]._render_preview(self))
+
     def get_live_capabilities(self):
         self.ensure_one()
         self.check_access("read")
         editorial = self.env.user.has_group("community_meetings.group_meeting_editor")
+        minutes_reviewer = editorial or self.env.user.has_group("community_meetings.group_meeting_approver")
         return {
             "timezone": self.series_id.timezone or self.env.user.tz or "UTC",
             "can_edit": editorial and self.has_access("write") and self.state not in ("approved", "cancelled"),
             "can_view_editorial": editorial and self.has_access("write"),
             "can_approve": self.env.user.has_group("community_meetings.group_meeting_approver"),
+            "can_preview_minutes": minutes_reviewer,
             "time_tracking": self.time_tracking_enabled,
             "can_add_point": self.add_point_allowed,
         }

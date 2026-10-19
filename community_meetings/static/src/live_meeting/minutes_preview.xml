@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="community_meetings.MinutesPreview">
+        <main class="o_community_minutes_preview">
+            <header class="o_community_minutes_preview_toolbar">
+                <button type="button" class="btn btn-secondary" t-on-click="backToMeeting">
+                    <i class="fa fa-arrow-left me-1" aria-hidden="true"/>Return to meeting to edit
+                </button>
+                <span class="text-muted">Draft preview · saved content</span>
+            </header>
+            <div t-if="state.loading" class="alert alert-info m-4" role="status">Loading minutes preview…</div>
+            <div t-elif="state.error" class="alert alert-danger m-4" role="alert">
+                <strong>Could not open the minutes preview.</strong>
+                <p class="mb-0" t-out="state.error"/>
+            </div>
+            <article t-elif="state.html" class="o_community_minutes_preview_body" t-out="state.html"/>
+        </main>
+    </t>
+</templates>

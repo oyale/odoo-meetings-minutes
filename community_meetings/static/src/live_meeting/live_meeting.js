@@ -80,6 +80,9 @@ export class LiveMeeting extends Component {
     get readOnly() { return this.locked || this.meetingPaused; }
     get canAddPoint() { return Boolean(this.state.capabilities?.can_add_point); }
     get draftingMinutes() { return ["held", "minutes_draft"].includes(this.state.meeting.state); }
+    get canPreviewMinutes() {
+        return this.draftingMinutes && Boolean(this.state.capabilities?.can_preview_minutes);
+    }
     get hasUnsavedEditors() { return Object.values(this.state.unsavedEditors).some(Boolean); }
 
     async load() {
@@ -1160,6 +1163,23 @@ export class LiveMeeting extends Component {
         }
         if (this.props.close) return this.props.close();
         return this.actionService.doAction({ type: "ir.actions.act_window", res_model: "community.meeting", views: [[false, "list"], [false, "form"]], target: "current" });
+    }
+    async previewMinutes() {
+        if (!await this.flushEditors()) {
+            this.notification.add(_t("Save the pending edits before opening the minutes preview."), { type: "warning" });
+            return;
+        }
+        const pendingResults = await Promise.all([...this.pendingWrites.values()]);
+        if (pendingResults.some((result) => result === false) || this.state.saving) {
+            this.notification.add(_t("Wait for all meeting changes to save before opening the minutes preview."), { type: "warning" });
+            return;
+        }
+        return this.actionService.doAction({
+            type: "ir.actions.client",
+            tag: "community_meetings.minutes_preview",
+            target: "current",
+            params: { meeting_id: this.meetingId },
+        });
     }
 }
 

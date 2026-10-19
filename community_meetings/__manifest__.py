@@ -35,15 +35,18 @@
     "assets": {
         "web.assets_backend": [
             "community_meetings/static/src/live_meeting/live_meeting.js",
+            "community_meetings/static/src/live_meeting/minutes_preview.js",
             "community_meetings/static/src/live_meeting/meeting_list.js",
             "community_meetings/static/src/live_meeting/series_list.js",
             "community_meetings/static/src/fields/agenda_type/agenda_type.js",
             "community_meetings/static/src/fields/point_options/point_options.js",
             "community_meetings/static/src/live_meeting/live_meeting.xml",
+            "community_meetings/static/src/live_meeting/minutes_preview.xml",
             "community_meetings/static/src/fields/agenda_type/agenda_type.xml",
             "community_meetings/static/src/fields/point_options/point_options.xml",
             "community_meetings/static/src/preparation/preparation.scss",
             "community_meetings/static/src/live_meeting/live_meeting.scss",
+            "community_meetings/static/src/live_meeting/minutes_preview.scss",
         ],
     },
     "installable": True,
