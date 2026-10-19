@@ -79,15 +79,17 @@ export class AgendaTypeField extends Component {
             this.select(item);
             return;
         }
-        const buttons = [...ev.currentTarget.parentElement.querySelectorAll("button:not(:disabled)")];
-        const index = buttons.indexOf(ev.currentTarget);
+        const items = this.items;
+        const index = items.findIndex((candidate) => candidate.id === item.id);
         const delta = ["ArrowRight", "ArrowDown"].includes(ev.key) ? 1 : -1;
-        const nextButton = buttons[(index + delta + buttons.length) % buttons.length];
-        nextButton?.focus();
-        const nextItem = this.items.find(
-            (candidate) => String(candidate.id) === nextButton?.dataset.itemId
+        const nextItem = items[(index + delta + items.length) % items.length];
+        if (!nextItem) return;
+        this.select(nextItem);
+        if (this.props.richChoices) this.state.showAllRichChoices = true;
+        const nextButton = ev.currentTarget.parentElement.querySelector(
+            `button[data-item-id="${nextItem.id}"]`
         );
-        if (nextItem) this.select(nextItem);
+        nextButton?.focus();
     }
 }
 

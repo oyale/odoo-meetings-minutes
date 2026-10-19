@@ -6,7 +6,7 @@
             <button t-if="!props.richChoices or state.showAllRichChoices or item.id === value" t-att-class="'btn o_meeting_type_choice ' + (props.richChoices ? 'o_meeting_type_card' : (item.id === value ? 'btn-primary' : 'btn-outline-secondary')) + (item.id === value ? ' is-selected' : '') + (props.richChoices and !state.showAllRichChoices ? ' is-compact' : '')" t-foreach="items" t-as="item"
                     t-key="item.id"
                     type="button"
-                    role="radio" t-att-aria-checked="item.id === value"
+                    role="radio" t-att-aria-checked="item.id === value ? 'true' : 'false'"
                     t-att-data-item-id="item.id"
                     t-att-aria-label="item.name"
                     t-att-disabled="props.readonly"
