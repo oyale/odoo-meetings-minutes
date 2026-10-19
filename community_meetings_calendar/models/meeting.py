@@ -7,9 +7,7 @@ from odoo.exceptions import AccessError, UserError, ValidationError
 class CommunityMeeting(models.Model):
     _inherit = "community.meeting"
 
-    calendar_event_ids = fields.One2many(
-        "calendar.event", "community_meeting_id", string="Calendar Event", copy=False
-    )
+    calendar_event_ids = fields.One2many("calendar.event", "community_meeting_id", string="Calendar Event", copy=False)
 
     @staticmethod
     def _calendar_managed_fields():
@@ -25,19 +23,19 @@ class CommunityMeeting(models.Model):
 
     def _check_calendar_attendees(self):
         user_model = self.env["res.users"].sudo()
-        partners_by_meeting = {
-            meeting.id: meeting._calendar_attendee_partner_ids() for meeting in self
-        }
+        partners_by_meeting = {meeting.id: meeting._calendar_attendee_partner_ids() for meeting in self}
         all_partners = self.env["res.partner"].browse(
             set().union(*(partners.ids for partners in partners_by_meeting.values()))
         )
         if not all_partners:
             return True
-        linked_users = user_model.search([
-            ("partner_id", "in", all_partners.ids),
-            ("active", "=", True),
-            ("share", "=", False),
-        ])
+        linked_users = user_model.search(
+            [
+                ("partner_id", "in", all_partners.ids),
+                ("active", "=", True),
+                ("share", "=", False),
+            ]
+        )
         users_by_partner = {}
         for user in linked_users:
             users_by_partner.setdefault(user.partner_id.id, self.env["res.users"])
@@ -45,15 +43,8 @@ class CommunityMeeting(models.Model):
         for meeting in self:
             for partner in partners_by_meeting[meeting.id]:
                 eligible = users_by_partner.get(partner.id, self.env["res.users"])
-                if not eligible or not any(
-                    meeting.company_id in user.company_ids for user in eligible
-                ):
-                    raise ValidationError(
-                        _(
-                            "Calendar invitees must be active internal users in the "
-                            "meeting company."
-                        )
-                    )
+                if not eligible or not any(meeting.company_id in user.company_ids for user in eligible):
+                    raise ValidationError(_("Calendar invitees must be active internal users in the meeting company."))
 
     def _calendar_attendee_partner_ids(self):
         self.ensure_one()
@@ -81,12 +72,21 @@ class CommunityMeeting(models.Model):
             "community_meeting_id": self.id,
         }
         if not event:
-            values["community_calendar_uid"] = "%s@community-meetings" % uuid.uuid4().hex
+            values["community_calendar_uid"] = f"{uuid.uuid4().hex}@community-meetings"
             return values
 
         scalar_fields = (
-            "name", "start", "stop", "location", "user_id", "privacy", "description",
-            "recurrency", "res_model_id", "res_id", "community_meeting_id",
+            "name",
+            "start",
+            "stop",
+            "location",
+            "user_id",
+            "privacy",
+            "description",
+            "recurrency",
+            "res_model_id",
+            "res_id",
+            "community_meeting_id",
         )
         updates = {
             field_name: values[field_name]
@@ -95,7 +95,8 @@ class CommunityMeeting(models.Model):
                 getattr(event, field_name).id
                 if hasattr(getattr(event, field_name), "id")
                 else getattr(event, field_name)
-            ) != values[field_name]
+            )
+            != values[field_name]
         }
         if set(event.partner_ids.ids) != set(self._calendar_attendee_partner_ids().ids):
             updates["partner_ids"] = values["partner_ids"]
@@ -104,12 +105,21 @@ class CommunityMeeting(models.Model):
     def _lock_calendar_event(self):
         for meeting in self.sorted("id"):
             self.env.cr.execute(
-                "SELECT id FROM community_meeting WHERE id = %s FOR UPDATE", [meeting.id]
+                "SELECT id FROM community_meeting WHERE id = %s FOR UPDATE",
+                [meeting.id],
             )
-        self.invalidate_recordset([
-            "state", "start_datetime", "end_datetime", "actual_start_datetime",
-            "organizer_id", "secretary_id", "attendee_partner_ids", "calendar_event_ids",
-        ])
+        self.invalidate_recordset(
+            [
+                "state",
+                "start_datetime",
+                "end_datetime",
+                "actual_start_datetime",
+                "organizer_id",
+                "secretary_id",
+                "attendee_partner_ids",
+                "calendar_event_ids",
+            ]
+        )
 
     def _ensure_calendar_end_datetime(self):
         for meeting in self:
@@ -117,7 +127,11 @@ class CommunityMeeting(models.Model):
                 duration = meeting.series_id.duration_hours if meeting.series_id else 1.0
                 end = fields.Datetime.add(meeting.start_datetime, hours=duration or 1.0)
                 super(CommunityMeeting, meeting).write({"end_datetime": end})
-            if not meeting.start_datetime or not meeting.end_datetime or meeting.end_datetime <= meeting.start_datetime:
+            if (
+                not meeting.start_datetime
+                or not meeting.end_datetime
+                or meeting.end_datetime <= meeting.start_datetime
+            ):
                 raise ValidationError(_("The meeting end must be after its start before scheduling."))
 
     def _sync_calendar_event(self):
@@ -143,9 +157,7 @@ class CommunityMeeting(models.Model):
                 if removed:
                     event._community_meetings_calendar_cancel_mail(removed)
             else:
-                entry = creates_by_owner.setdefault(
-                    meeting.organizer_id.id, (owner_env, [])
-                )
+                entry = creates_by_owner.setdefault(meeting.organizer_id.id, (owner_env, []))
                 entry[1].append(meeting._calendar_event_values())
         for owner_env, values_list in creates_by_owner.values():
             owner_env._community_meetings_calendar_create(values_list)

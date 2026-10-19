@@ -24,9 +24,7 @@ ADDONS = (
 CHANGELOG = ROOT / "CHANGELOG.md"
 METAPACKAGE = ROOT / "setup/_metapackage/pyproject.toml"
 VERSION_RE = re.compile(r"18\.0\.\d+\.\d+")
-RELEASE_HEADING_RE = re.compile(
-    r"^## Odoo Meetings Minutes (18\.0\.\d+\.\d+) \(", re.MULTILINE
-)
+RELEASE_HEADING_RE = re.compile(r"^## Odoo Meetings Minutes (18\.0\.\d+\.\d+) \(", re.MULTILINE)
 
 
 def git(*args: str, check: bool = True, capture: bool = True) -> str:
@@ -53,9 +51,7 @@ def next_release_version(latest: str, today: dt.date | None = None) -> str:
     date_segment = int(today.strftime("%Y%m%d"))
     latest_parts = parse_version(latest)
     if latest_parts[2] > date_segment:
-        raise SystemExit(
-            "The latest release date is in the future; pass --version explicitly."
-        )
+        raise SystemExit("The latest release date is in the future; pass --version explicitly.")
     sequence = latest_parts[3] + 1 if latest_parts[2] == date_segment else 0
     return f"18.0.{date_segment}.{sequence}"
 
@@ -68,9 +64,7 @@ def latest_release_tag() -> str:
     tags = git("tag", "--list", "18.0.*", "v18.0.*").splitlines()
     tagged = [tag for tag in tags if VERSION_RE.fullmatch(normalize_tag(tag))]
     if not tagged:
-        raise SystemExit(
-            "No 18.0 release tags found; cannot determine the release baseline."
-        )
+        raise SystemExit("No 18.0 release tags found; cannot determine the release baseline.")
     return max(tagged, key=lambda tag: parse_version(normalize_tag(tag)))
 
 
@@ -80,10 +74,7 @@ def normalize_tag(tag: str) -> str:
 
 def check_clean_state() -> None:
     if git("status", "--porcelain", "--untracked-files=no"):
-        raise SystemExit(
-            "Tracked changes are present. Commit or stash them before "
-            "preparing a release."
-        )
+        raise SystemExit("Tracked changes are present. Commit or stash them before preparing a release.")
 
 
 def changed_addons_since(tag: str) -> list[str]:
@@ -128,9 +119,7 @@ def bumped_manifest(addon: str, tag: str) -> tuple[str, str]:
     current = manifest_version(contents)
     new_version = next_addon_version(current, previous)
     if new_version != current:
-        pattern = re.compile(
-            r"(?m)^(\s*['\"]version['\"]\s*:\s*['\"])" + re.escape(current) + r"(['\"])"
-        )
+        pattern = re.compile(r"(?m)^(\s*['\"]version['\"]\s*:\s*['\"])" + re.escape(current) + r"(['\"])")
         updated, count = pattern.subn(rf"\g<1>{new_version}\g<2>", contents, count=1)
         if count != 1:
             raise SystemExit(f"Could not safely update the version in {path}.")
@@ -142,17 +131,13 @@ def bumped_manifest(addon: str, tag: str) -> tuple[str, str]:
 def run_precommit_hook(hook: str, files: list[str], manual: bool = False) -> None:
     precommit = shutil.which("pre-commit")
     if not precommit:
-        raise SystemExit(
-            "pre-commit is required; install the repository's hooks first."
-        )
+        raise SystemExit("pre-commit is required; install the repository's hooks first.")
     command = [precommit, "run", hook]
     if manual:
         command.extend(["--hook-stage", "manual"])
     if files:
         command.extend(["--files", *files])
-    result = subprocess.run(
-        command, cwd=ROOT, capture_output=True, text=True, check=False
-    )
+    result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, check=False)
     output = result.stdout + result.stderr
     print(output, end="")
     if result.returncode == 0:
@@ -166,9 +151,7 @@ def run_precommit_hook(hook: str, files: list[str], manual: bool = False) -> Non
     git("add", "--", *changed)
     result = subprocess.run(command, cwd=ROOT, check=False)
     if result.returncode:
-        raise SystemExit(
-            f"Pre-commit hook {hook} did not pass after staging its output."
-        )
+        raise SystemExit(f"Pre-commit hook {hook} did not pass after staging its output.")
 
 
 def read_release_notes(changelog: str, version: str) -> str:
@@ -222,18 +205,10 @@ def pending_prepared_release(tag: str) -> str | None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--version", help="Suite release version; defaults to today's next sequence"
-    )
-    parser.add_argument(
-        "--dry-run", action="store_true", help="Only report the planned version bumps"
-    )
-    parser.add_argument(
-        "--apply", action="store_true", help="Prepare and commit the release locally"
-    )
-    parser.add_argument(
-        "--push", action="store_true", help="Push the release commit to origin/18.0"
-    )
+    parser.add_argument("--version", help="Suite release version; defaults to today's next sequence")
+    parser.add_argument("--dry-run", action="store_true", help="Only report the planned version bumps")
+    parser.add_argument("--apply", action="store_true", help="Prepare and commit the release locally")
+    parser.add_argument("--push", action="store_true", help="Push the release commit to origin/18.0")
     parser.add_argument(
         "--publish",
         action="store_true",
@@ -293,20 +268,14 @@ def preflight(args: argparse.Namespace) -> tuple[str, str, list[str], bool]:
     return version, tag, addons, False
 
 
-def pending_release_plan(
-    args: argparse.Namespace, tag: str
-) -> tuple[str, str, list[str], bool] | None:
+def pending_release_plan(args: argparse.Namespace, tag: str) -> tuple[str, str, list[str], bool] | None:
     pending = pending_prepared_release(tag)
     if not pending:
         return None
     if args.version and args.version != pending:
-        raise SystemExit(
-            f"A prepared release {pending} is waiting to be pushed/published."
-        )
+        raise SystemExit(f"A prepared release {pending} is waiting to be pushed/published.")
     if not (args.push or args.publish or args.dry_run):
-        raise SystemExit(
-            f"Release {pending} is already prepared; rerun with --push or --publish."
-        )
+        raise SystemExit(f"Release {pending} is already prepared; rerun with --push or --publish.")
     return pending, tag, [], True
 
 
@@ -327,9 +296,7 @@ def check_push_target() -> None:
         check=False,
     )
     if ancestry.returncode:
-        raise SystemExit(
-            "origin/18.0 is not an ancestor of HEAD; update the branch first."
-        )
+        raise SystemExit("origin/18.0 is not an ancestor of HEAD; update the branch first.")
 
 
 def check_gh_auth() -> None:
@@ -349,20 +316,20 @@ def show_plan(version: str, tag: str, addons: list[str]) -> None:
             target = next_addon_version(current, previous)
             print(f"  {addon}: {current} -> {target}")
     else:
-        print(
-            "No addon package changes detected; only the suite metapackage "
-            "will be released."
-        )
+        print("No addon package changes detected; only the suite metapackage will be released.")
 
     has_fragments = any(
-        fragment
-        for addon in ADDONS
-        for fragment in (ROOT / addon / "readme/newsfragments").glob("*.*.md")
+        fragment for addon in ADDONS for fragment in (ROOT / addon / "readme/newsfragments").glob("*.*.md")
     )
     if not addons and not has_fragments:
-        raise SystemExit(
-            "No changed addons or release fragments found; nothing to release."
-        )
+        raise SystemExit("No changed addons or release fragments found; nothing to release.")
+
+
+def release_check_files(tag: str) -> list[str]:
+    """Check committed release contents as well as newly staged metadata."""
+    committed = git("diff", "--name-only", "--diff-filter=ACMRT", f"{tag}...HEAD").splitlines()
+    staged = git("diff", "--cached", "--name-only", "--diff-filter=ACMRT").splitlines()
+    return sorted(path for path in set(committed + staged) if (ROOT / path).is_file())
 
 
 def prepare_commit(version: str, tag: str, addons: list[str]) -> None:
@@ -402,19 +369,14 @@ def prepare_commit(version: str, tag: str, addons: list[str]) -> None:
     git("add", "--", "CHANGELOG.md", "README.md", "setup/_metapackage/pyproject.toml")
     fragment_paths = [f"{addon}/readme/newsfragments" for addon in ADDONS]
     git("add", "-u", "--", *fragment_paths)
-    changed_files = git("diff", "--cached", "--name-only").splitlines()
-    existing_files = [path for path in changed_files if (ROOT / path).is_file()]
+    existing_files = release_check_files(tag)
     if existing_files:
         precommit = shutil.which("pre-commit")
         if not precommit:
             raise SystemExit("pre-commit is required to validate the release commit.")
-        subprocess.run(
-            [precommit, "run", "--files", *existing_files], cwd=ROOT, check=True
-        )
+        subprocess.run([precommit, "run", "--files", *existing_files], cwd=ROOT, check=True)
     if not git("diff", "--cached", "--name-only"):
-        raise SystemExit(
-            "Release preparation produced no changes; refusing an empty commit."
-        )
+        raise SystemExit("Release preparation produced no changes; refusing an empty commit.")
     git("commit", "-m", f"chore(release): prepare {version}", capture=False)
 
 
@@ -472,9 +434,7 @@ def main() -> int:
     return 0
 
 
-def execute_plan(
-    args: argparse.Namespace, version: str, tag: str, addons: list[str]
-) -> None:
+def execute_plan(args: argparse.Namespace, version: str, tag: str, addons: list[str]) -> None:
     show_plan(version, tag, addons)
     if args.dry_run:
         return

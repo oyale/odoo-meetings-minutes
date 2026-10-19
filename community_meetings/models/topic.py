@@ -486,7 +486,7 @@ class AgendaParticipation(models.Model):
             prepared.append(vals)
         if pending_topic_values:
             topics = self.env["community.meeting.topic"].create(pending_topic_values)
-            for index, topic in zip(pending_topic_indexes, topics, strict=True):
+            for index, topic in zip(pending_topic_indexes, topics, strict=False):
                 prepared[index]["topic_id"] = topic.id
         items = super().create(prepared)
         for item in items:
