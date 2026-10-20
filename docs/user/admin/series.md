@@ -23,6 +23,14 @@ With the Project addon, project linking is also optional and starts off.
 
 ![New Meeting Series wizard: Structure step](../img/series-structure-wizard.png)
 
+## Chatter and change history
+
+The series form includes a chatter. Changes to its settings are recorded there,
+including changes to coordinators, usual attendees and allowed follow-up types.
+It does not reconstruct changes made before this feature was installed.
+With the Project addon, project destination and task policy changes are logged
+there as well.
+
 ## Header: What and People
 
 | Field | Meaning |

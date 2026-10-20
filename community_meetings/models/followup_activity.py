@@ -58,8 +58,11 @@ class MeetingSeries(models.Model):
         [("inherit", "Series/company default")] + FOLLOWUP_KIND_CODES,
         default="inherit",
         required=True,
+        tracking=True,
     )
-    default_activity_type_id = fields.Many2one("mail.activity.type", string="Default Odoo activity type")
+    default_activity_type_id = fields.Many2one(
+        "mail.activity.type", string="Default Odoo activity type", tracking=True
+    )
 
 
 class Meeting(models.Model):

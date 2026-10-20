@@ -8536,6 +8536,16 @@ msgid "Added to every meeting in this series. Editors can approve earlier minute
 msgstr "Se añade a todas las reuniones de esta serie. Los editores pueden aprobar actas anteriores durante una reunión en vivo; los aprobadores pueden hacerlo al preparar el acta de una reunión offline."
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
+msgid "Turning this off leaves pending minutes and existing approval points in place. Pending minutes can then be approved from their own meetings."
+msgstr "Al desactivar esta opción, las actas pendientes y los puntos de aprobación existentes se mantienen. Las actas pendientes podrán aprobarse desde sus propias reuniones."
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/series.py:0
+msgid "Series settings updated:"
+msgstr "Se ha actualizado la configuración de la serie:"
+
+#. module: community_meetings
 #: model:ir.model.constraint,message:community_meetings.constraint_community_meeting_revision_meeting_revision_unique
 msgid "Revision numbers must be unique per meeting."
 msgstr "Los números de revisión deben ser únicos por reunión."

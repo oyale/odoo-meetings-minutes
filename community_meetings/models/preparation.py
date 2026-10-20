@@ -54,11 +54,12 @@ class Settings(models.TransientModel):
 class MeetingSeries(models.Model):
     _inherit = "community.meeting.series"
 
-    duration_hours = fields.Float(string="Default duration", default=1.0, required=True)
+    duration_hours = fields.Float(string="Default duration", default=1.0, required=True, tracking=True)
     attendee_partner_ids = fields.Many2many("res.partner", string="Default attendees")
     default_estimated_minutes = fields.Integer(
         string="Default point estimate (minutes)",
         help="Overrides the company default for points of this series.",
+        tracking=True,
     )
     company_point_estimated_minutes = fields.Integer(
         related="company_id.meeting_estimated_minutes",
@@ -67,22 +68,26 @@ class MeetingSeries(models.Model):
     coordinator_label = fields.Char(
         string="Coordination role name",
         help="Optional. Overrides the default role name from Settings → Meetings for the meetings of this series.",
+        tracking=True,
     )
     secretary_label = fields.Char(
         string="Secretary role name",
         help="Optional. Overrides the default role name from Settings → Meetings for the meetings of this series.",
+        tracking=True,
     )
     meeting_name_pattern = fields.Char(
         string="New meeting name pattern",
         default="{date} {series}",
         required=True,
         help="Use {date} for the meeting date (YYYY-MM-DD) and {series} for this series name.",
+        tracking=True,
     )
     time_tracking = fields.Selection(
         [("inherit", "Company default"), ("on", "On"), ("off", "Off")],
         default="inherit",
         required=True,
         help="Overrides the company time-tracking setting for meetings of this series.",
+        tracking=True,
     )
     company_meeting_time_tracking = fields.Boolean(
         related="company_id.meeting_time_tracking",
@@ -98,6 +103,7 @@ class MeetingSeries(models.Model):
         default="inherit",
         required=True,
         help="Overrides the company rule for when new points can be added to the meetings of this series.",
+        tracking=True,
     )
 
     def _point_estimated_minutes_default(self):

@@ -180,6 +180,7 @@
                         </page>
                     </notebook>
                 </sheet>
+                <chatter/>
             </form>
         </field>
     </record>
@@ -276,7 +277,7 @@
                         <div class="o_meeting_series_agenda_options">
                             <div class="o_meeting_series_agenda_option">
                                 <div class="o_meeting_series_agenda_option_header">
-                                    <label class="o_meeting_series_agenda_option_label" for="has_minutes_approval_point"><strong>Minutes approval</strong><span>Added to every meeting in this series. Editors can approve earlier minutes during a live meeting; approvers can do so while preparing minutes for an offline meeting.</span></label>
+                                    <label class="o_meeting_series_agenda_option_label" for="has_minutes_approval_point"><strong>Minutes approval</strong><span>Added to every meeting in this series. Editors can approve earlier minutes during a live meeting; approvers can do so while preparing minutes for an offline meeting.</span><span>Turning this off leaves pending minutes and existing approval points in place. Pending minutes can then be approved from their own meetings.</span></label>
                                     <field name="has_minutes_approval_point" widget="boolean_toggle" nolabel="1"/>
                                 </div>
                             </div>

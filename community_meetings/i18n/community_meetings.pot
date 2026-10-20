@@ -8364,6 +8364,16 @@ msgid "Added to every meeting in this series. Editors can approve earlier minute
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
+msgid "Turning this off leaves pending minutes and existing approval points in place. Pending minutes can then be approved from their own meetings."
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/series.py:0
+msgid "Series settings updated:"
+msgstr ""
+
+#. module: community_meetings
 #: model:ir.model.constraint,message:community_meetings.constraint_community_meeting_revision_meeting_revision_unique
 msgid "Revision numbers must be unique per meeting."
 msgstr ""
