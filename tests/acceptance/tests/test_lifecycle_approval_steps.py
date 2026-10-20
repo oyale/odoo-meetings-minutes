@@ -9,7 +9,11 @@ from acceptance.features.steps.lifecycle_approval import minutes_draft_has_no_ag
 
 class LifecycleApprovalStepTests(unittest.TestCase):
     def test_failed_fixture_setup_marks_disposable_database_for_cleanup(self):
-        context = SimpleNamespace(browser_session=object(), requires_database_drop=False)
+        context = SimpleNamespace(
+            acceptance_config=SimpleNamespace(reviewer_login="reviewer"),
+            browser_session=object(),
+            requires_database_drop=False,
+        )
 
         with (
             patch(

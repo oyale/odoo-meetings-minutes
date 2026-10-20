@@ -1,6 +1,6 @@
 """Multi-actor UI steps for preview access boundaries."""
 
-from acceptance_actors import login_as_configured_actor
+from acceptance.features.steps.acceptance_actors import login_as_configured_actor
 from behave import given, then, when
 from browser_support.meeting import LiveMeetingFixture, assert_meeting_form
 from playwright.sync_api import expect

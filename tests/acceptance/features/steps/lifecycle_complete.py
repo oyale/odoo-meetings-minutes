@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from uuid import uuid4
 
-from acceptance_actors import login_as_configured_actor
+from acceptance.features.steps.acceptance_actors import login_as_configured_actor
 from behave import given, then, when
 from browser_support.meeting import assert_meeting_form
 from playwright.sync_api import expect

@@ -32,6 +32,7 @@ ensure_user(
         internal,
         "community_meetings.group_meeting_editor",
         "project.group_project_user",
+        "project.group_project_manager",
     ],
 )
 ensure_user(
