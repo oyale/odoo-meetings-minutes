@@ -7,6 +7,40 @@ Each addon changelog starts with its first release prepared after this change;
 the combined history below retains the existing suite release notes.
 
 <!-- towncrier release notes start -->
+## Odoo Meetings Minutes 18.0.20261020.0 (2026-10-20)
+
+### Addon versions
+
+| Addon | Odoo module version |
+|---|---:|
+| [Community Meetings](community_meetings/CHANGELOG.md) | `18.0.6.2.4` |
+| [Calendar Integration](community_meetings_calendar/CHANGELOG.md) | `18.0.1.0.3` |
+| [Project Integration](community_meetings_project/CHANGELOG.md) | `18.0.3.1.4` |
+| [Extension Demo](community_meetings_extension_demo/CHANGELOG.md) | `18.0.1.0.1` |
+
+=====================================================
+
+## Community Meetings
+
+### Features
+
+- Continued agenda points can show earlier discussion as read-only context, with an option to start without it. Recurring agenda templates can choose whether new occurrences show previous discussion.
+
+### Bugfixes
+
+- Fixed agenda point type choices so arrow-key navigation works while rich choices are collapsed and assistive technologies announce the selected state.
+
+### Improved Documentation
+
+- Added an extraordinary-meeting example to the Spanish guide on moving an agenda point to another series.
+## Calendar Integration
+
+### Bugfixes
+
+- Scheduling a meeting without a start date now shows the required date and time validation before checking the Calendar event interval.
+## Extension Demo
+
+No significant changes.
 ## Odoo Meetings Minutes 18.0.20261019.3 (2026-10-19)
 
 ### Addon versions

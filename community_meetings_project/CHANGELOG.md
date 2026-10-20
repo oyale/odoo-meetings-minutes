@@ -4,6 +4,14 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings Project 18.0.3.1.4 (2026-10-20)
+=====================================================
+
+## Internal changes
+
+- **alternate-project-selector-browser** — Corrected the alternate-project browser check to assert that the project input is hidden before enabling the option and visible afterwards.
+- **acceptance-coverage** — Added end-to-end acceptance scenarios for creating and linking Project tasks from meeting follow-ups.
+
 ## Community Meetings Project 18.0.3.1.3 (2026-10-19)
 =====================================================
 
