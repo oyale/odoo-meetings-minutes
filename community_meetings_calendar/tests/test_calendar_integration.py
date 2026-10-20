@@ -99,6 +99,16 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
         self.assertTrue(attachments, "The Calendar email did not contain invitation.ics")
         self.assertTrue(any(f"UID:{uid}".encode("ascii") in content for content in attachments))
 
+    def test_scheduling_without_start_datetime_uses_required_date_error(self):
+        meeting = self._meeting(start_datetime=False, end_datetime=False)
+
+        with self.assertRaisesRegex(ValidationError, "Set a meeting date and time before scheduling it"):
+            meeting.action_schedule()
+
+        self.assertEqual(meeting.state, "draft")
+        self.assertFalse(meeting.start_datetime)
+        self.assertFalse(meeting.calendar_event_ids)
+
     def test_scheduling_creates_one_private_event_with_stable_document_link(self):
         meeting = self._meeting(secretary_id=self.reader.id)
         self.assertFalse(meeting.calendar_event_ids)

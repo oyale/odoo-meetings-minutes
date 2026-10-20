@@ -8,6 +8,7 @@ editor account, and Python Playwright installed. Example:
 The suite creates and removes one scheduled meeting per case.
 """
 import os
+import sys
 import time
 import unittest
 import uuid
@@ -15,7 +16,12 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urljoin
 
-from playwright.sync_api import expect, sync_playwright
+from playwright.sync_api import expect
+
+TESTS_ROOT = Path(__file__).resolve().parents[3] / "tests"
+sys.path.insert(0, str(TESTS_ROOT))
+from browser_support.meeting import LiveMeetingFixture, open_live_meeting
+from browser_support.odoo_browser import OdooBrowserSession
 
 BASE_URL = os.environ.get("ODOO_BASE_URL", "http://localhost:8069").rstrip("/")
 DB = os.environ.get("ODOO_DB", "")
@@ -28,87 +34,41 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
     def setUpClass(cls):
         if not LOGIN or not PASSWORD:
             raise unittest.SkipTest("Set ODOO_LOGIN and ODOO_PASSWORD to an editor account.")
-        cls.playwright = sync_playwright().start()
-        cls.browser = cls.playwright.chromium.launch(
+        cls.session = OdooBrowserSession.login(
+            BASE_URL,
+            DB,
+            LOGIN,
+            PASSWORD,
             headless=os.environ.get("PLAYWRIGHT_HEADFUL") != "1",
-            args=["--no-sandbox"],
+            viewport={"width": 1440, "height": 1000},
         )
-        cls.context = cls.browser.new_context(viewport={"width": 1440, "height": 1000})
-        cls.page = cls.context.new_page()
-        cls.console_errors = []
-        cls.page.on("pageerror", lambda error: cls.console_errors.append(str(error)))
-        cls.page.on("console", lambda msg: cls.console_errors.append(msg.text) if msg.type == "error" else None)
-        cls.page.goto(urljoin(BASE_URL + "/", "web/login" + (("?db=%s" % DB) if DB else "")), wait_until="domcontentloaded")
-        cls.page.locator('input[name="login"]').fill(LOGIN)
-        cls.page.locator('input[name="password"]').fill(PASSWORD)
-        cls.page.locator('button[type="submit"]').click()
-        cls.page.wait_for_url("**/odoo**", timeout=30000)
+        cls.playwright = cls.session.playwright
+        cls.browser = cls.session.browser
+        cls.context = cls.session.context
+        cls.page = cls.session.page
+        cls.console_errors = cls.session.console_errors
 
     @classmethod
     def tearDownClass(cls):
-        cls.context.close()
-        cls.browser.close()
-        cls.playwright.stop()
+        cls.session.close()
 
     def rpc(self, model, method, args, kwargs=None, page=None):
-        response = (page or self.page).request.post(
-            urljoin(BASE_URL + "/", "web/dataset/call_kw/%s/%s" % (model, method)),
-            data={"jsonrpc": "2.0", "method": "call", "params": {
-                "model": model, "method": method, "args": args, "kwargs": kwargs or {},
-            }, "id": 1},
-        )
-        payload = response.json()
-        if response.status != 200 or payload.get("error"):
-            raise AssertionError("Odoo RPC failed: %r" % payload.get("error", payload))
-        return payload["result"]
+        return self.session.rpc(model, method, args, kwargs, page=page)
 
     def setUp(self):
         self.errors_before = len(self.console_errors)
-        self.meeting_id = False
-        self.item_ids = {}
-        start = (datetime.utcnow() + timedelta(days=1)).replace(microsecond=0)
-        self.meeting_id = self.rpc("community.meeting", "create", [{
-            "name": "Playwright live case %s" % self.id().rsplit(".", 1)[-1],
-            "start_datetime": start.strftime("%Y-%m-%d %H:%M:%S"),
-        }])
+        self.fixture = LiveMeetingFixture.create_scheduled_live_meeting(
+            self.session, self.id().rsplit(".", 1)[-1]
+        )
+        self.meeting_id = self.fixture.meeting_id
+        self.item_ids = self.fixture.item_ids
         self.addCleanup(self.cleanup_meeting)
-        for kind in ("information", "discussion", "decision", "todo"):
-            agenda_type = self.rpc("community.meeting.agenda.type", "search", [[("behavior", "=", kind), ("active", "=", True)]], {"limit": 1})
-            if not agenda_type:
-                self.fail("No active agenda type for %s" % kind)
-            self.item_ids[kind] = self.rpc("community.meeting.agenda.item", "create", [{
-                "meeting_id": self.meeting_id,
-                "name": "Browser %s case" % kind.title(),
-                "kind": kind,
-                "agenda_type_id": agenda_type[0],
-            }])
-        self.rpc("community.meeting", "action_schedule", [[self.meeting_id]])
-        self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
-        self.page.get_by_role("button", name="Open Meeting").click(timeout=30000)
-        try:
-            self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
-        except Exception as error:
-            raise AssertionError(
-                "Live meeting did not render agenda cards; browser errors: %r; URL: %s"
-                % (self.console_errors, self.page.url)
-            ) from error
-        self.page.get_by_role("button", name="Expand / Collapse all").click()
+        open_live_meeting(self.session, self.meeting_id)
 
     def cleanup_meeting(self):
         if not self.meeting_id:
             return
-        state = self.record("community.meeting", self.meeting_id, ["state"])["state"]
-        if state not in ("draft", "scheduled"):
-            # The standard workflow does not allow deleting terminal meetings.
-            return
-        transfers = self.rpc("community.meeting.carryover", "search", [["|", ("origin_meeting_id", "=", self.meeting_id), ("destination_meeting_id", "=", self.meeting_id)]])
-        if transfers:
-            return
-        self.rpc("community.meeting", "action_cancel", [[self.meeting_id]])
-        resolutions = self.rpc("community.meeting.resolution", "search", [[("meeting_id", "=", self.meeting_id)]])
-        if resolutions:
-            self.rpc("community.meeting.resolution", "unlink", [resolutions])
-        self.rpc("community.meeting", "unlink", [[self.meeting_id]])
+        self.fixture.cleanup()
 
     def card(self, kind, begin=True):
         card = self.page.locator(".o_live_agenda_card").filter(has_text="Browser %s case" % kind.title())

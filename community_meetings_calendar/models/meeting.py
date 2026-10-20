@@ -198,6 +198,8 @@ class CommunityMeeting(models.Model):
             or self.env.user.has_group("community_meetings.group_meeting_manager")
         ):
             raise AccessError(_("You are not allowed to schedule meetings."))
+        if any(not meeting.start_datetime for meeting in self):
+            raise ValidationError(_("Set a meeting date and time before scheduling it."))
         self._ensure_calendar_end_datetime()
         result = super().action_schedule()
         self._sync_calendar_event()

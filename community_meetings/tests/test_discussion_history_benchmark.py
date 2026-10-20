@@ -1,8 +1,9 @@
 """Manual scaling benchmark for predecessor history loading.
 
-Run only on a disposable database with devctl and select
-``TestDiscussionHistoryBenchmark`` explicitly. The test reports SQL query count
-and wall time for histories with increasing numbers of recurring occurrences.
+Run only on a disposable database with the configured Odoo test runner and
+select ``TestDiscussionHistoryBenchmark`` explicitly. The test reports SQL
+query count and wall time for histories with increasing numbers of recurring
+occurrences.
 """
 
 import logging
