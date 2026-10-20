@@ -29,7 +29,8 @@
                 <i class="fa fa-hourglass-half" aria-hidden="true"/>
                 <input type="number" min="0" step="1" inputmode="numeric" aria-label="Custom estimate in minutes"
                        t-att-value="value" t-att-disabled="props.readonly"
-                       t-on-change="(ev) => this.setValue(ev.target.value)"/>
+                       t-on-focus="selectAll"
+                       t-on-input="(ev) => this.setValue(ev.target.value)"/>
                 <span>minutes</span>
             </div>
         </div>

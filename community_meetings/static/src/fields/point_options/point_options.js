@@ -59,6 +59,10 @@ export class MeetingMinutesField extends Component {
         }
     }
 
+    selectAll(event) {
+        event.target.select();
+    }
+
     useCompanyDefault() {
         this.setValue(0);
     }
