@@ -178,3 +178,56 @@ class TestAgendaCarryover(TransactionCase):
         self.assertEqual(transfer.destination_item_id.meeting_id, destination)
         self.assertEqual(transfer.destination_item_id.carryover_id.origin_resolution_id, resolution)
         self.assertEqual(transfer.destination_item_id.topic_id.series_id, series)
+
+    def test_spanish_carryover_errors_are_translated(self):
+        spanish = self.env["res.lang"].search(
+            [("code", "=", "es_ES"), ("active", "=", True)], limit=1
+        )
+        if not spanish:
+            self.skipTest("Spanish translations are not installed in this database.")
+
+        spanish_items = (
+            self.env["community.meeting.agenda.item"]
+            .with_user(self.editor)
+            .with_context(lang="es_ES")
+        )
+        source_item = spanish_items.create(
+            {"meeting_id": self.source.id, "name": "Accepted source"}
+        )
+        cancelled_source_item = spanish_items.create(
+            {"meeting_id": self.source.id, "name": "Cancelled source"}
+        )
+        transfer = self._request(source_item)
+        transfer.action_accept()
+
+        with self.assertRaises(UserError) as deletion_error:
+            transfer.destination_item_id.with_context(lang="es_ES").unlink()
+        self.assertEqual(
+            str(deletion_error.exception),
+            "No se puede eliminar un punto del orden del día procedente de un traspaso aceptado.",
+        )
+
+        with self.assertRaises(UserError) as link_error:
+            transfer.destination_item_id.with_context(lang="es_ES").write(
+                {"carryover_id": False}
+            )
+        self.assertEqual(
+            str(link_error.exception),
+            "El vínculo de traspaso de un punto del orden del día no se puede cambiar.",
+        )
+
+        self.source.action_cancel()
+        with self.assertRaises(UserError) as cancelled_error:
+            self.env["community.meeting.carryover"].with_user(self.editor).with_context(
+                lang="es_ES"
+            ).create(
+                {
+                    "origin_model": "agenda_item",
+                    "origin_record_id": cancelled_source_item.id,
+                    "destination_meeting_id": self.destination.id,
+                }
+            )
+        self.assertEqual(
+            str(cancelled_error.exception),
+            "Las reuniones canceladas no pueden iniciar traspasos del orden del día.",
+        )
