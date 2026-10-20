@@ -4,14 +4,14 @@
 import json
 import os
 import re
-from pathlib import Path
 import sys
 import time
 import unittest
 import uuid
+from pathlib import Path
 
-from playwright.sync_api import expect
 from live_meeting_playwright import BASE_URL, LiveMeetingBrowserChecks
+from playwright.sync_api import expect
 
 # Each entry is an observable user action, not a line/branch coverage claim.
 ACTIONS = {
@@ -1012,8 +1012,59 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         self.page.goto(
             "%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, draft)
         )
+        schedule_heading = self.page.locator(
+            ".o_horizontal_separator",
+            has_text=re.compile("When and where|Cuándo y dónde", re.IGNORECASE),
+        )
+        people_heading = self.page.locator(
+            ".o_horizontal_separator",
+            has_text=re.compile("People and series|Personas y serie", re.IGNORECASE),
+        )
+        expect(schedule_heading).to_be_visible()
+        expect(people_heading).to_be_visible()
+        locale = (
+            "es"
+            if self.page.locator(
+                ".o_horizontal_separator",
+                has_text=re.compile("Cuándo y dónde", re.IGNORECASE),
+            ).count()
+            else "en"
+        )
+        schedule_box = schedule_heading.bounding_box()
+        people_box = people_heading.bounding_box()
+        self.assertLess(
+            abs(schedule_box["y"] - people_box["y"]),
+            100,
+            "Schedule and people should share the desktop identity row.",
+        )
+        self.page.screenshot(
+            path=str(
+                Path(os.environ["PLAYWRIGHT_ARTIFACTS"])
+                / f"meeting-form-desktop-{locale}.png"
+            ),
+            full_page=True,
+        )
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        responsive = self.page.locator(".o_form_view").evaluate(
+            "el => ({width: el.clientWidth, scrollWidth: el.scrollWidth})"
+        )
+        self.assertLessEqual(
+            responsive["scrollWidth"] - responsive["width"],
+            1,
+            responsive,
+        )
+        self.page.screenshot(
+            path=str(
+                Path(os.environ["PLAYWRIGHT_ARTIFACTS"])
+                / f"meeting-form-mobile-{locale}.png"
+            ),
+            full_page=True,
+        )
+        self.page.set_viewport_size({"width": 1440, "height": 900})
         self.page.locator('.o_field_widget[name="location"] input').fill("Browser room")
-        self.page.get_by_role("button", name="Schedule", exact=True).click()
+        self.page.get_by_role(
+            "button", name=re.compile("^(Schedule|Programar)$", re.IGNORECASE)
+        ).click()
         deadline = time.monotonic() + 30
         record = self.record("community.meeting", draft, ["location", "state"])
         while record["state"] != "scheduled" and time.monotonic() < deadline:

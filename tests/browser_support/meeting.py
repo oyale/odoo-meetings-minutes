@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -131,7 +132,9 @@ def open_live_meeting(
             f"web#model=community.meeting&id={meeting_id}&view_type=form",
         )
     )
-    page.get_by_role("button", name="Open Meeting").click(timeout=timeout)
+    page.get_by_role(
+        "button", name=re.compile(r"^(Open Meeting|Abrir reunión)$", re.IGNORECASE)
+    ).click(timeout=timeout)
     try:
         page.locator(".o_live_agenda_card").first.wait_for(timeout=timeout)
     except Exception as error:
@@ -139,7 +142,13 @@ def open_live_meeting(
             f"Live meeting did not render agenda cards; browser errors: {session.console_errors!r}; URL: {page.url}"
         ) from error
     if expand_all:
-        page.get_by_role("button", name="Expand / Collapse all").click()
+        page.get_by_role(
+            "button",
+            name=re.compile(
+                r"^(Expand \/ Collapse all|Desplegar \/ plegar todo)$",
+                re.IGNORECASE,
+            ),
+        ).click()
     return page
 
 
