@@ -1,0 +1,1 @@
+Series can require approval of earlier minutes from a minutes-approval point in a later meeting. The point is added to existing editable meetings when the policy is enabled, and approval history records the exact revision approved, including amendments.

@@ -64,7 +64,7 @@ class CommunityMeetingSeries(models.Model):
     )
     has_minutes_approval_point = fields.Boolean(
         string="Minutes approval point",
-        help="Add a 'Minutes Approval' point as the first agenda item of each meeting.",
+        help="Add a 'Minutes Approval' point to every meeting. Approvers use it to approve pending earlier minutes.",
     )
     has_next_meeting_point = fields.Boolean(
         string="Next meeting point",
@@ -219,7 +219,13 @@ class CommunityMeetingSeries(models.Model):
             [("series_id", "in", self.ids)]
         ):
             raise UserError(_("The kind of a series with meetings cannot be changed."))
-        return super().write(vals)
+        result = super().write(vals)
+        if vals.get("has_minutes_approval_point"):
+            meetings = self.env["community.meeting"].sudo().search(
+                [("series_id", "in", self.ids), ("state", "in", ("draft", "scheduled", "held", "minutes_draft"))]
+            )
+            meetings._ensure_minutes_approval_point()
+        return result
 
     def unlink(self):
         if any(self.env["community.meeting"].search_count([("series_id", "=", series.id)]) for series in self):

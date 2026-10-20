@@ -808,6 +808,15 @@ export class LiveMeeting extends Component {
         if (!await this.flushEditors()) return;
         await this.transition("action_approve_minutes", "approved");
     }
+    async approvePreviousMinutes(item, meetingId) {
+        if (!await this.flushEditors()) return;
+        try {
+            await this.orm.call("community.meeting", "action_approve_pending_minutes", [[this.meetingId], item.id, [meetingId]]);
+            await this.load();
+        } catch (error) {
+            this.notification.add(_t("The previous minutes could not be approved. Please refresh and retry."), { type: "danger" });
+        }
+    }
 
     async updateOutcome(item, value) {
         if (this.typeBehavior(item) === "decision") {

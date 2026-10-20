@@ -8303,6 +8303,63 @@ msgid "Revision Number"
 msgstr ""
 
 #. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_minutes_approval__revision_id
+msgid "Approved revision"
+msgstr ""
+
+#. module: community_meetings
+#: model:ir.model.constraint,message:community_meetings.constraint_community_meeting_minutes_approval_point_meeting_revision_unique
+msgid "This minutes revision is already recorded for this point."
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Approve these minutes from a later meeting's minutes approval point."
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Choose a minutes approval point from this meeting."
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Select pending minutes from an earlier meeting in this series."
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Only earlier meetings in this series can be approved here."
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "The minutes approval point must belong to a later meeting in this series."
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Minutes cannot be approved from a finished or cancelled meeting."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "The previous minutes could not be approved. Please refresh and retry."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Approve minutes"
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
+msgid "Added to every meeting in this series. Approvers can approve earlier minutes here."
+msgstr ""
+
+#. module: community_meetings
 #: model:ir.model.constraint,message:community_meetings.constraint_community_meeting_revision_meeting_revision_unique
 msgid "Revision numbers must be unique per meeting."
 msgstr ""

@@ -22,12 +22,19 @@ class CommunityMeetingMinutesApproval(models.Model):
         index=True,
         check_company=True,
     )
+    revision_id = fields.Many2one(
+        "community.meeting.revision",
+        string="Approved revision",
+        ondelete="restrict",
+        index=True,
+        check_company=True,
+    )
     company_id = fields.Many2one(related="meeting_id.company_id", store=True, index=True)
 
     _sql_constraints: ClassVar[list[tuple[str, str, str]]] = [
         (
-            "point_meeting_unique",
-            "unique(agenda_item_id, meeting_id)",
-            "This meeting's minutes are already recorded for this point.",
+            "point_meeting_revision_unique",
+            "unique(agenda_item_id, meeting_id, revision_id)",
+            "This minutes revision is already recorded for this point.",
         )
     ]

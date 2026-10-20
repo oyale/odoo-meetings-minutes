@@ -263,23 +263,7 @@ class Meeting(models.Model):
             series = meeting.series_id
             if not series:
                 continue
-            if (
-                series.has_minutes_approval_point
-                and (pending := meeting.get_pending_minutes_for_approval())
-                and not meeting.agenda_item_ids.filtered(
-                    lambda item: item.agenda_type_id.behavior == "minutes_approval"
-                )
-            ):
-                meeting.agenda_item_ids.create(
-                    {
-                        "meeting_id": meeting.id,
-                        "name": _("Approve previous minutes"),
-                        "kind": "minutes_approval",
-                        "sequence": -1,
-                        "estimated_minutes": 5 * len(pending),
-                        "presenter_partner_id": False,
-                    }
-                )
+            meeting._ensure_minutes_approval_point()
             if series.has_next_meeting_point and not meeting.agenda_item_ids.filtered(
                 lambda item: item.agenda_type_id.behavior == "next_meeting"
             ):
@@ -297,6 +281,24 @@ class Meeting(models.Model):
                         "presenter_partner_id": False,
                     }
                 )
+
+    def _ensure_minutes_approval_point(self):
+        for meeting in self:
+            if not meeting.series_id.has_minutes_approval_point or meeting.agenda_item_ids.filtered(
+                lambda item: item.kind == "minutes_approval"
+            ):
+                continue
+            pending = meeting.get_pending_minutes_for_approval()
+            self.env["community.meeting.agenda.item"].create(
+                {
+                    "meeting_id": meeting.id,
+                    "name": _("Approve previous minutes"),
+                    "kind": "minutes_approval",
+                    "sequence": -1,
+                    "estimated_minutes": 5 * len(pending),
+                    "presenter_partner_id": False,
+                }
+            )
 
     def write(self, vals):
         for meeting in self:
@@ -318,6 +320,7 @@ class Meeting(models.Model):
             super(Meeting, meeting).write(values)
             if "series_id" in values:
                 meeting.agenda_item_ids.topic_id._set_series(meeting.series_id)
+                meeting._ensure_minutes_approval_point()
         return True
 
     def unlink(self):

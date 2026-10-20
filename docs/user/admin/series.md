@@ -12,9 +12,11 @@ the time, point, and recurrence choices beside their controls.
 
 In **Structure**, the company-default switches for time tracking, point policy
 and point estimates start on. Turn a switch off to choose a series-specific
-value. The **Automatic points** controls add minutes approval when minutes are
-pending and a next-meeting point to every meeting; both are optional and start
-off. Enabling the next-meeting point reveals the rule used to suggest its date.
+value. The **Automatic points** controls add a minutes-approval point to every
+meeting and a next-meeting point to every meeting; both are optional and start
+off. When minutes approval is enabled, approvers use that point for earlier
+minutes and cannot approve those minutes directly. Enabling the next-meeting
+point reveals the rule used to suggest its date.
 With the Project addon, project linking is also optional and starts off.
 
 ![Series form](../img/series-form.png)
@@ -48,7 +50,7 @@ meeting as *Series description*.
 
 | Field | Meaning |
 |---|---|
-| **Minutes approval point** | Adds a first agenda point to approve previous minutes. Only appears when there are pending actas. Reserve: 5 minutes per pending acta. |
+| **Minutes approval point** | Adds a first agenda point to every meeting in the series. Approvers use it to approve pending earlier minutes; direct approval is disabled for this series. Reserve: 5 minutes per pending acta. |
 | **Next meeting point** | Adds a last agenda point to set the next date. Reserves 5 minutes. |
 | **Next meeting default** | Rule to pre-fill that date: *next weekday* (always Tuesday), *day of month*, or *after N days*. |
 

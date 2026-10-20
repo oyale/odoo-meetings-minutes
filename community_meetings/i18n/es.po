@@ -8475,6 +8475,63 @@ msgid "Revision Number"
 msgstr "Número de revisión"
 
 #. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_minutes_approval__revision_id
+msgid "Approved revision"
+msgstr "Revisión aprobada"
+
+#. module: community_meetings
+#: model:ir.model.constraint,message:community_meetings.constraint_community_meeting_minutes_approval_point_meeting_revision_unique
+msgid "This minutes revision is already recorded for this point."
+msgstr "Esta revisión del acta ya está registrada en este punto."
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Approve these minutes from a later meeting's minutes approval point."
+msgstr "Aprueba esta acta desde el punto de aprobación de una reunión posterior."
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Choose a minutes approval point from this meeting."
+msgstr "Elige un punto de aprobación del acta de esta reunión."
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Select pending minutes from an earlier meeting in this series."
+msgstr "Selecciona un acta pendiente de una reunión anterior de esta serie."
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Only earlier meetings in this series can be approved here."
+msgstr "Aquí solo se pueden aprobar reuniones anteriores de esta serie."
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "The minutes approval point must belong to a later meeting in this series."
+msgstr "El punto de aprobación debe pertenecer a una reunión posterior de esta serie."
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Minutes cannot be approved from a finished or cancelled meeting."
+msgstr "No se pueden aprobar actas desde una reunión finalizada o cancelada."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "The previous minutes could not be approved. Please refresh and retry."
+msgstr "No se pudo aprobar el acta anterior. Actualiza la página e inténtalo de nuevo."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Approve minutes"
+msgstr "Aprobar el acta"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
+msgid "Added to every meeting in this series. Approvers can approve earlier minutes here."
+msgstr "Se añade a todas las reuniones de esta serie. Los aprobadores pueden aprobar aquí las actas anteriores."
+
+#. module: community_meetings
 #: model:ir.model.constraint,message:community_meetings.constraint_community_meeting_revision_meeting_revision_unique
 msgid "Revision numbers must be unique per meeting."
 msgstr "Los números de revisión deben ser únicos por reunión."

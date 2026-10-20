@@ -39,6 +39,12 @@ no cambia el contenido guardado ni el estado de la reunión.
 
 ## 2. Aprobar (aprobador)
 
+En las series que exigen el punto de aprobación del acta, el aprobador debe
+aprobar las actas anteriores desde ese punto en una reunión posterior. Cada
+acta pendiente tiene su propia acción **Aprobar el acta**. La acción directa en
+la reunión anterior queda bloqueada. El historial guarda la revisión exacta;
+si se enmienda y se vuelve a aprobar, la nueva revisión queda registrada aparte.
+
 Un **aprobador** pulsa **Aprobar el acta** (pantalla en vivo o cabecera del
 formulario).
 

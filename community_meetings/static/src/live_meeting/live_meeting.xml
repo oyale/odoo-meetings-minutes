@@ -156,6 +156,7 @@
                                     <li t-foreach="state.pendingMinutes" t-as="pm" t-key="pm.id" class="d-flex align-items-center gap-2">
                                         <span><t t-out="pm.code"/> — <t t-out="pm.name"/> (<t t-out="stateLabel(pm.state)"/>)</span>
                                         <button class="btn btn-sm btn-link p-0" t-on-click="() => this.openMeeting(pm.id)" aria-label="Open minutes">Review</button>
+                                        <button t-if="canApproveMinutes and !['approved', 'cancelled'].includes(state.meeting.state)" class="btn btn-sm btn-outline-primary" t-on-click="() => this.approvePreviousMinutes(item, pm.id)">Approve minutes</button>
                                     </li>
                                 </ul>
                                 <p t-if="!state.pendingMinutes.length" class="text-muted mb-0">No pending minutes.</p>
@@ -163,7 +164,7 @@
                                     <label class="form-label">Approved previous minutes</label>
                                     <ul class="list-unstyled mb-0">
                                         <li t-foreach="approvalsFor(item)" t-as="approved" t-key="approved.id" class="d-flex align-items-center gap-2">
-                                            <span><i class="fa fa-check text-success" aria-hidden="true"/> <t t-out="approved.code"/> — <t t-out="approved.name"/></span>
+                                            <span><i class="fa fa-check text-success" aria-hidden="true"/> <t t-out="approved.code"/> — <t t-out="approved.name"/><small t-if="approved.revision_number" class="text-muted ms-2">Revision <t t-out="approved.revision_number"/></small></span>
                                             <button class="btn btn-sm btn-link p-0" t-on-click="() => this.openMeeting(approved.meeting_id)" aria-label="Open minutes">Review</button>
                                         </li>
                                     </ul>

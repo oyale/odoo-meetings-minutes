@@ -450,7 +450,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
     def test_review_previous_minutes_opens_live_and_approves(self):
         series = self.rpc(
             "community.meeting.series", "create",
-            [{"name": "Review minutes series " + uuid.uuid4().hex[:8]}],
+            [{"name": "Review minutes series " + uuid.uuid4().hex[:8], "has_minutes_approval_point": True}],
         )
         self.rpc("community.meeting", "write", [[self.meeting_id], {"series_id": series}])
         self.rpc("community.meeting", "action_mark_held", [[self.meeting_id]])
@@ -459,18 +459,16 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             "name": "Review previous minutes", "series_id": series,
             "start_datetime": (datetime.utcnow() + timedelta(days=3)).strftime("%Y-%m-%d %H:%M:%S"),
         }])
-        agenda_type = self.rpc("community.meeting.agenda.type", "search", [[("behavior", "=", "minutes_approval")]], {"limit": 1})[0]
-        self.rpc("community.meeting.agenda.item", "create", [{"meeting_id": current, "name": "Approve previous minutes", "agenda_type_id": agenda_type}])
         self.rpc("community.meeting", "action_schedule", [[current]])
         self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, current))
         self.page.get_by_role("button", name="Open Meeting").click()
         expect(self.page.locator(".o_community_live_meeting")).to_be_visible()
         if self.page.locator(".o_live_expand").first.get_attribute("aria-expanded") == "false":
             self.page.locator(".o_live_expand").first.click()
-        self.page.get_by_role("button", name="Open minutes", exact=True).click()
-        expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_be_visible()
-        self.page.get_by_role("button", name="Approve Minutes", exact=True).click()
-        expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_have_count(0, timeout=30000)
+        approval = self.page.locator(".o_live_minutes_approval")
+        expect(approval.get_by_role("button", name="Approve minutes", exact=True)).to_be_visible()
+        approval.get_by_role("button", name="Approve minutes", exact=True).click()
+        expect(approval.get_by_role("button", name="Approve minutes", exact=True)).to_have_count(0, timeout=30000)
         self.assertEqual(self.record("community.meeting", self.meeting_id, ["state"])["state"], "approved")
         previous_code = self.record("community.meeting", self.meeting_id, ["code"])["code"]
         self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, current))

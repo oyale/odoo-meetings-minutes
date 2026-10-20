@@ -36,6 +36,12 @@ leave the saved content and meeting state unchanged.
 
 ## 2. Approve (approver)
 
+When the series requires a minutes-approval point, approve earlier minutes from
+that point in a later meeting. Each pending meeting has its own **Approve
+minutes** action. The direct approval action on the earlier meeting is blocked
+for this series. Approval history links to the exact approved revision, so a
+later amendment is recorded separately.
+
 An **Approver** presses **Approve Minutes** (live screen or form header).
 
 Approval:
