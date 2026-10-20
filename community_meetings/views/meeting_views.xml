@@ -59,7 +59,7 @@
                         <label for="name"/>
                         <h1><field name="name" placeholder="Meeting title"/></h1>
                     </div>
-                    <group col="4">
+                    <group col="4" class="o_meeting_identity_groups">
                         <group string="When and where" colspan="2" col="2">
                             <field name="start_datetime"/>
                             <field name="end_datetime"/>

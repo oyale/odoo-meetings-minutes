@@ -320,7 +320,11 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         )
         self.assertEqual(
             [button.inner_text().strip() for button in record_actions.locator("button").all()],
-            ["Add agreement", "Add dissent"],
+            (
+                ["Añadir acuerdo", "Añadir disenso"]
+                if self.is_spanish_ui()
+                else ["Add agreement", "Add dissent"]
+            ),
         )
         expect(record_actions.get_by_role("button", name="Add dissent")).to_be_visible()
         expect(record_actions.get_by_role("button", name="Add agreement")).to_be_visible()
@@ -689,6 +693,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(self.outcome("decision")).to_have_text("Approved")
         card.get_by_role("button", name="Undo point result").click()
         card.get_by_role("button", name="Reopen point").click()
+        expect(self.outcome("decision")).to_have_text("Pending")
         card.get_by_role("button", name="Resume point").click()
         deadline = time.time() + 8
         point = self.record(

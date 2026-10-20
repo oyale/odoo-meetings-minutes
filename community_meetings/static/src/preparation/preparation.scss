@@ -703,6 +703,22 @@
 .o_meeting_persistent_form .oe_title { margin-bottom: 1rem; }
 .o_meeting_point_form .oe_title { margin-bottom: 0.8rem; }
 .o_meeting_point_form > .o_field_html { margin-top: 0.75rem; }
+.o_meeting_persistent_form .o_meeting_identity_groups {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(1rem, 3vw, 2.5rem);
+    align-items: start;
+    > .o_group {
+        width: auto !important;
+        min-width: 0;
+        grid-column: auto !important;
+    }
+}
+@media (max-width: 767px) {
+    .o_meeting_persistent_form .o_meeting_identity_groups {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
 
 .o_meeting_create_wizard {
     .o_meeting_carryover_cards .o_list_table,

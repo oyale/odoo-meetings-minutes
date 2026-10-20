@@ -11,6 +11,7 @@ import uuid
 from pathlib import Path
 
 from live_meeting_playwright import BASE_URL, LiveMeetingBrowserChecks
+from browser_support.localized_selectors import SpanishPlaywrightLocalization
 from playwright.sync_api import expect
 
 # Each entry is an observable user action, not a line/branch coverage claim.
@@ -233,16 +234,75 @@ ARTIFACTS = (
 class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
     retained = []
 
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        addon_root = Path(__file__).resolve().parents[3]
+        cls.ui_localization = SpanishPlaywrightLocalization(
+            [addon_root / "community_meetings", addon_root / "community_meetings_project"]
+        )
+
     def setUp(self):
         self.errors_before = len(self.console_errors)
         super().setUp()
         self.page.set_default_timeout(10000)
-        self.context.tracing.start(screenshots=True, snapshots=True, sources=True)
-        self.addCleanup(self.save_trace)
+        if os.environ.get("PLAYWRIGHT_TRACE", "1").lower() not in {
+            "0",
+            "false",
+            "no",
+        }:
+            self.context.tracing.start(screenshots=True, snapshots=True, sources=True)
+            self.addCleanup(self.save_trace)
+
+    def is_spanish_ui(self):
+        language = self.page.locator("html").get_attribute("lang") or ""
+        body_text = self.page.locator("body").inner_text()
+        return language.lower().startswith("es") or any(
+            text in body_text
+            for text in (
+                "Conversaciones",
+                "Añadir acuerdo",
+                "Cuándo y dónde",
+                "Reuniones",
+                "Series de reuniones",
+                "Preparar una reunión",
+            )
+        )
+
+    def capture_visual_screenshot(self, name, viewport=None):
+        if not hasattr(self, "_visual_capture_locale"):
+            self._visual_capture_locale = "es" if self.is_spanish_ui() else "en"
+        locale = self._visual_capture_locale
+        size = viewport or self.page.evaluate(
+            "() => ({width: window.innerWidth, height: window.innerHeight})"
+        )
+        device = "mobile" if size["width"] <= 767 else "desktop"
+        target = ARTIFACTS / "visual-preparation"
+        target.mkdir(mode=0o700, parents=True, exist_ok=True)
+        self.page.screenshot(
+            path=str(target / f"{name}-{locale}-{device}.png"),
+            full_page=True,
+        )
+
+    def localized_datetime(self, value):
+        month, day, year, hour, minute = re.fullmatch(
+            r"(\d{2})/(\d{2})/(\d{4}) (\d{2}):(\d{2})", value
+        ).groups()
+        if self.is_spanish_ui():
+            return f"{day}/{month}/{year} {hour}:{minute}:00"
+        return f"{month}/{day}/{year} {hour}:{minute}:00"
 
     def save_trace(self):
         ARTIFACTS.mkdir(mode=0o700, parents=True, exist_ok=True)
         self.context.tracing.stop(path=str(ARTIFACTS / (self._testMethodName + ".zip")))
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            if cls.ui_localization:
+                cls.ui_localization.close()
+        finally:
+            super().tearDownClass()
 
     def tearDown(self):
         self.assertFalse(
@@ -1044,6 +1104,13 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             ),
             full_page=True,
         )
+        # The half-width desktop viewport exercises the reflow expected at
+        # 200% zoom on a 1440px display while keeping the test deterministic.
+        self.page.set_viewport_size({"width": 720, "height": 900})
+        zoomed = self.page.locator(".o_form_view").evaluate(
+            "el => ({width: el.clientWidth, scrollWidth: el.scrollWidth})"
+        )
+        self.assertLessEqual(zoomed["scrollWidth"] - zoomed["width"], 1, zoomed)
         self.page.set_viewport_size({"width": 390, "height": 844})
         responsive = self.page.locator(".o_form_view").evaluate(
             "el => ({width: el.clientWidth, scrollWidth: el.scrollWidth})"
@@ -1123,9 +1190,18 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
         self.page.locator(".o_list_button_add").click()
         series_wizard = self.page.get_by_role("dialog").last
+        self.capture_visual_screenshot("series-wizard")
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        self.capture_visual_screenshot("series-wizard", {"width": 390, "height": 844})
+        self.assertLessEqual(
+            series_wizard.evaluate("el => el.scrollWidth - el.clientWidth"),
+            1,
+        )
+        self.page.set_viewport_size({"width": 1440, "height": 900})
         series_wizard.locator('.o_field_widget[name="name"] input').fill(name)
-        for _ in range(3):
+        for step in range(3):
             series_wizard.locator('button[name="action_next"]').click()
+            self.capture_visual_screenshot(f"series-wizard-step-{step + 2}")
         series_wizard.locator('button[name="action_finish"]').click()
         expect(series_wizard).not_to_be_visible()
         rows = self.rpc("community.meeting.series", "search", [[("name", "=", name)]])
@@ -1136,6 +1212,57 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             self.page.locator('.o_field_widget[name="series_id"] input')
         ).to_have_value(name)
         # Leave the unsaved meeting without persisting it.
+
+    def test_mobile_new_meeting_wizard_with_many_attendees(self):
+        suffix = uuid.uuid4().hex[:8]
+        attendee_values = self.rpc(
+            "res.partner", "search_read", [[]], {"fields": ["name"], "limit": 5}
+        )
+        attendee_ids = [row["id"] for row in attendee_values]
+        self.assertEqual(len(attendee_ids), 5, "The disposable DB needs five readable contacts.")
+        series_id = self.rpc(
+            "community.meeting.series",
+            "create",
+            [{
+                "name": "Long attendee series " + suffix,
+                "attendee_partner_ids": [(6, 0, attendee_ids)],
+            }],
+        )
+        self.addCleanup(self.rpc, "community.meeting.series", "unlink", [[series_id]])
+        self.page.goto(
+            "%s/web#model=community.meeting.series&id=%s&view_type=form"
+            % (BASE_URL, series_id)
+        )
+        self.page.locator('button[name="action_new_meeting"]').click()
+        wizard = self.page.get_by_role("dialog").last
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        self.addCleanup(
+            self.page.set_viewport_size, {"width": 1440, "height": 1000}
+        )
+        self.capture_visual_screenshot(
+            "new-meeting-many-attendees-start", {"width": 390, "height": 844}
+        )
+        wizard.locator('button[name="action_next"]').click()
+        wizard.locator('.o_field_widget[name="name"] input').fill(
+            "Quarterly planning and follow-up review " + "long agenda title " * 4
+        )
+        self.assertLessEqual(wizard.evaluate("el => el.scrollWidth - el.clientWidth"), 1)
+        wizard.locator('button[name="action_next"]').click()
+        attendee_field = wizard.locator('.o_field_widget[name="attendee_partner_ids"]')
+        expect(attendee_field).to_contain_text(attendee_values[0]["name"])
+        expect(attendee_field).to_contain_text(attendee_values[-1]["name"])
+        self.assertLessEqual(wizard.evaluate("el => el.scrollWidth - el.clientWidth"), 1)
+        self.capture_visual_screenshot(
+            "new-meeting-attendee-selection", {"width": 390, "height": 844}
+        )
+        next_button = wizard.locator('button[name="action_next"]')
+        next_button.scroll_into_view_if_needed()
+        self.capture_visual_screenshot(
+            "new-meeting-attendee-selection-footer", {"width": 390, "height": 844}
+        )
+        button_box = next_button.bounding_box()
+        self.assertGreaterEqual(button_box["y"], 0, button_box)
+        self.assertLessEqual(button_box["y"] + button_box["height"], 844, button_box)
 
     def test_recurring_agenda_template_selection_and_lineage(self):
         suffix = uuid.uuid4().hex[:8]
@@ -1379,10 +1506,22 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
         self.page.locator('button[name="action_new_meeting"]').click()
         wizard = self.page.get_by_role("dialog").last
+        self.capture_visual_screenshot("new-meeting-wizard")
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        self.capture_visual_screenshot(
+            "new-meeting-wizard", {"width": 390, "height": 844}
+        )
+        self.assertLessEqual(wizard.evaluate("el => el.scrollWidth - el.clientWidth"), 1)
+        self.page.set_viewport_size({"width": 1440, "height": 1000})
         expect(wizard.locator('.o_field_widget[name="series_id"] input')).to_have_value(
             re.compile("Guided series")
         )
         wizard.locator('button[name="action_next"]').click()
+        self.capture_visual_screenshot("new-meeting-when")
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        self.capture_visual_screenshot("new-meeting-when", {"width": 390, "height": 844})
+        self.assertLessEqual(wizard.evaluate("el => el.scrollWidth - el.clientWidth"), 1)
+        self.page.set_viewport_size({"width": 1440, "height": 1000})
         expect(
             wizard.get_by_text("Estimated Start Datetime", exact=True)
         ).to_be_visible()
@@ -1429,7 +1568,9 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             point.get_by_role("spinbutton", name="Custom estimate in minutes")
         ).to_be_visible()
         point.get_by_role("spinbutton", name="Custom estimate in minutes").fill("20")
-        point.locator('.o_field_widget[name="deadline"] input').fill("12/20/2026")
+        point.locator('.o_field_widget[name="deadline"] input').fill(
+            "20/12/2026" if self.is_spanish_ui() else "12/20/2026"
+        )
         point.locator('button[name="action_save"]').click()
         wizard = self.page.get_by_role("dialog").last
         expect(wizard.locator('.o_field_widget[name="line_ids"]')).to_contain_text(
@@ -1521,7 +1662,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         wizard.locator('button[name="action_next"]').click()
         expect(
             wizard.locator('.o_field_widget[name="start_datetime"] input')
-        ).to_have_value(re.compile(r"04/15/2030"))
+        ).to_have_value(re.compile(r"(?:04/15/2030|15/04/2030)"))
 
     def test_followup_points_are_offered_in_new_meeting_wizard(self):
         name = "Follow-up carryover " + uuid.uuid4().hex[:8]
@@ -1549,10 +1690,11 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         wizard = self.page.get_by_role("dialog").last
         wizard.locator('button[name="action_next"]').click()
         wizard.locator('.o_field_widget[name="start_datetime"] input').fill(
-            "10/08/2026 10:00:00"
+            self.localized_datetime("10/08/2026 10:00")
         )
         wizard.locator('button[name="action_next"]').click()
         wizard.locator('button[name="action_next"]').click()
+        self.capture_visual_screenshot("new-meeting-carryovers")
         expect(wizard.locator('.o_field_widget[name="carry_line_ids"]')).to_contain_text(
             "Completed follow-up to review"
         )
@@ -1582,7 +1724,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         wizard = self.page.get_by_role("dialog").last
         wizard.locator('button[name="action_next"]').click()
         wizard.locator('.o_field_widget[name="start_datetime"] input').fill(
-            "10/08/2026 10:00:00"
+            self.localized_datetime("10/08/2026 10:00")
         )
         wizard.locator('button[name="action_next"]').click()
         wizard.locator('button[name="action_next"]').click()
@@ -2072,19 +2214,31 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         self.consume_injected_write_error("Injected save failure")
 
     def test_mobile_point_wizard_and_keyboard_cancel(self):
-        self.page.set_viewport_size({"width": 390, "height": 844})
         try:
             self.page.get_by_role("button", name="Add Point", exact=True).click()
             dialog = self.page.get_by_role("dialog").last
+            expect(dialog).to_be_visible()
+            self.capture_visual_screenshot("add-point-wizard")
+            self.assertEqual(dialog.get_attribute("role"), "dialog")
+            self.page.set_viewport_size({"width": 390, "height": 844})
+            expect(dialog).to_be_visible()
+            self.capture_visual_screenshot(
+                "add-point-wizard", {"width": 390, "height": 844}
+            )
             title = dialog.locator('.o_field_widget[name="name"] input')
             title.click()
-            title.press_sequentially("Keyboard-only draft")
+            title.press_sequentially("Keyboard-only draft " + "long agenda text " * 12)
             title.press("Tab")
             self.assertLessEqual(
                 dialog.evaluate("el => el.scrollWidth - el.clientWidth"), 1
             )
             cancel = dialog.get_by_role("button", name="Cancel", exact=True)
             cancel.focus()
+            self.assertTrue(cancel.evaluate("el => el.matches(':focus-visible')"))
+            self.assertTrue(cancel.is_visible())
+            self.capture_visual_screenshot(
+                "add-point-wizard-bottom", {"width": 390, "height": 844}
+            )
             cancel.press("Enter")
             expect(dialog).not_to_be_visible()
             self.assertEqual(

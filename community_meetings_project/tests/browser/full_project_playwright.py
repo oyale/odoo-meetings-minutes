@@ -203,6 +203,24 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         expect(self.outcome("todo")).to_have_text("Resolved")
 
     def test_project_task_wizard_can_link_an_existing_task(self):
+        calendar_fields = self.rpc(
+            "community.meeting", "fields_get", [["calendar_event_ids"]]
+        )
+        if "calendar_event_ids" in calendar_fields:
+            event_ids = self.record(
+                "community.meeting", self.meeting_id, ["calendar_event_ids"]
+            )["calendar_event_ids"]
+            self.assertEqual(len(event_ids), 1)
+            self.page.goto(
+                "%s/web#model=calendar.event&id=%s&view_type=form"
+                % (BASE_URL, event_ids[0])
+            )
+            expect(self.page.locator(".o_form_view")).to_be_visible(timeout=30000)
+            expect(
+                self.page.locator('.o_form_view .o_field_widget[name="name"]')
+            ).to_contain_text(
+                self.record("community.meeting", self.meeting_id, ["name"])["name"]
+            )
         company_id = self.record(
             "community.meeting", self.meeting_id, ["company_id"]
         )["company_id"][0]
@@ -248,13 +266,22 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         card = self.card("todo")
         card.get_by_role("button", name="Create Project task").click()
         dialog = self.page.get_by_role("dialog").last
+        self.capture_visual_screenshot("project-task-wizard")
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        self.capture_visual_screenshot(
+            "project-task-wizard", {"width": 390, "height": 844}
+        )
+        self.assertLessEqual(dialog.evaluate("el => el.scrollWidth - el.clientWidth"), 1)
+        self.page.set_viewport_size({"width": 1440, "height": 1000})
         expect(dialog.get_by_text("Follow-up context")).to_be_visible()
         expect(
             dialog.locator('.o_field_widget[name="followup_name"]')
         ).to_contain_text(followup_name)
         expect(
             dialog.locator('.o_field_widget[name="followup_deadline"]')
-        ).to_contain_text("11/30/2026")
+        ).to_contain_text(
+            "30/11/2026" if self.is_spanish_ui() else "11/30/2026"
+        )
 
         task_field = dialog.locator('.o_field_widget[name="existing_task_id"] input')
         task_field.fill(task_name)
