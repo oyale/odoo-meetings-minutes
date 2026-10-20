@@ -78,6 +78,11 @@ class CommunityMeeting(models.Model):
         check_company=True,
         ondelete="restrict",
     )
+    requires_later_minutes_approval = fields.Boolean(
+        related="series_id.has_minutes_approval_point",
+        string="Requires approval from a later meeting",
+        readonly=True,
+    )
     series_carryover_policy = fields.Selection(related="series_id.carryover_policy", readonly=True)
     series_description = fields.Html(related="series_id.description", readonly=True, string="Series description")
     state = fields.Selection(
@@ -654,6 +659,7 @@ class CommunityMeeting(models.Model):
             "can_edit": editorial and self.has_access("write") and self.state not in ("approved", "cancelled"),
             "can_view_editorial": editorial and self.has_access("write"),
             "can_approve": self.env.user.has_group("community_meetings.group_meeting_approver"),
+            "requires_later_minutes_approval": bool(self.series_id.has_minutes_approval_point),
             "can_preview_minutes": minutes_reviewer,
             "time_tracking": self.time_tracking_enabled,
             "can_add_point": self.add_point_allowed,

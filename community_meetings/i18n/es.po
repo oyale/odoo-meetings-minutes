@@ -8510,6 +8510,10 @@ msgid "The minutes approval point must belong to a later meeting in this series.
 msgstr "El punto de aprobación debe pertenecer a una reunión posterior de esta serie."
 
 #. module: community_meetings
+msgid "Requires approval from a later meeting"
+msgstr "Requiere aprobación desde una reunión posterior"
+
+#. module: community_meetings
 #: code:addons/community_meetings/models/meeting.py:0
 msgid "Minutes cannot be approved from a finished or cancelled meeting."
 msgstr "No se pueden aprobar actas desde una reunión finalizada o cancelada."

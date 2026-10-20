@@ -455,6 +455,13 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.rpc("community.meeting", "write", [[self.meeting_id], {"series_id": series}])
         self.rpc("community.meeting", "action_mark_held", [[self.meeting_id]])
         self.rpc("community.meeting", "action_draft_minutes", [[self.meeting_id]])
+        self.page.goto(
+            f"{BASE_URL}/web#model=community.meeting&id={self.meeting_id}&view_type=form"
+        )
+        expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_have_count(0)
+        self.page.get_by_role("button", name="Open Meeting").click()
+        expect(self.page.locator(".o_community_live_meeting")).to_be_visible()
+        expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_have_count(0)
         current = self.rpc("community.meeting", "create", [{
             "name": "Review previous minutes", "series_id": series,
             "start_datetime": (datetime.utcnow() + timedelta(days=3)).strftime("%Y-%m-%d %H:%M:%S"),
