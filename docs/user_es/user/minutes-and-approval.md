@@ -29,6 +29,11 @@ discusión de los puntos, los acuerdos, los seguimientos y las discrepancias
 incluidas proceden de sus propios registros. El PDF oficial se crea cuando el
 aprobador aprueba el acta.
 
+La vista previa está disponible solo para editores y aprobadores con acceso a
+la reunión, y solo en estado **Celebrada** o **Acta en borrador**. Los lectores
+no pueden abrirla. Es de solo lectura: abrirla y volver al editor de la reunión
+no cambia el contenido guardado ni el estado de la reunión.
+
 > **Consejo:** el punto de aprobación del acta de las reuniones *posteriores*
 > listará este acta hasta aprobarla — apruébala pronto para no ensuciar la cola.
 
@@ -52,11 +57,11 @@ La pestaña **Revisiones aprobadas** lista cada revisión: número, fecha de apr
 aprobador, estado y botón **PDF**.
 
 Tras la aprobación, cambiar el contenido está bloqueado a propósito. Si hay que
-corregir algo, un aprobador pulsa **Iniciar una modificación**: la reunión reabre para
+corregir algo, un gestor de reuniones pulsa **Iniciar una modificación**: la reunión reabre para
 edición bajo una nueva revisión; la revisión anterior y su PDF permanecen intactos
 en la historia.
 
-![Revisiones aprobadas](img/revisions.png)
+![Revisiones aprobadas](../img/revisions.png)
 
 ## Discrepancias y acta
 

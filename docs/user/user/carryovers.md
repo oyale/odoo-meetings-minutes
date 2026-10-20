@@ -55,6 +55,10 @@ choose **Start without previous notes** to stop showing earlier discussion in
 this continuation and later ones; the source notes remain intact. This control
 does not apply to *Minutes approval* or *Next meeting* points.
 
+To show that context again, restore the previous discussion on the point where
+you hid it. Later continuations can then show the source notes again, provided
+they have not independently hidden earlier discussion.
+
 ## Related docs
 
 - [Series carryover policy](../admin/series.md#policies)

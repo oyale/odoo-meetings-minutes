@@ -3,13 +3,14 @@
 Módulo opcional que refleja las reuniones programadas en el **Calendario** estándar
 de Odoo para que todo el mundo las vea junto al resto de sus eventos.
 
-![Evento de calendario vinculado](img/calendar-event.png)
+![Evento de calendario vinculado](../img/calendar-event.png)
 
 ## Qué hace
 
 - **Programar** una reunión crea/actualiza un `calendar.event` vinculado con las
   mismas fechas, asistentes, lugar y enlace de videollamada.
-- Finalizar o cancelar la reunión mantiene el evento coherente con ella.
+- Los cambios de fecha, lugar y asistentes de la reunión actualizan el evento.
+- Cancelar la reunión elimina su evento de Calendario vinculado.
 
 ## Qué puede hacer el usuario
 

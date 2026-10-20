@@ -15,3 +15,4 @@ Feature: Preview draft minutes before approval
     And the meeting and saved draft remain unchanged
     When I choose Return to meeting to edit
     Then I return to the meeting editor
+    And the meeting and saved draft remain unchanged

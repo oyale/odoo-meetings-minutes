@@ -26,6 +26,11 @@ for the general narrative; agenda discussion, agreements, follow-ups and
 included dissents are drawn from their own records. The official PDF is created
 when an approver approves the minutes.
 
+Preview is available only to editors and approvers who can read the meeting,
+and only in **Held** or **Minutes draft** state. Readers cannot open this draft
+preview. It is read-only: opening it and choosing **Return to meeting to edit**
+leave the saved content and meeting state unchanged.
+
 > **Tip:** The minutes-approval structural point of *later* meetings will list this acta
 > until it is approved — approve promptly to keep the queue clean.
 
@@ -48,11 +53,11 @@ The **Approved Revisions** tab lists each revision: number, approval date,
 approver, status and a **PDF** button.
 
 After approval, changing content is intentionally blocked. If something must be
-corrected, an approver presses **Start Amendment**: the meeting reopens for
+corrected, a meeting manager presses **Start Amendment**: the meeting reopens for
 editing under a new revision; the previous revision and its PDF remain
 untouched in history.
 
-![Approved revisions](img/revisions.png)
+![Approved revisions](../img/revisions.png)
 
 ## Dissents and the minutes
 

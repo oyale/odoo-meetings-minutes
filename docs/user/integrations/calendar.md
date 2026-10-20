@@ -3,14 +3,14 @@
 Optional addon that mirrors scheduled meetings into Odoo's standard **Calendar**
 so everyone sees them next to their other events.
 
-![Calendar event linked to a meeting](img/calendar-event.png)
+![Calendar event linked to a meeting](../img/calendar-event.png)
 
 ## What it does
 
 - **Scheduling** a meeting creates/updates a linked `calendar.event` with the
   same start, end, attendees, location and video call link.
-- Finishing or cancelling the meeting keeps the event consistent with the
-  meeting.
+- Changes to the meeting time, location and attendees update the linked event.
+- Cancelling the meeting removes its linked Calendar event.
 
 ## What users can do
 
