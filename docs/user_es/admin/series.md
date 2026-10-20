@@ -29,8 +29,7 @@ el vínculo con el proyecto también es opcional y empieza desactivado.
 
 El formulario de la serie incluye un chatter. Allí quedan registrados los
 cambios de configuración, incluidos los coordinadores, los asistentes
-habituales y los tipos de seguimiento permitidos. El registro empieza al
-instalar esta función y no reconstruye cambios anteriores.
+habituales y los tipos de seguimiento permitidos.
 Con el módulo Project, también quedan registrados el destino del proyecto y
 los cambios en la política de tareas.
 

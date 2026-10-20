@@ -1,1 +1,1 @@
-Meeting series now have a chatter. Changes to series settings are tracked, including coordinator, attendee, and allowed follow-up type membership changes.
+Meeting series now have a chatter. Changes to series settings are tracked, including coordinator, attendee, and allowed follow-up type membership changes. Existing series do not receive backfilled history for changes made before this feature was installed.
