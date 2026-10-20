@@ -30,6 +30,8 @@ including changes to coordinators, usual attendees and allowed follow-up types.
 With the Project addon, project destination and task policy changes are logged
 there as well.
 
+![Series setting changes recorded in the chatter](../img/series-change-history.png)
+
 ## Header: What and People
 
 | Field | Meaning |

@@ -33,6 +33,8 @@ habituales y los tipos de seguimiento permitidos.
 Con el módulo Project, también quedan registrados el destino del proyecto y
 los cambios en la política de tareas.
 
+![Cambios de configuración de la serie registrados en el chatter](../img/series-change-history.png)
+
 ## Cabecera: Qué y Personas
 
 | Campo | Significado |
