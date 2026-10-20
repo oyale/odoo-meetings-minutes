@@ -1,5 +1,6 @@
 """Helpers for explicit role accounts in multi-actor acceptance scenarios."""
 
+
 def login_as_configured_actor(context, role: str):
     config = context.acceptance_config
     login = getattr(config, f"{role}_login")

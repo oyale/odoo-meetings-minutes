@@ -28,9 +28,9 @@ def unfinished_point_and_destination_exist(context):
     context.source_item_id = source.item_ids["discussion"]
     context.source_meeting_id = source.meeting_id
     context.destination_meeting_id = destination.meeting_id
-    context.destination_name = context.browser_session.record(
-        "community.meeting", destination.meeting_id, ["name"]
-    )["name"]
+    context.destination_name = context.browser_session.record("community.meeting", destination.meeting_id, ["name"])[
+        "name"
+    ]
     context.requires_database_drop = True
     open_live_meeting(context.browser_session, source.meeting_id)
 
@@ -78,9 +78,7 @@ def request_point_carryover(context):
 def destination_editor_accepts_point(context):
     open_live_meeting(context.browser_session, context.destination_meeting_id)
     incoming = context.page.get_by_role("region", name="Points to continue")
-    with context.page.expect_response(
-        lambda response: "/community.meeting.carryover/action_accept" in response.url
-    ):
+    with context.page.expect_response(lambda response: "/community.meeting.carryover/action_accept" in response.url):
         incoming.get_by_role("button", name="Accept").click()
 
     destination_item = context.browser_session.rpc(

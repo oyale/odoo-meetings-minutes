@@ -14,9 +14,7 @@ from playwright.sync_api import expect
 def create_and_schedule_meeting_with_agenda_point(context):
     context.meeting_name = f"Acceptance lifecycle {uuid4().hex[:8]}"
     context.requires_database_drop = True
-    context.page.goto(
-        f"{context.acceptance_config.base_url}/odoo/action-community_meetings.action_community_meetings"
-    )
+    context.page.goto(f"{context.acceptance_config.base_url}/odoo/action-community_meetings.action_community_meetings")
     context.page.locator('a[data-menu-xmlid="community_meetings.menu_prepare_meeting"]').click()
     wizard = context.page.get_by_role("dialog").last
     wizard.locator('button[name="action_next"]').click()
@@ -50,9 +48,7 @@ def create_and_schedule_meeting_with_agenda_point(context):
         f"{context.acceptance_config.base_url}/web#model=community.meeting&id={context.meeting_id}&view_type=form"
     )
     assert_meeting_form(context.page, context.meeting_name)
-    with context.page.expect_response(
-        lambda response: "/community.meeting/action_schedule" in response.url
-    ):
+    with context.page.expect_response(lambda response: "/community.meeting/action_schedule" in response.url):
         context.page.locator('button[name="action_schedule"]').click()
     record = context.browser_session.record("community.meeting", context.meeting_id, ["state"])
     assert record["state"] == "scheduled", record
@@ -74,9 +70,7 @@ def hold_meeting_in_live_agenda(context):
         card.get_by_role("button", name="Done", exact=True).click()
     else:
         raise AssertionError("The agenda discussion point could not be started")
-    with context.page.expect_response(
-        lambda response: "/community.meeting/action_mark_held" in response.url
-    ):
+    with context.page.expect_response(lambda response: "/community.meeting/action_mark_held" in response.url):
         context.page.get_by_role("button", name="Finish Meeting", exact=True).click()
     record = context.browser_session.record("community.meeting", context.meeting_id, ["state"])
     assert record["state"] == "held", record

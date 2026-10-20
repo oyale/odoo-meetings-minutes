@@ -10,9 +10,7 @@ env = api.Environment(shell_env.cr, SUPERUSER_ID, {})
 
 
 def ensure_user(login, name, group_xmlids):
-    groups = env["res.groups"].browse(
-        [env.ref(xmlid).id for xmlid in group_xmlids]
-    )
+    groups = env["res.groups"].browse([env.ref(xmlid).id for xmlid in group_xmlids])
     user = env["res.users"].search([("login", "=", login)], limit=1)
     values = {
         "name": name,
@@ -27,13 +25,11 @@ def ensure_user(login, name, group_xmlids):
 
 
 internal = "base.group_user"
-calendar = "calendar.group_calendar_user"
 ensure_user(
     "acceptance_editor",
     "Acceptance Editor",
     [
         internal,
-        calendar,
         "community_meetings.group_meeting_editor",
         "project.group_project_user",
     ],

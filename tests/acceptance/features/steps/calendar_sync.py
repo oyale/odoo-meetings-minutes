@@ -54,8 +54,8 @@ def scheduled_meeting_has_calendar_event(context):
     # editor and Odoo's UTC datetime representation agree on the exact instant.
     start = datetime.now(timezone.utc).replace(microsecond=0) + timedelta(days=2)
     context.calendar_expected_start = start.strftime("%Y-%m-%d %H:%M:%S")
-    context.calendar_start = start.astimezone(ZoneInfo(user["tz"] or "UTC")).replace(tzinfo=None).strftime(
-        "%Y-%m-%d %H:%M:%S"
+    context.calendar_start = (
+        start.astimezone(ZoneInfo(user["tz"] or "UTC")).replace(tzinfo=None).strftime("%Y-%m-%d %H:%M:%S")
     )
     context.page.goto(
         f"{context.acceptance_config.base_url}/web#model=community.meeting&id={fixture.meeting_id}&view_type=form"
