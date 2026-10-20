@@ -262,7 +262,7 @@ def build_multi(lang):
         depth = "../" * rel.count("/")
         text = (src / rel).read_text(encoding="utf-8")
         html = md_to_html(text)
-        html = re.sub(r'href="([^"]+?)\.md(#[^"]+)?"', r'href="\1.html\2"', html)
+        html = rewrite_links(html, rel, "multi", {})
         html = re.sub(r'(src="|href=")img/', lambda m: m.group(1) + depth + 'img/', html)
         counterpart = None
         other_src = LANGS[LANGS[lang]["switch_to"]]["src"]
@@ -300,9 +300,7 @@ def build_single(lang):
     for rel in pages:
         text = (src / rel).read_text(encoding="utf-8")
         html = md_to_html(text)
-        html = re.sub(r'href="([^"]+?)\.md(#[^"]+)?"',
-                      lambda m: 'href="#slug-%s%s"' % (single_slugs.get((Path(rel).parent / m.group(1)).as_posix(),
-                                                                       single_slugs["index.md"]), m.group(2) or ""), html)
+        html = rewrite_links(html, rel, "single", single_slugs)
         chunks.append(f'<div id="slug-{single_slugs[rel]}">{html}<hr></div>')
         label = NAV_LABELS.get(lang, {}).get(rel, Path(rel).stem.replace("-", " ").title())
         toc.append(f'<a href="#slug-{single_slugs[rel]}">{label}</a>')
