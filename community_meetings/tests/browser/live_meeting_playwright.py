@@ -473,6 +473,8 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         if self.page.locator(".o_live_expand").first.get_attribute("aria-expanded") == "false":
             self.page.locator(".o_live_expand").first.click()
         approval = self.page.locator(".o_live_minutes_approval")
+        expect(approval.get_by_role("button", name="Approve minutes", exact=True)).to_have_count(0)
+        self.page.get_by_role("button", name="Start Meeting", exact=True).click()
         expect(approval.get_by_role("button", name="Approve minutes", exact=True)).to_be_visible()
         approval.get_by_role("button", name="Approve minutes", exact=True).click()
         expect(approval.get_by_role("button", name="Approve minutes", exact=True)).to_have_count(0, timeout=30000)
@@ -491,6 +493,60 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(self.page.get_by_role("button", name="Add Point", exact=True)).to_have_count(0)
         expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_have_count(0)
         expect(self.page.locator(".o_live_rich_readonly").first).to_be_visible()
+
+    def test_offline_approver_can_approve_previous_minutes_from_point(self):
+        login = os.environ.get("ODOO_REVIEWER_LOGIN")
+        if not login:
+            self.skipTest("Disposable reviewer is not configured")
+        reviewer = self.rpc("res.users", "search", [[("login", "=", login)]], {"limit": 1})[0]
+        series = self.rpc(
+            "community.meeting.series", "create",
+            [{"name": "Offline approval " + uuid.uuid4().hex[:8], "has_minutes_approval_point": True}],
+        )
+        now = datetime.utcnow().replace(microsecond=0)
+        previous = self.rpc("community.meeting", "create", [{
+            "name": "Offline previous minutes",
+            "series_id": series,
+            "start_datetime": (now - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S"),
+            "reader_user_ids": [[4, reviewer]],
+        }])
+        self.rpc("community.meeting.agenda.item", "create", [{
+            "meeting_id": previous, "name": "Previous agenda", "kind": "discussion",
+        }])
+        self.rpc("community.meeting", "action_schedule", [[previous]])
+        self.rpc("community.meeting", "action_mark_held", [[previous]])
+        self.rpc("community.meeting", "action_draft_minutes", [[previous]])
+        self.rpc("community.meeting", "write", [[self.meeting_id], {
+            "series_id": series, "reader_user_ids": [[4, reviewer]],
+        }])
+        self.rpc("community.meeting", "action_mark_held", [[self.meeting_id]])
+        self.rpc("community.meeting", "action_draft_minutes", [[self.meeting_id]])
+        context = self.browser.new_context()
+        try:
+            page = context.new_page()
+            page.goto(BASE_URL + "/web/login" + (("?db=%s" % DB) if DB else ""))
+            page.locator('input[name="login"]').fill(login)
+            page.locator('input[name="password"]').fill(PASSWORD)
+            page.locator('button[type="submit"]').click()
+            page.wait_for_url("**/odoo**")
+            page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
+            page.get_by_role("button", name="Open Meeting").click()
+            if page.locator(".o_live_expand").first.get_attribute("aria-expanded") == "false":
+                page.locator(".o_live_expand").first.click()
+            approval = page.locator(".o_live_minutes_approval")
+            expect(approval).to_be_visible()
+            expect(approval.get_by_role("button", name="Approve minutes", exact=True)).to_be_visible()
+            expect(page.get_by_role("button", name="Approve Minutes", exact=True)).to_have_count(0)
+            approval.get_by_role("button", name="Approve minutes", exact=True).click()
+            expect(approval.get_by_role("button", name="Approve minutes", exact=True)).to_have_count(0)
+            self.assertEqual(self.record("community.meeting", previous, ["state"], page=page)["state"], "approved")
+            self.assertEqual(self.record("community.meeting", self.meeting_id, ["state"], page=page)["state"], "minutes_draft")
+            point = self.rpc("community.meeting.agenda.item", "search_read", [[
+                ("meeting_id", "=", self.meeting_id), ("kind", "=", "minutes_approval"),
+            ]], {"fields": ["disposition"]}, page=page)[0]
+            self.assertEqual(point["disposition"], "closed")
+        finally:
+            context.close()
 
     def test_agreement_followup_asks_for_series(self):
         self.retain_carryover = True

@@ -79,6 +79,9 @@ export class LiveMeeting extends Component {
     get meetingPaused() { return Boolean(this.state.meeting.actual_paused_at); }
     get readOnly() { return this.locked || this.meetingPaused; }
     get canAddPoint() { return Boolean(this.state.capabilities?.can_add_point); }
+    get canApprovePreviousMinutes() {
+        return Boolean(this.state.capabilities?.can_approve_previous_minutes);
+    }
     get draftingMinutes() { return ["held", "minutes_draft"].includes(this.state.meeting.state); }
     get canPreviewMinutes() {
         return this.draftingMinutes && Boolean(this.state.capabilities?.can_preview_minutes);

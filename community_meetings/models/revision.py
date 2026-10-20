@@ -202,8 +202,32 @@ class CommunityMeetingRevision(models.Model):
         return {}
 
     @api.model
-    def _create_approved_revision(self, meeting):
-        if not self.env.user.has_group("community_meetings.group_meeting_approver"):
+    def _create_approved_revision(self, meeting, approval_point=None, offline=False):
+        if approval_point:
+            point_meeting = approval_point.meeting_id
+            live_editor_approval = (
+                not offline
+                and self.env.user.has_group("community_meetings.group_meeting_editor")
+                and point_meeting.state == "scheduled"
+                and point_meeting.actual_start_datetime
+                and not point_meeting.actual_end_datetime
+            )
+            offline_approver_approval = (
+                offline
+                and self.env.user.has_group("community_meetings.group_meeting_approver")
+                and point_meeting.state == "minutes_draft"
+                and not point_meeting.actual_start_datetime
+            )
+            if not (live_editor_approval or offline_approver_approval):
+                raise AccessError(_("Only an authorized editor in a live meeting or approver preparing offline minutes can approve from this point."))
+            if (
+                approval_point.kind != "minutes_approval"
+                or point_meeting.series_id != meeting.series_id
+                or not point_meeting.start_datetime
+                or point_meeting.start_datetime <= meeting.start_datetime
+            ):
+                raise UserError(_("The minutes approval point must belong to a later meeting in this series."))
+        elif not self.env.user.has_group("community_meetings.group_meeting_approver"):
             raise AccessError(_("Only an authorized approver can create a minutes revision."))
         meeting.check_access("read")
         self.env.cr.execute(

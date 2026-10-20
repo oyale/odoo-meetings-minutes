@@ -8360,7 +8360,7 @@ msgstr ""
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
-msgid "Added to every meeting in this series. Approvers can approve earlier minutes here."
+msgid "Added to every meeting in this series. Editors can approve earlier minutes during a live meeting; approvers can do so while preparing minutes for an offline meeting."
 msgstr ""
 
 #. module: community_meetings
@@ -10486,4 +10486,51 @@ msgstr ""
 
 #. module: community_meetings
 msgid "Leave at zero to use the series or company default."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Only meeting editors can approve previous minutes from a live meeting."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Only meeting approvers can approve previous minutes while preparing offline minutes."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Previous minutes can only be approved during a live meeting or while preparing offline minutes."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Previous minutes can only be approved while preparing offline minutes."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "This series does not require approval from a later meeting."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Only meeting editors can approve previous minutes from a later meeting."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/revision.py:0
+msgid "Only an authorized editor in a live meeting or approver preparing offline minutes can approve from this point."
+msgstr ""
+
+#. module: community_meetings
+#: model:ir.model.fields,help:community_meetings.field_community_meeting_series__has_minutes_approval_point
+msgid "Add a 'Minutes Approval' point to every meeting. Editors use it during a live meeting and approvers use it while preparing minutes for an offline meeting to approve pending earlier minutes."
 msgstr ""

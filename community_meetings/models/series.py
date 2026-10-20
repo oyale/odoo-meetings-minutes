@@ -64,7 +64,7 @@ class CommunityMeetingSeries(models.Model):
     )
     has_minutes_approval_point = fields.Boolean(
         string="Minutes approval point",
-        help="Add a 'Minutes Approval' point to every meeting. Approvers use it to approve pending earlier minutes.",
+        help="Add a 'Minutes Approval' point to every meeting. Editors use it during a live meeting and approvers use it while preparing minutes for an offline meeting to approve pending earlier minutes.",
     )
     has_next_meeting_point = fields.Boolean(
         string="Next meeting point",

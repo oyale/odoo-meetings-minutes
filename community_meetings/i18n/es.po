@@ -8532,8 +8532,8 @@ msgstr "Aprobar el acta"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
-msgid "Added to every meeting in this series. Approvers can approve earlier minutes here."
-msgstr "Se añade a todas las reuniones de esta serie. Los aprobadores pueden aprobar aquí las actas anteriores."
+msgid "Added to every meeting in this series. Editors can approve earlier minutes during a live meeting; approvers can do so while preparing minutes for an offline meeting."
+msgstr "Se añade a todas las reuniones de esta serie. Los editores pueden aprobar actas anteriores durante una reunión en vivo; los aprobadores pueden hacerlo al preparar el acta de una reunión offline."
 
 #. module: community_meetings
 #: model:ir.model.constraint,message:community_meetings.constraint_community_meeting_revision_meeting_revision_unique
@@ -10804,3 +10804,36 @@ msgstr "Ocurrencia anterior"
 #. module: community_meetings
 msgid "Leave at zero to use the series or company default."
 msgstr "Deja el valor en cero para usar el predeterminado de la serie o de la compañía."
+
+#. module: community_meetings
+msgid "Only meeting editors can approve previous minutes from a live meeting."
+msgstr "Solo los editores pueden aprobar actas anteriores durante una reunión en vivo."
+
+#. module: community_meetings
+msgid "Only meeting approvers can approve previous minutes while preparing offline minutes."
+msgstr "Solo los aprobadores pueden aprobar actas anteriores al preparar el acta de una reunión offline."
+
+#. module: community_meetings
+msgid "Previous minutes can only be approved during a live meeting or while preparing offline minutes."
+msgstr "Las actas anteriores solo se pueden aprobar durante una reunión en vivo o al preparar el acta de una reunión offline."
+
+#. module: community_meetings
+msgid "Previous minutes can only be approved while preparing offline minutes."
+msgstr "Las actas anteriores solo se pueden aprobar al preparar el acta de una reunión offline."
+
+#. module: community_meetings
+msgid "This series does not require approval from a later meeting."
+msgstr "Esta serie no requiere aprobación desde una reunión posterior."
+
+#. module: community_meetings
+msgid "Only meeting editors can approve previous minutes from a later meeting."
+msgstr "Solo los editores pueden aprobar actas anteriores desde una reunión posterior."
+
+#. module: community_meetings
+msgid "Only an authorized editor in a live meeting or approver preparing offline minutes can approve from this point."
+msgstr "Solo un editor autorizado en una reunión en vivo o un aprobador que prepara el acta de una reunión offline puede aprobar desde este punto."
+
+#. module: community_meetings
+#: model:ir.model.fields,help:community_meetings.field_community_meeting_series__has_minutes_approval_point
+msgid "Add a 'Minutes Approval' point to every meeting. Editors use it during a live meeting and approvers use it while preparing minutes for an offline meeting to approve pending earlier minutes."
+msgstr "Añade un punto «Aprobación del acta» a todas las reuniones. Los editores lo usan durante una reunión en vivo y los aprobadores al preparar el acta de una reunión offline para aprobar actas anteriores pendientes."

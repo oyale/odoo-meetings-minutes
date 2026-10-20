@@ -50,7 +50,7 @@ meeting as *Series description*.
 
 | Field | Meaning |
 |---|---|
-| **Minutes approval point** | Adds a first agenda point to every meeting in the series. Approvers use it to approve pending earlier minutes; direct approval is disabled for this series. Reserve: 5 minutes per pending acta. |
+| **Minutes approval point** | Adds a first agenda point to every meeting in the series. Editors approve earlier minutes during a live meeting; Approvers can approve them while preparing minutes for a meeting that happened offline. Direct approval on the earlier meeting is disabled. Reserve: 5 minutes per pending acta. |
 | **Next meeting point** | Adds a last agenda point to set the next date. Reserves 5 minutes. |
 | **Next meeting default** | Rule to pre-fill that date: *next weekday* (always Tuesday), *day of month*, or *after N days*. |
 

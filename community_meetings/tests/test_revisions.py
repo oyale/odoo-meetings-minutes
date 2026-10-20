@@ -1,7 +1,7 @@
 import json
 from unittest.mock import patch
 
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 from odoo.tests import TransactionCase, tagged
 
 
@@ -120,7 +120,7 @@ class TestMeetingRevisions(TransactionCase):
         revision = self._approve_without_rendering_pdf(approved)
         return meeting, action, revision
 
-    def _drafted_meeting(self, name, series=None):
+    def _drafted_meeting(self, name, series=None, start_datetime="2026-11-01 10:00:00"):
         meeting = (
             self.env["community.meeting"]
             .with_user(self.editor)
@@ -128,7 +128,7 @@ class TestMeetingRevisions(TransactionCase):
                 {
                     "name": name,
                     "series_id": series.id if series else False,
-                    "start_datetime": "2026-11-01 10:00:00",
+                    "start_datetime": start_datetime,
                     "reader_user_ids": [(4, self.approver.id)],
                 }
             )
@@ -178,8 +178,14 @@ class TestMeetingRevisions(TransactionCase):
         with self.assertRaises(UserError), self.cr.savepoint():
             self._approve_without_rendering_pdf(earlier.with_user(self.approver))
 
-        with patch.object(type(self.env["ir.actions.report"]), "_render_qweb_pdf", return_value=(b"%PDF-1.4", "pdf")):
+        later.with_user(self.editor).action_schedule()
+        with self.assertRaises(UserError), self.cr.savepoint():
+            later.with_user(self.editor).action_approve_pending_minutes(point.id, [earlier.id])
+        with self.assertRaises(UserError), self.cr.savepoint():
             later.with_user(self.approver).action_approve_pending_minutes(point.id, [earlier.id])
+        later.with_user(self.editor).action_start_meeting()
+        with patch.object(type(self.env["ir.actions.report"]), "_render_qweb_pdf", return_value=(b"%PDF-1.4", "pdf")):
+            later.with_user(self.editor).action_approve_pending_minutes(point.id, [earlier.id])
         first_revision = earlier.approved_revision_id
         record = point.minutes_approval_ids.filtered(lambda row: row.meeting_id == earlier)
         self.assertEqual(record.revision_id, first_revision)
@@ -187,11 +193,32 @@ class TestMeetingRevisions(TransactionCase):
         earlier.with_user(self.manager).action_start_amendment()
         earlier.agenda_item_ids[0].with_user(self.manager).write({"discussion_notes": "Amended discussion"})
         with patch.object(type(self.env["ir.actions.report"]), "_render_qweb_pdf", return_value=(b"%PDF-1.4", "pdf")):
-            later.with_user(self.approver).action_approve_pending_minutes(point.id, [earlier.id])
+            later.with_user(self.editor).action_approve_pending_minutes(point.id, [earlier.id])
         history = point.minutes_approval_ids.filtered(lambda row: row.meeting_id == earlier).sorted("id")
         self.assertEqual(len(history), 2)
         self.assertEqual(history[-1].revision_id, earlier.approved_revision_id)
         self.assertNotEqual(history[0].revision_id, history[1].revision_id)
+
+    def test_offline_approver_approves_previous_minutes_from_point(self):
+        series = self.env["community.meeting.series"].with_user(self.editor).create(
+            {"name": "Offline approval policy", "has_minutes_approval_point": True}
+        )
+        earlier = self._drafted_meeting("Earlier offline minutes", series=series)
+        later = self._drafted_meeting(
+            "Offline minutes with approval", series=series, start_datetime="2026-11-08 10:00:00"
+        )
+        point = later.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
+        self.assertTrue(point)
+        self.assertFalse(later.actual_start_datetime)
+        with self.assertRaises(AccessError), self.cr.savepoint():
+            later.with_user(self.editor).action_approve_pending_minutes(point.id, [earlier.id])
+        with patch.object(type(self.env["ir.actions.report"]), "_render_qweb_pdf", return_value=(b"%PDF-1.4", "pdf")):
+            revisions = later.with_user(self.approver).action_approve_pending_minutes(point.id, [earlier.id])
+        self.assertEqual({revision.meeting_id for revision in revisions}, {earlier})
+        self.assertEqual((earlier.state, later.state), ("approved", "minutes_draft"))
+        self.assertEqual(point.disposition, "closed")
+        approval = point.minutes_approval_ids.filtered(lambda row: row.meeting_id == earlier)
+        self.assertEqual(approval.revision_id, earlier.approved_revision_id)
 
     def test_snapshot_records_pending_destination_series(self):
         meeting = self._drafted_meeting("Pending follow-up destination")

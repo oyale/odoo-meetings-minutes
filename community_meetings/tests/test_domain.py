@@ -354,6 +354,12 @@ class TestMeetingDomain(TransactionCase):
         with self.assertRaises(UserError):
             self._approve_without_rendering_pdf(previous)
         self.assertFalse(previous.approved_revision_id)
+        with self.assertRaises(UserError), self.cr.savepoint():
+            later.with_user(self.editor).action_approve_pending_minutes(point.id, [previous.id])
+        later.action_schedule()
+        with self.assertRaises(UserError), self.cr.savepoint():
+            later.with_user(self.editor).action_approve_pending_minutes(point.id, [previous.id])
+        later.action_start_meeting()
         with patch.object(type(self.env["ir.actions.report"]), "_render_qweb_pdf", return_value=(b"%PDF-1.4", "pdf")):
             later.with_user(self.editor).action_approve_pending_minutes(point.id, [previous.id])
         self.assertEqual(later.get_pending_minutes_for_approval(), [])

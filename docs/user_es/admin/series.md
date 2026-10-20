@@ -52,7 +52,7 @@ lectura en cada reunión como *Descripción de la serie*.
 
 | Campo | Significado |
 |---|---|
-| **Punto de aprobación del acta** | Añade un primer punto a todas las reuniones de la serie. Los aprobadores lo usan para aprobar actas anteriores pendientes; la aprobación directa queda desactivada en esta serie. Reserva 5 minutos por acta pendiente. |
+| **Punto de aprobación del acta** | Añade un primer punto a todas las reuniones de la serie. Los editores aprueban actas anteriores durante una reunión en vivo; si la reunión ocurrió offline, un aprobador puede hacerlo al preparar su acta. La aprobación directa en la reunión anterior queda desactivada. Reserva 5 minutos por acta pendiente. |
 | **Punto de próxima reunión** | Añade un último punto para fijar la próxima fecha. Reserva 5 minutos. |
 | **Regla de próxima reunión** | Regla para proponer esa fecha: *día de la semana* (siempre martes), *día del mes* o *cada N días*. |
 

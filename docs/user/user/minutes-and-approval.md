@@ -36,13 +36,19 @@ leave the saved content and meeting state unchanged.
 
 ## 2. Approve (approver)
 
-When the series requires a minutes-approval point, approve earlier minutes from
-that point in a later meeting. Each pending meeting has its own **Approve
-minutes** action. The direct approval action on the earlier meeting is blocked
-for this series. Approval history links to the exact approved revision, so a
-later amendment is recorded separately.
+When the series requires a minutes-approval point, each pending earlier meeting
+has its own **Approve minutes** action on that point. An **Editor** can use it
+while the later meeting is live. For a meeting that happened offline, an
+**Approver** can use it while preparing that meeting's minutes. In this offline
+flow, the point closes after all earlier minutes have been approved. Direct
+approval on the earlier meeting is blocked for this series. Approval history
+links to the exact approved revision, so a later amendment is recorded
+separately.
 
-An **Approver** presses **Approve Minutes** (live screen or form header).
+When a series does not use a later-meeting approval point, an **Approver**
+presses **Approve Minutes** (live screen or form header). When the point policy
+is enabled, the current minutes stay pending for a later meeting's point; the
+direct action is blocked.
 
 Approval:
 
