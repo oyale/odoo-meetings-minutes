@@ -57,6 +57,10 @@ previo en esta continuación y en las siguientes; las notas originales se
 conservan. Este control no se aplica a los puntos *Aprobación del acta* ni
 *Próxima reunión*.
 
+Para volver a mostrar ese contexto, restaura el debate anterior en el punto
+donde lo ocultaste. Las continuaciones posteriores podrán mostrar de nuevo las
+notas de origen, siempre que no hayan ocultado el debate anterior por su cuenta.
+
 ## Documentación relacionada
 
 - [Política de arrastre de la serie](../admin/series.md#políticas)

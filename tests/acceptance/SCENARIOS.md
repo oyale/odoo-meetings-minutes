@@ -37,3 +37,26 @@ individually, such as generated mail or attachments.
 | `cm_carryover_003` | Core / meeting editor | Accepted point has earlier debate notes and a destination meeting. | Read the context; hide it; accept the point into another meeting; restore context. | Earlier notes are separate/read-only; hiding leaves source notes unchanged and hides context in current and later continuations; restoring makes context visible again. | Cross-meeting lineage is retained; drop the disposable test database after the scenario. |
 | `cm_next_review_001` | Core / meeting editor | Running meeting contains a discussion point that can be postponed. | Postpone with a reason and mark it for review next time. | Postponed state, reason, and next-meeting review choice are visible and persisted. | Cancel and delete the scheduled meeting fixture. |
 | `cm_next_review_002` | Core / meeting editor | Point has next-meeting review enabled. | Reopen the meeting, clear the choice, and reopen again. | Choice is checked before clearing and remains unchecked after persistence/reload. | Cancel and delete the scheduled meeting fixture. |
+
+## User guide cross-reference
+
+These links describe the user contract behind the scenarios. A scenario's
+presence is coverage by specification, not evidence of a successful browser run.
+Keep the English and Spanish guides aligned when changing an expected result.
+
+| Guide (English / Spanish) | Acceptance scenarios | Documented behavior still needing a dedicated acceptance journey |
+| --- | --- | --- |
+| [Series](../../docs/user/admin/series.md) / [Series (ES)](../../docs/user_es/admin/series.md) | `cm_ser_001`–`004` | Recurring-template deactivation and changes to series defaults. |
+| [Preparation](../../docs/user/user/prepare-meeting.md) / [Preparación](../../docs/user_es/user/prepare-meeting.md) | `cm_lifecycle_001`–`002` | Meeting creation with time tracking disabled. |
+| [Live meeting](../../docs/user/user/live-meeting.md) / [Reunión en vivo](../../docs/user_es/user/live-meeting.md) | `cm_agenda_001`–`002`, `cm_next_review_001`–`002` | Pause/resume, undoing outcomes and saving rich text before leaving. |
+| [Minutes](../../docs/user/user/minutes-and-approval.md) / [Actas](../../docs/user_es/user/minutes-and-approval.md) | `cm_lifecycle_001`, `003`, `cm_preview_001`–`003` | Amendment by a manager and reapproval preserving the earlier PDF; exclusion of private notes and unpublished dissents. Preview currently exercises Minutes draft, not a separate Held-state journey. |
+| [Proposals](../../docs/user/user/propose-a-point.md) / [Propuestas](../../docs/user_es/user/propose-a-point.md) | `cm_proposal_001`–`002` | Rejection and proposal-policy restrictions. |
+| [Carryovers](../../docs/user/user/carryovers.md) / [Arrastres](../../docs/user_es/user/carryovers.md) | `cm_carryover_001`–`003` | Automatic carryover, dismissal and transfer to a different series. |
+| [Follow-ups](../../docs/user/user/followups.md) / [Seguimientos](../../docs/user_es/user/followups.md) | Project task journeys below provide partial coverage. | Native activity/To-do creation, owner changes, completion and refusal to resolve a TODO point without evidence. |
+| [Project](../../docs/user/integrations/project.md) / [Project (ES)](../../docs/user_es/integrations/project.md) | `cm_project_001`–`002` | Linking an existing task and carrying selected tasks between meetings. |
+| [Calendar](../../docs/user/integrations/calendar.md) / [Calendario](../../docs/user_es/integrations/calendar.md) | `cm_calendar_001`–`004` | Read-only managed event fields and invitation controls. |
+
+The final column concerns this Behave suite only; ORM or other browser tests
+may cover those rules. It is not a list of missing product features. When adding
+a journey, turn the documented rule into a user action and observable result,
+then add its stable ID to the matrix and link its guide here.

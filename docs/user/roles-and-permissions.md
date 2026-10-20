@@ -13,8 +13,8 @@ cumulative.
 | **Proposer** | Suggest new agenda points for a series (via *Propose a point*). Every internal user has this by default. |
 | **Reader** | See the meetings they are organizer, secretary, or explicitly assigned reader of: agenda, discussion, agreements, minutes and approved PDFs. |
 | **Editor** | Everything a Reader does, plus: prepare meetings, add/reorder points, run the live meeting, record agreements/dissents/follow-ups, postpone points, manage editorial notes, write minutes, request carryovers, manage series. |
-| **Approver** | Everything a Reader does, plus: approve minutes (and start amendments on approved meetings). Independent from Editor. |
-| **Manager** | Editor + Approver, plus: assign per-meeting readers/editors, change a meeting's organizer, full configuration (catalogs, settings). |
+| **Approver** | Everything a Reader does, plus: approve minutes. Independent from Editor. |
+| **Manager** | Editor + Approver, plus: start amendments on approved meetings, assign per-meeting readers/editors, change a meeting's organizer, full configuration (catalogs, settings). |
 
 > **Note:** Editor and Approver are independent: an approver who is not an editor can
 > approve minutes but cannot modify the agenda. A manager includes both.
@@ -65,6 +65,7 @@ specific groups (see [Authorized proposer groups](admin/catalogs.md#authorized-p
 | Record dissents / editorial notes | | ✔ | | ✔ |
 | Write minutes | | ✔ | | ✔ |
 | Approve minutes | | | ✔ | ✔ |
+| Start an amendment | | | | ✔ |
 | Assign per-meeting readers/editors | | ✔² | | ✔ |
 | Configure series, kinds, settings | | | | ✔ |
 

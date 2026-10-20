@@ -13,8 +13,8 @@ acceso* → **Meeting roles**) y son acumulativos.
 | **Proponente** | Sugerir puntos nuevos para una serie (vía *Proponer un punto*). Todo usuario interno lo tiene por defecto. |
 | **Lector** | Ver las reuniones de las que es organizador, secretario o lector asignado: agenda, discusión, acuerdos, actas y PDFs aprobados. |
 | **Editor** | Todo lo del Lector, más: preparar reuniones, añadir/reordenar puntos, dirigir la reunión en vivo, registrar acuerdos/discrepancias/seguimientos, posponer puntos, gestionar notas editoriales, redactar actas, solicitar arrastres, gestionar series. |
-| **Aprobador** | Todo lo del Lector, más: aprobar actas (e iniciar enmiendas sobre reuniones aprobadas). Independiente del Editor. |
-| **Gestor** | Editor + Aprobador, más: asignar lectores/editores por reunión, cambiar el organizador, toda la configuración (catálogos, ajustes). |
+| **Aprobador** | Todo lo del Lector, más: aprobar actas. Independiente del Editor. |
+| **Gestor** | Editor + Aprobador, más: iniciar enmiendas sobre reuniones aprobadas, asignar lectores/editores por reunión, cambiar el organizador, toda la configuración (catálogos, ajustes). |
 
 > **Nota:** Editor y Aprobador son independientes: un aprobador que no es editor
 > puede aprobar actas pero no modificar la agenda. Un gestor incluye ambos.
@@ -68,6 +68,7 @@ la propuesta a grupos concretos (ver
 | Registrar discrepancias / notas editoriales | | ✔ | | ✔ |
 | Redactar el acta | | ✔ | | ✔ |
 | Aprobar el acta | | | ✔ | ✔ |
+| Iniciar una modificación | | | | ✔ |
 | Asignar lectores/editores por reunión | | ✔² | | ✔ |
 | Configurar series, tipos, ajustes | | | | ✔ |
 
