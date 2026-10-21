@@ -1,7 +1,7 @@
 {
     "name": "Community Meetings - Project Tasks",
     "summary": "Link existing Odoo Project tasks to meetings",
-    "version": "18.0.3.1.4",
+    "version": "18.0.3.1.5",
     "category": "Services/Project",
     "license": "AGPL-3",
     "author": "Pelayo García",

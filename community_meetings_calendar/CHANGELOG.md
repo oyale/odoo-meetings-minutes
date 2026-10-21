@@ -4,6 +4,15 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings Calendar 18.0.1.0.4 (2026-10-21)
+======================================================
+
+## Release notes
+
+### Improved Documentation
+
+- Clarify in the English and Spanish guides that meeting changes update the linked Calendar event and cancellation removes it.
+
 ## Community Meetings Calendar 18.0.1.0.3 (2026-10-20)
 ======================================================
 

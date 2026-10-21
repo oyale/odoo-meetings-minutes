@@ -4,6 +4,19 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings Project 18.0.3.1.5 (2026-10-21)
+=====================================================
+
+## Release notes
+
+### Features
+
+- Project destination and task policy changes on meeting series are now recorded in the series chatter.
+
+## Internal changes
+
+- **project-followup-browser-coverage** — Extend the Project follow-up wizard browser coverage to review context, link an existing task without creating a duplicate, and check the compact layout with Calendar installed.
+
 ## Community Meetings Project 18.0.3.1.4 (2026-10-20)
 =====================================================
 
