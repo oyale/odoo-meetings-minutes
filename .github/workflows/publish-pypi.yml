@@ -182,6 +182,7 @@ jobs:
 
   publish:
     needs: [build, test]
+    if: needs.test.result == 'success'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

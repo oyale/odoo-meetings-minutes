@@ -36,7 +36,9 @@ def affects_odoo(paths: list[str]) -> bool:
 
 def changed_paths() -> list[str] | None:
     if os.environ.get("FORCE_TESTS", "").lower() == "true":
-        return ["forced test run"]
+        # None means the comparison is unavailable, so the caller runs tests
+        # conservatively. A synthetic path would be classified as docs-only.
+        return None
 
     event_name = os.environ.get("EVENT_NAME")
     if event_name == "pull_request":
