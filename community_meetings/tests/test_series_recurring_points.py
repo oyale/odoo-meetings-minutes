@@ -87,6 +87,23 @@ class TestSeriesRecurringPoints(TransactionCase):
         next_meeting = self._prepare_meeting("2026-11-09 10:00:00")
         self.assertEqual(next_meeting.agenda_item_ids.topic_id.recurring_template_id, self.template)
 
+    def test_repeated_occurrence_creation_reuses_the_existing_agenda_item(self):
+        meeting = self._prepare_meeting("2026-11-02 10:00:00")
+        existing = meeting.agenda_item_ids.filtered(lambda item: item.topic_id.recurring_template_id == self.template)
+
+        repeated = self.template.with_user(self.editor)._create_occurrence(meeting)
+
+        self.assertEqual(repeated, existing)
+        self.assertEqual(
+            self.env["community.meeting.agenda.item"].search_count(
+                [
+                    ("meeting_id", "=", meeting.id),
+                    ("topic_id.recurring_template_id", "=", self.template.id),
+                ]
+            ),
+            1,
+        )
+
     def test_occurrences_are_independent_and_link_to_previous_occurrence(self):
         first_meeting = self._prepare_meeting("2026-11-02 10:00:00")
         first_topic = first_meeting.agenda_item_ids.topic_id.filtered("recurring_template_id")

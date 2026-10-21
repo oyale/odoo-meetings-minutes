@@ -73,6 +73,21 @@ class MeetingSeriesAgendaTemplate(models.Model):
         if meeting.series_id != self.series_id:
             raise ValidationError(_("A recurring point can only be added to a meeting in its series."))
 
+        # Serialize repeated requests for this meeting/template pair and reuse
+        # the occurrence if an earlier request already created it.
+        meeting._lock_live_workflow()
+        meeting.invalidate_recordset(["agenda_item_ids"])
+        existing = self.env["community.meeting.agenda.item"].search(
+            [
+                ("meeting_id", "=", meeting.id),
+                ("topic_id.recurring_template_id", "=", self.id),
+            ],
+            limit=1,
+            order="id",
+        )
+        if existing:
+            return existing
+
         previous_items = self.env["community.meeting.agenda.item"].search(
             [
                 ("topic_id.recurring_template_id", "=", self.id),
