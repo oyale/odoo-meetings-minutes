@@ -163,7 +163,7 @@ class TestMeetingSecurity(TransactionCase):
                 "series_id": series.id,
                 "start_datetime": "2026-11-08 10:00:00",
                 "secretary_id": secretary.id,
-                "reader_user_ids": [(4, self.editor.id)],
+                "editor_user_ids": [(4, self.editor.id)],
             }
         )
         later.with_user(self.reader_editor).action_schedule()

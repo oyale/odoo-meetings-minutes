@@ -474,12 +474,13 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             "also needs the Editor role and edit access."
         )
         expect(self.page.locator(".o_live_minutes_approval")).to_contain_text(approval_notice)
+        editor_id = self.rpc("res.users", "search", [[("login", "=", LOGIN)]], {"limit": 1})[0]
         current = self.rpc("community.meeting", "create", [{
             "name": "Review previous minutes", "series_id": series,
             "start_datetime": (datetime.now(timezone.utc) + timedelta(days=3))
             .replace(tzinfo=None, microsecond=0)
             .strftime("%Y-%m-%d %H:%M:%S"),
-            "secretary_id": self.editor_id,
+            "secretary_id": editor_id,
         }])
         discussion_type = self.rpc(
             "community.meeting.agenda.type", "search",
