@@ -7,6 +7,31 @@ Each addon changelog starts with its first release prepared after this change;
 the combined history below retains the existing suite release notes.
 
 <!-- towncrier release notes start -->
+## Odoo Meetings Minutes 18.0.20261021.1 (2026-10-21)
+
+### Addon versions
+
+| Addon | Odoo module version |
+|---|---:|
+| [Community Meetings](community_meetings/CHANGELOG.md) | `18.0.6.2.6` |
+| [Calendar Integration](community_meetings_calendar/CHANGELOG.md) | `18.0.1.0.4` |
+| [Project Integration](community_meetings_project/CHANGELOG.md) | `18.0.3.1.6` |
+| [Extension Demo](community_meetings_extension_demo/CHANGELOG.md) | `18.0.1.0.1` |
+
+=====================================================
+
+## Community Meetings
+
+### Bugfixes
+
+- Approved minutes now show the meeting time in the series timezone, falling back to the company timezone and then UTC. Draft previews show the viewer's timezone.
+- Recording or moving a decision agreement that would duplicate another active agreement now raises a normal validation error instead of a database uniqueness error.
+## Calendar Integration
+
+No significant changes.
+## Extension Demo
+
+No significant changes.
 ## Odoo Meetings Minutes 18.0.20261021.0 (2026-10-21)
 
 ### Addon versions

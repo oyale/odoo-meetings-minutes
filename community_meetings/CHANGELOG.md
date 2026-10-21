@@ -4,6 +4,21 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings 18.0.6.2.6 (2026-10-21)
+=============================================
+
+## Release notes
+
+### Bugfixes
+
+- Approved minutes now show the meeting time in the series timezone, falling back to the company timezone and then UTC. Draft previews show the viewer's timezone.
+- Recording or moving a decision agreement that would duplicate another active agreement now raises a normal validation error instead of a database uniqueness error.
+
+## Internal changes
+
+- **coverage-resolution-guards** — Add regression coverage for resolution authorization, link consistency, duplicate agreements, and approved-minute locks.
+- **coverage-approval-revision-guards** — Add regression coverage for minutes approval authorization, revision immutability, PDF access, and PDF failure rollback.
+
 ## Community Meetings 18.0.6.2.5 (2026-10-21)
 =============================================
 

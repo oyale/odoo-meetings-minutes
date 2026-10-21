@@ -4,6 +4,13 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings Project 18.0.3.1.6 (2026-10-21)
+=====================================================
+
+## Internal changes
+
+- **coverage-private-project-task-links** — Add regression coverage for privacy of inaccessible project task links.
+
 ## Community Meetings Project 18.0.3.1.5 (2026-10-21)
 =====================================================
 
