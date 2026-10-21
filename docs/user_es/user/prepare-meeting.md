@@ -98,6 +98,15 @@ puntos rápido.
 > la **política de añadir puntos** de su serie — desaparece al vencer el plazo y el
 > servidor también lo impide.
 
+## Reordenar puntos de agenda
+
+Usa los controles **Subir** y **Bajar** junto a cada punto para colocarlo donde
+corresponda. El orden se guarda al momento y se refleja en la agenda en vivo y
+en el acta. Los puntos de aprobación del acta y de próxima reunión conservan sus
+posiciones estructurales. El reordenamiento sigue la política de la compañía o
+de la serie; al marcar la reunión como
+**Celebrada**, el orden queda bloqueado.
+
 En el formulario de la reunión aparece un aviso cuando la suma de estimaciones
 de la agenda supera la duración prevista. Ajusta allí la duración o los puntos.
 

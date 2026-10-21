@@ -43,6 +43,14 @@ Tools above the list: **Add Point** (subject to the
 [adding-points policy](../admin/configuration.md#adding-points)), previous/next
 arrows, **Pending only** filter, **Expand/Collapse all**.
 
+Regular agenda points can also be moved up or down when the series or company
+reordering policy allows it. During a live meeting, choose **Reorder agenda**
+above the cards to reveal the arrows; choose **Done reordering** when finished.
+The minutes-approval, next-meeting, and individually fixed points keep their
+positions. The order locks when the meeting is marked **Held**.
+
+![Live agenda with reordering controls enabled](../img/live-agenda-reordering.png)
+
 ### Running a point
 
 1. **Begin point** (time tracking on) — opens the point for editing and starts

@@ -43,6 +43,15 @@ Herramientas sobre la lista: **Añadir punto** (según la
 [política de añadir puntos](../admin/configuration.md#añadir-puntos)), flechas
 anterior/siguiente, filtro **Solo pendientes**, **Expandir/Contraer todo**.
 
+Cuando la política de reordenamiento de la compañía o de la serie lo permite,
+también se pueden subir o bajar puntos normales. Durante la reunión, pulsa
+**Reordenar agenda** sobre las tarjetas para mostrar las flechas; al terminar,
+pulsa **Hecho**. Los puntos de aprobación del acta, de próxima reunión y los
+marcados como fijos conservan su posición. El orden se bloquea al marcar la
+reunión como **Celebrada**.
+
+![Reunión en vivo con los controles de reordenamiento activados](../img/live-agenda-reordering.png)
+
 ### Dirigir un punto
 
 1. **Iniciar punto** (con tiempo activado) — habilita la edición y arranca su

@@ -1,0 +1,1 @@
+Meeting editors can move agenda points up or down in preparation and during a live meeting, within a company or series policy. The order is locked when the meeting is marked held; minutes-approval and next-meeting points retain their structural positions.

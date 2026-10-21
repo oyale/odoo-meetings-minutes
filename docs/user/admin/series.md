@@ -93,6 +93,17 @@ can use **Company default**; the unfinished-points rule is chosen explicitly.
 | **Before it starts** | Also once scheduled, until it begins. |
 | **While it runs** | Also while the meeting is in progress, until it finishes. |
 
+### Reordering points
+
+| Value | Behavior |
+|---|---|
+| **Company default** | Follows *Settings → Agenda order*. |
+| **Draft only** | Editors can reorder points only while preparing the meeting. |
+| **Before it starts** | Also while the meeting is scheduled and has not started. |
+| **While it runs** | Also during the live meeting, until it is marked held. |
+
+Minutes-approval and next-meeting points keep their structural positions.
+
 ### Point estimates
 
 | Field | Meaning |
@@ -135,6 +146,10 @@ on by default. Turn it off when a recurring point should start without the
 earlier notes; the choice is saved on each occurrence, so later template edits
 do not change meetings already prepared. Automatic *Minutes approval* and *Next
 meeting* points do not use discussion history.
+
+Turn off **Can be reordered** to keep that point in the same agenda position in
+each meeting. This setting is copied when an occurrence is created; it does not
+change meetings already prepared.
 
 ![Recurring agenda templates on a series](../img/series-form.png)
 

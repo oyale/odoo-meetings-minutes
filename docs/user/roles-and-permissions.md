@@ -62,6 +62,13 @@ Configured per company and per series (see
 adding points stops when the meeting leaves draft, when it starts, or when it
 finishes. The **Add Point** button simply disappears when not allowed.
 
+## Who can reorder agenda points?
+
+Only meeting editors can reorder points. The company or series policy sets the
+last phase in which this is allowed; the server applies the same rule to direct
+requests. Structural minutes-approval and next-meeting points keep their fixed
+positions.
+
 ## Proposals
 
 Any internal user can propose points unless the manager restricts proposal to
@@ -75,6 +82,7 @@ specific groups (see [Authorized proposer groups](admin/catalogs.md#authorized-p
 | Download approved PDF | ✔ | ✔ | ✔ | ✔ |
 | Propose a point | ✔¹ | ✔ | ✔ | ✔ |
 | Add points to an agenda | | ✔ | | ✔ |
+| Reorder agenda points | | ✔ | | ✔ |
 | Run the live meeting | | ✔ | | ✔ |
 | Record dissents / editorial notes | | ✔ | | ✔ |
 | Write minutes | | ✔ | | ✔ |

@@ -1,3 +1,4 @@
+#. module: community_meetings
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
 # 	* community_meetings
@@ -10587,3 +10588,135 @@ msgstr "Aprobado por"
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Snapshot SHA-256"
 msgstr "SHA-256 de la instantánea"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_res_company__meeting_reorder_point_policy
+#: model:ir.model.fields,field_description:community_meetings.field_res_config_settings__meeting_reorder_point_policy
+msgid "Reorder agenda points until"
+msgstr ""
+
+#. module: community_meetings
+msgid "Agenda order"
+msgstr ""
+
+#. module: community_meetings
+msgid "Reordering points"
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_preparation
+msgid "Move up"
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_preparation
+msgid "Move down"
+msgstr ""
+
+#. module: community_meetings
+msgid "Move point up"
+msgstr ""
+
+#. module: community_meetings
+msgid "Move point down"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Move %(point)s up from position %(position)s of %(total)s"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Move %(point)s down from position %(position)s of %(total)s"
+msgstr ""
+
+#. module: community_meetings
+msgid "Reorder agenda points"
+msgstr ""
+
+#. module: community_meetings
+msgid "Last moment when agenda points can be reordered: only while the meeting is a draft, until it starts, or while it runs. A series can override it."
+msgstr ""
+
+#. module: community_meetings
+msgid "Overrides the company rule for when agenda points can be reordered in this series."
+msgstr ""
+
+#. module: community_meetings
+msgid "Only meeting editors can reorder agenda points."
+msgstr ""
+
+#. module: community_meetings
+msgid "Agenda points can no longer be reordered for this meeting."
+msgstr ""
+
+#. module: community_meetings
+msgid "The reordered list must contain every agenda point exactly once."
+msgstr ""
+
+#. module: community_meetings
+msgid "Fixed agenda points must keep their positions."
+msgstr ""
+
+#. module: community_meetings
+msgid "Can be reordered"
+msgstr ""
+
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:620
+#. module: community_meetings
+#. odoo-javascript
+msgid "Done reordering"
+msgstr ""
+
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:620
+#. module: community_meetings
+#. odoo-javascript
+msgid "Reorder agenda"
+msgstr ""
+
+#. module: community_meetings
+msgid "When disabled, each occurrence stays in its original position in the meeting agenda."
+msgstr ""
+
+#. module: community_meetings
+msgid "Agenda points can only be reordered within one meeting."
+msgstr ""
+
+#. module: community_meetings
+msgid "Choose whether to move the point up or down."
+msgstr ""
+
+#. module: community_meetings
+msgid "The agenda order could not be saved. Refresh and try again."
+msgstr ""
+
+#. module: community_meetings
+msgid "Editors can reorder points under the company rule. Turn off the switch to choose when this series allows reordering. Reordering is locked when a meeting is marked held."
+msgstr ""
+
+#. module: community_meetings
+msgid "Editors can change the agenda order while the meeting is in this phase. Reordering is locked when the meeting is marked held."
+msgstr ""
+
+#. module: community_meetings
+msgid "Draft only: points can be reordered while preparing the meeting. Before it starts: also while scheduled. While it runs: also during the live meeting. Reordering is locked once the meeting is marked held."
+msgstr ""
+
+#. module: community_meetings
+msgid "Points can only be reordered while the meeting is a draft."
+msgstr ""
+
+#. module: community_meetings
+msgid "When agenda points can be reordered"
+msgstr ""
+
+#. module: community_meetings
+msgid "Company reorder-policy default"
+msgstr ""
+
+#. module: community_meetings
+msgid "Reordering points for this series"
+msgstr ""

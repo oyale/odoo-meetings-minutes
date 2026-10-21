@@ -1,3 +1,4 @@
+#. module: community_meetings
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
 # 	* community_meetings
@@ -10872,3 +10873,137 @@ msgstr "Aprobado por"
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Snapshot SHA-256"
 msgstr "SHA-256 de la instantánea"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_res_company__meeting_reorder_point_policy
+#: model:ir.model.fields,field_description:community_meetings.field_res_config_settings__meeting_reorder_point_policy
+msgid "Reorder agenda points until"
+msgstr "Reordenar puntos de agenda hasta"
+
+#. module: community_meetings
+msgid "Agenda order"
+msgstr "Orden de la agenda"
+
+#. module: community_meetings
+msgid "Reordering points"
+msgstr "Reordenar puntos"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_preparation
+msgid "Move up"
+msgstr "Subir"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_preparation
+msgid "Move down"
+msgstr "Bajar"
+
+#. module: community_meetings
+msgid "Move point up"
+msgstr "Subir punto"
+
+#. module: community_meetings
+msgid "Move point down"
+msgstr "Bajar punto"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Move %(point)s up from position %(position)s of %(total)s"
+msgstr "Subir %(point)s desde la posición %(position)s de %(total)s"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Move %(point)s down from position %(position)s of %(total)s"
+msgstr "Bajar %(point)s desde la posición %(position)s de %(total)s"
+
+#. module: community_meetings
+msgid "Reorder agenda points"
+msgstr "Reordenar puntos de agenda"
+
+#. module: community_meetings
+msgid "Last moment when agenda points can be reordered: only while the meeting is a draft, until it starts, or while it runs. A series can override it."
+msgstr "Último momento para reordenar puntos: solo durante el borrador, hasta que empiece o mientras esté en curso. La serie puede sobrescribir este ajuste."
+
+#. module: community_meetings
+msgid "Overrides the company rule for when agenda points can be reordered in this series."
+msgstr "Sobrescribe la regla de la compañía sobre cuándo se pueden reordenar los puntos de agenda de esta serie."
+
+#. module: community_meetings
+msgid "Only meeting editors can reorder agenda points."
+msgstr "Solo los editores de la reunión pueden reordenar los puntos de agenda."
+
+#. module: community_meetings
+msgid "Agenda points can no longer be reordered for this meeting."
+msgstr "Ya no se pueden reordenar los puntos de agenda de esta reunión."
+
+#. module: community_meetings
+msgid "The reordered list must contain every agenda point exactly once."
+msgstr "La lista reordenada debe contener cada punto de agenda exactamente una vez."
+
+#. module: community_meetings
+msgid "Fixed agenda points must keep their positions."
+msgstr "Los puntos fijos deben conservar su posición."
+
+#. module: community_meetings
+msgid "Can be reordered"
+msgstr "Se puede reordenar"
+
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:620
+#. module: community_meetings
+#. odoo-javascript
+msgid "Done reordering"
+msgstr "Hecho"
+
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:620
+#. module: community_meetings
+#. odoo-javascript
+msgid "Reorder agenda"
+msgstr "Reordenar agenda"
+
+#. module: community_meetings
+msgid "When disabled, each occurrence stays in its original position in the meeting agenda."
+msgstr "Si se desactiva, cada ocurrencia conserva su posición original en la agenda de la reunión."
+
+#. module: community_meetings
+msgid "Agenda points can only be reordered within one meeting."
+msgstr "Los puntos de agenda solo se pueden reordenar dentro de una misma reunión."
+
+#. module: community_meetings
+msgid "Choose whether to move the point up or down."
+msgstr "Elige si quieres subir o bajar el punto."
+
+#. module: community_meetings
+msgid "The agenda order could not be saved. Refresh and try again."
+msgstr "No se pudo guardar el orden de la agenda. Actualiza la página e inténtalo de nuevo."
+
+#. module: community_meetings
+msgid "Editors can reorder points under the company rule. Turn off the switch to choose when this series allows reordering. Reordering is locked when a meeting is marked held."
+msgstr "La serie sigue la regla de la compañía. Desactiva el interruptor para elegir cuándo se pueden reordenar sus puntos. El orden se bloquea al marcar la reunión como celebrada."
+
+#. module: community_meetings
+msgid "Editors can change the agenda order while the meeting is in this phase. Reordering is locked when the meeting is marked held."
+msgstr "Se puede cambiar el orden de la agenda durante esta fase. El orden se bloquea al marcar la reunión como celebrada."
+
+#. module: community_meetings
+msgid "Draft only: points can be reordered while preparing the meeting. Before it starts: also while scheduled. While it runs: also during the live meeting. Reordering is locked once the meeting is marked held."
+msgstr "Solo borrador: se reordenan al preparar la reunión. Antes de empezar: también cuando está programada. Mientras se realiza: también durante la reunión en vivo. El orden se bloquea al marcarla como celebrada."
+
+#. module: community_meetings
+msgid "Points can only be reordered while the meeting is a draft."
+msgstr "Los puntos solo se pueden reordenar mientras la reunión esté en borrador."
+
+#. module: community_meetings
+msgid "When agenda points can be reordered"
+msgstr "Cuándo se pueden reordenar los puntos de agenda"
+
+#. module: community_meetings
+msgid "Company reorder-policy default"
+msgstr "Política de reordenamiento de la compañía"
+
+#. module: community_meetings
+msgid "Reordering points for this series"
+msgstr "Reordenamiento de puntos para esta serie"
+
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:621

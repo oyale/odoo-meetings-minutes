@@ -65,6 +65,13 @@ de poder añadirse al salir de borrador, al iniciarse o al terminar. El botón
 **Añadir punto** simplemente desaparece cuando no está permitido — y el servidor
 también lo impide.
 
+## ¿Quién puede reordenar puntos de agenda?
+
+Solo los editores de la reunión. La política de la compañía o de la serie fija
+la última fase en que se permite; el servidor aplica la misma regla a las
+peticiones directas. Los puntos estructurales de aprobación del acta y de
+próxima reunión conservan sus posiciones.
+
 ## Propuestas
 
 Cualquier usuario interno puede proponer puntos, salvo que el gestor restrinja
@@ -79,6 +86,7 @@ la propuesta a grupos concretos (ver
 | Descargar el PDF aprobado | ✔ | ✔ | ✔ | ✔ |
 | Proponer un punto | ✔¹ | ✔ | ✔ | ✔ |
 | Añadir puntos a una agenda | | ✔ | | ✔ |
+| Reordenar puntos de agenda | | ✔ | | ✔ |
 | Dirigir la reunión en vivo | | ✔ | | ✔ |
 | Registrar discrepancias / notas editoriales | | ✔ | | ✔ |
 | Redactar el acta | | ✔ | | ✔ |

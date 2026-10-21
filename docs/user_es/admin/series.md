@@ -97,6 +97,18 @@ la política de puntos sin terminar se elige expresamente.
 | **Antes de empezar** | También programada, hasta que comience. |
 | **Mientras se realiza** | También mientras está en curso, hasta que termine. |
 
+### Reordenar puntos
+
+| Valor | Comportamiento |
+|---|---|
+| **Predeterminado de la compañía** | Sigue *Ajustes → Orden de la agenda*. |
+| **Solo borrador** | Los editores pueden reordenar puntos mientras preparan la reunión. |
+| **Antes de empezar** | También mientras está programada y aún no ha comenzado. |
+| **Mientras se realiza** | También durante la reunión en vivo, hasta marcarla como celebrada. |
+
+Los puntos de aprobación del acta y de próxima reunión conservan sus posiciones
+estructurales.
+
 ### Estimaciones de puntos
 
 | Campo | Significado |
@@ -143,6 +155,10 @@ sin las notas previas. La elección se guarda en cada ocurrencia y los cambios
 posteriores de la plantilla no modifican reuniones ya preparadas. Los puntos
 automáticos *Aprobación del acta* y *Próxima reunión* no muestran historial de
 debate.
+
+Desactiva **Se puede reordenar** para mantener ese punto en la misma posición
+de la agenda en cada reunión. El ajuste se copia al crear cada ocurrencia y no
+cambia las reuniones ya preparadas.
 
 ![Plantillas de agenda recurrentes de una serie](../img/series-form.png)
 

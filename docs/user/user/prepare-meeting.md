@@ -98,6 +98,14 @@ The **Add and continue** button chains several points quickly.
 > **adding-points policy** of its series — it disappears after the deadline and
 > the server enforces it too.
 
+## Reorder agenda points
+
+Use the **Move up** and **Move down** controls beside a point to put it in the
+right place. The order is saved immediately and carries through to the live
+agenda and the minutes. Minutes-approval and next-meeting points stay in their
+structural positions. Reordering follows the company or series policy; the order
+locks when the meeting is marked **Held**.
+
 On the meeting form, an **estimated agenda over budget** warning appears when
 the sum of agenda estimates exceeds the meeting duration. Adjust the duration
 or the agenda there.

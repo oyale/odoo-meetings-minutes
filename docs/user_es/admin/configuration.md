@@ -58,6 +58,17 @@ impide. Cada serie puede sobrescribirlo (ver
 > (Celebrada/Acta en borrador/Aprobada) — eso se registra como seguimiento o
 > propuesta nueva.
 
+## Reordenar puntos de agenda
+
+| Ajuste | Significado |
+|---|---|
+| **Reordenar puntos hasta** | La última fase en que los editores pueden cambiar el orden: **Solo borrador**, **Antes de empezar** o **Mientras se realiza**. |
+
+La política usa los mismos límites de fase que la de añadir puntos. El
+reordenamiento se bloquea al marcar la reunión como **Celebrada**, para mantener
+fijo el orden con el que se prepara el acta. Cada serie puede sobrescribir el
+valor de la compañía.
+
 ## Seguimientos
 
 | Ajuste | Significado |

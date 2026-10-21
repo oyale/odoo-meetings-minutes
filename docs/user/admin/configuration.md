@@ -55,6 +55,16 @@ Series can override this per series (see [Series → Policies](series.md#policie
 > (Held/Minutes draft/Approved) — record those as follow-ups or new proposals
 > instead.
 
+## Reordering agenda points
+
+| Setting | Meaning |
+|---|---|
+| **Reorder agenda points until** | The last phase in which editors can change the order: **Draft only**, **Before it starts**, or **While it runs**. |
+
+The policy uses the same phase boundaries as adding points. Reordering stops
+when the meeting is marked **Held**, so the order used to prepare minutes stays
+fixed. A series can override the company setting.
+
 ## Follow-ups
 
 | Setting | Meaning |
