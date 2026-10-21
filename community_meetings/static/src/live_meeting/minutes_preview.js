@@ -36,6 +36,12 @@ export class MinutesPreview extends Component {
         });
     }
 
+    get backToMeetingLabel() {
+        return this.props.action?.params?.review_return
+            ? _t("Back to live meeting")
+            : _t("Return to meeting to edit");
+    }
+
     async backToMeeting() {
         const meetingId = this.props.action?.params?.meeting_id
             || this.props.action?.context?.active_id;

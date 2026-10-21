@@ -1,9 +1,9 @@
-# Minutes and approval (editor / approver)
+# Minutes and approval
 
 The minutes are built from the live meeting work and formalized in two steps:
 **prepare → approve**.
 
-## 1. Prepare the minutes (editor)
+## 1. Prepare the minutes
 
 When the meeting is **Held**, press *Prepare Minutes* (live screen) or on the
 form. The meeting enters **Minutes draft**:
@@ -12,7 +12,7 @@ form. The meeting enters **Minutes draft**:
   tab on the form) becomes the focus. It is rich text, auto-saved.
 - Discussion notes recorded per point stay on each point; the notes section is
   where the narrative acta lives.
-- Editors can still add content, adjust agreements/dissents and fix follow-ups
+- You can still add content, adjust agreements/dissents and fix follow-ups
   (with the [adding-points policy](../admin/configuration.md#adding-points)
   limiting brand-new agenda points).
 - **Private editorial notes** are excluded from minutes — use them for internal
@@ -26,34 +26,32 @@ for the general narrative; agenda discussion, agreements, follow-ups and
 included dissents are drawn from their own records. The official PDF is created
 when an approver approves the minutes.
 
-Preview is available only to editors and approvers who can read the meeting,
-and only in **Held** or **Minutes draft** state. Readers cannot open this draft
-preview. It is read-only: opening it and choosing **Return to meeting to edit**
-leave the saved content and meeting state unchanged.
+In **Held** or **Minutes draft** state, the preview is read-only: opening it and
+choosing **Return to meeting to edit** leave the saved content and meeting state
+unchanged. Anyone with read access to the meeting can open this preview; see
+[Roles and permissions](../roles-and-permissions.md) for meeting access.
 
 ![Read-only preview of saved meeting minutes](../img/minutes-preview.png)
 
 > **Tip:** The minutes-approval structural point of *later* meetings will list this acta
 > until it is approved — approve promptly to keep the queue clean.
 
-## 2. Approve (approver)
+## 2. Approve
 
 When the series requires a minutes-approval point, each pending earlier meeting
-has its own **Approve minutes** action on that point. Only the assigned minutes
-secretary can use it. During a live meeting, the secretary also needs the
-**Editor** role and edit access to that meeting; for a meeting held offline,
-the secretary can approve while preparing its minutes. Choose **Review** beside an earlier
-meeting to open its saved draft in the read-only preview; **Back to live
-meeting** returns to the same point. Reviewing does not pause or finish an
-active agenda point. In offline preparation, the point closes after all earlier
-minutes have been approved. Direct approval on the earlier meeting is blocked
-for this series. Approval history links to the exact approved revision, so a
-later amendment is recorded separately.
+has its own **Approve earlier minutes** action on that point. Choose **Review**
+beside an earlier meeting to open its saved draft in the read-only preview;
+**Back to live meeting** returns to the same point. Reviewing does not pause or
+finish an active agenda point. In offline preparation, the point closes after
+all earlier minutes have been approved. Direct approval on the earlier meeting
+is blocked for this series. Approval history links to the exact approved
+revision, so a later amendment is recorded separately.
 
-When a series does not use a later-meeting approval point, an **Approver**
-presses **Approve Minutes** (live screen or form header). When the point policy
-is enabled, the current minutes stay pending for a later meeting's point; the
-direct action is blocked.
+When a series does not use a later-meeting approval point, approve the minutes
+with **Approve Minutes** (live screen or form header). When the point policy is
+enabled, the current minutes stay pending for a later meeting's point; the
+direct action is blocked. See [Roles and permissions](../roles-and-permissions.md)
+for who can perform each approval route.
 
 Approval:
 

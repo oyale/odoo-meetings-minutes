@@ -180,7 +180,7 @@ class TestMeetingSecurity(TransactionCase):
         self.assertFalse(earlier.approved_revision_id)
 
 
-    def test_minutes_preview_requires_role_record_access_and_allowed_state(self):
+    def test_minutes_preview_requires_record_access_and_allowed_state(self):
         meeting = (
             self.env["community.meeting"]
             .with_user(self.editor)
@@ -200,18 +200,14 @@ class TestMeetingSecurity(TransactionCase):
         )
         with self.assertRaises(UserError):
             meeting.with_user(self.editor).get_minutes_preview_html()
-        with self.assertRaises(AccessError):
+        with self.assertRaises(UserError):
             meeting.with_user(self.reader).get_minutes_preview_html()
         with self.assertRaises(AccessError):
             meeting.with_user(self.outsider).get_minutes_preview_html()
 
         meeting.with_user(self.editor).action_schedule()
         meeting.with_user(self.editor).action_mark_held()
-        self.reader.write(
-            {
-                "groups_id": [(4, self.env.ref("community_meetings.group_meeting_approver").id)],
-            }
-        )
+        self.assertTrue(meeting.with_user(self.reader).get_live_capabilities()["can_preview_minutes"])
         self.assertIn(
             "Draft — not approved.",
             meeting.with_user(self.reader).get_minutes_preview_html(),

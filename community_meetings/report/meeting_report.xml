@@ -26,13 +26,14 @@
         <div class="o_meeting_minutes_document">
             <header class="o_minutes_document_header">
                 <div class="o_minutes_document_kicker">
-                    <span>Meeting minutes</span>
+                    <span t-translation="on">Meeting minutes</span>
                     <span class="o_minutes_document_code" t-out="doc['meeting']['code']"/>
                 </div>
                 <h1 class="o_minutes_document_title" t-out="doc['meeting']['name']"/>
                 <p t-if="doc.get('draft')" class="o_minutes_document_draft_status">
                     <span class="o_minutes_status_dot" aria-hidden="true"/>
-                    <strong>Draft — not approved.</strong> This preview reflects current saved meeting data.
+                    <strong t-translation="on">Draft — not approved.</strong>
+                    <span t-translation="on">This preview reflects current saved meeting data.</span>
                 </p>
                 <p t-else="" class="o_minutes_document_revision">
                     Revision <span t-out="doc['revision'].revision_number"/>
@@ -121,6 +122,6 @@
         </div>
     </template>
     <template id="report_revision_preview">
-        <div class="o_meeting_minutes_preview"><t t-call="community_meetings.report_revision_content"/></div>
+        <div class="o_meeting_minutes_preview"><t t-call="community_meetings.report_revision_content" t-lang="lang"/></div>
     </template>
 </odoo>

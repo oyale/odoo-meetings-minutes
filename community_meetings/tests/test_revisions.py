@@ -199,6 +199,50 @@ class TestMeetingRevisions(TransactionCase):
         self.assertEqual(history[-1].revision_id, earlier.approved_revision_id)
         self.assertNotEqual(history[0].revision_id, history[1].revision_id)
 
+    def test_legacy_approval_record_does_not_guess_its_revision(self):
+        series = self.env["community.meeting.series"].with_user(self.editor).create(
+            {"name": "Legacy approval history without revision"}
+        )
+        earlier = self._drafted_meeting("Legacy approved minutes", series=series)
+        self._approve_without_rendering_pdf(earlier.with_user(self.approver))
+        later = self.env["community.meeting"].with_user(self.editor).create(
+            {
+                "name": "Later meeting with legacy approval history",
+                "series_id": series.id,
+                "start_datetime": "2026-11-15 10:00:00",
+            }
+        )
+        approval_point = later.agenda_item_ids.filtered(
+            lambda item: item.kind == "minutes_approval"
+        )
+        if not approval_point:
+            approval_type = self.env["community.meeting.agenda.type"].search(
+                [("behavior", "=", "minutes_approval")], limit=1
+            )
+            approval_point = self.env["community.meeting.agenda.item"].with_user(
+                self.editor
+            ).create(
+                {
+                    "meeting_id": later.id,
+                    "name": "Approve previous minutes",
+                    "agenda_type_id": approval_type.id,
+                }
+            )
+
+        legacy_approval = self.env["community.meeting.minutes.approval"].create(
+            {
+                "agenda_item_id": approval_point.id,
+                "meeting_id": earlier.id,
+            }
+        )
+        history = later.get_minutes_approval_history()
+
+        self.assertTrue(earlier.approved_revision_id)
+        self.assertFalse(legacy_approval.revision_id)
+        self.assertEqual(len(history), 1)
+        self.assertFalse(history[0]["revision_id"])
+        self.assertFalse(history[0]["revision_number"])
+
     def test_assigned_secretary_approves_previous_minutes_from_point(self):
         series = self.env["community.meeting.series"].with_user(self.editor).create(
             {"name": "Offline approval policy", "has_minutes_approval_point": True}
@@ -311,7 +355,9 @@ class TestMeetingRevisions(TransactionCase):
         public_content = self.env["community.meeting.revision"]._build_public_content(meeting)
         preview = meeting.with_user(self.editor).get_minutes_preview_html()
 
-        self.assertIn("Draft — not approved.", preview)
+        self.assertTrue(
+            "Draft — not approved." in preview or "Borrador — sin aprobar." in preview
+        )
         self.assertIn("Preview narrative", preview)
         self.assertIn("Preview agreement", preview)
         self.assertIn("Included preview dissent", preview)

@@ -18,6 +18,12 @@ const OUTCOMES = {
     todo: [["open", _t("Task required")], ["closed", _t("Resolved")], ["deferred", _t("Postponed")]],
 };
 const ACTION_STATES = { open: _t("Open"), in_progress: _t("In progress"), done: _t("Done"), cancelled: _t("Cancelled") };
+function isEmptyRichText(value) {
+    const template = document.createElement("template");
+    template.innerHTML = value || "";
+    return !template.content.textContent.replace(/\u00a0/g, " ").trim()
+        && !template.content.querySelector("img, video, audio, iframe, object, embed, svg, canvas, table, hr");
+}
 const MEETING_STATES = {
     draft: _t("Draft"), scheduled: _t("Scheduled"), held: _t("Held"),
     minutes_draft: _t("Minutes to prepare"), approved: _t("Approved"), cancelled: _t("Cancelled"),
@@ -385,7 +391,7 @@ export class LiveMeeting extends Component {
             delete this.state.unsavedEditors[key];
             return true;
         }
-        if (value === (record[field] || "")) {
+        if (value === (record[field] || "") || (isEmptyRichText(value) && isEmptyRichText(record[field]))) {
             delete this.state.unsavedEditors[key];
             return true;
         }
@@ -729,8 +735,10 @@ export class LiveMeeting extends Component {
         }
     }
 
-    async write(key, model, ids, values, apply) {
-        const writeKey = ids.length === 1 ? `${model}:${ids[0]}` : key;
+    async write(_key, model, ids, values, apply) {
+        // Live writes all lock the meeting row. Queue them by meeting so two
+        // editors cannot race through that shared workflow lock.
+        const writeKey = `meeting:${this.meetingId}`;
         const previous = this.pendingWrites.get(writeKey) || Promise.resolve();
         this.state.saving++;
         const operation = previous.catch(() => {}).then(async () => {

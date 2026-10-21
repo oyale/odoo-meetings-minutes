@@ -640,11 +640,6 @@ class CommunityMeeting(models.Model):
     def _check_minutes_preview_access(self):
         self.ensure_one()
         self.check_access("read")
-        if not (
-            self.env.user.has_group("community_meetings.group_meeting_editor")
-            or self.env.user.has_group("community_meetings.group_meeting_approver")
-        ):
-            raise AccessError(_("Only meeting editors and approvers can preview draft minutes."))
         if self.state not in ("held", "minutes_draft"):
             raise UserError(_("Minutes preview is only available for held meetings or draft minutes."))
 
@@ -668,7 +663,6 @@ class CommunityMeeting(models.Model):
         self.ensure_one()
         self.check_access("read")
         editorial = self.env.user.has_group("community_meetings.group_meeting_editor")
-        minutes_reviewer = editorial or self.env.user.has_group("community_meetings.group_meeting_approver")
         return {
             "timezone": self.series_id.timezone or self.env.user.tz or "UTC",
             "can_edit": editorial and self.has_access("write") and self.state not in ("approved", "cancelled"),
@@ -693,7 +687,7 @@ class CommunityMeeting(models.Model):
                 )
             ),
             "requires_later_minutes_approval": bool(self.series_id.has_minutes_approval_point),
-            "can_preview_minutes": minutes_reviewer,
+            "can_preview_minutes": True,
             "time_tracking": self.time_tracking_enabled,
             "can_add_point": self.add_point_allowed,
         }

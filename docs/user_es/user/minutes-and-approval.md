@@ -1,9 +1,9 @@
-# Actas y aprobación (editor / aprobador)
+# Actas y aprobación
 
 El acta se construye desde el trabajo de la reunión en vivo y se formaliza en dos
 pasos: **preparar → aprobar**.
 
-## 1. Preparar el acta (editor)
+## 1. Preparar el acta
 
 Con la reunión **Celebrada**, pulsa *Preparar el acta* (pantalla en vivo) o en el
 formulario. La reunión pasa a **Acta en borrador**:
@@ -13,7 +13,7 @@ formulario. La reunión pasa a **Acta en borrador**:
   autoguardado.
 - Las notas de discusión de cada punto permanecen en su punto; la sección de notas
   es donde vive el relato del acta.
-- Los editores aún pueden añadir contenido, ajustar acuerdos/discrepancias y
+- Aún puedes añadir contenido, ajustar acuerdos/discrepancias y
   corregir seguimientos (la [política de añadir
   puntos](../admin/configuration.md#añadir-puntos) limita los puntos de agenda
   nuevos).
@@ -29,35 +29,34 @@ discusión de los puntos, los acuerdos, los seguimientos y las discrepancias
 incluidas proceden de sus propios registros. El PDF oficial se crea cuando el
 aprobador aprueba el acta.
 
-La vista previa está disponible solo para editores y aprobadores con acceso a
-la reunión, y solo en estado **Celebrada** o **Acta en borrador**. Los lectores
-no pueden abrirla. Es de solo lectura: abrirla y volver al editor de la reunión
-no cambia el contenido guardado ni el estado de la reunión.
+En estado **Celebrada** o **Acta en borrador**, la vista previa es de solo
+lectura: abrirla y volver a la reunión no cambia el contenido guardado ni su
+estado. Cualquier persona con acceso de lectura a la reunión puede abrirla;
+consulta [Roles y permisos](../roles-and-permissions.md) para ver cómo se
+concede ese acceso.
 
 ![Vista previa de solo lectura del acta guardada](../img/minutes-preview.png)
 
 > **Consejo:** el punto de aprobación del acta de las reuniones *posteriores*
 > listará este acta hasta aprobarla — apruébala pronto para no ensuciar la cola.
 
-## 2. Aprobar (aprobador)
+## 2. Aprobar
 
 En las series que exigen el punto de aprobación del acta, cada acta anterior
-pendiente tiene su propia acción **Aprobar el acta** en ese punto. Solo la
-persona asignada a la secretaría/actas puede usarla. Durante una reunión en vivo,
-también necesita el rol **Editor** y permiso de edición sobre esa reunión; si se
-celebró sin modo en vivo, puede aprobarla al preparar sus actas. Pulsa
-**Review** junto a una reunión anterior para abrir su borrador guardado en la
-vista previa de solo lectura; **Back to live meeting** vuelve al mismo punto.
-Revisar no pausa ni termina un punto en marcha. En la preparación offline, el
-punto se cierra cuando se han aprobado todas las actas anteriores. La aprobación
-directa en la reunión anterior queda bloqueada. El historial guarda la revisión
-exacta; si se enmienda y se vuelve a aprobar, la nueva revisión queda registrada
-aparte.
+pendiente tiene su propia acción **Aprobar actas anteriores** en ese punto.
+Pulsa **Revisar** junto a una reunión anterior para abrir su borrador guardado
+en la vista previa de solo lectura; **Volver a la reunión en vivo** vuelve al
+mismo punto. Revisar no pausa ni termina un punto en marcha. En la preparación
+offline, el punto se cierra cuando se han aprobado todas las actas anteriores.
+La aprobación directa en la reunión anterior queda bloqueada. El historial
+guarda la revisión exacta; si se enmienda y se vuelve a aprobar, la nueva
+revisión queda registrada aparte.
 
-En una serie que no usa un punto de aprobación posterior, un **aprobador** pulsa
-**Aprobar el acta** (pantalla en vivo o cabecera del formulario). Si la serie
-usa ese punto, el acta actual queda pendiente para que se apruebe desde el punto
-de una reunión posterior; la acción directa queda bloqueada.
+En una serie que no usa un punto de aprobación posterior, pulsa **Aprobar el
+acta** (pantalla en vivo o cabecera del formulario). Si la serie usa ese punto,
+el acta actual queda pendiente para que se apruebe desde el punto de una reunión
+posterior; la acción directa queda bloqueada. Consulta [Roles y permisos](../roles-and-permissions.md)
+para saber quién puede seguir cada ruta de aprobación.
 
 La aprobación:
 

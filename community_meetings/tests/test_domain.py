@@ -313,6 +313,15 @@ class TestMeetingDomain(TransactionCase):
             }
         )
         point = meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
+        duplicate_point = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": meeting.id,
+                "name": "Additional approval point",
+                "kind": "minutes_approval",
+            }
+        )
+        duplicate_point.unlink()
+        self.assertEqual(len(meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")), 1)
 
         with self.assertRaises(UserError), self.cr.savepoint():
             point.unlink()
@@ -326,8 +335,12 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(len(meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")), 1)
 
         series.write({"has_minutes_approval_point": False})
+        point.write({"kind": "discussion"})
+        self.assertFalse(meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval"))
         point.unlink()
         self.assertFalse(meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval"))
+        series.write({"has_minutes_approval_point": True})
+        self.assertEqual(len(meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")), 1)
 
         other_series = self.env["community.meeting.series"].create(
             {"name": "Approval enabled after meeting", "has_minutes_approval_point": True}

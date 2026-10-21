@@ -19,6 +19,21 @@ acceso* → **Meeting roles**) y son acumulativos.
 > **Nota:** Editor y Aprobador son independientes: un aprobador que no es editor
 > puede aprobar actas pero no modificar la agenda. Un gestor incluye ambos.
 
+## Rutas de aprobación de actas
+
+- Cualquier persona con acceso de lectura a la reunión puede abrir la vista
+  previa del borrador, también los **Lectores**. Quien no tenga acceso a la
+  reunión no puede abrirla.
+- Si no hay un punto de aprobación del acta en una reunión posterior, hace falta
+  el rol **Aprobador** para aprobarla.
+- Si la serie usa ese punto, solo la **secretaría de actas** asignada a la
+  reunión puede aprobar desde ahí actas anteriores. Durante una reunión en vivo,
+  también necesita el rol **Editor** y permiso efectivo de escritura sobre la
+  reunión. Durante la preparación offline, la secretaría asignada puede aprobar
+  sin permisos generales de edición.
+- Un Editor o Aprobador que no tenga asignada la secretaría no puede aprobar
+  actas anteriores desde el punto de una reunión posterior.
+
 ## Quién ve una reunión
 
 Una reunión es visible para:
@@ -67,7 +82,7 @@ la propuesta a grupos concretos (ver
 | Dirigir la reunión en vivo | | ✔ | | ✔ |
 | Registrar discrepancias / notas editoriales | | ✔ | | ✔ |
 | Redactar el acta | | ✔ | | ✔ |
-| Aprobar el acta | | | ✔ | ✔ |
+| Aprobar el acta directamente (sin punto de aprobación posterior) | | | ✔ | ✔ |
 | Iniciar una modificación | | | | ✔ |
 | Asignar lectores/editores por reunión | | ✔² | | ✔ |
 | Configurar series, tipos, ajustes | | | | ✔ |

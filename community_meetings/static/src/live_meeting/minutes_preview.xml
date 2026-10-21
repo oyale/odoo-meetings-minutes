@@ -4,7 +4,7 @@
         <main class="o_community_minutes_preview">
             <header class="o_community_minutes_preview_toolbar">
                 <button type="button" class="btn btn-secondary o_minutes_preview_back" t-on-click="backToMeeting">
-                    <i class="fa fa-arrow-left me-1" aria-hidden="true"/><t t-if="props.action?.params?.review_return">Back to live meeting</t><t t-else="">Return to meeting to edit</t>
+                    <i class="fa fa-arrow-left me-1" aria-hidden="true"/><t t-out="backToMeetingLabel"/>
                 </button>
                 <span class="o_minutes_preview_toolbar_label">Draft preview · saved content</span>
             </header>

@@ -1020,6 +1020,7 @@ msgid "Agenda Type"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_document
 msgid "Agenda and discussion"
 msgstr ""
@@ -3110,6 +3111,7 @@ msgid "Attachment Count"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #. odoo-python
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
@@ -3540,6 +3542,7 @@ msgid "Carry Line"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__carryover_ids
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__carryover_ids
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__carryover_id
@@ -3736,6 +3739,7 @@ msgid "Companies"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__company_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__company_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__company_id
@@ -4167,6 +4171,7 @@ msgid "Decision result"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_document
 msgid "Decision:"
 msgstr ""
@@ -4254,6 +4259,7 @@ msgid "Describe the reason for postponing this point."
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__description
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__description
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__description
@@ -4383,6 +4389,7 @@ msgid "Disposition"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_document
 msgid "Disposition:"
 msgstr ""
@@ -4465,6 +4472,7 @@ msgid "Dissents and Reservations"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_document
 msgid "Dissents and reservations"
 msgstr ""
@@ -5453,6 +5461,7 @@ msgid "Follow-up Responsible"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_document
 msgid "Follow-up actions"
 msgstr ""
@@ -6105,6 +6114,7 @@ msgid "Loading meeting…"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__location
@@ -6288,12 +6298,14 @@ msgid "Meeting link"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 msgid "Meeting minutes"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Meeting date"
 msgstr ""
 
@@ -6351,6 +6363,7 @@ msgid "Meeting title"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_document
 msgid "Meeting-wide resolutions"
 msgstr ""
@@ -6414,6 +6427,7 @@ msgid "Minority Opinion"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_document
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
 msgid "Minutes"
@@ -6443,6 +6457,7 @@ msgid "Minutes approval point"
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #. odoo-javascript
 #. odoo-python
 #: code:addons/community_meetings/models/preparation.py:0
@@ -7147,6 +7162,7 @@ msgid ""
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #. odoo-python
 #: code:addons/community_meetings/models/preparation.py:0
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__organizer_id
@@ -8284,6 +8300,7 @@ msgid ""
 msgstr ""
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__revision_ids
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_document
 msgid "Revision"
@@ -10309,12 +10326,6 @@ msgstr ""
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/meeting.py:0
-msgid "Only meeting editors and approvers can preview draft minutes."
-msgstr ""
-
-#. module: community_meetings
-#. odoo-python
-#: code:addons/community_meetings/models/meeting.py:0
 msgid "Minutes preview is only available for held meetings or draft minutes."
 msgstr ""
 
@@ -10358,6 +10369,12 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/minutes_preview.xml:0
 msgid "Return to meeting to edit"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
+msgid "Back to live meeting"
 msgstr ""
 
 #. module: community_meetings
@@ -10582,3 +10599,13 @@ msgstr ""
 #. module: community_meetings
 msgid "The assigned minutes secretary can approve earlier minutes during a live meeting or while preparing minutes for an offline meeting. In a live meeting, the secretary also needs the Editor role and edit access."
 msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Approved by"
+msgstr "Aprobado por"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Snapshot SHA-256"
+msgstr "SHA-256 de la instantánea"
