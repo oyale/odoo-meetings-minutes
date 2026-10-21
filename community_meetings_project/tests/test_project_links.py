@@ -186,6 +186,43 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
         self.assertEqual(reverse["context"]["default_resolution_ids"][0][2], resolution.ids)
         self.assertEqual(reverse["context"]["default_action_ids"][0][2], action.ids)
 
+    def test_meeting_reader_does_not_learn_inaccessible_project_task_ids(self):
+        reader = self.env["res.users"].create(
+            {
+                "name": "Meeting reader without Project access",
+                "login": "meeting-reader-no-project-access",
+                "groups_id": [
+                    (
+                        6,
+                        0,
+                        [
+                            self.env.ref("base.group_user").id,
+                            self.env.ref("community_meetings.group_meeting_reader").id,
+                        ],
+                    )
+                ],
+            }
+        )
+        meeting = self.meetings[0].with_user(self.editor)
+        meeting.write({"reader_user_ids": [(4, reader.id)]})
+        agenda = (
+            self.env["community.meeting.agenda.item"]
+            .with_user(self.editor)
+            .create(
+                {
+                    "meeting_id": meeting.id,
+                    "name": "Private task link",
+                    "project_task_ids": [(6, 0, self.tasks.ids)],
+                }
+            )
+        )
+
+        with patch.object(type(self.env["project.task"]), "search", side_effect=AccessError("task is hidden")):
+            returned = agenda.with_user(reader).read(["project_task_ids"])
+
+        self.assertEqual(returned[0]["project_task_ids"], [])
+        self.assertEqual(set(agenda.with_user(self.editor).project_task_ids.ids), set(self.tasks.ids))
+
     def test_todo_cannot_close_without_project_task_on_followup_action(self):
         self.series.write({"meeting_todo_requirement": "project"})
         meeting = self.meetings[0]
