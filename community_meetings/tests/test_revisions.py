@@ -457,6 +457,83 @@ class TestMeetingRevisions(TransactionCase):
         self.assertEqual(agenda[0]["kind"], "minutes_approval")
         self.assertEqual(agenda[-1]["kind"], "next_meeting")
 
+    def test_approved_minutes_follow_reordered_agenda(self):
+        series = (
+            self.env["community.meeting.series"]
+            .with_user(self.editor)
+            .create(
+                {
+                    "name": "Reordered minutes series",
+                    "has_minutes_approval_point": True,
+                    "has_next_meeting_point": True,
+                }
+            )
+        )
+        meeting = (
+            self.env["community.meeting"]
+            .with_user(self.editor)
+            .create(
+                {
+                    "name": "Reordered minutes",
+                    "series_id": series.id,
+                    "start_datetime": "2026-11-01 10:00:00",
+                    "reader_user_ids": [(4, self.approver.id)],
+                }
+            )
+        )
+        items = (
+            self.env["community.meeting.agenda.item"]
+            .with_user(self.editor)
+            .create(
+                [
+                    {"meeting_id": meeting.id, "name": "Review open actions"},
+                    {"meeting_id": meeting.id, "name": "Second discussion"},
+                ]
+            )
+        )
+        ordered_ids = meeting.agenda_item_ids.sorted("sequence").ids
+        first_index = ordered_ids.index(items[0].id)
+        second_index = ordered_ids.index(items[1].id)
+        ordered_ids[first_index], ordered_ids[second_index] = (
+            ordered_ids[second_index],
+            ordered_ids[first_index],
+        )
+        meeting.action_reorder_agenda_items(ordered_ids)
+        meeting.action_schedule()
+        meeting.action_mark_held()
+        meeting.action_draft_minutes()
+
+        later = (
+            self.env["community.meeting"]
+            .with_user(self.editor)
+            .create(
+                {
+                    "name": "Later meeting approves reordered minutes",
+                    "series_id": series.id,
+                    "start_datetime": "2026-11-10 10:00:00",
+                    "secretary_id": self.editor.id,
+                    "reader_user_ids": [(4, self.approver.id)],
+                }
+            )
+        )
+        approval_point = later.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
+        later.action_schedule()
+        later.action_start_meeting()
+        with patch.object(
+            type(self.env["ir.actions.report"]),
+            "_render_qweb_pdf",
+            return_value=(b"%PDF-1.4\n", "pdf"),
+        ):
+            later.with_user(self.editor).action_approve_pending_minutes(approval_point.id, [meeting.id])
+        revision = meeting.approved_revision_id
+        agenda = json.loads(revision.snapshot_json)["agenda"]
+
+        self.assertEqual([item["sequence"] for item in agenda], list(range(1, len(agenda) + 1)))
+        self.assertEqual(
+            [item["name"] for item in agenda if item["kind"] not in {"minutes_approval", "next_meeting"}],
+            ["Second discussion", "Review open actions"],
+        )
+
     def test_report_html_and_snapshot_are_stable_after_action_changes(self):
         _, action, revision = self._approved_meeting()
         before_json = revision.snapshot_json

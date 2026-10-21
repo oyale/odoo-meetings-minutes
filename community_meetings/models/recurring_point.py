@@ -15,6 +15,7 @@ class MeetingSeriesAgendaTemplate(models.Model):
     company_id = fields.Many2one(related="series_id.company_id", store=True, index=True)
     sequence = fields.Integer(default=10)
     active = fields.Boolean(default=True)
+    reorderable = fields.Boolean(default=True, string="Can be reordered")
     name = fields.Char(required=True)
     description = fields.Html()
     agenda_type_id = fields.Many2one(
@@ -120,6 +121,7 @@ class MeetingSeriesAgendaTemplate(models.Model):
             {
                 "meeting_id": meeting.id,
                 "topic_id": topic.id,
+                "reorderable": self.reorderable,
                 "discard_previous_discussion": not self.show_previous_discussion,
             }
         )

@@ -39,6 +39,20 @@ class Company(models.Model):
         help="Last moment when new points can be added to a meeting: only while it is a "
         "draft, until it starts, or while it runs. A series can override it.",
     )
+    meeting_reorder_point_policy = fields.Selection(
+        [
+            ("draft", "Draft only"),
+            ("scheduled", "Before it starts"),
+            ("ongoing", "While it runs"),
+        ],
+        string="Reorder agenda points until",
+        default="ongoing",
+        required=True,
+        help=(
+            "Last moment when agenda points can be reordered: only while the meeting is a draft, "
+            "until it starts, or while it runs. A series can override it."
+        ),
+    )
 
 
 class Settings(models.TransientModel):
@@ -49,6 +63,7 @@ class Settings(models.TransientModel):
     meeting_secretary_label = fields.Char(related="company_id.meeting_secretary_label", readonly=False)
     meeting_time_tracking = fields.Boolean(related="company_id.meeting_time_tracking", readonly=False)
     meeting_add_point_policy = fields.Selection(related="company_id.meeting_add_point_policy", readonly=False)
+    meeting_reorder_point_policy = fields.Selection(related="company_id.meeting_reorder_point_policy", readonly=False)
 
 
 class MeetingSeries(models.Model):
@@ -103,6 +118,18 @@ class MeetingSeries(models.Model):
         default="inherit",
         required=True,
         help="Overrides the company rule for when new points can be added to the meetings of this series.",
+        tracking=True,
+    )
+    reorder_point_policy = fields.Selection(
+        [
+            ("inherit", "Company default"),
+            ("draft", "Draft only"),
+            ("scheduled", "Before it starts"),
+            ("ongoing", "While it runs"),
+        ],
+        default="inherit",
+        required=True,
+        help="Overrides the company rule for when agenda points can be reordered in this series.",
         tracking=True,
     )
 

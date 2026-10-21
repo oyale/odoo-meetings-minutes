@@ -120,6 +120,16 @@ class CommunityMeeting(models.Model):
         compute="_compute_add_point_allowed",
         help=("Whether new points can still be added to this meeting under the current policy."),
     )
+    reorder_point_policy = fields.Selection(
+        [
+            ("draft", "Draft only"),
+            ("scheduled", "Before it starts"),
+            ("ongoing", "While it runs"),
+        ],
+        string="Reorder agenda points until",
+        compute="_compute_reorder_point_policy",
+    )
+    reorder_points_allowed = fields.Boolean(compute="_compute_reorder_points_allowed")
     agenda_item_ids = fields.One2many("community.meeting.agenda.item", "meeting_id")
     # ponytail: display-only "In Progress" derived from scheduled + actual_start;
     # upgrade path: real 'in_progress' state if workflows/filters need to target it.
@@ -201,6 +211,29 @@ class CommunityMeeting(models.Model):
                 meeting.add_point_allowed = False
             else:  # scheduled or ongoing
                 meeting.add_point_allowed = meeting.add_point_policy == "ongoing" or not meeting.actual_start_datetime
+
+    @api.depends("series_id.reorder_point_policy", "company_id.meeting_reorder_point_policy")
+    def _compute_reorder_point_policy(self):
+        for meeting in self:
+            series_policy = meeting.series_id.reorder_point_policy or "inherit"
+            meeting.reorder_point_policy = (
+                meeting.company_id.meeting_reorder_point_policy if series_policy == "inherit" else series_policy
+            )
+
+    @api.depends("state", "actual_start_datetime", "actual_end_datetime", "reorder_point_policy")
+    def _compute_reorder_points_allowed(self):
+        for meeting in self:
+            if meeting.state == "draft":
+                meeting.reorder_points_allowed = True
+            elif meeting.state == "scheduled" and not meeting.actual_end_datetime:
+                if not meeting.actual_start_datetime:
+                    meeting.reorder_points_allowed = meeting.reorder_point_policy in ("scheduled", "ongoing")
+                else:
+                    meeting.reorder_points_allowed = meeting.reorder_point_policy == "ongoing"
+            else:
+                # Once the meeting is marked held, the agenda order becomes part of
+                # the minutes being prepared and cannot be changed anymore.
+                meeting.reorder_points_allowed = False
 
     @api.depends("state", "actual_start_datetime")
     def _compute_display_state(self):
@@ -694,7 +727,51 @@ class CommunityMeeting(models.Model):
             "can_preview_minutes": True,
             "time_tracking": self.time_tracking_enabled,
             "can_add_point": self.add_point_allowed,
+            "can_reorder_points": (
+                self.reorder_points_allowed
+                and self.env.user.has_group("community_meetings.group_meeting_editor")
+                and self.has_access("write")
+            ),
         }
+
+    def action_reorder_agenda_items(self, ordered_ids):
+        self.ensure_one()
+        self.check_access("write")
+        if not self.env.user.has_group("community_meetings.group_meeting_editor"):
+            raise AccessError(_("Only meeting editors can reorder agenda points."))
+        self._lock_live_workflow()
+        self.invalidate_recordset(["state", "agenda_item_ids", "reorder_points_allowed"])
+        if not self.reorder_points_allowed:
+            raise UserError(_("Agenda points can no longer be reordered for this meeting."))
+        current = self.agenda_item_ids.sorted(lambda item: (item.sequence, item.id))
+        if not isinstance(ordered_ids, (list, tuple)):
+            raise ValidationError(_("The reordered list must contain every agenda point exactly once."))
+        try:
+            ids = [int(item_id) for item_id in ordered_ids]
+        except (TypeError, ValueError) as error:
+            raise ValidationError(_("The reordered list must contain every agenda point exactly once.")) from error
+        if len(ids) != len(set(ids)) or set(ids) != set(current.ids):
+            raise ValidationError(_("The reordered list must contain every agenda point exactly once."))
+        structural_positions = [
+            (index, item_id)
+            for index, item_id in enumerate(current.ids)
+            if not current[index].reorderable or current[index].kind in ("minutes_approval", "next_meeting")
+        ]
+        fixed_item_ids = {item_id for _, item_id in structural_positions}
+        requested_structural_positions = [
+            (index, item_id) for index, item_id in enumerate(ids) if item_id in fixed_item_ids
+        ]
+        if requested_structural_positions != structural_positions:
+            raise ValidationError(_("Fixed agenda points must keep their positions."))
+        for position, item_id in enumerate(ids, start=1):
+            self.env.cr.execute(
+                "UPDATE community_meeting_agenda_item "
+                "SET sequence=%s, write_date=clock_timestamp(), write_uid=%s "
+                "WHERE id=%s AND meeting_id=%s",
+                [position * 10, self.env.uid, item_id, self.id],
+            )
+        current.invalidate_recordset(["sequence", "write_date", "write_uid"])
+        return True
 
     def get_live_dissents(self):
         """Read all recorded dissents after checking meeting visibility."""

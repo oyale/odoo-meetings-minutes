@@ -1,5 +1,5 @@
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 
 
 class CommunityMeetingAgendaItem(models.Model):
@@ -17,6 +17,9 @@ class CommunityMeetingAgendaItem(models.Model):
     )
     company_id = fields.Many2one(related="meeting_id.company_id", store=True, index=True)
     sequence = fields.Integer(default=10)
+    reorderable = fields.Boolean(default=True, string="Can be reordered")
+    can_move_up = fields.Boolean(compute="_compute_reorder_neighbors")
+    can_move_down = fields.Boolean(compute="_compute_reorder_neighbors")
     name = fields.Char(required=True)
     kind = fields.Selection(
         [
@@ -113,6 +116,48 @@ class CommunityMeetingAgendaItem(models.Model):
     def _check_meeting_editable(self):
         if any(item.meeting_id.state in ("approved", "cancelled") for item in self):
             raise ValidationError(_("Agenda items cannot be added to approved or cancelled meetings."))
+
+    @api.depends(
+        "sequence",
+        "kind",
+        "reorderable",
+        "meeting_id.reorder_points_allowed",
+        "meeting_id.agenda_item_ids.sequence",
+        "meeting_id.agenda_item_ids.kind",
+        "meeting_id.agenda_item_ids.reorderable",
+    )
+    def _compute_reorder_neighbors(self):
+        for item in self:
+            item.can_move_up = False
+            item.can_move_down = False
+        for meeting in self.mapped("meeting_id"):
+            items = meeting.agenda_item_ids.sorted(lambda row: (row.sequence, row.id))
+            positions = {item.id: index for index, item in enumerate(items)}
+            meeting_item_ids = [row.id for row in self if row.meeting_id == meeting]
+            for item in self.browse(meeting_item_ids):
+                index = positions.get(item.id, -1)
+                movable = (
+                    index >= 0
+                    and meeting.reorder_points_allowed
+                    and item.reorderable
+                    and item.kind
+                    not in (
+                        "minutes_approval",
+                        "next_meeting",
+                    )
+                )
+                item.can_move_up = bool(
+                    movable
+                    and index > 0
+                    and items[index - 1].reorderable
+                    and items[index - 1].kind not in ("minutes_approval", "next_meeting")
+                )
+                item.can_move_down = bool(
+                    movable
+                    and index + 1 < len(items)
+                    and items[index + 1].reorderable
+                    and items[index + 1].kind not in ("minutes_approval", "next_meeting")
+                )
 
     def _active_workflow_resolutions(self):
         resolutions = self.env["community.meeting.resolution"].search(
@@ -281,6 +326,33 @@ class CommunityMeetingAgendaItem(models.Model):
 
     # Keep these checks ordered at the workflow boundary for live point writes.
     def write(self, vals):  # noqa: C901
+        if "sequence" in vals:
+            meetings = self.mapped("meeting_id")
+            if len(meetings) != 1:
+                raise ValidationError(_("Agenda points can only be reordered within one meeting."))
+            meeting = meetings.ensure_one()
+            meeting.check_access("write")
+            if not self.env.user.has_group("community_meetings.group_meeting_editor"):
+                raise AccessError(_("Only meeting editors can reorder agenda points."))
+            meeting._lock_live_workflow()
+            meeting.invalidate_recordset(["state", "agenda_item_ids", "reorder_points_allowed"])
+            if not meeting.reorder_points_allowed:
+                raise UserError(_("Agenda points can no longer be reordered for this meeting."))
+            all_items = meeting.agenda_item_ids.sorted(lambda item: (item.sequence, item.id))
+            structural_positions = [
+                (index, item.id)
+                for index, item in enumerate(all_items)
+                if not item.reorderable or item.kind in ("minutes_approval", "next_meeting")
+            ]
+            proposed_sequences = {item.id: vals["sequence"] for item in self}
+            proposed = all_items.sorted(lambda item: (proposed_sequences.get(item.id, item.sequence), item.id))
+            proposed_structural_positions = [
+                (index, item.id)
+                for index, item in enumerate(proposed)
+                if not item.reorderable or item.kind in ("minutes_approval", "next_meeting")
+            ]
+            if proposed_structural_positions != structural_positions:
+                raise ValidationError(_("Fixed agenda points must keep their positions."))
         if "meeting_id" in vals and any(item.meeting_id.id != vals["meeting_id"] for item in self):
             raise UserError(_("An agenda item cannot be moved to another meeting."))
         if "carryover_id" in vals:
@@ -346,6 +418,30 @@ class CommunityMeetingAgendaItem(models.Model):
         if values.get("decision_result") in ("approved", "denied"):
             values["disposition"] = "closed"
         return super().write(values)
+
+    def action_move_agenda_item(self, direction=None):
+        self.ensure_one()
+        direction = direction if direction is not None else self.env.context.get("direction")
+        if direction not in (-1, 1):
+            raise ValidationError(_("Choose whether to move the point up or down."))
+        meeting = self.meeting_id
+        meeting.check_access("write")
+        if not self.env.user.has_group("community_meetings.group_meeting_editor"):
+            raise AccessError(_("Only meeting editors can reorder agenda points."))
+        if not meeting.reorder_points_allowed:
+            raise UserError(_("Agenda points can no longer be reordered for this meeting."))
+        items = meeting.agenda_item_ids.sorted(lambda item: (item.sequence, item.id))
+        index = items.ids.index(self.id)
+        other_index = index + direction
+        if not 0 <= other_index < len(items):
+            return True
+        other = items[other_index]
+        fixed_kind = ("minutes_approval", "next_meeting")
+        if not self.reorderable or not other.reorderable or self.kind in fixed_kind or other.kind in fixed_kind:
+            return True
+        ordered_ids = items.ids
+        ordered_ids[index], ordered_ids[other_index] = ordered_ids[other_index], ordered_ids[index]
+        return meeting.action_reorder_agenda_items(ordered_ids)
 
     def unlink(self):
         if any(item.meeting_id.state not in ("draft", "cancelled") for item in self):

@@ -22,31 +22,30 @@ class MeetingSeriesWizard(models.TransientModel):
         # Seed the policy controls explicitly: the structure step may not be
         # mounted when the form first asks for its defaults, and uninitialized
         # toggles would be saved as series-specific overrides when advancing.
-        company = self.env["res.company"].browse(
-            values.get("company_id") or self.env.company.id
-        )
+        company = self.env["res.company"].browse(values.get("company_id") or self.env.company.id)
         time_tracking = values.get("time_tracking", "inherit")
         add_point_policy = values.get("add_point_policy", "inherit")
+        reorder_point_policy = values.get("reorder_point_policy", "inherit")
         if "use_company_time_tracking" in fields_list:
             values["use_company_time_tracking"] = time_tracking == "inherit"
         if "time_tracking_override" in fields_list:
             values["time_tracking_override"] = (
-                ("on" if company.meeting_time_tracking else "off")
-                if time_tracking == "inherit"
-                else time_tracking
+                ("on" if company.meeting_time_tracking else "off") if time_tracking == "inherit" else time_tracking
             )
         if "use_company_add_point_policy" in fields_list:
             values["use_company_add_point_policy"] = add_point_policy == "inherit"
         if "add_point_policy_override" in fields_list:
             values["add_point_policy_override"] = (
-                company.meeting_add_point_policy
-                if add_point_policy == "inherit"
-                else add_point_policy
+                company.meeting_add_point_policy if add_point_policy == "inherit" else add_point_policy
+            )
+        if "use_company_reorder_point_policy" in fields_list:
+            values["use_company_reorder_point_policy"] = reorder_point_policy == "inherit"
+        if "reorder_point_policy_override" in fields_list:
+            values["reorder_point_policy_override"] = (
+                company.meeting_reorder_point_policy if reorder_point_policy == "inherit" else reorder_point_policy
             )
         if "use_company_estimated_minutes" in fields_list:
-            values["use_company_estimated_minutes"] = not values.get(
-                "default_estimated_minutes", 0
-            )
+            values["use_company_estimated_minutes"] = not values.get("default_estimated_minutes", 0)
         return values
 
     step = fields.Selection(
@@ -60,9 +59,7 @@ class MeetingSeriesWizard(models.TransientModel):
         required=True,
     )
     name = fields.Char(string="Series name", required=True)
-    company_id = fields.Many2one(
-        "res.company", required=True, default=lambda self: self.env.company
-    )
+    company_id = fields.Many2one("res.company", required=True, default=lambda self: self.env.company)
     active = fields.Boolean(default=True)
     coordinator_user_ids = fields.Many2many(
         "res.users",
@@ -87,9 +84,7 @@ class MeetingSeriesWizard(models.TransientModel):
         "community_meeting_series_wizard_attendee_rel",
         string="Usual attendees",
     )
-    meeting_name_pattern = fields.Char(
-        string="Meeting title pattern", default="{date} {series}", required=True
-    )
+    meeting_name_pattern = fields.Char(string="Meeting title pattern", default="{date} {series}", required=True)
     has_minutes_approval_point = fields.Boolean(string="Add a minutes approval point")
     has_next_meeting_point = fields.Boolean(string="Add a next meeting point")
     next_meeting_rule = fields.Selection(
@@ -122,9 +117,7 @@ class MeetingSeriesWizard(models.TransientModel):
             "type": "ir.actions.act_window",
             "name": _("New Meeting Series"),
             "res_model": self._name,
-            "views": [
-                (self.env.ref("community_meetings.view_series_wizard").id, "form")
-            ],
+            "views": [(self.env.ref("community_meetings.view_series_wizard").id, "form")],
             "target": "new",
             "context": context,
         }
@@ -189,9 +182,32 @@ class MeetingSeriesWizard(models.TransientModel):
         inverse="_inverse_add_point_policy_override",
         string="Adding points for this series",
     )
-    default_estimated_minutes = fields.Integer(
-        string="Default point estimate (minutes)"
+    reorder_point_policy = fields.Selection(
+        [
+            ("inherit", "Company default"),
+            ("draft", "Draft only"),
+            ("scheduled", "Before it starts"),
+            ("ongoing", "While it runs"),
+        ],
+        default="inherit",
+        required=True,
+        string="When agenda points can be reordered",
     )
+    use_company_reorder_point_policy = fields.Boolean(
+        default=True,
+        string="Company reorder-policy default",
+    )
+    reorder_point_policy_override = fields.Selection(
+        [
+            ("draft", "Draft only"),
+            ("scheduled", "Before it starts"),
+            ("ongoing", "While it runs"),
+        ],
+        compute="_compute_reorder_point_policy_override",
+        inverse="_inverse_reorder_point_policy_override",
+        string="Reordering points for this series",
+    )
+    default_estimated_minutes = fields.Integer(string="Default point estimate (minutes)")
     use_company_estimated_minutes = fields.Boolean(
         compute="_compute_use_company_estimated_minutes",
         inverse="_inverse_use_company_estimated_minutes",
@@ -204,9 +220,7 @@ class MeetingSeriesWizard(models.TransientModel):
             if wizard.use_company_time_tracking:
                 wizard.time_tracking = "inherit"
             elif wizard.time_tracking == "inherit":
-                wizard.time_tracking = (
-                    "on" if wizard.company_id.meeting_time_tracking else "off"
-                )
+                wizard.time_tracking = "on" if wizard.company_id.meeting_time_tracking else "off"
 
     @api.depends("time_tracking", "company_id.meeting_time_tracking")
     def _compute_time_tracking_override(self):
@@ -244,6 +258,27 @@ class MeetingSeriesWizard(models.TransientModel):
         for wizard in self:
             wizard.add_point_policy = wizard.add_point_policy_override
 
+    @api.onchange("use_company_reorder_point_policy")
+    def _onchange_use_company_reorder_point_policy(self):
+        for wizard in self:
+            if wizard.use_company_reorder_point_policy:
+                wizard.reorder_point_policy = "inherit"
+            elif wizard.reorder_point_policy == "inherit":
+                wizard.reorder_point_policy = wizard.company_id.meeting_reorder_point_policy
+
+    @api.depends("reorder_point_policy", "company_id.meeting_reorder_point_policy")
+    def _compute_reorder_point_policy_override(self):
+        for wizard in self:
+            wizard.reorder_point_policy_override = (
+                wizard.reorder_point_policy
+                if wizard.reorder_point_policy != "inherit"
+                else wizard.company_id.meeting_reorder_point_policy
+            )
+
+    def _inverse_reorder_point_policy_override(self):
+        for wizard in self:
+            wizard.reorder_point_policy = wizard.reorder_point_policy_override
+
     @api.depends("default_estimated_minutes")
     def _compute_use_company_estimated_minutes(self):
         for wizard in self:
@@ -254,9 +289,7 @@ class MeetingSeriesWizard(models.TransientModel):
             if wizard.use_company_estimated_minutes:
                 wizard.default_estimated_minutes = 0
             elif not wizard.default_estimated_minutes:
-                wizard.default_estimated_minutes = (
-                    wizard.company_id.meeting_estimated_minutes or 5
-                )
+                wizard.default_estimated_minutes = wizard.company_id.meeting_estimated_minutes or 5
 
     def action_finish(self):
         self.ensure_one()
@@ -276,6 +309,7 @@ class MeetingSeriesWizard(models.TransientModel):
                 "carryover_policy": self.carryover_policy,
                 "time_tracking": self.time_tracking,
                 "add_point_policy": self.add_point_policy,
+                "reorder_point_policy": self.reorder_point_policy,
                 "default_estimated_minutes": self.default_estimated_minutes,
                 "timezone": self.timezone,
                 "duration_hours": self.duration_hours,

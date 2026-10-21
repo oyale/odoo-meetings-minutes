@@ -133,6 +133,15 @@ class TestSeriesRecurringPoints(TransactionCase):
         second_item = second.agenda_item_ids.filtered(lambda row: row.topic_id.recurring_template_id)
         self.assertFalse(second_item.discard_previous_discussion)
 
+    def test_occurrence_copies_reordering_preference_from_template(self):
+        self.template.reorderable = False
+        meeting = self._prepare_meeting("2026-11-02 10:00:00")
+        item = meeting.agenda_item_ids.filtered(lambda row: row.topic_id.recurring_template_id)
+
+        self.assertFalse(item.reorderable)
+        self.assertFalse(item.can_move_up)
+        self.assertFalse(item.can_move_down)
+
     def test_previous_discussion_is_read_only_context_and_cutoff_stops_chain(self):
         first = self._prepare_meeting("2026-11-02 10:00:00")
         first_item = first.agenda_item_ids.filtered(lambda row: row.topic_id.recurring_template_id)
