@@ -1,10 +1,15 @@
 """Focused contract tests for the public browser catalog helper."""
 
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-from catalog_lookup import CatalogLookup
+TESTS_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(TESTS_ROOT))
+
+from browser_support.catalog_lookup import CatalogLookup
+from browser_support.ui_text import LocalizedUI
 
 HEADER = (
     'msgid ""\nmsgstr ""\n'
@@ -56,8 +61,25 @@ class PublicCatalogLookupChecks(unittest.TestCase):
         self.assertEqual(lookup.translate("sample_addon", "Open", context="button"), "Abrir")
         with self.assertRaisesRegex(ValueError, "pass plural_index"):
             lookup.translate("sample_addon", "One item")
+        self.assertEqual(lookup.translate("sample_addon", "One item", plural_index=1), "Varios elementos")
+
+    def test_selector_translates_each_catalog_message(self):
+        translations = {"Discussion notes": "Notas de debate", "Meeting minutes": "Acta"}
+
+        class SampleLocalizedUI(LocalizedUI):
+            def ui_text(self, module, msgid, **kwargs):
+                self_test.assertEqual(module, "sample_addon")
+                return translations[msgid]
+
+        self_test = self
         self.assertEqual(
-            lookup.translate("sample_addon", "One item", plural_index=1), "Varios elementos"
+            SampleLocalizedUI().ui_selector(
+                "sample_addon",
+                '[aria-label="Discussion notes"] input[title="Meeting minutes"]',
+                "Discussion notes",
+                "Meeting minutes",
+            ),
+            '[aria-label="Notas de debate"] input[title="Acta"]',
         )
 
     def test_malformed_catalog_reports_path(self):

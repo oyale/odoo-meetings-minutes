@@ -32,3 +32,23 @@ def ui_text(
 def configured_addons_root() -> Path:
     """Return the root of this addon checkout."""
     return Path(__file__).resolve().parents[2]
+
+
+class LocalizedUI:
+    """Shared locale-aware text and selector helpers for browser test suites."""
+
+    def ui_text(self, module, msgid, *, context=None, plural_index=None):
+        return ui_text(
+            configured_addons_root(),
+            self.effective_locale(),
+            module,
+            msgid,
+            context=context,
+            plural_index=plural_index,
+        )
+
+    def ui_selector(self, module, selector, *msgids):
+        """Translate catalog strings embedded in a browser selector."""
+        for msgid in msgids:
+            selector = selector.replace(msgid, self.ui_text(module, msgid))
+        return selector

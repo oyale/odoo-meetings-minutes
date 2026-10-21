@@ -25,7 +25,7 @@ sys.path.insert(0, str(TESTS_ROOT))
 from browser_support.meeting import LiveMeetingFixture, open_live_meeting
 from browser_support.odoo_browser import OdooBrowserSession, normalize_locale
 from browser_support.screenshot_capture import capture_checkpoint
-from browser_support.ui_text import configured_addons_root, ui_text
+from browser_support.ui_text import LocalizedUI
 
 BASE_URL = os.environ.get("ODOO_BASE_URL", "http://localhost:8069").rstrip("/")
 DB = os.environ.get("ODOO_DB", "")
@@ -75,7 +75,7 @@ class LiveWriteTrace:
         self.page.remove_listener("response", self.on_response)
 
 
-class LiveMeetingBrowserChecks(unittest.TestCase):
+class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if not LOGIN or not PASSWORD:
@@ -109,21 +109,6 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
 
     def effective_locale(self):
         return normalize_locale(self.session.session_info().get("user_context", {}).get("lang"))
-
-    def ui_text(self, module, msgid, *, context=None, plural_index=None):
-        return ui_text(
-            configured_addons_root(),
-            self.effective_locale(),
-            module,
-            msgid,
-            context=context,
-            plural_index=plural_index,
-        )
-
-    def ui_selector(self, module, selector, *msgids):
-        for msgid in msgids:
-            selector = selector.replace(msgid, self.ui_text(module, msgid))
-        return selector
 
     def rpc(self, model, method, args, kwargs=None, page=None):
         return self.session.rpc(model, method, args, kwargs, page=page)
