@@ -31,61 +31,141 @@
   </article>
 </div>
 
-Calendar and Project are optional: connect scheduled meetings to Odoo Calendar
-and link follow-ups to Odoo Project tasks when those apps are part of your
-workflow. See the [Calendar](integrations/calendar.md) and
-[Project](integrations/project.md) guides.
+<aside class="integration-note">
+  <strong>Optional connections.</strong> If you use Odoo Calendar or Project, connect scheduled meetings to calendar events and follow-ups to tasks. See the <a href="integrations/calendar.md">Calendar</a> and <a href="integrations/project.md">Project</a> guides.
+</aside>
 
-## Who is who
+<section class="guide-section" id="roles">
+  <div class="guide-section-head">
+    <p class="guide-eyebrow">Choose your starting point</p>
+    <div>
+      <h2>Find your place in the meeting</h2>
+      <p>Start with the work you do. Each role opens the guide at the next useful step.</p>
+    </div>
+  </div>
+  <div class="role-list">
+    <a class="role-row" href="user/prepare-meeting.md#reading-a-meeting">
+      <span class="role-number">01</span><span class="role-copy"><strong>Reader</strong><small>Read meeting agendas, draft minutes previews and approved minutes.</small></span><span class="role-action">Open a meeting <span aria-hidden="true">→</span></span>
+    </a>
+    <a class="role-row" href="user/propose-a-point.md">
+      <span class="role-number">02</span><span class="role-copy"><strong>Proposer</strong><small>Suggest an item for a future agenda.</small></span><span class="role-action">Propose a point <span aria-hidden="true">→</span></span>
+    </a>
+    <a class="role-row" href="user/prepare-meeting.md">
+      <span class="role-number">03</span><span class="role-copy"><strong>Editor</strong><small>Prepare the agenda and guide the live meeting.</small></span><span class="role-action">Prepare a meeting <span aria-hidden="true">→</span></span>
+    </a>
+    <a class="role-row" href="user/minutes-and-approval.md">
+      <span class="role-number">04</span><span class="role-copy"><strong>Approver</strong><small>Review and approve the meeting minutes.</small></span><span class="role-action">Review minutes <span aria-hidden="true">→</span></span>
+    </a>
+    <a class="role-row" href="admin/configuration.md">
+      <span class="role-number">05</span><span class="role-copy"><strong>Manager</strong><small>Set up the module for your organization.</small></span><span class="role-action">Configure meetings <span aria-hidden="true">→</span></span>
+    </a>
+  </div>
+  <p class="role-note"><strong>Roles build on one another.</strong> Editors can also read; Managers have the Editor and Approver roles. See <a href="roles-and-permissions.md">roles and permissions</a>.</p>
+</section>
 
-The suite is role-based. Find your role, then follow its track:
+<section class="guide-section journey-section" id="meeting-flow">
+  <div class="guide-section-head">
+    <p class="guide-eyebrow">One connected record</p>
+    <div>
+      <h2>One thread from preparation through follow-up</h2>
+      <p>A series provides a starting point for recurring meetings. Each meeting keeps its own agenda and record; open points can continue later.</p>
+    </div>
+  </div>
+  <div class="workflow-illustration" role="group" aria-label="Meeting workflow from preparation to follow-up">
+    <div class="workflow-entry">
+      <div class="workflow-sources">
+        <article class="workflow-source">
+          <span class="workflow-kicker">Recurring meetings</span>
+          <strong>Series</strong>
+          <p>Usual attendees, agenda templates and meeting rules.</p>
+        </article>
+        <article class="workflow-source standalone">
+          <span class="workflow-kicker">One meeting</span>
+          <strong>Standalone</strong>
+          <p>Prepare it without creating a series.</p>
+        </article>
+      </div>
+      <span class="workflow-merge" aria-hidden="true">→</span>
+      <article class="workflow-meeting-card">
+        <div class="workflow-card-head">
+          <span class="workflow-kicker">A meeting takes shape</span>
+          <strong>Date · people · agenda</strong>
+        </div>
+        <div class="workflow-agenda">
+          <span class="workflow-agenda-title">Agenda</span>
+          <div><b>01</b><span>Point for this meeting</span></div>
+          <div><b>02</b><span>Open point to revisit</span></div>
+        </div>
+      </article>
+    </div>
 
-| Role | Typical person | Start here |
-|---|---|---|
-| **Reader** | Any attendee who consults meetings and minutes | [Reading meetings](user/prepare-meeting.md#reading-a-meeting) |
-| **Proposer** | Any internal user suggesting agenda points | [Propose a point](user/propose-a-point.md) |
-| **Editor** | The person preparing and running meetings | [Prepare a meeting](user/prepare-meeting.md) |
-| **Approver** | Whoever signs off the minutes | [Minutes and approval](user/minutes-and-approval.md) |
-| **Manager** | The module administrator | [Administration](admin/configuration.md) |
+    <ol class="workflow-stages">
+      <li><span class="workflow-step-number">01</span><span class="workflow-kicker">During the meeting</span><strong>Work through points</strong><p>Keep discussion notes, agreements and follow-ups with each point.</p></li>
+      <li><span class="workflow-step-number">02</span><span class="workflow-kicker">After the meeting</span><strong>Prepare the minutes</strong><p>Bring the meeting notes and point outcomes into one readable draft.</p></li>
+      <li><span class="workflow-step-number">03</span><span class="workflow-kicker">Approval</span><strong>Keep an official record</strong><p>Approval saves an immutable revision and its PDF.</p></li>
+      <li><span class="workflow-step-number">04</span><span class="workflow-kicker">Next steps</span><strong>Carry on the work</strong><p>Assign tasks and decide which open points need another meeting.</p></li>
+    </ol>
 
-Roles are cumulative: an Editor is also a Reader; a Manager is Editor + Approver.
-See [Roles and permissions](roles-and-permissions.md).
+    <div class="workflow-continuity">
+      <div class="workflow-continuity-copy">
+        <span class="workflow-kicker">Across meetings</span>
+        <strong>The same point can continue, with a fresh record each time.</strong>
+      </div>
+      <div class="workflow-meeting-pair">
+        <article class="workflow-occurrence">
+          <span class="workflow-kicker">Meeting 1</span>
+          <strong>Shared point</strong>
+          <p>This meeting's discussion and outcome</p>
+        </article>
+        <div class="workflow-carry" aria-hidden="true"><span>Carry forward</span><b>→</b></div>
+        <article class="workflow-occurrence">
+          <span class="workflow-kicker">Meeting 2</span>
+          <strong>Same shared point</strong>
+          <p>A new discussion and outcome</p>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
 
-## How the work flows
-
-1. A **series** describes a recurring meeting (kind, people, schedule, policies).
-2. Each concrete **meeting** is prepared from the series or standalone, with an
-   **agenda** of **points**.
-3. A **point** is a subject with its own identity: it can appear in several
-   meetings, keeping a separate **discussion** and **outcome** in each one.
-4. The meeting is **run live** from a dedicated screen: discussion notes,
-   agreements, dissents, follow-ups and postponements are recorded in the
-   moment.
-5. When it finishes, the **minutes** are prepared and **approved**. Approval
-   freezes an immutable **revision** with its PDF.
-
-```mermaid
-flowchart LR
-    S["Series<br/>recurring template & policies"] --> M["Meeting<br/>prepare agenda (wizard)"]
-    M --> L["Live meeting<br/>notes · agreements · follow-ups"]
-    L --> A["Minutes<br/>prepare & approve"]
-    A --> F["Follow-ups<br/>activities · To-dos · tasks"]
-    L -. "carryovers" .-> M
-```
-
-## Document map
-
-| I want to… | Read |
-|---|---|
-| Understand the vocabulary | [Concepts](concepts.md) |
-| Know who can do what | [Roles and permissions](roles-and-permissions.md) |
-| Configure the modules | [General configuration](admin/configuration.md) · [Series](admin/series.md) · [Catalogs](admin/catalogs.md) |
-| Prepare a meeting | [Prepare a meeting](user/prepare-meeting.md) |
-| Suggest a point for a future meeting | [Propose a point](user/propose-a-point.md) |
-| Run a meeting live | [Live meeting](user/live-meeting.md) |
-| Write, approve or amend minutes | [Minutes and approval](user/minutes-and-approval.md) |
-| Track who does what after the meeting | [Follow-ups](user/followups.md) |
-| Move points to another meeting | [Carryovers](user/carryovers.md) |
-| Use Calendar / Project | [Calendar](integrations/calendar.md) · [Project](integrations/project.md) |
-| See what changed between releases | [Release notes](release-notes.md) |
-| Solve a problem | [FAQ](faq.md) |
+<section class="guide-section guide-library" id="guide-library">
+  <div class="guide-section-head">
+    <p class="guide-eyebrow">Keep this guide close</p>
+    <div>
+      <h2>Go straight to what you need</h2>
+      <p>Practical steps first, then setup and reference material.</p>
+    </div>
+  </div>
+  <div class="guide-library-grid">
+    <section>
+      <h3>Prepare and take part</h3>
+      <ul>
+        <li><a href="user/prepare-meeting.md">Prepare a meeting</a></li>
+        <li><a href="user/propose-a-point.md">Propose a point</a></li>
+        <li><a href="user/live-meeting.md">Run a meeting live</a></li>
+        <li><a href="user/minutes-and-approval.md">Review and approve minutes</a></li>
+        <li><a href="user/followups.md">Track follow-ups</a></li>
+        <li><a href="user/carryovers.md">Continue a point</a></li>
+      </ul>
+    </section>
+    <section>
+      <h3>Set up your meetings</h3>
+      <ul>
+        <li><a href="roles-and-permissions.md">Roles and permissions</a></li>
+        <li><a href="admin/configuration.md">General configuration</a></li>
+        <li><a href="admin/series.md">Meeting series</a></li>
+        <li><a href="admin/catalogs.md">Point and decision catalogs</a></li>
+      </ul>
+    </section>
+    <section>
+      <h3>Look things up</h3>
+      <ul>
+        <li><a href="concepts.md">Concepts and vocabulary</a></li>
+        <li><a href="integrations/calendar.md">Calendar integration</a></li>
+        <li><a href="integrations/project.md">Project integration</a></li>
+        <li><a href="release-notes.md">Release notes</a></li>
+        <li><a href="faq.md">Frequently asked questions</a></li>
+      </ul>
+    </section>
+  </div>
+</section>

@@ -62,6 +62,8 @@ tiempo previsto.
 
 ![Revisión: la agenda supera la duración prevista en 15 minutos](../img/meeting-duration-warning.png)
 
+<a id="leer-una-reunion"></a>
+
 ## Leer una reunión (itinerario lector)
 
 Los lectores abren las reuniones desde **Meetings → Reuniones** (o el calendario).
