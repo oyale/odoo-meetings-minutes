@@ -32,7 +32,14 @@ class CalendarMeetingBrowserChecks(FullMeetingBrowserChecks):
     def test_calendar_event_is_read_only_and_links_back_to_meeting(self):
         event_id = self.calendar_event_id()
         self.open_calendar_event(event_id)
-        expect(self.page.get_by_text("This event is managed by its community meeting.")).to_be_visible()
+        expect(
+            self.page.get_by_text(
+                self.ui_text(
+                    "community_meetings_calendar",
+                    "This event is managed by its community meeting. Open the meeting to view or edit meeting details.",
+                )
+            )
+        ).to_be_visible()
         self.assertFalse(self.record("calendar.event", event_id, ["user_can_edit"])["user_can_edit"])
         subject = self.page.locator('.o_form_view .o_field_widget[name="name"]')
         expect(subject).to_contain_text(

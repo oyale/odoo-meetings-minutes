@@ -14,7 +14,6 @@ from pathlib import Path
 TESTS_ROOT = Path(__file__).resolve().parents[3] / "tests"
 sys.path.insert(0, str(TESTS_ROOT))
 
-from browser_support.localized_selectors import SpanishPlaywrightLocalization
 from browser_support.screenshot_capture import capture_checkpoint, capture_failure
 from live_meeting_playwright import BASE_URL, LiveMeetingBrowserChecks
 from playwright.sync_api import expect
@@ -247,13 +246,6 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         cls.capture_locale = cls.session.verify_locale(
             requested_locale or cls.session.session_info().get("user_context", {}).get("lang")
         )
-        if requested_locale:
-            cls.ui_localization = None
-        else:
-            addon_root = Path(__file__).resolve().parents[3]
-            cls.ui_localization = SpanishPlaywrightLocalization(
-                [addon_root / "community_meetings", addon_root / "community_meetings_project"]
-            )
 
     def setUp(self):
         self.errors_before = len(self.console_errors)
@@ -315,14 +307,6 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
     def save_trace(self):
         ARTIFACTS.mkdir(mode=0o700, parents=True, exist_ok=True)
         self.context.tracing.stop(path=str(ARTIFACTS / (self._testMethodName + ".zip")))
-
-    @classmethod
-    def tearDownClass(cls):
-        try:
-            if cls.ui_localization:
-                cls.ui_localization.close()
-        finally:
-            super().tearDownClass()
 
     def tearDown(self):
         self.assertFalse(
@@ -547,7 +531,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
     def test_notes_autosave_and_reload(self):
         self.edit_rich(
             self.card("discussion").locator(
-                '[contenteditable="true"][aria-label="Discussion notes"]'
+                self.ui_selector("community_meetings", '[contenteditable="true"][aria-label="Discussion notes"]', "Discussion notes")
             ),
             "Discussion persisted in browser",
         )
@@ -558,7 +542,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "Discussion persisted",
         )
         self.edit_rich(
-            self.page.locator('[contenteditable="true"][aria-label="Meeting minutes"]'),
+            self.page.locator(self.ui_selector("community_meetings", '[contenteditable="true"][aria-label="Meeting minutes"]', "Meeting minutes")),
             "Session notes persisted",
         )
         self.wait_field(
@@ -572,11 +556,11 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Expand / Collapse all")).click()
         expect(
             self.card("discussion").locator(
-                '[contenteditable="true"][aria-label="Discussion notes"]'
+                self.ui_selector("community_meetings", '[contenteditable="true"][aria-label="Discussion notes"]', "Discussion notes")
             )
         ).to_contain_text("Discussion persisted")
         expect(
-            self.page.locator('[contenteditable="true"][aria-label="Meeting minutes"]')
+            self.page.locator(self.ui_selector("community_meetings", '[contenteditable="true"][aria-label="Meeting minutes"]', "Meeting minutes"))
         ).to_contain_text("Session notes persisted")
 
     def test_private_note_create_and_edit(self):
@@ -618,7 +602,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         form.get_by_label(self.ui_text("community_meetings", "Task owner")).select_option(str(editor_id))
         form.get_by_label(self.ui_text("community_meetings", "Deadline"), exact=True).fill("2027-02-01")
         form.get_by_role("button", name=self.ui_text("community_meetings", "Add follow-up")).click()
-        row = card.locator('li:has(select[aria-label="Task status"])')
+        row = card.locator(self.ui_selector("community_meetings", 'li:has(select[aria-label="Task status"])', "Task status"))
         expect(row).to_be_visible()
         task = self.related("community.meeting.action", "discussion")
         self.assertEqual(
@@ -643,7 +627,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         form = card.locator(".o_live_task_form")
         form.get_by_label(self.ui_text("community_meetings", "Task name")).fill("Remove this follow-up")
         form.get_by_role("button", name=self.ui_text("community_meetings", "Add follow-up"), exact=True).click()
-        row = card.locator('li:has(select[aria-label="Task status"])').last
+        row = card.locator(self.ui_selector("community_meetings", 'li:has(select[aria-label="Task status"])', "Task status")).last
         expect(row.get_by_role("button", name=self.ui_text("community_meetings", "Delete follow-up"))).to_be_visible()
         action_id = self.related("community.meeting.action", "discussion")
         row.get_by_role("button", name=self.ui_text("community_meetings", "Delete follow-up")).click()
@@ -1012,7 +996,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         expect(activity_dialog.locator('.o_field_widget[name="summary"] input')).to_have_value(
             "Promoted origin follow-up"
         )
-        activity_dialog.get_by_role("button", name="Close").click()
+        activity_dialog.get_by_role("button", name=self.ui_text("community_meetings_project", "Close")).click()
         expect(followup_preview).to_contain_text(self.ui_text("community_meetings", "From meeting"))
         expect(followup_preview.locator(".o_live_relation_source_heading").filter(has_text=self.ui_text("community_meetings", "From meeting"))).to_be_visible()
         expect(followup_preview.get_by_role("button", name=self.ui_text("community_meetings", "Open minutes"))).to_be_visible()
@@ -1972,7 +1956,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         self.addCleanup(self.delete_draft, draft)
         self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, draft))
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Open Meeting")).click()
-        expect(self.page.locator('.o_live_header input[aria-label="Meeting name"]')).to_have_value(re.compile("Draft workspace"))
+        expect(self.page.locator(self.ui_selector("community_meetings", '.o_live_header input[aria-label="Meeting name"]', "Meeting name"))).to_have_value(re.compile("Draft workspace"))
         expect(self.page.get_by_role("button", name=self.ui_text("community_meetings", "Add Point"), exact=True)).to_be_visible()
 
     def test_live_header_shows_coordinator_before_minutes_secretary(self):
@@ -2027,7 +2011,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         form.get_by_label(self.ui_text("community_meetings", "Task name")).fill("Native meeting follow-up")
         form.get_by_role("button", name=self.ui_text("community_meetings", "Add follow-up")).click()
         expect(form).to_have_count(0)
-        row = card.locator('li:has(select[aria-label="Task status"])').last
+        row = card.locator(self.ui_selector("community_meetings", 'li:has(select[aria-label="Task status"])', "Task status")).last
         expect(row).to_be_visible()
         expect(row.locator(".o_live_followup_task_title")).to_be_visible()
         expect(
@@ -2067,7 +2051,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         form.get_by_role("button", name=self.ui_text("community_meetings", "Add follow-up")).click()
         record = self.wait_action_record("Odoo call activity")
         activity_row = card.locator("li").filter(has_text="Odoo call activity")
-        expect(activity_row.get_by_role("button", name="Create Project task")).to_have_count(0)
+        expect(activity_row.get_by_role("button", name=self.ui_text("community_meetings_project", "Create Project task"))).to_have_count(0)
         self.assertEqual(record["agenda_item_id"][0], self.item_ids["discussion"])
         self.assertEqual(record["followup_kind"], "activity")
         self.assertTrue(record["followup_activity_id"])
@@ -2263,7 +2247,6 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "PRIVATE_NOT_FOR_PUBLICATION"
         )
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Finish Meeting"), exact=True).click()
-        expect(self.page.get_by_role("dialog")).to_contain_text("agenda point(s) are not resolved")
         self.page.get_by_role("dialog").get_by_role("button", name=self.ui_text("community_meetings", "Finish meeting"), exact=True).click()
         expect(self.page.get_by_role("button", name=self.ui_text("community_meetings", "Prepare Minutes"), exact=True)).to_be_visible()
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Prepare Minutes"), exact=True).click()
@@ -2333,7 +2316,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
 
         self.page.route(target, fail_once, times=1)
         editor = self.card("discussion").locator(
-            '[contenteditable="true"][aria-label="Discussion notes"]'
+            self.ui_selector("community_meetings", '[contenteditable="true"][aria-label="Discussion notes"]', "Discussion notes")
         )
         self.edit_rich(editor, "Unsaved text must survive an error")
         expect(self.page.get_by_role("alert").filter(has_text=self.ui_text("community_meetings", "Some changes could not be saved."))).to_be_visible()

@@ -120,6 +120,11 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             plural_index=plural_index,
         )
 
+    def ui_selector(self, module, selector, *msgids):
+        for msgid in msgids:
+            selector = selector.replace(msgid, self.ui_text(module, msgid))
+        return selector
+
     def rpc(self, model, method, args, kwargs=None, page=None):
         return self.session.rpc(model, method, args, kwargs, page=page)
 
@@ -297,9 +302,23 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
 
         history.get_by_role("button", name=self.ui_text("community_meetings", "Start without previous notes")).click()
         dialog = self.page.locator(".modal").last
-        expect(dialog.get_by_text("The original notes and this meeting’s notes are preserved.")).to_be_visible()
+        expect(
+            dialog.get_by_text(
+                self.ui_text(
+                    "community_meetings",
+                    "Earlier discussion will be hidden for this point and later continuations. The original notes and this meeting’s notes are preserved.",
+                )
+            )
+        ).to_be_visible()
         dialog.get_by_role("button", name=self.ui_text("community_meetings", "Start without previous notes")).click()
-        expect(history.get_by_text("This point starts without earlier discussion.")).to_be_visible()
+        expect(
+            history.get_by_text(
+                self.ui_text(
+                    "community_meetings",
+                    "This point starts without earlier discussion. Its notes remain available on the original meeting.",
+                )
+            )
+        ).to_be_visible()
         self.assertTrue(self.record("community.meeting.agenda.item", current_item, ["discard_previous_discussion"])["discard_previous_discussion"])
 
         history.get_by_role("button", name=self.ui_text("community_meetings", "Show previous notes")).click()
@@ -351,7 +370,9 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(self.outcome("discussion")).to_have_text(self.ui_text("community_meetings", "Resolved"))
         self.assertEqual(card.get_by_label("Actual minutes for this point").count(), 0)
         card.get_by_role("button", name=self.ui_text("community_meetings", "Undo point result")).click()
-        reason = card.get_by_label("Why reopen this point?")
+        reason = card.get_by_label(
+            self.ui_text("community_meetings", "Why reopen this point? (optional)")
+        )
         reason.fill("We need to revise the conclusion.")
         card.get_by_role("button", name=self.ui_text("community_meetings", "Reopen point")).click()
         expect(self.outcome("discussion")).to_have_text(self.ui_text("community_meetings", "Pending"))
@@ -429,7 +450,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(self.page.locator(".o_community_live_meeting")).to_be_visible()
         card = self.card("discussion", begin=False)
         self.assertEqual(
-            card.locator('[contenteditable="true"][aria-label="Discussion notes"]').count(),
+            card.locator(self.ui_selector("community_meetings", '[contenteditable="true"][aria-label="Discussion notes"]', "Discussion notes")).count(),
             0,
             "Unexpected editor before Begin: item=%r; editors=%r"
             % (
@@ -440,7 +461,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.assertEqual(card.get_by_role("button", name=self.ui_text("community_meetings", "Add agreement")).count(), 0)
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Start Meeting")).click()
         card.get_by_role("button", name=self.ui_text("community_meetings", "Begin point")).click()
-        expect(card.locator('[contenteditable="true"][aria-label="Discussion notes"]')).to_be_visible()
+        expect(card.locator(self.ui_selector("community_meetings", '[contenteditable="true"][aria-label="Discussion notes"]', "Discussion notes"))).to_be_visible()
         self.assertTrue(
             card.locator(".o_live_planned").evaluate(
                 "el => el.nextElementSibling?.querySelector('.o_live_discussion_notes') !== null"
@@ -466,18 +487,18 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         card.get_by_role("button", name=self.ui_text("community_meetings", "Pause point")).click()
         expect(card.locator(".o_live_point_timer_status")).to_have_attribute("aria-label", self.ui_text("community_meetings", "Point paused"))
         self.assertEqual(
-            card.locator('[contenteditable="true"][aria-label="Discussion notes"]').count(),
+            card.locator(self.ui_selector("community_meetings", '[contenteditable="true"][aria-label="Discussion notes"]', "Discussion notes")).count(),
             0,
             "Editor remained after pause: item=%r; editor=%r; card=%r"
             % (
                 self.record("community.meeting.agenda.item", self.item_ids["discussion"], ["has_started", "actual_started_at"]),
-                card.locator('[contenteditable="true"][aria-label="Discussion notes"]').evaluate_all("els => els.map(el => el.outerHTML)"),
+                card.locator(self.ui_selector("community_meetings", '[contenteditable="true"][aria-label="Discussion notes"]', "Discussion notes")).evaluate_all("els => els.map(el => el.outerHTML)"),
                 card.locator(".o_live_card_body").inner_text(),
             ),
         )
         self.assertEqual(card.get_by_role("button", name=self.ui_text("community_meetings", "Add agreement")).count(), 0)
 
-        editor = card.locator('[aria-label="Discussion notes"]')
+        editor = card.locator(self.ui_selector("community_meetings", '[aria-label="Discussion notes"]', "Discussion notes"))
         for _ in range(3):
             card.get_by_role("button", name=self.ui_text("community_meetings", "Resume point")).click()
             expect(card.get_by_role("button", name=self.ui_text("community_meetings", "Pause point"))).to_be_visible()
@@ -504,7 +525,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Start Meeting")).click()
         card = self.card("discussion", begin=False)
         card.get_by_role("button", name=self.ui_text("community_meetings", "Begin point")).click()
-        editor = card.locator('[aria-label="Discussion notes"]')
+        editor = card.locator(self.ui_selector("community_meetings", '[aria-label="Discussion notes"]', "Discussion notes"))
         expect(editor).to_have_attribute("contenteditable", "true")
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Pause Meeting")).click()
         expect(self.page.get_by_role("button", name=self.ui_text("community_meetings", "Resume Meeting"))).to_be_visible()
@@ -532,7 +553,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Expand / Collapse all")).click()
         card = self.card("discussion", begin=False)
-        expect(card.locator('[aria-label="Discussion notes"]')).to_have_attribute(
+        expect(card.locator(self.ui_selector("community_meetings", '[aria-label="Discussion notes"]', "Discussion notes"))).to_have_attribute(
             "contenteditable", "true",
         )
 
@@ -680,7 +701,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Open Meeting")).click(timeout=30000)
         self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Expand / Collapse all")).click()
-        expect(self.page.locator('[aria-label="Next meeting date"]')).to_be_visible()
+        expect(self.page.locator(self.ui_selector("community_meetings", '[aria-label="Next meeting date"]', "Next meeting date"))).to_be_visible()
         expect(self.page.locator(".o_live_minutes_approval")).to_be_visible()
         expect(self.page.locator(".o_live_minutes_approval")).to_contain_text("Structural previous meeting")
 
@@ -999,7 +1020,9 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         card.get_by_role("button", name=self.ui_text("community_meetings", "Add agreement"), exact=True).click()
         expect(self.outcome("decision")).to_have_text(self.ui_text("community_meetings", "Approved"))
         card.get_by_role("button", name=self.ui_text("community_meetings", "Undo point result")).click()
-        card.get_by_label("Why reopen this point?").fill("The vote needs checking.")
+        card.get_by_label(
+            self.ui_text("community_meetings", "Why reopen this point? (optional)")
+        ).fill("The vote needs checking.")
         card.get_by_role("button", name=self.ui_text("community_meetings", "Reopen point")).click()
         expect(self.outcome("decision")).to_have_text(self.ui_text("community_meetings", "Pending"))
         agreement = self.rpc("community.meeting.resolution", "search_read", [[("agenda_item_id", "=", self.item_ids["decision"])]], {"fields": ["status"], "limit": 1})[0]
