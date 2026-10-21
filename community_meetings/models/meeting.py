@@ -379,11 +379,17 @@ class CommunityMeeting(models.Model):
                 or self.env.user.has_group("community_meetings.group_meeting_manager")
             ):
                 raise UserError(_("You are not allowed to change this meeting."))
+        if target == "scheduled":
+            if any(not meeting.start_datetime for meeting in self):
+                raise ValidationError(_("Set a meeting date and time before scheduling it."))
+            self._prepare_schedule_transition()
         return super().write({"state": target})
 
+    def _prepare_schedule_transition(self):
+        """Extension hook for checks and fields required before scheduling."""
+        return True
+
     def action_schedule(self):
-        if any(not meeting.start_datetime for meeting in self):
-            raise ValidationError(_("Set a meeting date and time before scheduling it."))
         result = self._transition(("draft",), "scheduled")
         self.env["community.meeting.carryover"]._process_new_meetings(self)
         return result
