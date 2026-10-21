@@ -1,18 +1,40 @@
 # Community Meetings — User & Administrator Guide
 
-Welcome to the **Community Meetings** suite for Odoo 18. This guide teaches you
-how to **use** and **administer** the modules — it does not cover installation.
+<div class="guide-hero">
+  <div class="guide-hero-copy">
+    <p class="guide-eyebrow">Prepare · meet · follow through</p>
+    <h2>Make every meeting easier to run — and easier to act on.</h2>
+    <p>Keep the agenda, live discussion, decisions and next steps connected. Reuse points between meetings, record agreements as they happen, then review and approve a readable set of minutes.</p>
+    <p><a class="guide-cta" href="user/prepare-meeting.md">Prepare your first meeting →</a></p>
+  </div>
+  <img src="img/meetings-list.png" alt="Meetings list with dates, series, organizers and status" />
+</div>
 
-### On this page
+<div class="guide-features">
+  <article>
+    <img src="img/meeting-review.png" alt="The meeting preparation wizard reviewing the selected agenda" />
+    <h3>Prepare with context</h3>
+    <p>Build an agenda from a series or a one-off meeting. Bring forward open points and give attendees a clear plan.</p>
+    <a href="user/prepare-meeting.md">See how preparation works →</a>
+  </article>
+  <article>
+    <img src="img/live-meeting.png" alt="Live meeting screen with agenda points, notes and controls" />
+    <h3>Keep the meeting moving</h3>
+    <p>Work through one point at a time. Capture notes, agreements, follow-ups and postponed topics as the conversation unfolds.</p>
+    <a href="user/live-meeting.md">Explore the live meeting →</a>
+  </article>
+  <article>
+    <img src="img/minutes-preview.png" alt="A polished preview of draft meeting minutes" />
+    <h3>Leave with a reliable record</h3>
+    <p>Review the draft, approve the minutes and carry actions into the next meeting. Approved revisions stay available as a record.</p>
+    <a href="user/minutes-and-approval.md">See minutes and approval →</a>
+  </article>
+</div>
 
-## What you get
-
-| Module | What it does | For whom |
-|---|---|---|
-| **Community Meetings** (`community_meetings`) | Operational meetings with structured agendas, reusable points, resolutions, follow-ups, dissent, minutes and immutable approved revisions. | Everyone |
-| **Community Meetings – Project Tasks** (`community_meetings_project`) | Links follow-ups to Odoo **Project** tasks and adds task policies. | Teams using Project |
-| **Community Meetings – Calendar** (`community_meetings_calendar`) | Publishes each scheduled meeting as a read-only Odoo **Calendar** event. | Everyone with Calendar |
-| **Extension Contract Demo** (`community_meetings_extension_demo`) | Synthetic example showing how developers extend meeting kinds. Developers only — ignore it in day-to-day use. | Developers |
+Calendar and Project are optional: connect scheduled meetings to Odoo Calendar
+and link follow-ups to Odoo Project tasks when those apps are part of your
+workflow. See the [Calendar](integrations/calendar.md) and
+[Project](integrations/project.md) guides.
 
 ## Who is who
 
@@ -29,7 +51,7 @@ The suite is role-based. Find your role, then follow its track:
 Roles are cumulative: an Editor is also a Reader; a Manager is Editor + Approver.
 See [Roles and permissions](roles-and-permissions.md).
 
-## The 5-minute mental model
+## How the work flows
 
 1. A **series** describes a recurring meeting (kind, people, schedule, policies).
 2. Each concrete **meeting** is prepared from the series or standalone, with an

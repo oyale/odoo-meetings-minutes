@@ -1,18 +1,40 @@
 # Community Meetings — Guía de uso y administración
 
-Bienvenido a la suite **Community Meetings** para Odoo 18. Esta guía enseña a
-**usar** y **administrar** los módulos — no cubre la instalación.
+<div class="guide-hero">
+  <div class="guide-hero-copy">
+    <p class="guide-eyebrow">Preparación · reunión en vivo · seguimiento</p>
+    <h2>Reuniones más fáciles de llevar y con acuerdos que se cumplen.</h2>
+    <p>Mantén conectados el orden del día, la conversación, las decisiones y los siguientes pasos. Reutiliza puntos entre reuniones, registra los acuerdos al tomarlos y revisa y aprueba un acta clara.</p>
+    <p><a class="guide-cta" href="user/prepare-meeting.md">Prepara tu primera reunión →</a></p>
+  </div>
+  <img src="img/meetings-list.png" alt="Lista de reuniones de Odoo con fechas, series, organizadores y estado" />
+</div>
 
-### En esta página
+<div class="guide-features">
+  <article>
+    <img src="img/meeting-review.png" alt="Asistente de preparación que permite revisar el orden del día elegido" />
+    <h3>Prepara la reunión con contexto</h3>
+    <p>Organiza el orden del día desde una serie o para una reunión puntual. Recupera los puntos abiertos y comparte un plan claro con las personas convocadas.</p>
+    <a href="user/prepare-meeting.md">Cómo preparar una reunión →</a>
+  </article>
+  <article>
+    <img src="img/live-meeting.png" alt="Pantalla de reunión en vivo con puntos, notas y controles" />
+    <h3>Mantened el ritmo de la reunión</h3>
+    <p>Tratad un punto cada vez. Anotad la conversación, los acuerdos y seguimientos, y aplazad lo que necesite más tiempo.</p>
+    <a href="user/live-meeting.md">Descubre la reunión en vivo →</a>
+  </article>
+  <article>
+    <img src="img/minutes-preview.png" alt="Vista previa cuidada de un borrador de acta" />
+    <h3>Cerrad con un acta útil</h3>
+    <p>Revisad el borrador, aprobad el acta y retomad las tareas en la siguiente reunión. Las revisiones aprobadas quedan como registro.</p>
+    <a href="user/minutes-and-approval.md">Actas y aprobación →</a>
+  </article>
+</div>
 
-## Qué obtienes
-
-| Módulo | Qué hace | Para quién |
-|---|---|---|
-| **Community Meetings** (`community_meetings`) | Reuniones operativas con agendas estructuradas, puntos reutilizables, acuerdos, seguimientos, discrepancias, actas y revisiones aprobadas inmutables. | Todo el mundo |
-| **Community Meetings – Project Tasks** (`community_meetings_project`) | Vincula los seguimientos con tareas de **Project** y añade políticas de tareas. | Equipos que usan Project |
-| **Community Meetings – Calendar** (`community_meetings_calendar`) | Publica cada reunión programada como evento de **Calendario** de Odoo, de solo lectura. | Todos los usuarios del calendario |
-| **Extension Contract Demo** (`community_meetings_extension_demo`) | Ejemplo sintético de cómo ampliar los tipos de reunión. Solo para desarrolladores. | Desarrolladores |
+Calendario y Project son opcionales: puedes conectar las reuniones programadas
+con Odoo Calendar y vincular los seguimientos con tareas de Odoo Project si
+forman parte de vuestro trabajo. Consulta las guías de
+[Calendario](integrations/calendar.md) y [Project](integrations/project.md).
 
 ## Quién es quién
 
@@ -29,7 +51,7 @@ La suite funciona por roles. Encuentra el tuyo y sigue su itinerario:
 Los roles son acumulativos: un Editor es también Lector; un Gestor es
 Editor + Aprobador. Ver [Roles y permisos](roles-and-permissions.md).
 
-## El modelo mental en 5 minutos
+## Cómo fluye el trabajo
 
 1. Una **serie** describe una reunión recurrente (tipo, personas, calendario,
    políticas).
