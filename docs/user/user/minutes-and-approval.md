@@ -26,6 +26,10 @@ for the general narrative; agenda discussion, agreements, follow-ups and
 included dissents are drawn from their own records. The official PDF is created
 when an approver approves the minutes.
 
+The preview shows the meeting time in your user timezone. Approved minutes use
+the series timezone; standalone meetings use the company timezone, then UTC if
+neither is set. The timezone is printed beside the time.
+
 In **Held** or **Minutes draft** state, the preview is read-only: opening it and
 choosing **Return to meeting to edit** leave the saved content and meeting state
 unchanged. Anyone with read access to the meeting can open this preview; see

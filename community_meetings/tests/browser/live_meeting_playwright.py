@@ -120,28 +120,55 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.item_ids = self.fixture.item_ids
         self.addCleanup(self.cleanup_meeting)
         if os.environ.get("MM_CAPTURE_MINUTES_PREVIEW"):
+            capture_language = os.environ.get("MM_CAPTURE_LANGUAGE", "en_US")
+            spanish_capture = capture_language.lower().startswith("es")
             reviewer_ids = self.rpc(
                 "res.users", "search", [[("login", "=", os.environ["ODOO_REVIEWER_LOGIN"])]],
             )
             self.assertEqual(len(reviewer_ids), 1, "expected one disposable reviewer")
             reviewer = self.rpc("res.users", "read", [reviewer_ids, ["partner_id"]])[0]
             self.rpc("community.meeting", "write", [[self.meeting_id], {
-                "name": "Planificación del segundo trimestre",
-                "location": "Sala de reuniones",
-                "description": "<p>Revisar prioridades, calendario y recursos.</p>",
-                "minutes_notes": "<p>Se acuerda preparar una propuesta para la siguiente sesión.</p>",
+                "name": (
+                    "Planificación del segundo trimestre"
+                    if spanish_capture
+                    else "Planning for the second quarter"
+                ),
+                "location": "Sala de reuniones" if spanish_capture else "Meeting room",
+                "description": (
+                    "<p>Revisar prioridades, calendario y recursos.</p>"
+                    if spanish_capture
+                    else "<p>Review priorities, schedule, and resources.</p>"
+                ),
+                "minutes_notes": (
+                    "<p>Se acuerda preparar una propuesta para la siguiente sesión.</p>"
+                    if spanish_capture
+                    else "<p>Prepare a proposal for the next session.</p>"
+                ),
                 "attendee_partner_ids": [(6, 0, [reviewer["partner_id"][0]])],
             }])
-            agenda_names = {
-                "information": "Apertura y acuerdos anteriores",
-                "discussion": "Seguimiento del proyecto comunitario",
-                "decision": "Presupuesto del próximo trimestre",
-                "todo": "Preparar calendario de actividades",
-            }
+            agenda_names = (
+                {
+                    "information": "Apertura y acuerdos anteriores",
+                    "discussion": "Seguimiento del proyecto comunitario",
+                    "decision": "Presupuesto del próximo trimestre",
+                    "todo": "Preparar calendario de actividades",
+                }
+                if spanish_capture
+                else {
+                    "information": "Opening and previous decisions",
+                    "discussion": "Community project update",
+                    "decision": "Next quarter budget",
+                    "todo": "Prepare the activity calendar",
+                }
+            )
             for kind, item_id in self.item_ids.items():
                 values = {"name": agenda_names[kind]}
                 if kind == "discussion":
-                    values["discussion_notes"] = "<p>El equipo revisa los avances y los riesgos.</p>"
+                    values["discussion_notes"] = (
+                        "<p>El equipo revisa los avances y los riesgos.</p>"
+                        if spanish_capture
+                        else "<p>The team reviews progress and risks.</p>"
+                    )
                 self.rpc("community.meeting.agenda.item", "write", [[item_id], values])
         else:
             open_live_meeting(self.session, self.meeting_id)
@@ -496,16 +523,34 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
                 [[self.meeting_id]],
                 {"context": {"lang": capture_language}},
             )
-            self.assertIn("Orden del día y debate", localized_html)
-            for translated_label in (
-                "Acta de la reunión",
-                "Borrador — sin aprobar.",
-                "Esta vista previa refleja los datos guardados actualmente en la reunión.",
-            ):
+            if capture_language.lower().startswith("es"):
+                self.assertIn("Orden del día y debate", localized_html)
+                translated_labels = (
+                    "Acta de la reunión",
+                    "Borrador — sin aprobar.",
+                    "Esta vista previa refleja los datos guardados actualmente en la reunión.",
+                )
+                excluded_labels = (
+                    "Meeting minutes",
+                    "Draft — not approved.",
+                    "This preview reflects current saved meeting data.",
+                )
+            else:
+                self.assertIn("Agenda and discussion", localized_html)
+                translated_labels = (
+                    "Meeting minutes",
+                    "Draft — not approved.",
+                    "This preview reflects current saved meeting data.",
+                )
+                excluded_labels = (
+                    "Acta de la reunión",
+                    "Borrador — sin aprobar.",
+                    "Esta vista previa refleja los datos guardados actualmente en la reunión.",
+                )
+            for translated_label in translated_labels:
                 self.assertIn(translated_label, localized_html)
-            self.assertNotIn("Meeting minutes", localized_html)
-            self.assertNotIn("Draft — not approved.", localized_html)
-            self.assertNotIn("This preview reflects current saved meeting data.", localized_html)
+            for translated_label in excluded_labels:
+                self.assertNotIn(translated_label, localized_html)
             html_trace = os.environ.get("MM_CAPTURE_PREVIEW_HTML")
             if html_trace:
                 Path(html_trace).write_text(localized_html)
@@ -552,9 +597,14 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
                 re.I,
             )
         )
-        expect(preview).to_contain_text(
-            "Seguimiento del proyecto comunitario" if capture_path else "Browser Discussion case"
+        expected_discussion = (
+            "Seguimiento del proyecto comunitario"
+            if capture_path and capture_language and capture_language.lower().startswith("es")
+            else "Community project update"
+            if capture_path
+            else "Browser Discussion case"
         )
+        expect(preview).to_contain_text(expected_discussion)
         self.assertFalse(write_trace.empty_note_writes, "opening the preview must not write untouched empty editors")
         self.assertEqual(write_trace.max_active_note_writes, 1, "writes for a single meeting must be serialized")
         expect(preview.locator(".o_community_minutes_preview_body")).to_be_visible()

@@ -44,7 +44,13 @@
                 </p>
                 <dl class="o_minutes_document_metadata">
                     <div class="o_minutes_metadata_item"><dt>Company</dt><dd t-out="doc['meeting']['company']"/></div>
-                    <div class="o_minutes_metadata_item"><dt>Meeting date</dt><dd t-out="doc['meeting']['start_datetime_display']"/></div>
+                    <div class="o_minutes_metadata_item">
+                        <dt>Meeting date</dt>
+                        <dd>
+                            <span t-out="doc['meeting']['start_datetime_display']"/>
+                            <span t-if="doc['meeting'].get('start_timezone')" t-out="' (' + doc['meeting']['start_timezone'] + ')'"/>
+                        </dd>
+                    </div>
                     <div class="o_minutes_metadata_item"><dt>Organizer</dt><dd t-out="doc['meeting']['organizer']"/></div>
                     <div class="o_minutes_metadata_item"><dt>Minutes secretary</dt><dd t-out="doc['meeting']['secretary']"/></div>
                     <div class="o_minutes_metadata_item"><dt>Location</dt><dd t-out="doc['meeting']['location'] or '—'"/></div>

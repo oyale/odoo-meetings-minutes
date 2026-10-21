@@ -54,8 +54,9 @@ class CommunityMeetingRevision(models.Model):
         return str(html_sanitize(value or ""))
 
     @api.model
-    def _build_public_content(self, meeting):
+    def _build_public_content(self, meeting, timezone=None):
         meeting.ensure_one()
+        timezone = timezone or self.env.user.tz or "UTC"
         agenda = []
         for sequence, item in enumerate(
             meeting.agenda_item_ids.sorted(lambda row: (row.sequence, row.id)),
@@ -148,7 +149,7 @@ class CommunityMeetingRevision(models.Model):
             for transfer in carryover_records
         ]
         snapshot = {
-            "schema_version": 2,
+            "schema_version": 3,
             "meeting": {
                 "code": meeting.code,
                 "name": meeting.name,
@@ -161,11 +162,12 @@ class CommunityMeetingRevision(models.Model):
                 "start_datetime_display": format_datetime(
                     self.env,
                     meeting.start_datetime,
-                    tz=self.env.user.tz,
+                    tz=timezone,
                     dt_format="short",
                 )
                 if meeting.start_datetime
                 else "",
+                "start_timezone": timezone if meeting.start_datetime else "",
                 "location": meeting.location or "",
                 "meeting_url": meeting.meeting_url or "",
                 "description": self._clean_html(meeting.description),
@@ -202,7 +204,8 @@ class CommunityMeetingRevision(models.Model):
 
     @api.model
     def _build_snapshot(self, meeting, approver, approved_at):
-        snapshot = self._build_public_content(meeting)
+        timezone = meeting.series_id.timezone or meeting.company_id.partner_id.tz or "UTC"
+        snapshot = self._build_public_content(meeting, timezone=timezone)
         snapshot["approval"] = {
             "approver": approver.name,
             "approved_at": fields.Datetime.to_string(approved_at),

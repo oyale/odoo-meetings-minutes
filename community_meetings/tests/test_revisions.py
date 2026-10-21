@@ -324,7 +324,7 @@ class TestMeetingRevisions(TransactionCase):
         )
         revision = self._approve_without_rendering_pdf(meeting.with_user(self.approver))
         snapshot = json.loads(revision.snapshot_json)
-        self.assertEqual(snapshot["schema_version"], 2)
+        self.assertEqual(snapshot["schema_version"], 3)
         self.assertEqual(
             snapshot["carryovers"][0]["destination_series"],
             {"id": destination.id, "name": destination.name},
@@ -364,7 +364,6 @@ class TestMeetingRevisions(TransactionCase):
 
         before_state = meeting.state
         before_revisions = meeting.revision_ids.ids
-        public_content = self.env["community.meeting.revision"]._build_public_content(meeting)
         preview = meeting.with_user(self.editor).get_minutes_preview_html()
 
         self.assertTrue("Draft — not approved." in preview or "Borrador — sin aprobar." in preview)
@@ -381,10 +380,57 @@ class TestMeetingRevisions(TransactionCase):
         self.assertIn("Updated preview narrative", updated_preview)
         self.assertNotIn("Preview narrative", updated_preview)
 
-        public_content = self.env["community.meeting.revision"]._build_public_content(meeting)
+        approver_meeting = meeting.with_user(self.approver)
+        public_content = (
+            self.env["community.meeting.revision"]
+            .with_user(self.approver)
+            ._build_public_content(
+                approver_meeting,
+                timezone=(meeting.series_id.timezone or meeting.company_id.partner_id.tz or "UTC"),
+            )
+        )
         revision = self._approve_without_rendering_pdf(meeting.with_user(self.approver))
         snapshot = json.loads(revision.snapshot_json)
         self.assertEqual({key: snapshot[key] for key in public_content}, public_content)
+
+    def test_minutes_preview_and_approved_snapshot_use_their_expected_timezones(self):
+        self.editor.write({"tz": "America/Los_Angeles"})
+        self.approver.write({"tz": "Pacific/Honolulu"})
+        self.env.company.partner_id.tz = "Europe/Madrid"
+        meeting = self._drafted_meeting("Minutes timezone behavior", start_datetime="2026-11-01 10:00:00")
+
+        preview = meeting.with_user(self.editor).get_minutes_preview_html()
+        self.assertIn("2:00 AM", preview)
+        self.assertIn("America/Los_Angeles", preview)
+
+        revision = self._approve_without_rendering_pdf(meeting.with_user(self.approver))
+        snapshot = json.loads(revision.snapshot_json)
+        self.assertEqual(snapshot["meeting"]["start_timezone"], "Europe/Madrid")
+        self.assertEqual(snapshot["meeting"]["start_datetime_display"], "11/1/26, 11:00 AM")
+
+    def test_approved_minutes_use_series_timezone_before_company_timezone(self):
+        self.approver.write({"tz": "Pacific/Honolulu"})
+        self.env.company.partner_id.tz = "Europe/Madrid"
+        series = (
+            self.env["community.meeting.series"]
+            .with_user(self.editor)
+            .create({"name": "Tokyo timezone", "timezone": "Asia/Tokyo"})
+        )
+        meeting = self._drafted_meeting("Series timezone behavior", series=series)
+
+        revision = self._approve_without_rendering_pdf(meeting.with_user(self.approver))
+        snapshot = json.loads(revision.snapshot_json)
+        self.assertEqual(snapshot["meeting"]["start_timezone"], "Asia/Tokyo")
+        self.assertEqual(snapshot["meeting"]["start_datetime_display"], "11/1/26, 7:00 PM")
+
+    def test_approved_minutes_fall_back_to_utc_without_a_meeting_timezone(self):
+        self.env.company.partner_id.tz = False
+        meeting = self._drafted_meeting("UTC timezone fallback")
+
+        revision = self._approve_without_rendering_pdf(meeting.with_user(self.approver))
+        snapshot = json.loads(revision.snapshot_json)
+        self.assertEqual(snapshot["meeting"]["start_timezone"], "UTC")
+        self.assertEqual(snapshot["meeting"]["start_datetime_display"], "11/1/26, 10:00 AM")
 
     def test_preview_action_points_to_preview_client_action(self):
         meeting = self._drafted_meeting("Preview client action")

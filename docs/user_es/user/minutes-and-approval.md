@@ -29,6 +29,11 @@ discusión de los puntos, los acuerdos, los seguimientos y las discrepancias
 incluidas proceden de sus propios registros. El PDF oficial se crea cuando el
 aprobador aprueba el acta.
 
+La vista previa muestra la hora de la reunión en tu zona horaria de usuario.
+El acta aprobada usa la zona de la serie; si la reunión es independiente, usa
+la de la compañía y, si tampoco está configurada, UTC. La zona aparece junto a
+la hora.
+
 En estado **Celebrada** o **Acta en borrador**, la vista previa es de solo
 lectura: abrirla y volver a la reunión no cambia el contenido guardado ni su
 estado. Cualquier persona con acceso de lectura a la reunión puede abrirla;
