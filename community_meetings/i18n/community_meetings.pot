@@ -504,12 +504,6 @@ msgid "Add Point Policy"
 msgstr ""
 
 #. module: community_meetings
-#: model:ir.model.fields,help:community_meetings.field_community_meeting_series__has_minutes_approval_point
-msgid ""
-"Add a 'Minutes Approval' point as the first agenda item of each meeting."
-msgstr ""
-
-#. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_series__has_next_meeting_point
 msgid "Add a 'Next Meeting' point as the last agenda item of each meeting."
 msgstr ""

@@ -37,9 +37,7 @@ class TestMeetingDomain(TransactionCase):
     def _approve_without_rendering_pdf(self, meeting):
         report_model = self.env["ir.actions.report"]
         pdf_fixture = b"%PDF-1.4\n% PDF rendering is covered by TestMeetingRevisions.\n"
-        with patch.object(
-            type(report_model), "_render_qweb_pdf", return_value=(pdf_fixture, "pdf")
-        ):
+        with patch.object(type(report_model), "_render_qweb_pdf", return_value=(pdf_fixture, "pdf")):
             return meeting.action_approve_minutes()
 
     def test_next_meeting_recurrence_preserves_local_time_across_dst(self):
@@ -63,9 +61,7 @@ class TestMeetingDomain(TransactionCase):
         meeting = self.env["community.meeting"].create(
             {"name": "Frozen minutes", "start_datetime": "2026-11-02 10:00:00"}
         )
-        point = self.env["community.meeting.agenda.item"].create(
-            {"meeting_id": meeting.id, "name": "Frozen point"}
-        )
+        point = self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Frozen point"})
         meeting.action_schedule()
         meeting.action_mark_held()
         point.topic_id.write({"name": "Edited after the session"})
@@ -76,9 +72,7 @@ class TestMeetingDomain(TransactionCase):
         meeting = self.env["community.meeting"].create(
             {"name": "Pause policy", "start_datetime": "2026-11-01 10:00:00"}
         )
-        point = self.env["community.meeting.agenda.item"].create(
-            {"meeting_id": meeting.id, "name": "Notes"}
-        )
+        point = self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Notes"})
         meeting.action_schedule()
         meeting.action_start_meeting()
         point.action_start_timing()
@@ -111,17 +105,15 @@ class TestMeetingDomain(TransactionCase):
             ("community.meeting.action", {"name": "Default context follow-up"}),
         ]:
             with self.assertRaises(UserError):
-                self.env[model].with_context(
-                    default_meeting_id=meeting.id, default_agenda_item_id=point.id
-                ).create(values)
+                self.env[model].with_context(default_meeting_id=meeting.id, default_agenda_item_id=point.id).create(
+                    values
+                )
         meeting.action_mark_held()
         point.write({"discussion_notes": "Editorial correction after meeting"})
         self.assertIn("Editorial correction", point.discussion_notes)
 
     def test_preparation_unifies_requests_and_promoted_followups(self):
-        series = self.env["community.meeting.series"].create(
-            {"name": "Unified preparation"}
-        )
+        series = self.env["community.meeting.series"].create({"name": "Unified preparation"})
         origin = self.env["community.meeting"].create(
             {
                 "name": "Origin",
@@ -129,9 +121,7 @@ class TestMeetingDomain(TransactionCase):
                 "start_datetime": "2026-11-01 10:00:00",
             }
         )
-        item = self.env["community.meeting.agenda.item"].create(
-            {"meeting_id": origin.id, "name": "Original"}
-        )
+        item = self.env["community.meeting.agenda.item"].create({"meeting_id": origin.id, "name": "Original"})
         resolution = self.env["community.meeting.resolution"].create(
             {
                 "meeting_id": origin.id,
@@ -166,9 +156,7 @@ class TestMeetingDomain(TransactionCase):
         )
         wizard.action_next()
         self.assertEqual(len(wizard.carry_line_ids), 2)
-        request_line = wizard.carry_line_ids.filtered(
-            lambda line: line.transfer_id == transfer
-        )
+        request_line = wizard.carry_line_ids.filtered(lambda line: line.transfer_id == transfer)
         self.assertTrue(request_line)
         request_line.decision = "postpone"
         wizard.action_finish()
@@ -179,12 +167,8 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(included.topic_id.origin_action_id, action)
         wizard.action_finish()
         self.assertEqual(len(wizard.created_meeting_id.agenda_item_ids), 1)
-        later = self.env["community.meeting"]._agenda_candidates(
-            series, "2026-11-15 10:00:00"
-        )
-        self.assertIn(
-            f"transfer:{transfer.id}", [candidate["key"] for candidate in later]
-        )
+        later = self.env["community.meeting"]._agenda_candidates(series, "2026-11-15 10:00:00")
+        self.assertIn(f"transfer:{transfer.id}", [candidate["key"] for candidate in later])
 
     def test_topic_identity_and_session_history(self):
         series = self.env["community.meeting.series"].create({"name": "Domain series"})
@@ -194,9 +178,7 @@ class TestMeetingDomain(TransactionCase):
                 {"name": "Second", "series_id": series.id},
             ]
         )
-        point = self.env["community.meeting.agenda.item"].create(
-            {"meeting_id": first.id, "name": "Original"}
-        )
+        point = self.env["community.meeting.agenda.item"].create({"meeting_id": first.id, "name": "Original"})
         later = self.env["community.meeting.agenda.item"].create(
             {"meeting_id": second.id, "topic_id": point.topic_id.id}
         )
@@ -214,9 +196,7 @@ class TestMeetingDomain(TransactionCase):
                 {"name": "Second", "series_id": series.id},
             ]
         )
-        point = self.env["community.meeting.agenda.item"].create(
-            {"meeting_id": first.id, "name": "Shared point"}
-        )
+        point = self.env["community.meeting.agenda.item"].create({"meeting_id": first.id, "name": "Shared point"})
         later = self.env["community.meeting.agenda.item"].create(
             {"meeting_id": second.id, "topic_id": point.topic_id.id}
         )
@@ -296,9 +276,7 @@ class TestMeetingDomain(TransactionCase):
             }
         )
         self.assertTrue(
-            meeting.agenda_item_ids.filtered(
-                lambda item: item.agenda_type_id.behavior == "minutes_approval"
-            )
+            meeting.agenda_item_ids.filtered(lambda item: item.agenda_type_id.behavior == "minutes_approval")
         )
 
     def test_required_minutes_approval_point_cannot_be_removed_or_retyped(self):
@@ -417,9 +395,7 @@ class TestMeetingDomain(TransactionCase):
                 "start_datetime": "2026-10-08 10:00:00",
             }
         )
-        point = later.agenda_item_ids.filtered(
-            lambda item: item.kind == "minutes_approval"
-        )
+        point = later.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
         self.assertTrue(point)
         self.assertEqual(later.get_pending_minutes_for_approval()[0]["id"], previous.id)
         with self.assertRaises(UserError):
@@ -486,9 +462,7 @@ class TestMeetingDomain(TransactionCase):
                             0,
                             [
                                 self.env.ref("base.group_user").id,
-                                self.env.ref(
-                                    "community_meetings.group_meeting_approver"
-                                ).id,
+                                self.env.ref("community_meetings.group_meeting_approver").id,
                             ],
                         )
                     ],
@@ -519,9 +493,7 @@ class TestMeetingDomain(TransactionCase):
 
     def test_series_next_meeting_rule_proposes_date(self):
         series = self.env["community.meeting.series"].create({"name": "Recurrence"})
-        series.write(
-            {"next_meeting_rule": "interval_days", "next_meeting_interval_days": 7}
-        )
+        series.write({"next_meeting_rule": "interval_days", "next_meeting_interval_days": 7})
         self.assertEqual(
             str(series._propose_next_meeting_datetime("2026-10-20 10:00:00")),
             "2026-10-27 10:00:00",
@@ -555,9 +527,7 @@ class TestMeetingDomain(TransactionCase):
             str(series._propose_next_meeting_datetime("2026-10-19 10:00:00")),
             "2026-10-20 10:00:00",
         )
-        series.write(
-            {"next_meeting_rule": "day_of_month", "next_meeting_day_of_month": 15}
-        )
+        series.write({"next_meeting_rule": "day_of_month", "next_meeting_day_of_month": 15})
         self.assertEqual(
             str(series._propose_next_meeting_datetime("2026-10-10 10:00:00")),
             "2026-10-15 10:00:00",
@@ -578,9 +548,7 @@ class TestMeetingDomain(TransactionCase):
             }
         )
         agreed = fields.Datetime.to_datetime("2026-10-15 17:30:00")
-        meeting.agenda_item_ids.filtered(
-            lambda item: item.kind == "next_meeting"
-        ).write(
+        meeting.agenda_item_ids.filtered(lambda item: item.kind == "next_meeting").write(
             {
                 "next_meeting_datetime": agreed,
             }
@@ -617,14 +585,11 @@ class TestMeetingDomain(TransactionCase):
                 "start_datetime": "2026-10-23 08:00:00",
             }
         )
-        next_point = meeting.agenda_item_ids.filtered(
-            lambda item: item.kind == "next_meeting"
-        )
+        next_point = meeting.agenda_item_ids.filtered(lambda item: item.kind == "next_meeting")
         self.assertEqual(
             str(next_point.next_meeting_datetime),
             "2026-10-30 09:00:00",
-            "The next meeting point should preserve the 10:00 Madrid meeting hour "
-            "across DST.",
+            "The next meeting point should preserve the 10:00 Madrid meeting hour across DST.",
         )
 
     def test_cross_series_carryover_uses_destination_point_estimate(self):
@@ -760,13 +725,9 @@ class TestMeetingDomain(TransactionCase):
             )
 
     def test_unstarted_meeting_can_change_and_remove_series(self):
-        series = self.env["community.meeting.series"].create(
-            {"name": "Original series"}
-        )
+        series = self.env["community.meeting.series"].create({"name": "Original series"})
         other = self.env["community.meeting.series"].create({"name": "Other series"})
-        meeting = self.env["community.meeting"].create(
-            {"name": "Fixed series", "series_id": series.id}
-        )
+        meeting = self.env["community.meeting"].create({"name": "Fixed series", "series_id": series.id})
         meeting.write({"series_id": series.id})
         meeting.write({"series_id": other.id})
         self.assertEqual(meeting.series_id, other)
@@ -893,9 +854,7 @@ class TestMeetingDomain(TransactionCase):
         second.action_start_timing()
         self.assertFalse(first.actual_started_at)
         self.assertGreaterEqual(first.actual_minutes, 2)
-        second.write(
-            {"actual_started_at": fields.Datetime.now() - timedelta(minutes=1)}
-        )
+        second.write({"actual_started_at": fields.Datetime.now() - timedelta(minutes=1)})
         second.action_pause_timing()
         first.action_start_timing()
         first.write({"actual_started_at": fields.Datetime.now() - timedelta(minutes=1)})
@@ -989,9 +948,7 @@ class TestMeetingDomain(TransactionCase):
         self.assertFalse(item.review_next_meeting)
 
     def test_review_dismissal_is_per_destination(self):
-        series = self.env["community.meeting.series"].create(
-            {"name": "Review domain", "carryover_policy": "review"}
-        )
+        series = self.env["community.meeting.series"].create({"name": "Review domain", "carryover_policy": "review"})
         first = self.env["community.meeting"].create(
             {
                 "name": "First",
@@ -999,9 +956,7 @@ class TestMeetingDomain(TransactionCase):
                 "start_datetime": "2026-10-01 10:00:00",
             }
         )
-        item = self.env["community.meeting.agenda.item"].create(
-            {"meeting_id": first.id, "name": "Maybe continue"}
-        )
+        item = self.env["community.meeting.agenda.item"].create({"meeting_id": first.id, "name": "Maybe continue"})
         item.write({"review_next_meeting": True})
         later = self.env["community.meeting"].create(
             {
@@ -1050,9 +1005,7 @@ class TestMeetingDomain(TransactionCase):
             }
         )
 
-        candidates = self.env["community.meeting"]._carryover_candidates(
-            series, next_meeting.start_datetime
-        )
+        candidates = self.env["community.meeting"]._carryover_candidates(series, next_meeting.start_datetime)
 
         self.assertEqual(candidates, point)
         self.assertFalse(point.review_next_meeting)
@@ -1082,9 +1035,7 @@ class TestMeetingDomain(TransactionCase):
             }
         )
 
-        candidates = self.env["community.meeting"]._carryover_candidates(
-            series, next_meeting.start_datetime
-        )
+        candidates = self.env["community.meeting"]._carryover_candidates(series, next_meeting.start_datetime)
 
         self.assertNotIn(point, candidates)
 
@@ -1100,12 +1051,8 @@ class TestMeetingDomain(TransactionCase):
                 "start_datetime": "2026-11-05 10:00:00",
             }
         )
-        item = self.env["community.meeting.agenda.item"].create(
-            {"meeting_id": meeting.id, "name": "Point"}
-        )
-        self.assertEqual(
-            meeting.get_followup_defaults(item.id)["allowed_kinds"], ["activity"]
-        )
+        item = self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Point"})
+        self.assertEqual(meeting.get_followup_defaults(item.id)["allowed_kinds"], ["activity"])
         self.assertEqual(meeting.get_followup_defaults(item.id)["kind"], "activity")
         # A point override narrows nothing new in core, but must be accepted.
         item.followup_default_kind = "activity"
@@ -1146,9 +1093,7 @@ class TestMeetingDomain(TransactionCase):
 
     def test_followup_conversion_replaces_container(self):
         meeting = self.env["community.meeting"].create({"name": "Conversion"})
-        item = self.env["community.meeting.agenda.item"].create(
-            {"meeting_id": meeting.id, "name": "Point"}
-        )
+        item = self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Point"})
         action = self.env["community.meeting.action"].create(
             {
                 "meeting_id": meeting.id,
@@ -1177,9 +1122,7 @@ class TestMeetingDomain(TransactionCase):
                 "agenda_item_id": item.id,
                 "name": "Draft the report",
                 "followup_kind": "activity",
-                "followup_activity_type_id": self.env.ref(
-                    "mail.mail_activity_data_todo"
-                ).id,
+                "followup_activity_type_id": self.env.ref("mail.mail_activity_data_todo").id,
             }
         )
         activity = task.followup_activity_id
@@ -1235,9 +1178,7 @@ class TestMeetingDomain(TransactionCase):
                             0,
                             [
                                 self.env.ref("base.group_user").id,
-                                self.env.ref(
-                                    "community_meetings.group_meeting_reader"
-                                ).id,
+                                self.env.ref("community_meetings.group_meeting_reader").id,
                             ],
                         )
                     ],
@@ -1315,9 +1256,7 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(task.state, "done")
 
     def test_agenda_creation_batches_new_topic_creation(self):
-        meeting = self.env["community.meeting"].create(
-            {"name": "Batched topic creation"}
-        )
+        meeting = self.env["community.meeting"].create({"name": "Batched topic creation"})
         topic_class = type(self.env["community.meeting.topic"])
         original_create = topic_class.create
         batch_sizes = []
@@ -1338,12 +1277,8 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(len(items.topic_id), 2)
 
     def test_followup_actions_by_topic_avoids_topic_field_load_for_one_topic(self):
-        series = self.env["community.meeting.series"].create(
-            {"name": "Shared topic lookup series"}
-        )
-        meeting = self.env["community.meeting"].create(
-            {"name": "One-topic lookup", "series_id": series.id}
-        )
+        series = self.env["community.meeting.series"].create({"name": "Shared topic lookup series"})
+        meeting = self.env["community.meeting"].create({"name": "One-topic lookup", "series_id": series.id})
         item = self.env["community.meeting.agenda.item"].create(
             {"meeting_id": meeting.id, "name": "One-topic TODO", "kind": "todo"}
         )
@@ -1438,9 +1373,7 @@ class TestMeetingDomain(TransactionCase):
                             0,
                             [
                                 self.env.ref("base.group_user").id,
-                                self.env.ref(
-                                    "community_meetings.group_meeting_reader"
-                                ).id,
+                                self.env.ref("community_meetings.group_meeting_reader").id,
                             ],
                         )
                     ],
@@ -1450,9 +1383,7 @@ class TestMeetingDomain(TransactionCase):
         meeting = self.env["community.meeting"].create(
             {"name": "Shared responsibility", "reader_user_ids": [(4, other.id)]}
         )
-        item = self.env["community.meeting.agenda.item"].create(
-            {"meeting_id": meeting.id, "name": "Work"}
-        )
+        item = self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Work"})
         action = self.env["community.meeting.action"].create(
             {
                 "meeting_id": meeting.id,
@@ -1462,15 +1393,11 @@ class TestMeetingDomain(TransactionCase):
             }
         )
         self.assertEqual(len(action.followup_activity_ids), 2)
-        first = action.followup_activity_ids.filtered(
-            lambda a: a.user_id.id == self.env.uid
-        )
+        first = action.followup_activity_ids.filtered(lambda a: a.user_id.id == self.env.uid)
         first.action_feedback(feedback="My part is done")
         self.assertEqual(action.state, "open")
         self.assertEqual(len(action.followup_activity_ids), 1)
-        action.followup_activity_ids.with_user(other).action_feedback(
-            feedback="All done"
-        )
+        action.followup_activity_ids.with_user(other).action_feedback(feedback="All done")
         self.assertEqual(action.state, "done")
         self.assertTrue(action.followup_activity_completed_on)
         action.write({"state": "open"})
@@ -1552,9 +1479,7 @@ class TestMeetingDomain(TransactionCase):
                             0,
                             [
                                 self.env.ref("base.group_user").id,
-                                self.env.ref(
-                                    "community_meetings.group_meeting_reader"
-                                ).id,
+                                self.env.ref("community_meetings.group_meeting_reader").id,
                             ],
                         )
                     ],
@@ -1686,9 +1611,7 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(next_meeting.agenda_item_ids.topic_id, item.topic_id)
 
     def test_removing_task_checks_closed_participations_of_same_point(self):
-        first, second = self.env["community.meeting"].create(
-            [{"name": "Task origin"}, {"name": "Resolution session"}]
-        )
+        first, second = self.env["community.meeting"].create([{"name": "Task origin"}, {"name": "Resolution session"}])
         origin = self.env["community.meeting.agenda.item"].create(
             {"meeting_id": first.id, "name": "TODO shared", "kind": "todo"}
         )
@@ -1724,19 +1647,13 @@ class TestMeetingDomain(TransactionCase):
         item.write({"reopen_reason": "Additional evidence"})
         item.action_reopen()
         self.assertEqual(item.topic_id.state, "open")
-        self.assertTrue(
-            item.topic_id.message_ids.filtered(
-                lambda m: "Additional evidence" in (m.body or "")
-            )
-        )
+        self.assertTrue(item.topic_id.message_ids.filtered(lambda m: "Additional evidence" in (m.body or "")))
 
     def test_legacy_closed_chain_migrates_without_replaying_workflow(self):
         import importlib.util
         from pathlib import Path
 
-        series = self.env["community.meeting.series"].create(
-            {"name": "Legacy chain", "carryover_policy": "automatic"}
-        )
+        series = self.env["community.meeting.series"].create({"name": "Legacy chain", "carryover_policy": "automatic"})
         first, second = self.env["community.meeting"].create(
             [
                 {
@@ -1773,30 +1690,20 @@ class TestMeetingDomain(TransactionCase):
         self.assertTrue(destination)
         ids = [item.id, destination.id]
         self.env.cr.execute(
-            "UPDATE community_meeting_agenda_item SET topic_id=NULL,is_followup=false "
-            "WHERE id IN %s",
+            "UPDATE community_meeting_agenda_item SET topic_id=NULL,is_followup=false WHERE id IN %s",
             [tuple(ids)],
         )
         (item | destination).invalidate_recordset(["topic_id", "is_followup"])
-        script = (
-            Path(__file__).resolve().parents[1]
-            / "migrations/18.0.2.0.0/post-migrate.py"
-        )
-        spec = importlib.util.spec_from_file_location(
-            "meeting_domain_migration", script
-        )
+        script = Path(__file__).resolve().parents[1] / "migrations/18.0.2.0.0/post-migrate.py"
+        spec = importlib.util.spec_from_file_location("meeting_domain_migration", script)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         module.migrate(self.env.cr, "18.0.1.0.14")
         (item | destination).invalidate_recordset()
         self.assertEqual(item.topic_id, destination.topic_id)
-        self.assertEqual(
-            (item.topic_id.state, item.topic_id.outcome), ("closed", "approved")
-        )
+        self.assertEqual((item.topic_id.state, item.topic_id.outcome), ("closed", "approved"))
         self.assertTrue(destination.is_followup)
         self.assertEqual(item.decision_result, "approved")
         count = self.env["community.meeting.topic"].sudo().search_count([])
         module.migrate(self.env.cr, "18.0.1.0.14")
-        self.assertEqual(
-            self.env["community.meeting.topic"].sudo().search_count([]), count
-        )
+        self.assertEqual(self.env["community.meeting.topic"].sudo().search_count([]), count)

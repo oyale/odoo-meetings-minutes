@@ -132,9 +132,9 @@ def open_live_meeting(
             f"web#model=community.meeting&id={meeting_id}&view_type=form",
         )
     )
-    page.get_by_role(
-        "button", name=re.compile(r"^(Open Meeting|Abrir reunión)$", re.IGNORECASE)
-    ).click(timeout=timeout)
+    page.get_by_role("button", name=re.compile(r"^(Open Meeting|Abrir reunión)$", re.IGNORECASE)).click(
+        timeout=timeout
+    )
     try:
         page.locator(".o_live_agenda_card").first.wait_for(timeout=timeout)
     except Exception as error:

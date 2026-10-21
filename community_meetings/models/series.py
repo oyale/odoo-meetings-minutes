@@ -263,8 +263,12 @@ class CommunityMeetingSeries(models.Model):
                     subtype_xmlid="mail.mt_note",
                 )
         if vals.get("has_minutes_approval_point"):
-            meetings = self.env["community.meeting"].sudo().search(
-                [("series_id", "in", self.ids), ("state", "in", ("draft", "scheduled", "held", "minutes_draft"))]
+            meetings = (
+                self.env["community.meeting"]
+                .sudo()
+                .search(
+                    [("series_id", "in", self.ids), ("state", "in", ("draft", "scheduled", "held", "minutes_draft"))]
+                )
             )
             meetings._ensure_minutes_approval_point()
         return result

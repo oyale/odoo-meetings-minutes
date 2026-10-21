@@ -95,7 +95,5 @@ def submit_and_reject_proposal(context):
 
 @then("the proposal is rejected and is not admitted to the agenda")
 def proposal_is_rejected(context):
-    topic = context.browser_session.record(
-        "community.meeting.topic", context.topic_id, ["state", "proposal_status"]
-    )
+    topic = context.browser_session.record("community.meeting.topic", context.topic_id, ["state", "proposal_status"])
     assert topic["state"] == "proposed" and topic["proposal_status"] == "rejected", topic

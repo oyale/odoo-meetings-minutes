@@ -16,9 +16,7 @@ SCOPES = [("any", "Any accessible project"), ("configured", "Configured project 
 class Company(models.Model):
     _inherit = "res.company"
 
-    meeting_project_mode = fields.Selection(
-        MODES, string="Project destination", default="none", required=True
-    )
+    meeting_project_mode = fields.Selection(MODES, string="Project destination", default="none", required=True)
     meeting_project_id = fields.Many2one("project.project", check_company=True)
     meeting_todo_requirement = fields.Selection(
         REQUIREMENTS,
@@ -26,26 +24,16 @@ class Company(models.Model):
         default="core",
         required=True,
     )
-    meeting_task_scope = fields.Selection(
-        SCOPES, string="Selectable tasks", default="any", required=True
-    )
+    meeting_task_scope = fields.Selection(SCOPES, string="Selectable tasks", default="any", required=True)
 
 
 class Settings(models.TransientModel):
     _inherit = "res.config.settings"
 
-    meeting_project_mode = fields.Selection(
-        related="company_id.meeting_project_mode", readonly=False
-    )
-    meeting_project_id = fields.Many2one(
-        related="company_id.meeting_project_id", readonly=False
-    )
-    meeting_todo_requirement = fields.Selection(
-        related="company_id.meeting_todo_requirement", readonly=False
-    )
-    meeting_task_scope = fields.Selection(
-        related="company_id.meeting_task_scope", readonly=False
-    )
+    meeting_project_mode = fields.Selection(related="company_id.meeting_project_mode", readonly=False)
+    meeting_project_id = fields.Many2one(related="company_id.meeting_project_id", readonly=False)
+    meeting_todo_requirement = fields.Selection(related="company_id.meeting_todo_requirement", readonly=False)
+    meeting_task_scope = fields.Selection(related="company_id.meeting_task_scope", readonly=False)
 
 
 class Series(models.Model):
@@ -58,9 +46,7 @@ class Series(models.Model):
         required=True,
         tracking=True,
     )
-    meeting_project_id = fields.Many2one(
-        "project.project", check_company=True, string="Series project", tracking=True
-    )
+    meeting_project_id = fields.Many2one("project.project", check_company=True, string="Series project", tracking=True)
     meeting_todo_requirement = fields.Selection(
         [("inherit", "Company default")] + REQUIREMENTS,
         string="Evidence required to close a TODO",
@@ -124,9 +110,7 @@ class Meeting(models.Model):
             series.invalidate_recordset(["meeting_project_id"])
         project = series.meeting_project_id
         if not project and create:
-            project = self.env["project.project"].create(
-                {"name": series.name, "company_id": self.company_id.id}
-            )
+            project = self.env["project.project"].create({"name": series.name, "company_id": self.company_id.id})
             series.write({"meeting_project_id": project.id})
         if project:
             project.check_access("read")
@@ -136,13 +120,9 @@ class Meeting(models.Model):
 class Agenda(models.Model):
     _inherit = "community.meeting.agenda.item"
 
-    project_requirement_snapshot = fields.Selection(
-        REQUIREMENTS, readonly=True, copy=False
-    )
+    project_requirement_snapshot = fields.Selection(REQUIREMENTS, readonly=True, copy=False)
     task_scope_snapshot = fields.Selection(SCOPES, readonly=True, copy=False)
-    allowed_project_snapshot_id = fields.Many2one(
-        "project.project", readonly=True, copy=False, ondelete="restrict"
-    )
+    allowed_project_snapshot_id = fields.Many2one("project.project", readonly=True, copy=False, ondelete="restrict")
     requires_project_task = fields.Boolean(compute="_compute_requires_project_task")
 
     @api.depends(
@@ -153,21 +133,16 @@ class Agenda(models.Model):
     )
     def _compute_requires_project_task(self):
         for item in self:
-            requirement = (
-                item.project_requirement_snapshot
-                if item.disposition == "closed"
-                else False
-            )
+            requirement = item.project_requirement_snapshot if item.disposition == "closed" else False
             item.requires_project_task = (
-                requirement
-                or item.meeting_id._project_policy()["meeting_todo_requirement"]
+                requirement or item.meeting_id._project_policy()["meeting_todo_requirement"]
             ) == "project"
 
     def _validate_followup_removal(self, actions):
         super()._validate_followup_removal(actions)
-        self.env[
-            "community.meeting.project.task.mixin"
-        ].sudo()._check_closed_todo_project_tasks(self, excluded_action_ids=actions.ids)
+        self.env["community.meeting.project.task.mixin"].sudo()._check_closed_todo_project_tasks(
+            self, excluded_action_ids=actions.ids
+        )
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -177,32 +152,24 @@ class Agenda(models.Model):
                 "task_scope_snapshot",
                 "allowed_project_snapshot_id",
             }.intersection(vals):
-                raise UserError(
-                    _("The task requirement is recorded by the point workflow.")
-                )
+                raise UserError(_("The task requirement is recorded by the point workflow."))
         prepared = []
         for original in vals_list:
             vals = dict(original)
             if vals.get("disposition") == "closed":
                 meeting = self.env["community.meeting"].browse(vals.get("meeting_id"))
                 policy = meeting._project_policy()
-                vals["project_requirement_snapshot"] = policy[
-                    "meeting_todo_requirement"
-                ]
+                vals["project_requirement_snapshot"] = policy["meeting_todo_requirement"]
                 vals["task_scope_snapshot"] = policy["meeting_task_scope"]
                 vals["allowed_project_snapshot_id"] = (
-                    meeting._meeting_project().id
-                    if policy["meeting_task_scope"] == "configured"
-                    else False
+                    meeting._meeting_project().id if policy["meeting_task_scope"] == "configured" else False
                 )
             prepared.append(vals)
         records = super().create(prepared)
         # These participations were just inserted and cannot be closed by a
         # concurrent transaction yet. Only rows already closed need evidence;
         # task removal must still lock existing open participations.
-        records._check_closed_todo_project_tasks(
-            records.filtered(lambda item: item.disposition == "closed")
-        )
+        records._check_closed_todo_project_tasks(records.filtered(lambda item: item.disposition == "closed"))
         return records
 
     def write(self, vals):
@@ -211,9 +178,7 @@ class Agenda(models.Model):
             "task_scope_snapshot",
             "allowed_project_snapshot_id",
         }.intersection(vals):
-            raise UserError(
-                _("The task requirement is recorded by the point workflow.")
-            )
+            raise UserError(_("The task requirement is recorded by the point workflow."))
         snapshot_fields = (
             "project_requirement_snapshot",
             "task_scope_snapshot",
@@ -222,18 +187,12 @@ class Agenda(models.Model):
         groups = {}
         for item in self:
             snapshot = None
-            if (
-                vals.get("disposition") == "closed"
-                and item.kind == "todo"
-                and item.disposition != "closed"
-            ):
+            if vals.get("disposition") == "closed" and item.kind == "todo" and item.disposition != "closed":
                 policy = item.meeting_id._project_policy()
                 snapshot = (
                     policy["meeting_todo_requirement"],
                     policy["meeting_task_scope"],
-                    item.meeting_id._meeting_project().id
-                    if policy["meeting_task_scope"] == "configured"
-                    else False,
+                    item.meeting_id._meeting_project().id if policy["meeting_task_scope"] == "configured" else False,
                 )
             groups.setdefault(snapshot, self.browse())
             groups[snapshot] |= item

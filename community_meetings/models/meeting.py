@@ -512,9 +512,7 @@ class CommunityMeeting(models.Model):
                     ("revision_id", "=", revision.id),
                 ]
             ):
-                approvals.create(
-                    {"agenda_item_id": point.id, "meeting_id": self.id, "revision_id": revision.id}
-                )
+                approvals.create({"agenda_item_id": point.id, "meeting_id": self.id, "revision_id": revision.id})
 
     def get_minutes_approval_history(self):
         """Previously approved minutes recorded on this meeting's approval points."""

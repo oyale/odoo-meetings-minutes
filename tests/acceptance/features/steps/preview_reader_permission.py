@@ -39,14 +39,15 @@ def reader_attempts_minutes_preview(context):
     context.reader_page = context.reader_session.page
 
 
-@then("the reader sees no preview action or content and the endpoint denies access")
-def reader_preview_is_denied(context):
+@then("the reader can open the read-only preview and the endpoint returns its content")
+def reader_can_preview_minutes(context):
     page = context.reader_page
-    expect(page.get_by_role("button", name="Preview Minutes", exact=True)).to_have_count(0)
-    try:
-        context.reader_session.rpc("community.meeting", "get_minutes_preview_html", [[context.meeting_id]])
-    except AssertionError as error:
-        assert "Only meeting editors and approvers can preview draft minutes." in str(error), error
-    else:
-        raise AssertionError("Reader unexpectedly received draft minutes preview content")
-    expect(page.locator(".o_community_minutes_preview")).to_have_count(0)
+    expect(page.get_by_role("button", name="Preview Minutes", exact=True)).to_be_visible()
+    rendered = context.reader_session.rpc("community.meeting", "get_minutes_preview_html", [[context.meeting_id]])
+    assert context.meeting_name in rendered
+    page.get_by_role("button", name="Preview Minutes", exact=True).click()
+    preview = page.locator(".o_community_minutes_preview")
+    expect(preview).to_be_visible()
+    expect(preview).to_contain_text(context.meeting_name)
+    expect(preview.locator('[contenteditable="true"]')).to_have_count(0)
+    expect(preview.get_by_role("textbox")).to_have_count(0)

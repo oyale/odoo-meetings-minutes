@@ -49,16 +49,14 @@ class SpanishPlaywrightLocalization:
         self.patchers = []
         self._install()
 
-    def _translated(self, value, exact=None):
+    def _translated(self, value, exact=None):  # noqa: C901
         def escaped(text):
             return re.escape(text).replace("/", r"\/")
 
         if isinstance(value, str):
             translated = self.translations.get(value)
             if not translated and value.startswith("Related: "):
-                translated = self.translations.get("Related", "Relacionado") + value[
-                    len("Related") :
-                ]
+                translated = self.translations.get("Related", "Relacionado") + value[len("Related") :]
             if not translated or translated == value:
                 return value
             alternatives = (escaped(value), escaped(translated))
@@ -71,22 +69,18 @@ class SpanishPlaywrightLocalization:
                 prefix = raw[1:]
                 translated = self.translations.get(prefix)
                 if translated:
-                    return re.compile(
-                        r"^(?:%s|%s)" % (prefix, escaped(translated)), value.flags
-                    )
+                    return re.compile(rf"^(?:{prefix}|{escaped(translated)})", value.flags)
             if not translated or translated == unwrapped:
                 return value
             flags = value.flags
             if raw.startswith("^") and raw.endswith("$"):
-                return re.compile(
-                    r"^(?:%s|%s)$" % (raw[1:-1], escaped(translated)), flags
-                )
-            return re.compile(r"(?:%s|%s)" % (raw, escaped(translated)), flags)
+                return re.compile(rf"^(?:{raw[1:-1]}|{escaped(translated)})$", flags)
+            return re.compile(rf"(?:{raw}|{escaped(translated)})", flags)
         else:
             return value
-        pattern = "(?:%s|%s)" % alternatives
+        pattern = f"(?:{alternatives[0]}|{alternatives[1]})"
         if exact:
-            pattern = "^(?:%s)$" % pattern
+            pattern = f"^(?:{pattern})$"
         return re.compile(pattern, flags)
 
     def _translated_css(self, selector):
@@ -101,10 +95,7 @@ class SpanishPlaywrightLocalization:
                 return match.group(0)
             attribute = match.group(1)
             quote = match.group(2)
-            return (
-                f':is([{attribute}={quote}{original}{quote}], '
-                f'[{attribute}={quote}{translated}{quote}])'
-            )
+            return f":is([{attribute}={quote}{original}{quote}], [{attribute}={quote}{translated}{quote}])"
 
         return pattern.sub(replace, selector)
 
@@ -113,7 +104,7 @@ class SpanishPlaywrightLocalization:
             kwargs[key] = self._translated(kwargs[key], kwargs.get("exact"))
         return kwargs
 
-    def _install(self):
+    def _install(self):  # noqa: C901
         for cls in (Page, Frame, Locator):
             for method_name, key in (
                 ("get_by_role", "name"),
@@ -137,9 +128,7 @@ class SpanishPlaywrightLocalization:
             original_locator = cls.locator
 
             def localized_locator(instance, selector, *args, __original=original_locator, **kwargs):
-                return __original(
-                    instance, self._translated_css(selector), *args, **kwargs
-                )
+                return __original(instance, self._translated_css(selector), *args, **kwargs)
 
             self.patchers.append(patch.object(cls, "locator", localized_locator))
 
@@ -170,9 +159,7 @@ class SpanishPlaywrightLocalization:
                         kwargs["value"] = option
             return original_select_option(instance, *args, **kwargs)
 
-        self.patchers.append(
-            patch.object(Locator, "select_option", localized_select_option)
-        )
+        self.patchers.append(patch.object(Locator, "select_option", localized_select_option))
 
         for method_name in ("to_contain_text", "to_have_text"):
             original = getattr(LocatorAssertions, method_name)
@@ -186,9 +173,7 @@ class SpanishPlaywrightLocalization:
                 **kwargs,
             ):
                 if isinstance(expected, str | re.Pattern):
-                    expected = self._translated(
-                        expected, exact=False
-                    )
+                    expected = self._translated(expected, exact=False)
                 elif isinstance(expected, list):
                     expected = [self._translated(item, exact=False) for item in expected]
                 return __original(instance, expected, *args, **kwargs)
@@ -202,9 +187,7 @@ class SpanishPlaywrightLocalization:
                 value = self._translated(value)
             return original_attribute(instance, name, value, *args, **kwargs)
 
-        self.patchers.append(
-            patch.object(LocatorAssertions, "to_have_attribute", localized_attribute)
-        )
+        self.patchers.append(patch.object(LocatorAssertions, "to_have_attribute", localized_attribute))
 
         original_title = PageAssertions.to_have_title
 

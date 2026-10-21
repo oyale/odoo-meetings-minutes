@@ -106,9 +106,7 @@ def project_followup_and_existing_task(context):
     suffix = uuid4().hex[:8]
     company = session.rpc("res.company", "search_read", [[]], {"fields": ["id"], "limit": 1})[0]
     project_name = f"Acceptance existing-task project {suffix}"
-    project_id = session.rpc(
-        "project.project", "create", [{"name": project_name, "company_id": company["id"]}]
-    )
+    project_id = session.rpc("project.project", "create", [{"name": project_name, "company_id": company["id"]}])
     context.existing_task_name = f"Acceptance existing task {suffix}"
     context.existing_task_id = session.rpc(
         "project.task",

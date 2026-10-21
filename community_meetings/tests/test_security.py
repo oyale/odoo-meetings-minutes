@@ -97,16 +97,22 @@ class TestMeetingSecurity(TransactionCase):
 
     def test_global_editor_cannot_approve_previous_minutes_without_secretary_assignment(self):
         self.editor.write({"groups_id": [(4, self.env.ref("community_meetings.group_meeting_editor").id)]})
-        series = self.env["community.meeting.series"].with_user(self.reader_editor).create(
-            {"name": "Read-only live approval", "has_minutes_approval_point": True}
+        series = (
+            self.env["community.meeting.series"]
+            .with_user(self.reader_editor)
+            .create({"name": "Read-only live approval", "has_minutes_approval_point": True})
         )
-        previous = self.env["community.meeting"].with_user(self.reader_editor).create(
-            {
-                "name": "Previous minutes",
-                "series_id": series.id,
-                "start_datetime": "2026-11-01 10:00:00",
-                "reader_user_ids": [(4, self.editor.id)],
-            }
+        previous = (
+            self.env["community.meeting"]
+            .with_user(self.reader_editor)
+            .create(
+                {
+                    "name": "Previous minutes",
+                    "series_id": series.id,
+                    "start_datetime": "2026-11-01 10:00:00",
+                    "reader_user_ids": [(4, self.editor.id)],
+                }
+            )
         )
         self.env["community.meeting.agenda.item"].with_user(self.reader_editor).create(
             {"meeting_id": previous.id, "name": "Previous agenda"}
@@ -114,13 +120,17 @@ class TestMeetingSecurity(TransactionCase):
         previous.with_user(self.reader_editor).action_schedule()
         previous.with_user(self.reader_editor).action_mark_held()
         previous.with_user(self.reader_editor).action_draft_minutes()
-        later = self.env["community.meeting"].with_user(self.reader_editor).create(
-            {
-                "name": "Read-only live meeting",
-                "series_id": series.id,
-                "start_datetime": "2026-11-08 10:00:00",
-                "reader_user_ids": [(4, self.editor.id)],
-            }
+        later = (
+            self.env["community.meeting"]
+            .with_user(self.reader_editor)
+            .create(
+                {
+                    "name": "Read-only live meeting",
+                    "series_id": series.id,
+                    "start_datetime": "2026-11-08 10:00:00",
+                    "reader_user_ids": [(4, self.editor.id)],
+                }
+            )
         )
         later.with_user(self.reader_editor).action_schedule()
         later.with_user(self.reader_editor).action_start_meeting()
@@ -145,11 +155,15 @@ class TestMeetingSecurity(TransactionCase):
                 "groups_id": [(6, 0, [self.env.ref("base.group_user").id, self.reader_group.id])],
             }
         )
-        series = self.env["community.meeting.series"].with_user(self.reader_editor).create(
-            {"name": "Live approval secretary assignment", "has_minutes_approval_point": True}
+        series = (
+            self.env["community.meeting.series"]
+            .with_user(self.reader_editor)
+            .create({"name": "Live approval secretary assignment", "has_minutes_approval_point": True})
         )
-        earlier = self.env["community.meeting"].with_user(self.reader_editor).create(
-            {"name": "Earlier draft", "series_id": series.id, "start_datetime": "2026-11-01 10:00:00"}
+        earlier = (
+            self.env["community.meeting"]
+            .with_user(self.reader_editor)
+            .create({"name": "Earlier draft", "series_id": series.id, "start_datetime": "2026-11-01 10:00:00"})
         )
         self.env["community.meeting.agenda.item"].with_user(self.reader_editor).create(
             {"meeting_id": earlier.id, "name": "Earlier point"}
@@ -157,14 +171,18 @@ class TestMeetingSecurity(TransactionCase):
         earlier.with_user(self.reader_editor).action_schedule()
         earlier.with_user(self.reader_editor).action_mark_held()
         earlier.with_user(self.reader_editor).action_draft_minutes()
-        later = self.env["community.meeting"].with_user(self.reader_editor).create(
-            {
-                "name": "Later live meeting",
-                "series_id": series.id,
-                "start_datetime": "2026-11-08 10:00:00",
-                "secretary_id": secretary.id,
-                "editor_user_ids": [(4, self.editor.id)],
-            }
+        later = (
+            self.env["community.meeting"]
+            .with_user(self.reader_editor)
+            .create(
+                {
+                    "name": "Later live meeting",
+                    "series_id": series.id,
+                    "start_datetime": "2026-11-08 10:00:00",
+                    "secretary_id": secretary.id,
+                    "editor_user_ids": [(4, self.editor.id)],
+                }
+            )
         )
         later.with_user(self.reader_editor).action_schedule()
         later.with_user(self.reader_editor).action_start_meeting()
@@ -178,7 +196,6 @@ class TestMeetingSecurity(TransactionCase):
         self.assertTrue(editor_view.get_live_capabilities()["can_approve_previous_minutes"])
         self.assertEqual(earlier.state, "minutes_draft")
         self.assertFalse(earlier.approved_revision_id)
-
 
     def test_minutes_preview_requires_record_access_and_allowed_state(self):
         meeting = (

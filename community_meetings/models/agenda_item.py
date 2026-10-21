@@ -308,9 +308,7 @@ class CommunityMeetingAgendaItem(models.Model):
                         lambda item: item.kind == "minutes_approval" and item not in removing
                     )
                     if required and not remaining:
-                        raise UserError(
-                            _("A meeting in this series must keep its minutes approval point.")
-                        )
+                        raise UserError(_("A meeting in this series must keep its minutes approval point."))
         if "agenda_type_id" in vals:
             agenda_type = self.env["community.meeting.agenda.type"].browse(vals["agenda_type_id"])
             vals = dict(vals, kind=agenda_type.behavior)

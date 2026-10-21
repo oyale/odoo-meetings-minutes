@@ -100,16 +100,12 @@ def editor_dismisses_carryover(context):
         f"{context.acceptance_config.base_url}/web#model=community.meeting&id={context.destination_meeting_id}&view_type=form"
     )
     row = context.page.locator('.o_field_widget[name="pending_carryover_ids"] tr.o_data_row').filter(
-        has_text=context.browser_session.record(
-            "community.meeting.agenda.item", context.source_item_id, ["name"]
-        )["name"]
+        has_text=context.browser_session.record("community.meeting.agenda.item", context.source_item_id, ["name"])[
+            "name"
+        ]
     )
     expect(row).to_be_visible()
-    with context.page.expect_response(
-        lambda response: "/community.meeting.carryover/action_dismiss" in response.url
-    ):
+    with context.page.expect_response(lambda response: "/community.meeting.carryover/action_dismiss" in response.url):
         row.get_by_role("button", name="Dismiss", exact=True).click()
-    status = context.browser_session.record("community.meeting.carryover", context.carryover_id, ["status"])[
-        "status"
-    ]
+    status = context.browser_session.record("community.meeting.carryover", context.carryover_id, ["status"])["status"]
     assert status == "dismissed", status
