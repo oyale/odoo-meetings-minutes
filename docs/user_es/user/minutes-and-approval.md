@@ -34,13 +34,30 @@ la reunión, y solo en estado **Celebrada** o **Acta en borrador**. Los lectores
 no pueden abrirla. Es de solo lectura: abrirla y volver al editor de la reunión
 no cambia el contenido guardado ni el estado de la reunión.
 
+![Vista previa de solo lectura del acta guardada](../img/minutes-preview.png)
+
 > **Consejo:** el punto de aprobación del acta de las reuniones *posteriores*
 > listará este acta hasta aprobarla — apruébala pronto para no ensuciar la cola.
 
 ## 2. Aprobar (aprobador)
 
-Un **aprobador** pulsa **Aprobar el acta** (pantalla en vivo o cabecera del
-formulario).
+En las series que exigen el punto de aprobación del acta, cada acta anterior
+pendiente tiene su propia acción **Aprobar el acta** en ese punto. Solo la
+persona asignada a la secretaría/actas puede usarla. Durante una reunión en vivo,
+también necesita el rol **Editor** y permiso de edición sobre esa reunión; si se
+celebró sin modo en vivo, puede aprobarla al preparar sus actas. Pulsa
+**Review** junto a una reunión anterior para abrir su borrador guardado en la
+vista previa de solo lectura; **Back to live meeting** vuelve al mismo punto.
+Revisar no pausa ni termina un punto en marcha. En la preparación offline, el
+punto se cierra cuando se han aprobado todas las actas anteriores. La aprobación
+directa en la reunión anterior queda bloqueada. El historial guarda la revisión
+exacta; si se enmienda y se vuelve a aprobar, la nueva revisión queda registrada
+aparte.
+
+En una serie que no usa un punto de aprobación posterior, un **aprobador** pulsa
+**Aprobar el acta** (pantalla en vivo o cabecera del formulario). Si la serie
+usa ese punto, el acta actual queda pendiente para que se apruebe desde el punto
+de una reunión posterior; la acción directa queda bloqueada.
 
 La aprobación:
 

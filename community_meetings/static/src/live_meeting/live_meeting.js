@@ -75,10 +75,20 @@ export class LiveMeeting extends Component {
         return action.params?.meeting_id || action.context?.active_id || action.context?.params?.id
             || Number(routeIds.at(-1)?.[1]) || false;
     }
+    reviewedMinutesKey(id) { return `community_meetings.reviewed_minutes.${this.meetingId}.${id}`; }
+    reviewReturnItemKey(id = this.meetingId) { return `community_meetings.review_return_item.${id}`; }
     get locked() { return !this.state.capabilities?.can_edit || ["approved", "cancelled"].includes(this.state.meeting.state); }
     get meetingPaused() { return Boolean(this.state.meeting.actual_paused_at); }
     get readOnly() { return this.locked || this.meetingPaused; }
     get canAddPoint() { return Boolean(this.state.capabilities?.can_add_point); }
+    get canApprovePreviousMinutes() {
+        return Boolean(this.state.capabilities?.can_approve_previous_minutes);
+    }
+    get minutesApprovalRouteGuidance() {
+        return _t(
+            "The assigned minutes secretary can approve earlier minutes during a live meeting or while preparing minutes for an offline meeting. In a live meeting, the secretary also needs the Editor role and edit access."
+        );
+    }
     get draftingMinutes() { return ["held", "minutes_draft"].includes(this.state.meeting.state); }
     get canPreviewMinutes() {
         return this.draftingMinutes && Boolean(this.state.capabilities?.can_preview_minutes);
@@ -206,10 +216,16 @@ export class LiveMeeting extends Component {
         this.state.privateNotes = privateNotes;
         this.state.users = users;
         this.state.expanded = Object.fromEntries(items.map((item, index) => [item.id, index === 0]));
+        this.state.activeItemId = items[0]?.id || false;
+        const returnItemId = Number(sessionStorage.getItem(this.reviewReturnItemKey()));
+        if (items.some((item) => item.id === returnItemId)) {
+            this.state.expanded[returnItemId] = true;
+            this.state.activeItemId = returnItemId;
+            sessionStorage.removeItem(this.reviewReturnItemKey());
+        }
         this.state.expandedNotes = {};
         this.state.relatedTopicOpenId = false;
         this.state.relatedActionOpenId = false;
-        this.state.activeItemId = items[0]?.id || false;
         this.state.loading = false;
     }
 
@@ -222,6 +238,8 @@ export class LiveMeeting extends Component {
 
     label(value) { return Array.isArray(value) ? value[1] : (value || ""); }
     dateTime(value) { return value ? formatDateTime(deserializeDateTime(value)) : _t("Not set"); }
+    meetingDate(value) { return value ? deserializeDateTime(value).toLocaleString(DateTime.DATE_MED) : _t("Not set"); }
+    clockTime(value) { return value ? deserializeDateTime(value).toFormat("HH:mm") : _t("Not set"); }
     stateLabel(value) { return MEETING_STATES[value] || value || ""; }
     actionStateLabel(value) { return ACTION_STATES[value] || value || ""; }
     followupKindLabel(action) {
@@ -389,7 +407,8 @@ export class LiveMeeting extends Component {
         return results.every((result) => result !== false) && !Object.values(this.state.unsavedEditors).some(Boolean);
     }
     attendees() {
-        return this.state.attendees.map((partner) => partner.name).join(", ") || _t("No attendees listed");
+        const count = this.state.attendees.length;
+        return count ? `${count} ${count === 1 ? _t("attendee") : _t("attendees")}` : _t("No attendees listed");
     }
     get timingEnabled() { return Boolean(this.state.capabilities?.time_tracking); }
     canEditDiscussion(item) {
@@ -789,6 +808,18 @@ export class LiveMeeting extends Component {
         return this.state.minutesApprovals.filter((entry) => entry.agenda_item_id === item.id);
     }
 
+    minutesReviewed(id) { return sessionStorage.getItem(this.reviewedMinutesKey(id)) === "1"; }
+    async reviewMinutes(item, id) {
+        if (!await this.flushEditors()) return;
+        sessionStorage.setItem(this.reviewedMinutesKey(id), "1");
+        const action = await this.orm.call("community.meeting", "action_preview_minutes", [[id]]);
+        action.params = {
+            ...action.params,
+            review_return: { meeting_id: this.meetingId, item_id: item.id },
+        };
+        return this.actionService.doAction(action);
+    }
+
     async openMeeting(id) {
         if (!await this.flushEditors()) return;
         const action = await this.orm.call("community.meeting", "action_open_live_meeting", [[id]]);
@@ -807,6 +838,15 @@ export class LiveMeeting extends Component {
     async approveMinutes() {
         if (!await this.flushEditors()) return;
         await this.transition("action_approve_minutes", "approved");
+    }
+    async approvePreviousMinutes(item, meetingId) {
+        if (!await this.flushEditors()) return;
+        try {
+            await this.orm.call("community.meeting", "action_approve_pending_minutes", [[this.meetingId], item.id, [meetingId]]);
+            await this.load();
+        } catch (error) {
+            this.notification.add(_t("The previous minutes could not be approved. Please refresh and retry."), { type: "danger" });
+        }
     }
 
     async updateOutcome(item, value) {

@@ -1,0 +1,1 @@
+When a series requires approval from a later meeting, earlier minutes are approved from that meeting's approval point. Editors can approve each pending acta during a live meeting; approvers can approve them while preparing minutes for a meeting that happened offline. The point closes when no earlier minutes remain pending.

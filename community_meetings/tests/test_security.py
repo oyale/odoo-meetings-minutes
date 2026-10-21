@@ -95,6 +95,91 @@ class TestMeetingSecurity(TransactionCase):
         with self.assertRaises(AccessError):
             meeting.with_user(self.outsider).get_live_capabilities()
 
+    def test_global_editor_cannot_approve_previous_minutes_without_secretary_assignment(self):
+        self.editor.write({"groups_id": [(4, self.env.ref("community_meetings.group_meeting_editor").id)]})
+        series = self.env["community.meeting.series"].with_user(self.reader_editor).create(
+            {"name": "Read-only live approval", "has_minutes_approval_point": True}
+        )
+        previous = self.env["community.meeting"].with_user(self.reader_editor).create(
+            {
+                "name": "Previous minutes",
+                "series_id": series.id,
+                "start_datetime": "2026-11-01 10:00:00",
+                "reader_user_ids": [(4, self.editor.id)],
+            }
+        )
+        self.env["community.meeting.agenda.item"].with_user(self.reader_editor).create(
+            {"meeting_id": previous.id, "name": "Previous agenda"}
+        )
+        previous.with_user(self.reader_editor).action_schedule()
+        previous.with_user(self.reader_editor).action_mark_held()
+        previous.with_user(self.reader_editor).action_draft_minutes()
+        later = self.env["community.meeting"].with_user(self.reader_editor).create(
+            {
+                "name": "Read-only live meeting",
+                "series_id": series.id,
+                "start_datetime": "2026-11-08 10:00:00",
+                "reader_user_ids": [(4, self.editor.id)],
+            }
+        )
+        later.with_user(self.reader_editor).action_schedule()
+        later.with_user(self.reader_editor).action_start_meeting()
+        editor_view = later.with_user(self.editor)
+        point = later.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
+
+        self.assertTrue(editor_view.has_access("read"))
+        self.assertFalse(editor_view.has_access("write"))
+        self.assertFalse(editor_view.get_live_capabilities()["can_approve_previous_minutes"])
+        with self.assertRaises(AccessError), self.cr.savepoint():
+            editor_view.action_approve_pending_minutes(point.id, [previous.id])
+        self.assertEqual(previous.state, "minutes_draft")
+        self.assertFalse(previous.approved_revision_id)
+        self.assertFalse(previous.revision_ids)
+        self.assertFalse(point.minutes_approval_ids)
+
+    def test_editor_with_write_access_cannot_approve_live_unless_assigned_secretary(self):
+        secretary = self.env["res.users"].create(
+            {
+                "name": "Meeting secretary",
+                "login": "live-minutes-secretary-security-test",
+                "groups_id": [(6, 0, [self.env.ref("base.group_user").id, self.reader_group.id])],
+            }
+        )
+        series = self.env["community.meeting.series"].with_user(self.reader_editor).create(
+            {"name": "Live approval secretary assignment", "has_minutes_approval_point": True}
+        )
+        earlier = self.env["community.meeting"].with_user(self.reader_editor).create(
+            {"name": "Earlier draft", "series_id": series.id, "start_datetime": "2026-11-01 10:00:00"}
+        )
+        self.env["community.meeting.agenda.item"].with_user(self.reader_editor).create(
+            {"meeting_id": earlier.id, "name": "Earlier point"}
+        )
+        earlier.with_user(self.reader_editor).action_schedule()
+        earlier.with_user(self.reader_editor).action_mark_held()
+        earlier.with_user(self.reader_editor).action_draft_minutes()
+        later = self.env["community.meeting"].with_user(self.reader_editor).create(
+            {
+                "name": "Later live meeting",
+                "series_id": series.id,
+                "start_datetime": "2026-11-08 10:00:00",
+                "secretary_id": secretary.id,
+                "reader_user_ids": [(4, self.editor.id)],
+            }
+        )
+        later.with_user(self.reader_editor).action_schedule()
+        later.with_user(self.reader_editor).action_start_meeting()
+        point = later.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
+        editor_view = later.with_user(self.editor)
+        self.assertTrue(editor_view.has_access("write"))
+        self.assertFalse(editor_view.get_live_capabilities()["can_approve_previous_minutes"])
+        with self.assertRaises(AccessError), self.cr.savepoint():
+            editor_view.action_approve_pending_minutes(point.id, [earlier.id])
+        later.with_user(self.reader_editor).write({"secretary_id": self.editor.id})
+        self.assertTrue(editor_view.get_live_capabilities()["can_approve_previous_minutes"])
+        self.assertEqual(earlier.state, "minutes_draft")
+        self.assertFalse(earlier.approved_revision_id)
+
+
     def test_minutes_preview_requires_role_record_access_and_allowed_state(self):
         meeting = (
             self.env["community.meeting"]

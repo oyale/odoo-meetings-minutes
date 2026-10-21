@@ -6294,6 +6294,10 @@ msgid "Meeting minutes"
 msgstr ""
 
 #. module: community_meetings
+msgid "Meeting date"
+msgstr ""
+
+#. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
@@ -6731,12 +6735,6 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "No matching contacts."
-msgstr ""
-
-#. module: community_meetings
-#. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-msgid "No pending minutes."
 msgstr ""
 
 #. module: community_meetings
@@ -7591,12 +7589,6 @@ msgstr ""
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-msgid "Pending minutes to approve"
-msgstr ""
-
-#. module: community_meetings
-#. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Pending only"
 msgstr ""
 
@@ -8300,6 +8292,71 @@ msgstr ""
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_revision__revision_number
 msgid "Revision Number"
+msgstr ""
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_minutes_approval__revision_id
+msgid "Approved revision"
+msgstr ""
+
+#. module: community_meetings
+#: model:ir.model.constraint,message:community_meetings.constraint_community_meeting_minutes_approval_point_meeting_revision_unique
+msgid "This minutes revision is already recorded for this point."
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Approve these minutes from a later meeting's minutes approval point."
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Choose a minutes approval point from this meeting."
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Select pending minutes from an earlier meeting in this series."
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Only earlier meetings in this series can be approved here."
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "The minutes approval point must belong to a later meeting in this series."
+msgstr ""
+
+#. module: community_meetings
+msgid "Requires approval from a later meeting"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Minutes cannot be approved from a finished or cancelled meeting."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "The previous minutes could not be approved. Please refresh and retry."
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
+msgid "Added to every meeting in this series. Only the assigned minutes secretary can approve earlier minutes. During a live meeting, the secretary also needs the Editor role and edit access."
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
+msgid "Turning this off leaves pending minutes and existing approval points in place. Pending minutes can then be approved from their own meetings."
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/series.py:0
+msgid "Series settings updated:"
 msgstr ""
 
 #. module: community_meetings
@@ -10425,4 +10482,103 @@ msgstr ""
 
 #. module: community_meetings
 msgid "Leave at zero to use the series or company default."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Only meeting editors can approve previous minutes from a live meeting."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Only meeting approvers can approve previous minutes while preparing offline minutes."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Previous minutes can only be approved during a live meeting or while preparing offline minutes."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Previous minutes can only be approved while preparing offline minutes."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "This series does not require approval from a later meeting."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Only meeting editors can approve previous minutes from a later meeting."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/revision.py:0
+msgid "Only the assigned minutes secretary can approve from this point; live approval also requires the Editor role and edit access."
+msgstr ""
+
+#. module: community_meetings
+#: model:ir.model.fields,help:community_meetings.field_community_meeting_series__has_minutes_approval_point
+msgid "Add a 'Minutes Approval' point to every meeting. Only the assigned minutes secretary can approve earlier minutes here, whether the meeting is live or its minutes are being prepared offline. During a live meeting, the secretary also needs the Editor role and edit access."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Earlier minutes awaiting approval"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "No earlier minutes are waiting for approval."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Approve earlier minutes"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "This meeting is live. You can approve earlier minutes below."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "For this live meeting, an Editor with edit access can approve earlier minutes below."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "These minutes are being prepared. You can approve earlier minutes below."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "While preparing minutes for this meeting, an Approver can approve earlier minutes below."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Approval is available here during a live meeting for an Editor with edit access, or while preparing minutes for a meeting held without using the live meeting screen for an Approver."
+msgstr ""
+
+#. module: community_meetings
+msgid "The assigned minutes secretary can approve earlier minutes during a live meeting or while preparing minutes for an offline meeting. In a live meeting, the secretary also needs the Editor role and edit access."
 msgstr ""

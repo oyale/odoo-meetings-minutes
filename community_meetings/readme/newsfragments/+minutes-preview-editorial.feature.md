@@ -1,0 +1,1 @@
+Reviewing earlier minutes now opens a clean, read-only draft preview. Agenda points use consecutive presentation numbers, including structural points, and returning from the preview preserves the live meeting and its running point timer.

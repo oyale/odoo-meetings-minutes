@@ -3,6 +3,7 @@ from datetime import timedelta
 from typing import ClassVar
 
 import pytz
+from markupsafe import Markup
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
@@ -11,22 +12,25 @@ from odoo.exceptions import UserError, ValidationError
 class CommunityMeetingSeries(models.Model):
     _name = "community.meeting.series"
     _description = "Community Meeting Series"
+    _inherit: ClassVar[list[str]] = ["mail.thread"]
     _order = "name, id"
     _check_company_auto = True
 
-    name = fields.Char(required=True)
+    name = fields.Char(required=True, tracking=True)
     timezone = fields.Selection(
         [(tz, tz) for tz in pytz.all_timezones],
         required=True,
         default=lambda self: self.env.user.tz or "UTC",
         string="Meeting timezone",
+        tracking=True,
     )
-    active = fields.Boolean(default=True)
+    active = fields.Boolean(default=True, tracking=True)
     company_id = fields.Many2one(
         "res.company",
         required=True,
         default=lambda self: self.env.company,
         index=True,
+        tracking=True,
     )
     meeting_kind_id = fields.Many2one(
         "community.meeting.kind",
@@ -34,8 +38,9 @@ class CommunityMeetingSeries(models.Model):
         required=True,
         ondelete="restrict",
         default=lambda self: self.env.ref("community_meetings.kind_operational", raise_if_not_found=False),
+        tracking=True,
     )
-    description = fields.Html(translate=True)
+    description = fields.Html(translate=True, tracking=True)
     coordinator_user_ids = fields.Many2many(
         "res.users",
         "community_meeting_series_coordinator_rel",
@@ -61,14 +66,21 @@ class CommunityMeetingSeries(models.Model):
             "into the next meeting without asking. Manual: someone moves each "
             "point explicitly."
         ),
+        tracking=True,
     )
     has_minutes_approval_point = fields.Boolean(
         string="Minutes approval point",
-        help="Add a 'Minutes Approval' point as the first agenda item of each meeting.",
+        help=(
+            "Add a 'Minutes Approval' point to every meeting. Only the assigned minutes secretary can approve "
+            "earlier minutes here, whether the meeting is live or its minutes are being prepared offline. During "
+            "a live meeting, the secretary also needs the Editor role and edit access."
+        ),
+        tracking=True,
     )
     has_next_meeting_point = fields.Boolean(
         string="Next meeting point",
         help="Add a 'Next Meeting' point as the last agenda item of each meeting.",
+        tracking=True,
     )
     next_meeting_rule = fields.Selection(
         [
@@ -78,6 +90,7 @@ class CommunityMeetingSeries(models.Model):
         ],
         string="Next meeting default",
         help=("Default rule used to propose the next meeting date for 'Next Meeting' points."),
+        tracking=True,
     )
     next_meeting_weekday = fields.Selection(
         [
@@ -90,9 +103,10 @@ class CommunityMeetingSeries(models.Model):
             ("6", "Sunday"),
         ],
         string="Weekday",
+        tracking=True,
     )
-    next_meeting_day_of_month = fields.Integer(string="Day of month")
-    next_meeting_interval_days = fields.Integer(string="Days")
+    next_meeting_day_of_month = fields.Integer(string="Day of month", tracking=True)
+    next_meeting_interval_days = fields.Integer(string="Days", tracking=True)
 
     # Each recurrence rule has distinct date and timezone edge cases.
     def _propose_next_meeting_datetime(self, from_datetime):  # noqa: C901
@@ -219,7 +233,41 @@ class CommunityMeetingSeries(models.Model):
             [("series_id", "in", self.ids)]
         ):
             raise UserError(_("The kind of a series with meetings cannot be changed."))
-        return super().write(vals)
+        relational_fields = [
+            field_name
+            for field_name in ("coordinator_user_ids", "attendee_partner_ids", "followup_allowed_kinds")
+            if field_name in vals and field_name in self._fields
+        ]
+        before = {
+            (series.id, field_name): set(series[field_name].mapped("display_name"))
+            for series in self
+            for field_name in relational_fields
+        }
+        result = super().write(vals)
+        for series in self:
+            changes = []
+            for field_name in relational_fields:
+                old = before[(series.id, field_name)]
+                new = set(series[field_name].mapped("display_name"))
+                if old == new:
+                    continue
+                label = series._fields[field_name].string
+                old_value = ", ".join(sorted(old)) or _("None")
+                new_value = ", ".join(sorted(new)) or _("None")
+                changes.append(Markup("<li><strong>{}</strong>: {} → {}</li>").format(label, old_value, new_value))
+            if changes:
+                series.message_post(
+                    body=Markup("<p>{}</p><ul>{}</ul>").format(
+                        _("Series settings updated:"), Markup("").join(changes)
+                    ),
+                    subtype_xmlid="mail.mt_note",
+                )
+        if vals.get("has_minutes_approval_point"):
+            meetings = self.env["community.meeting"].sudo().search(
+                [("series_id", "in", self.ids), ("state", "in", ("draft", "scheduled", "held", "minutes_draft"))]
+            )
+            meetings._ensure_minutes_approval_point()
+        return result
 
     def unlink(self):
         if any(self.env["community.meeting"].search_count([("series_id", "=", series.id)]) for series in self):
