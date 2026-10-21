@@ -8,6 +8,7 @@ import sys
 import time
 import unittest
 import uuid
+from datetime import datetime
 from pathlib import Path
 
 TESTS_ROOT = Path(__file__).resolve().parents[3] / "tests"
@@ -269,9 +270,6 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
     def effective_locale(self):
         return self.capture_locale
 
-    def is_spanish_ui(self):
-        return (self.effective_locale() or "").startswith("es_")
-
     def capture_visual_screenshot(self, name, viewport=None):
         self.session.verify_locale(self.effective_locale())
         if not hasattr(self, "_visual_capture_locale"):
@@ -284,14 +282,35 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             viewport,
         )
 
+    def locale_formats(self):
+        languages = self.rpc(
+            "res.lang",
+            "search_read",
+            [[("code", "=", self.effective_locale())]],
+            {"fields": ["date_format", "time_format"], "limit": 1},
+        )
+        if len(languages) != 1:
+            raise AssertionError(f"Odoo has no unique language config for {self.effective_locale()!r}")
+        return languages[0]
+
+    def localized_date(self, value):
+        date_value = datetime.strptime(value, "%Y-%m-%d")
+        return date_value.strftime(self.locale_formats()["date_format"])
+
     def localized_datetime(self, value):
-        month, day, year, hour, minute = re.fullmatch(
-            r"(\d{2})/(\d{2})/(\d{4}) (\d{2}):(\d{2})", value
-        ).groups()
-        language = (self.effective_locale() or "en_US").split("_", 1)[0]
-        if language in {"es", "fr", "de", "it", "pt", "nl"}:
-            return f"{day}/{month}/{year} {hour}:{minute}:00"
-        return f"{month}/{day}/{year} {hour}:{minute}:00"
+        date_value = datetime.strptime(value, "%m/%d/%Y %H:%M")
+        formats = self.locale_formats()
+        return date_value.strftime(f"{formats['date_format']} {formats['time_format']}")
+
+    def unresolved_points_warning(self, points):
+        source = (
+            "%(count)s agenda point(s) are not resolved:\n"
+            "%(points)s%(more)s\n\n"
+            "Finish the meeting anyway?"
+        )
+        translated = self.ui_text("community_meetings", source)
+        point_list = "\n".join(f"• {point}" for point in points)
+        return translated % {"count": len(points), "points": point_list, "more": ""}
 
     def save_trace(self):
         ARTIFACTS.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -721,7 +740,6 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
 
     def test_session_lifecycle(self):
-        spanish_ui = self.is_spanish_ui()
         self.rpc("community.meeting", "write", [[self.meeting_id], {"duration_minutes": 95}])
         self.page.reload(wait_until="domcontentloaded")
         expect(self.page.locator(".o_live_duration_chip")).to_contain_text("01:35")
@@ -736,18 +754,13 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         reorder_toggle.click()
         expect(reorder_toggle).to_have_attribute("aria-pressed", "true")
         expect(self.page.locator(".o_live_reorder_controls").first).to_be_visible()
-        expect(reorder_toggle).to_contain_text(
-            "Hecho" if self.is_spanish_ui() else "Done reordering"
-        )
+        expect(reorder_toggle).to_contain_text(self.ui_text("community_meetings", "Done reordering"))
         self.capture_visual_screenshot("live-agenda-reordering-active")
-        move_down = self.page.get_by_role(
-            "button",
-            name=(
-                "Bajar Browser Information case desde la posición 1 de 4"
-                if spanish_ui
-                else "Move Browser Information case down from position 1 of 4"
-            ),
-        )
+        move_down_label = self.ui_text(
+            "community_meetings",
+            "Move %(point)s down from position %(position)s of %(total)s",
+        ) % {"point": "Browser Information case", "position": 1, "total": 4}
+        move_down = self.page.get_by_role("button", name=move_down_label)
         expect(move_down).to_be_visible()
         move_down.focus()
         move_down.press("Enter")
@@ -755,14 +768,11 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "Browser Discussion case"
         )
         self.page.set_viewport_size({"width": 390, "height": 844})
-        mobile_move_down = self.page.get_by_role(
-            "button",
-            name=(
-                "Bajar Browser Discussion case desde la posición 1 de 4"
-                if spanish_ui
-                else "Move Browser Discussion case down from position 1 of 4"
-            ),
-        )
+        mobile_move_down_label = self.ui_text(
+            "community_meetings",
+            "Move %(point)s down from position %(position)s of %(total)s",
+        ) % {"point": "Browser Discussion case", "position": 1, "total": 4}
+        mobile_move_down = self.page.get_by_role("button", name=mobile_move_down_label)
         expect(mobile_move_down).to_be_visible()
         expect(mobile_move_down).to_be_enabled()
         mobile_move_down.tap()
@@ -771,10 +781,12 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
         self.capture_visual_screenshot("live-agenda-reordering-active")
         self.page.set_viewport_size({"width": 1440, "height": 1000})
-        toggle_name = "Hecho" if spanish_ui else "Done reordering"
-        self.page.get_by_role("button", name=toggle_name, exact=True).click()
-        closed_toggle_name = "Reordenar agenda" if spanish_ui else "Reorder agenda"
-        expect(self.page.get_by_role("button", name=closed_toggle_name, exact=True)).to_have_attribute(
+        self.page.get_by_role(
+            "button", name=self.ui_text("community_meetings", "Done reordering"), exact=True
+        ).click()
+        expect(
+            self.page.get_by_role("button", name=self.ui_text("community_meetings", "Reorder agenda"), exact=True)
+        ).to_have_attribute(
             "aria-pressed", "false"
         )
         expect(self.page.locator(".o_live_reorder_controls")).to_have_count(0)
@@ -789,8 +801,18 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Finish Meeting"), exact=True).click()
         dialog = self.page.get_by_role("dialog")
-        expect(dialog).to_contain_text("agenda point(s) are not resolved")
-        expect(dialog).to_contain_text("Browser Information case")
+        expect(
+            dialog
+        ).to_contain_text(
+            self.unresolved_points_warning(
+                [
+                    "Browser Information case",
+                    "Browser Discussion case",
+                    "Browser Decision case",
+                    "Browser Todo case",
+                ]
+            )
+        )
         dialog.get_by_role("button", name=self.ui_text("community_meetings", "Continue meeting"), exact=True).click()
         expect(self.page.get_by_role("button", name=self.ui_text("community_meetings", "Finish Meeting"), exact=True)).to_be_visible()
         self.assertEqual(self.record("community.meeting", self.meeting_id, ["state"])["state"], "scheduled")
@@ -809,7 +831,18 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "button", name=self.ui_text("community_meetings", "Record as Already Held"), exact=True
         ).click()
         dialog = self.page.get_by_role("dialog")
-        expect(dialog).to_contain_text("are not resolved")
+        expect(
+            dialog
+        ).to_contain_text(
+            self.unresolved_points_warning(
+                [
+                    "Browser Information case",
+                    "Browser Discussion case",
+                    "Browser Decision case",
+                    "Browser Todo case",
+                ]
+            )
+        )
         dialog.get_by_role("button", name=self.ui_text("community_meetings", "Finish meeting"), exact=True).click()
         expect(
             self.page.get_by_role("button", name=self.ui_text("community_meetings", "Prepare Minutes"), exact=True)
@@ -1176,7 +1209,6 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         self.rpc("community.meeting", "unlink", [[record_id]])
 
     def test_create_meeting_and_point(self):
-        spanish_ui = self.is_spanish_ui()
         name = "Browser created " + uuid.uuid4().hex[:8]
         self.page.goto(
             BASE_URL + "/odoo/action-community_meetings.action_community_meetings"
@@ -1218,16 +1250,18 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             [i["name"] for i in items],
             ["Created agenda title", "Second agenda title"],
         )
-        agenda_tab_name = "Orden del día" if spanish_ui else "Agenda"
-        agenda_tab = self.page.get_by_role("tab", name=agenda_tab_name, exact=True)
+        agenda_tab = self.page.get_by_role(
+            "tab", name=self.ui_text("community_meetings", "Agenda"), exact=True
+        )
         if agenda_tab.count():
             agenda_tab.click()
         agenda_rows = self.page.locator(
             '.o_field_widget[name="agenda_item_ids"] tr.o_data_row'
         )
         expect(agenda_rows).to_have_count(2)
-        move_down_name = "Bajar" if spanish_ui else "Move down"
-        agenda_rows.nth(0).get_by_role("button", name=move_down_name).click()
+        agenda_rows.nth(0).get_by_role(
+            "button", name=self.ui_text("community_meetings", "Move down")
+        ).click()
         expect(agenda_rows.nth(0)).to_contain_text("Second agenda title")
         persisted_order = self.rpc(
             "community.meeting.agenda.item",
@@ -1678,7 +1712,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         ).to_be_visible()
         point.get_by_role("spinbutton", name=self.ui_text("community_meetings", "Custom estimate in minutes")).fill("20")
         point.locator('.o_field_widget[name="deadline"] input').fill(
-            "20/12/2026" if self.is_spanish_ui() else "12/20/2026"
+            self.localized_date("2026-12-20")
         )
         point.locator('button[name="action_save"]').click()
         wizard = self.page.get_by_role("dialog").last

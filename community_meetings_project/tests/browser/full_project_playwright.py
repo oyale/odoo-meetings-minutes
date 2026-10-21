@@ -280,7 +280,7 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         expect(
             dialog.locator('.o_field_widget[name="followup_deadline"]')
         ).to_contain_text(
-            "30/11/2026" if self.is_spanish_ui() else "11/30/2026"
+            self.localized_date("2026-11-30")
         )
 
         task_field = dialog.locator('.o_field_widget[name="existing_task_id"] input')
