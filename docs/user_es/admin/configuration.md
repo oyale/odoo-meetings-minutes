@@ -3,7 +3,7 @@
 Todo en esta página requiere el rol **Gestor** y acceso a *Ajustes* de Odoo.
 Ubicación: **Ajustes → Meetings** (desplázate dentro de la página de ajustes).
 
-![Ajustes generales](img/settings-general.png)
+![Ajustes generales](../img/settings-general.png)
 
 La página de ajustes tiene cinco bloques. Todos los valores son **valores
 predeterminados de la compañía**: cualquier serie puede sobrescribir los que
@@ -65,6 +65,11 @@ impide. Cada serie puede sobrescribirlo (ver
 | **Tipos de seguimiento permitidos** | Mecanismos de ejecución que pueden usar los puntos (actividad de Odoo, TODO nativo…). |
 | **Tipo de seguimiento predeterminado** | Tipo preseleccionado al crear un seguimiento. |
 | **Tipo de actividad de Odoo por defecto** | Tipo de actividad usado cuando el seguimiento es una actividad de Odoo. |
+
+Si un punto o una serie no selecciona tipos permitidos, hereda la política del
+nivel superior. Se aplica la opción configurada más específica: punto, punto
+compartido, serie y, por último, compañía. Los tipos de tarea Project requieren
+acceso a Project.
 
 Con el módulo **Project** instalado aparece aquí también el bloque *política de tareas de Project* — ver [Integración con Project](../integrations/project.md#política-de-tareas).
 

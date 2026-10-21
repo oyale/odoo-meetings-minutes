@@ -3,7 +3,7 @@
 Everything in this page requires the **Manager** role and Odoo *Settings* access.
 Location: **Settings → Meetings** (scroll inside the settings page).
 
-![General settings](img/settings-general.png)
+![General settings](../img/settings-general.png)
 
 The settings page has five blocks. All values are **company defaults**: any
 series can override the point-level ones (see [Series](series.md)).
@@ -62,6 +62,10 @@ Series can override this per series (see [Series → Policies](series.md#policie
 | **Allowed follow-up types** | Which execution mechanisms points may use (Odoo activity, native To-do…). |
 | **Default follow-up type** | Pre-selected when creating a follow-up. |
 | **Default Odoo activity type** | Activity type used when a follow-up is an Odoo activity. |
+
+For allowed types, an empty point or series selection inherits its parent. The
+most specific configured choice applies: point, shared point, series, then
+company. Project task types also require Project access.
 
 With the **Project** addon installed, a *Project task policy* block appears
 here too — see [Project integration](../integrations/project.md#task-policy).

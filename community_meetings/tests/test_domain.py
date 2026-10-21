@@ -1159,7 +1159,12 @@ class TestMeetingDomain(TransactionCase):
         company = self.env.company
         activity = self.env.ref("community_meetings.followup_kind_activity")
         company.sudo().write({"followup_allowed_kinds": [(6, 0, activity.ids)]})
+        kind_model = self.env["community.meeting.followup.kind"]
+        series_kind = kind_model.create({"name": "Series only", "code": "test_series_only"})
+        topic_kind = kind_model.create({"name": "Shared point only", "code": "test_topic_only"})
+        point_kind = kind_model.create({"name": "Point only", "code": "test_point_only"})
         series = self.env["community.meeting.series"].create({"name": "Allowed kinds"})
+        series.followup_allowed_kinds = [(6, 0, series_kind.ids)]
         meeting = self.env["community.meeting"].create(
             {
                 "name": "Cascade",
@@ -1167,12 +1172,38 @@ class TestMeetingDomain(TransactionCase):
                 "start_datetime": "2026-11-05 10:00:00",
             }
         )
-        item = self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Point"})
+        topic = self.env["community.meeting.topic"].create(
+            {
+                "name": "Point",
+                "company_id": company.id,
+                "series_id": series.id,
+                "agenda_type_id": self.env.ref("community_meetings.agenda_type_discussion").id,
+            }
+        )
+        topic.followup_allowed_kinds = [(6, 0, topic_kind.ids)]
+        item = self.env["community.meeting.agenda.item"].create(
+            {"meeting_id": meeting.id, "topic_id": topic.id, "name": "Point"}
+        )
+        self.assertEqual(item.topic_id.followup_allowed_kinds, topic_kind)
+        item.followup_allowed_kinds = [(6, 0, point_kind.ids)]
+
+        self.assertEqual(meeting.get_followup_defaults(item.id)["allowed_kinds"], ["test_point_only"])
+        item.followup_allowed_kinds = [(5, 0, 0)]
+        self.assertEqual(item.topic_id.followup_allowed_kinds, topic_kind)
+        self.assertEqual(meeting.get_followup_defaults(item.id)["allowed_kinds"], ["test_topic_only"])
+        item.topic_id.followup_allowed_kinds = [(5, 0, 0)]
+        self.assertEqual(meeting.get_followup_defaults(item.id)["allowed_kinds"], ["test_series_only"])
+        series.followup_allowed_kinds = [(5, 0, 0)]
         self.assertEqual(meeting.get_followup_defaults(item.id)["allowed_kinds"], ["activity"])
-        self.assertEqual(meeting.get_followup_defaults(item.id)["kind"], "activity")
-        # A point override narrows nothing new in core, but must be accepted.
-        item.followup_default_kind = "activity"
-        self.assertEqual(item.get_followup_defaults()["kind"], "activity")
+
+    def test_empty_effective_followup_policy_has_no_default_kind(self):
+        meeting = self.env["community.meeting"].create({"name": "No available follow-up type"})
+
+        with patch.object(type(meeting), "_followup_available_codes", return_value=[]):
+            defaults = meeting.get_followup_defaults()
+
+        self.assertEqual(defaults["allowed_kinds"], [])
+        self.assertFalse(defaults["kind"])
 
     def test_activity_default_uses_company_activity_type(self):
         call_type = self.env["mail.activity.type"].search(

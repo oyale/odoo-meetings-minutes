@@ -119,6 +119,10 @@ esta serie.
 | **Tipo de seguimiento por defecto** | Tipo preseleccionado. |
 | **Tipo de actividad por defecto** | Para seguimientos registrados como actividades de Odoo. |
 
+Si no se selecciona ningún tipo permitido, se hereda la política de la compañía.
+Un punto puede sustituir la selección de la serie; si no tiene una selección
+propia, se usa la configuración del punto compartido.
+
 Con el módulo Project, el paso **Estructura** del asistente también permite
 vincular la serie nueva a un proyecto existente o crear uno para ella. En el
 formulario de la serie se añade la página **Política de seguimientos y tareas**;

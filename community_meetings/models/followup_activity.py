@@ -74,19 +74,16 @@ class Meeting(models.Model):
     def _followup_allowed_codes(self, item=False):
         self.ensure_one()
         available = self._followup_available_codes()
-        levels = (
-            self.company_id,
-            self.series_id,
-            item.topic_id if item else False,
-            item if item else False,
-        )
-        allowed = []
+        # More specific policies override their parents: point, shared point,
+        # series, then company. An empty selection means inherit.
+        levels = (item, item.topic_id if item else False, self.series_id, self.company_id)
+        allowed = None
         for record in levels:
             if record and record.followup_allowed_kinds:
                 allowed = record.followup_allowed_kinds.mapped("code")
                 break
-        if not allowed:
-            allowed = self.company_id.followup_allowed_kinds.mapped("code")
+        if allowed is None:
+            allowed = ["activity"]
         return [code for code in allowed if code in available]
 
     def get_followup_defaults(self, item_id=False):
@@ -95,9 +92,7 @@ class Meeting(models.Model):
         item = self.env["community.meeting.agenda.item"].browse(item_id).exists()
         if item and item.meeting_id != self:
             raise ValidationError(_("The point must belong to this meeting."))
-        # ponytail: company.followup_allowed_kinds stays empty in a fresh core
-        # install; the fallback below keeps activity as the implicit default.
-        allowed = self._followup_allowed_codes(item) or ["activity"]
+        allowed = self._followup_allowed_codes(item)
         kind = self.company_id.followup_default_kind
         for record in (
             self.series_id,
@@ -107,7 +102,7 @@ class Meeting(models.Model):
             if record and record.followup_default_kind and record.followup_default_kind != "inherit":
                 kind = record.followup_default_kind
         if kind not in allowed:
-            kind = allowed[0]
+            kind = allowed[0] if allowed else False
         series = self.series_id
         activity_type = (
             series.default_activity_type_id

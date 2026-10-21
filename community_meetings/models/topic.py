@@ -11,8 +11,6 @@ CONTENT_FIELDS = (
     "priority",
     "deadline",
     "estimated_minutes",
-    "followup_allowed_kinds",
-    "followup_default_kind",
 )
 
 

@@ -114,6 +114,10 @@ Optional overrides of the coordination/secretary labels for this series only.
 | **Default follow-up type** | Pre-selected type. |
 | **Default activity type** | For follow-ups recorded as Odoo activities. |
 
+An empty allowed-types selection inherits the company policy. A point can
+override the series selection; the point's shared definition is used when no
+point-specific override is set.
+
 With the Project addon, the wizard's **Structure** step also lets you link the
 new series to an existing project or create a project for it. A
 **Follow-up and Task Policy** page is added to the series form — see
