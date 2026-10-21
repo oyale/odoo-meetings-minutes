@@ -10,6 +10,7 @@ from playwright.sync_api import expect
 CORE_BROWSER = Path(__file__).resolve().parents[3] / "community_meetings" / "tests" / "browser"
 sys.path.insert(0, str(CORE_BROWSER))
 from full_meeting_playwright import ACTIONS as CORE_ACTIONS
+from full_meeting_playwright import BASE_URL
 from full_meeting_playwright import FullMeetingBrowserChecks, run_suite
 
 PROJECT_ACTIONS = {
