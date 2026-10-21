@@ -141,21 +141,11 @@ class CommunityMeetingCarryover(models.Model):
 
     def _validate_destination(self, meeting):
         self.ensure_one()
-        source_meeting = self.origin_meeting_id
-        if meeting.company_id != source_meeting.company_id:
-            raise ValidationError(_("A carryover destination must be in the same company."))
-        if (self.destination_series_id or source_meeting.series_id) and meeting.series_id != (
-            self.destination_series_id or source_meeting.series_id
-        ):
-            raise ValidationError(_("A carryover destination must be in the same meeting series."))
-        if meeting.state not in ("draft", "scheduled"):
-            raise ValidationError(_("Carryovers can only target a future draft or scheduled meeting."))
-        if (
-            not source_meeting.start_datetime
-            or not meeting.start_datetime
-            or meeting.start_datetime <= source_meeting.start_datetime
-        ):
-            raise ValidationError(_("The destination meeting must have a later scheduled start."))
+        return self._validate_destination_for(
+            self.origin_meeting_id,
+            meeting,
+            series=self.destination_series_id,
+        )
 
     @api.model
     def _source_fields(self, model_name):
