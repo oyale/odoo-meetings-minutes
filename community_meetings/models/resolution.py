@@ -171,6 +171,31 @@ class CommunityMeetingResolution(models.Model):
             raise UserError(_("A resolution cannot be moved to another meeting."))
         if any(record.meeting_id.state in ("approved", "cancelled") for record in self):
             raise UserError(_("Resolutions in approved or cancelled meetings cannot be edited."))
+        if {"decision_outcome", "status", "agenda_item_id"} & vals.keys():
+            active_decisions = []
+            for resolution in self:
+                item_id = vals.get("agenda_item_id", resolution.agenda_item_id.id)
+                status = vals.get("status", resolution.status)
+                outcome = vals.get("decision_outcome", resolution.decision_outcome)
+                if status == "active" and outcome:
+                    active_decisions.append((resolution.id, item_id))
+            target_item_ids = [item_id for _resolution_id, item_id in active_decisions]
+            if len(target_item_ids) != len(set(target_item_ids)):
+                raise ValidationError(_("Only one active agreement can determine a point's decision."))
+            for item_id in sorted(set(target_item_ids)):
+                self.env.cr.execute(
+                    "SELECT id FROM community_meeting_agenda_item WHERE id=%s FOR UPDATE",
+                    [item_id],
+                )
+                if self.search_count(
+                    [
+                        ("agenda_item_id", "=", item_id),
+                        ("status", "=", "active"),
+                        ("decision_outcome", "!=", False),
+                        ("id", "not in", self.ids),
+                    ]
+                ):
+                    raise ValidationError(_("Only one active agreement can determine a point's decision."))
         items = self.agenda_item_id
         result = super().write(vals)
         if {"decision_outcome", "status", "agenda_item_id"} & vals.keys():

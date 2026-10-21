@@ -883,6 +883,122 @@ class TestMeetingDomain(TransactionCase):
         meeting.action_mark_held()
         self.assertTrue(item.review_next_meeting)
 
+    def test_resolution_rejects_unauthorized_missing_or_inconsistent_links(self):
+        first, second = self.env["community.meeting"].create(
+            [
+                {"name": "Resolution link source"},
+                {"name": "Resolution link destination"},
+            ]
+        )
+        decision_type = self.env.ref("community_meetings.agenda_type_decision")
+        decision_point = self.env["community.meeting.agenda.item"].create(
+            {"meeting_id": first.id, "name": "Decision", "agenda_type_id": decision_type.id}
+        )
+        discussion_point = self.env["community.meeting.agenda.item"].create(
+            {"meeting_id": second.id, "name": "Discussion"}
+        )
+        reader = (
+            self.env["res.users"]
+            .sudo()
+            .create(
+                {
+                    "name": "Resolution reader",
+                    "login": "resolution-reader-test",
+                    "groups_id": [
+                        (
+                            6,
+                            0,
+                            [
+                                self.env.ref("base.group_user").id,
+                                self.env.ref("community_meetings.group_meeting_reader").id,
+                            ],
+                        )
+                    ],
+                }
+            )
+        )
+        with self.assertRaises(UserError), self.cr.savepoint():
+            self.env["community.meeting.resolution"].with_user(reader).create(
+                {"meeting_id": first.id, "title": "Unauthorized resolution"}
+            )
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            self.env["community.meeting.resolution"].create({"meeting_id": first.id, "title": "Missing agenda point"})
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            self.env["community.meeting.resolution"].create(
+                {
+                    "meeting_id": first.id,
+                    "agenda_item_id": discussion_point.id,
+                    "title": "Mismatched agenda point",
+                }
+            )
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            self.env["community.meeting.resolution"].create(
+                {
+                    "meeting_id": second.id,
+                    "agenda_item_id": discussion_point.id,
+                    "title": "Invalid discussion decision",
+                    "decision_outcome": "approved",
+                }
+            )
+
+        existing = self.env["community.meeting.resolution"].create(
+            {
+                "meeting_id": first.id,
+                "agenda_item_id": decision_point.id,
+                "title": "Existing agreement",
+                "decision_outcome": "approved",
+            }
+        )
+        replacement = self.env["community.meeting.resolution"].create(
+            {
+                "meeting_id": second.id,
+                "agenda_item_id": discussion_point.id,
+                "title": "Resolution in another meeting",
+            }
+        )
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            self.env["community.meeting.resolution"].create(
+                {
+                    "meeting_id": first.id,
+                    "agenda_item_id": decision_point.id,
+                    "title": "Wrong replacement link",
+                    "replacement_resolution_id": replacement.id,
+                }
+            )
+        duplicate = self.env["community.meeting.resolution"].create(
+            {
+                "meeting_id": first.id,
+                "agenda_item_id": decision_point.id,
+                "title": "Second agreement",
+            }
+        )
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            duplicate.write({"decision_outcome": "denied"})
+        self.assertEqual(existing.decision_outcome, "approved")
+        self.assertFalse(duplicate.decision_outcome)
+        with self.assertRaises(UserError), self.cr.savepoint():
+            existing.write({"meeting_id": second.id})
+
+    def test_resolution_is_locked_after_minutes_are_approved(self):
+        meeting = self.env["community.meeting"].create(
+            {"name": "Approved resolution lock", "start_datetime": "2026-11-20 10:00:00"}
+        )
+        point = self.env["community.meeting.agenda.item"].create({"meeting_id": meeting.id, "name": "Discussion"})
+        resolution = self.env["community.meeting.resolution"].create(
+            {"meeting_id": meeting.id, "agenda_item_id": point.id, "title": "Recorded agreement"}
+        )
+        meeting.action_schedule()
+        meeting.action_mark_held()
+        meeting.action_draft_minutes()
+        self._approve_without_rendering_pdf(meeting)
+        self.assertEqual(meeting.state, "approved")
+
+        with self.assertRaises(UserError), self.cr.savepoint():
+            resolution.write({"title": "Changed after approval"})
+        with self.assertRaises(UserError), self.cr.savepoint():
+            resolution.unlink()
+        self.assertEqual(resolution.title, "Recorded agreement")
+
     def test_live_decision_can_be_undone_and_agreement_edits_sync(self):
         meeting = self.env["community.meeting"].create(
             {
