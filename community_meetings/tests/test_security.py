@@ -72,13 +72,11 @@ class TestMeetingSecurity(TransactionCase):
                     "meeting_id": meeting.id,
                     "agenda_item_id": item.id,
                     "body": "Public dissent",
-                    "include_in_minutes": True,
                 },
                 {
                     "meeting_id": meeting.id,
                     "agenda_item_id": item.id,
-                    "body": "Private dissent",
-                    "include_in_minutes": False,
+                    "body": "Another dissent",
                 },
             ]
         )
@@ -87,9 +85,12 @@ class TestMeetingSecurity(TransactionCase):
         self.assertEqual(reviewed.action_open_live_meeting()["tag"], "community_meetings.live_meeting")
         self.assertFalse(reviewed.get_live_capabilities()["can_edit"])
         self.assertFalse(reviewed.get_live_capabilities()["can_view_editorial"])
-        published = reviewed.get_live_published_dissents()
-        self.assertEqual(len(published), 1)
-        self.assertIn("Public dissent", published[0]["body"])
+        published = reviewed.get_live_dissents()
+        self.assertEqual(len(published), 2)
+        self.assertEqual(
+            {str(row["body"]) for row in published},
+            {"<p>Public dissent</p>", "<p>Another dissent</p>"},
+        )
         with self.assertRaises(AccessError):
             reviewed.write({"minutes_notes": "Forbidden"})
         with self.assertRaises(AccessError):
@@ -359,7 +360,6 @@ class TestMeetingSecurity(TransactionCase):
                     "meeting_id": meeting.id,
                     "agenda_item_id": item.id,
                     "body": "Restricted until approved",
-                    "include_in_minutes": False,
                 }
             )
         )

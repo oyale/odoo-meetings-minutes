@@ -54,8 +54,8 @@ Dos tipos de registros están especialmente protegidos:
 
 - **Notas editoriales** — solo visibles para los editores de la reunión. Nunca
   se muestran a los lectores y **nunca** entran en las actas aprobadas.
-- **Discrepancias** — las gestionan los editores; los lectores solo ven las
-  marcadas con *incluir en el acta*.
+- **Discrepancias** — las gestionan los editores; los lectores pueden leer todas
+  las registradas, que forman parte del acta.
 
 ## ¿Quién puede añadir puntos a una reunión?
 

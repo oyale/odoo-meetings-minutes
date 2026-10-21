@@ -52,8 +52,8 @@ Two kinds of records are extra-restricted:
 
 - **Editorial notes** — visible only to editors of the meeting. Never shown to
   readers and **never** included in approved minutes.
-- **Dissents** — editors manage them; readers only see those flagged
-  *include in minutes*.
+- **Dissents** — editors manage them; readers can read all recorded dissents,
+  which form part of the minutes.
 
 ## Who can add points to a meeting?
 

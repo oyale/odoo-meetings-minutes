@@ -74,7 +74,8 @@ arrows, **Pending only** filter, **Expand/Collapse all**.
 
 - **Agreements** — the decisions (title, body, result). Withdraw an agreement
   to make the decision pending again.
-- **Dissents** — author, reason catalog, statement, *include in minutes* flag.
+- **Dissents** — author, reason catalog and statement. Every recorded dissent
+  appears in the minutes.
 - **Private editorial notes** — editor-only scratchpad, never in the minutes.
 - **Follow-up tasks** — assigned owners, due dates, status, convert between
   kinds, *Several responsible people* under advanced options.

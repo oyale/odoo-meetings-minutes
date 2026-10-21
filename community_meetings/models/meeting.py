@@ -690,15 +690,15 @@ class CommunityMeeting(models.Model):
             "can_add_point": self.add_point_allowed,
         }
 
-    def get_live_published_dissents(self):
-        """Read only the publishable projection after checking meeting visibility."""
+    def get_live_dissents(self):
+        """Read all recorded dissents after checking meeting visibility."""
         self.ensure_one()
         self.check_access("read")
         records = (
             self.env["community.meeting.dissent"]
             .sudo()
             .search(
-                [("meeting_id", "=", self.id), ("include_in_minutes", "=", True)],
+                [("meeting_id", "=", self.id)],
                 order="sequence, id",
             )
         )

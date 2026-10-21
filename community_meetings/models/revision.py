@@ -97,16 +97,13 @@ class CommunityMeetingRevision(models.Model):
                 }
             )
         # Approval has already checked the approver's write access to this meeting.
-        # Read only explicitly publishable dissent records; excluded private material
-        # is never loaded into the snapshot.
-        included_dissents = (
+        # Every recorded dissent belongs to the minutes; private editorial notes
+        # remain a separate model and are never loaded into the snapshot.
+        meeting_dissents = (
             self.env["community.meeting.dissent"]
             .sudo()
             .search(
-                [
-                    ("meeting_id", "=", meeting.id),
-                    ("include_in_minutes", "=", True),
-                ],
+                [("meeting_id", "=", meeting.id)],
                 order="sequence, id",
             )
         )
@@ -120,7 +117,7 @@ class CommunityMeetingRevision(models.Model):
                 if dissent.resolution_id
                 else (dissent.agenda_item_id.name if dissent.agenda_item_id else meeting.name),
             }
-            for dissent in included_dissents
+            for dissent in meeting_dissents
         ]
         carryover_records = (
             self.env["community.meeting.carryover"]

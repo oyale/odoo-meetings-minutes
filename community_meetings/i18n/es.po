@@ -5892,17 +5892,6 @@ msgid "Include"
 msgstr "Incluir"
 
 #. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_dissent__include_in_minutes
-msgid "Include In Minutes"
-msgstr "Incluir en el acta"
-
-#. module: community_meetings
-#. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-msgid "Include in minutes"
-msgstr "Incluir en el acta"
-
-#. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__included
 msgid "Included"
 msgstr "Incluido"
@@ -5911,7 +5900,7 @@ msgstr "Incluido"
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Included in minutes"
-msgstr "En acta"
+msgstr "Incluido en el acta"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover__inclusion_reason
@@ -10671,11 +10660,6 @@ msgstr "Origen: notas de la reunión en el formulario o la pantalla en vivo."
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Source: follow-up records linked to this meeting."
 msgstr "Origen: seguimientos vinculados a esta reunión."
-
-#. module: community_meetings
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Source: dissents marked for inclusion in the minutes."
-msgstr "Origen: discrepancias marcadas para incluirlas en el acta."
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content

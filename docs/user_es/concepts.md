@@ -145,16 +145,14 @@ en texto enriquecido y pueden retirarse durante la reunión en vivo.
 </div>
 
 ### Discrepancias y reservas
-Una objeción o reserva registrada, con un motivo del catálogo, la persona que la
-expresa y una marca para incluirla en el acta o mantenerla interna.
+Una objeción o reserva registrada, con un motivo del catálogo y la persona que
+la expresa. Todas las discrepancias registradas aparecen en el acta; las notas
+editoriales privadas son un registro independiente.
 
-<div class="object-diagram" role="img" aria-label="Una discrepancia puede incluirse en el acta o quedar como nota interna">
+<div class="object-diagram" role="img" aria-label="Todas las discrepancias registradas aparecen en el acta">
   <div class="object-diagram-node object-diagram-record"><strong>Discrepancia</strong><small>Autoría · motivo · texto</small></div>
   <span class="object-diagram-arrow" aria-hidden="true">→</span>
-  <div class="object-diagram-branches">
-    <div class="object-diagram-node"><strong>Incluir en el acta</strong></div>
-    <div class="object-diagram-node"><strong>Mantener interna</strong></div>
-  </div>
+  <div class="object-diagram-node"><strong>Acta aprobada</strong></div>
 </div>
 
 ### Seguimiento

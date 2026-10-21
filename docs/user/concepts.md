@@ -146,16 +146,14 @@ bodies and can be withdrawn during the live meeting.
 </div>
 
 ### Dissent and reservations
-A recorded objection or reservation, with a reason catalog, the person
-expressing it, and a flag to include it in the minutes or keep it internal.
+A recorded objection or reservation, with a reason catalog and the person
+expressing it. Every recorded dissent appears in the minutes; private editorial
+notes are a separate record.
 
-<div class="object-diagram" role="img" aria-label="A dissent can be included in the minutes or kept internal">
+<div class="object-diagram" role="img" aria-label="Every recorded dissent appears in the minutes">
   <div class="object-diagram-node object-diagram-record"><strong>Dissent</strong><small>Author · reason · statement</small></div>
   <span class="object-diagram-arrow" aria-hidden="true">→</span>
-  <div class="object-diagram-branches">
-    <div class="object-diagram-node"><strong>Include in minutes</strong></div>
-    <div class="object-diagram-node"><strong>Keep internal</strong></div>
-  </div>
+  <div class="object-diagram-node"><strong>Approved minutes</strong></div>
 </div>
 
 ### Follow-up

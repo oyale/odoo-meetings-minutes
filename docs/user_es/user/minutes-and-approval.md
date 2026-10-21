@@ -86,9 +86,9 @@ en la historia.
 
 ## Discrepancias y acta
 
-Las discrepancias marcadas **incluir en el acta** forman parte del registro
-aprobado; las no marcadas quedan solo para uso editorial. Repásalas con el editor
-antes de aprobar.
+Todas las discrepancias registradas forman parte del acta aprobada. Las notas
+editoriales privadas son independientes y nunca se incluyen. Repasa las
+discrepancias registradas con la persona editora antes de aprobar.
 
 ## Preguntas frecuentes
 

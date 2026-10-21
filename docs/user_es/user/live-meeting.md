@@ -70,8 +70,8 @@ anterior/siguiente, filtro **Solo pendientes**, **Expandir/Contraer todo**.
 
 - **Acuerdos** — las decisiones (título, cuerpo, resultado). Retirar un acuerdo
   devuelve la decisión a pendiente.
-- **Discrepancias** — autor, catálogo de motivos, declaración, marca *incluir en el
-  acta*.
+- **Discrepancias** — persona, catálogo de motivos y declaración. Todas las
+  discrepancias registradas aparecen en el acta.
 - **Notas editoriales privadas** — bloc solo para editores, nunca en el acta.
 - **Tareas de seguimiento** — responsables, plazos, estado, conversión entre tipos,
   *varias personas responsables* en opciones avanzadas.

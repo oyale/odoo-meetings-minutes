@@ -5792,17 +5792,6 @@ msgid "Include"
 msgstr ""
 
 #. module: community_meetings
-#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_dissent__include_in_minutes
-msgid "Include In Minutes"
-msgstr ""
-
-#. module: community_meetings
-#. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-msgid "Include in minutes"
-msgstr ""
-
-#. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__included
 msgid "Included"
 msgstr ""
@@ -10427,11 +10416,6 @@ msgstr ""
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Source: follow-up records linked to this meeting."
-msgstr ""
-
-#. module: community_meetings
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Source: dissents marked for inclusion in the minutes."
 msgstr ""
 
 #. module: community_meetings

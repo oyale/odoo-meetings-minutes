@@ -88,8 +88,6 @@ class CommunityMeetingDissent(models.Model):
         default=lambda self: self.env.ref("community_meetings.dissent_reason_dissent", raise_if_not_found=False),
     )
     sequence = fields.Integer(default=10)
-    include_in_minutes = fields.Boolean(default=True)
-
     @api.constrains("meeting_id", "agenda_item_id", "resolution_id")
     def _check_scope(self):
         for dissent in self:

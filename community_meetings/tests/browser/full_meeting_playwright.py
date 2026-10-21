@@ -112,7 +112,6 @@ ACTIONS = {
     "test_dissent_editing": [
         "edit dissent author",
         "edit dissent reason",
-        "exclude dissent from minutes",
         "edit dissent body",
     ],
     "test_deferral_cancel": ["cancel postponement"],
@@ -653,11 +652,6 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             self.page.wait_for_timeout(100)
             saved = self.record("community.meeting.dissent", record_id, ["reason_id"])["reason_id"]
         self.assertEqual(saved[1], "Dissent")
-        row.get_by_label("Include in minutes").click()
-        expect(row.get_by_label("Include in minutes")).not_to_be_checked()
-        self.wait_field(
-            "community.meeting.dissent", record_id, "include_in_minutes", False
-        )
         row.get_by_role("button", name="Edit statement").click()
         self.edit_rich(
             row.locator('[contenteditable="true"]'), "Alternative proposal in detail"

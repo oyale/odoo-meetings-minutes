@@ -80,9 +80,9 @@ untouched in history.
 
 ## Dissents and the minutes
 
-Dissents flagged **include in minutes** are part of the approved record;
-unflagged ones remain editorial-only. Review them with the editor before
-approving.
+Every recorded dissent is part of the approved record. Private editorial notes
+remain separate and are never included. Review recorded dissents with the editor
+before approving.
 
 ## FAQs
 

@@ -350,14 +350,12 @@ class TestMeetingRevisions(TransactionCase):
                 {
                     "meeting_id": meeting.id,
                     "agenda_item_id": item.id,
-                    "body": "<p>Included preview dissent</p>",
-                    "include_in_minutes": True,
+                    "body": "<p>Preview dissent</p>",
                 },
                 {
                     "meeting_id": meeting.id,
                     "agenda_item_id": item.id,
-                    "body": "EXCLUDED_PREVIEW_DISSENT",
-                    "include_in_minutes": False,
+                    "body": "SECOND_PREVIEW_DISSENT",
                 },
             ]
         )
@@ -369,9 +367,9 @@ class TestMeetingRevisions(TransactionCase):
         self.assertTrue("Draft — not approved." in preview or "Borrador — sin aprobar." in preview)
         self.assertIn("Preview narrative", preview)
         self.assertIn("Preview agreement", preview)
-        self.assertIn("Included preview dissent", preview)
+        self.assertIn("Preview dissent", preview)
+        self.assertIn("SECOND_PREVIEW_DISSENT", preview)
         self.assertNotIn("PRIVATE_PREVIEW_NOTE", preview)
-        self.assertNotIn("EXCLUDED_PREVIEW_DISSENT", preview)
         self.assertEqual(meeting.state, before_state)
         self.assertEqual(meeting.revision_ids.ids, before_revisions)
 

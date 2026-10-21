@@ -113,7 +113,7 @@ export class LiveMeeting extends Component {
             this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "company_id", "start_datetime", "end_datetime", "actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_end_datetime", "actual_duration_minutes", "organizer_id", "secretary_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id", "duration_minutes", "coordinator_role_label", "secretary_role_label"]),
             this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "topic_id", "sequence", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "discussion_history", "discard_previous_discussion", "deferral_reason", "deferral_reason_code", "deferral_blocked_by", "presenter_partner_id", "priority", "deadline", "estimated_minutes", "actual_minutes", "actual_seconds", "actual_started_at", "has_started", "review_next_meeting", "is_followup", "topic_state", "topic_outcome", "next_meeting_datetime"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.agenda.type", [], ["name", "behavior", "active"], { order: "sequence, name", context: { active_test: false } }),
-            editorial ? this.orm.searchRead("community.meeting.dissent", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "body", "reason_id", "author_display_name", "author_partner_id"], { order: "sequence, id" }) : this.orm.call("community.meeting", "get_live_published_dissents", [[this.meetingId]]),
+            editorial ? this.orm.searchRead("community.meeting.dissent", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "body", "reason_id", "author_display_name", "author_partner_id"], { order: "sequence, id" }) : this.orm.call("community.meeting", "get_live_dissents", [[this.meetingId]]),
             this.orm.searchRead("community.meeting.action", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "name", "description", "responsible_user_id", "deadline", "state"], { order: "deadline, id" }),
             this.orm.searchRead("community.meeting.resolution", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "title", "body", "status", "decision_outcome"], { order: "id" }),
             editorial ? this.orm.searchRead("community.meeting.editor.note", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "content"], { order: "id" }) : Promise.resolve([]),
@@ -990,7 +990,7 @@ export class LiveMeeting extends Component {
         try {
             const [id] = await this.orm.create(model, [values]);
             const fields = model === "community.meeting.dissent"
-                ? ["agenda_item_id", "body", "reason_id", "author_display_name", "author_partner_id", "include_in_minutes"]
+                ? ["agenda_item_id", "body", "reason_id", "author_display_name", "author_partner_id"]
                 : model === "community.meeting.editor.note"
                     ? ["agenda_item_id", "content"]
                 : model === "community.meeting.resolution"
@@ -1015,7 +1015,6 @@ export class LiveMeeting extends Component {
             meeting_id: this.meetingId, agenda_item_id: item.id, body,
             reason_id: Number(form.reason_id) || (this.state.dissentReasons[0]?.id) || false,
             author_display_name: form.author_display_name || false,
-            include_in_minutes: form.include_in_minutes !== false,
         }, (record) => {
             this.state.dissents.push(record);
             this.state.newDissent[item.id] = "";
@@ -1042,7 +1041,7 @@ export class LiveMeeting extends Component {
         });
     }
     setDissent(item, key, value) {
-        this.state.newDissent[item.id] ||= { include_in_minutes: true };
+        this.state.newDissent[item.id] ||= {};
         this.state.newDissent[item.id][key] = value;
     }
     setAction(item, key, value) {
