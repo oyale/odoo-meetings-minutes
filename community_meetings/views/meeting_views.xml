@@ -48,8 +48,9 @@
                     <button name="action_mark_held" type="object" string="Finish Meeting" invisible="state != 'scheduled' or (not actual_start_datetime and time_tracking_enabled)" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_mark_held" type="object" string="Record as Already Held" invisible="state != 'scheduled' or actual_start_datetime or not time_tracking_enabled" confirm="Mark this meeting as held even though it was never started?" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_draft_minutes" type="object" string="Prepare Minutes" invisible="state != 'held'" groups="community_meetings.group_meeting_editor"/>
-                    <button name="action_preview_minutes" type="object" string="Preview Minutes" invisible="state not in ['held', 'minutes_draft']" groups="community_meetings.group_meeting_editor,community_meetings.group_meeting_approver"/>
-                    <button name="action_approve_minutes" type="object" string="Approve Minutes" invisible="state != 'minutes_draft'" groups="community_meetings.group_meeting_approver"/>
+                    <button name="action_preview_minutes" type="object" string="Preview Minutes" invisible="state not in ['held', 'minutes_draft']"/>
+                    <field name="requires_later_minutes_approval" invisible="1"/>
+                    <button name="action_approve_minutes" type="object" string="Approve Minutes" invisible="state != 'minutes_draft' or requires_later_minutes_approval" groups="community_meetings.group_meeting_approver"/>
                     <button name="action_start_amendment" type="object" string="Start Amendment" invisible="state != 'approved'" groups="community_meetings.group_meeting_manager"/>
                     <button name="action_cancel" type="object" string="Cancel" invisible="state not in ['draft', 'scheduled']" groups="community_meetings.group_meeting_editor"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,scheduled,held,minutes_draft,approved"/>
@@ -59,8 +60,8 @@
                         <label for="name"/>
                         <h1><field name="name" placeholder="Meeting title"/></h1>
                     </div>
-                    <group col="1">
-                        <group string="When and where" col="4">
+                    <group col="4" class="o_meeting_identity_groups">
+                        <group string="When and where" colspan="2" col="2">
                             <field name="start_datetime"/>
                             <field name="end_datetime"/>
                             <field name="actual_start_datetime" readonly="1" invisible="not actual_start_datetime or not time_tracking_enabled"/>
@@ -71,7 +72,7 @@
                             <field name="location"/>
                             <field name="meeting_url" widget="url"/>
                         </group>
-                        <group string="People and series" col="4">
+                        <group string="People and series" colspan="2" col="2">
                             <field name="code" readonly="1"/>
                             <field name="coordinator_role_label" readonly="1" nolabel="1" class="text-muted"/>
                             <field name="organizer_id" groups="community_meetings.group_meeting_manager"/>

@@ -42,9 +42,9 @@ class MeetingRevisionReport(models.AbstractModel):
     def _render_preview(self, meeting):
         snapshot = self.env["community.meeting.revision"]._build_public_content(meeting)
         doc = self._prepare_document(snapshot, draft=True)
-        return self.env["ir.qweb"]._render(
+        return self.env["ir.qweb"].with_context(lang=self.env.user.lang)._render(
             "community_meetings.report_revision_preview",
-            {"doc": doc},
+            {"doc": doc, "lang": self.env.user.lang},
         )
 
     def _get_report_values(self, docids, data=None):

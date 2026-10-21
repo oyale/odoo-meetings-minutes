@@ -281,7 +281,7 @@ class TestMeetingDomain(TransactionCase):
         self.assertEqual(items[0].agenda_type_id.behavior, "minutes_approval")
         self.assertEqual(items[-1].agenda_type_id.behavior, "next_meeting")
 
-    def test_no_minutes_approval_point_without_pending_minutes(self):
+    def test_minutes_approval_point_exists_without_pending_minutes(self):
         series = self.env["community.meeting.series"].create(
             {
                 "name": "No pending minutes",
@@ -295,11 +295,96 @@ class TestMeetingDomain(TransactionCase):
                 "start_datetime": "2026-10-08 10:00:00",
             }
         )
-        self.assertFalse(
+        self.assertTrue(
             meeting.agenda_item_ids.filtered(
                 lambda item: item.agenda_type_id.behavior == "minutes_approval"
             )
         )
+
+    def test_required_minutes_approval_point_cannot_be_removed_or_retyped(self):
+        series = self.env["community.meeting.series"].create(
+            {"name": "Required approval point", "has_minutes_approval_point": True}
+        )
+        meeting = self.env["community.meeting"].create(
+            {
+                "name": "Keep approval point",
+                "series_id": series.id,
+                "start_datetime": "2026-10-08 10:00:00",
+            }
+        )
+        point = meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
+        duplicate_point = self.env["community.meeting.agenda.item"].create(
+            {
+                "meeting_id": meeting.id,
+                "name": "Additional approval point",
+                "kind": "minutes_approval",
+            }
+        )
+        duplicate_point.unlink()
+        self.assertEqual(len(meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")), 1)
+
+        with self.assertRaises(UserError), self.cr.savepoint():
+            point.unlink()
+        with self.assertRaises(UserError), self.cr.savepoint():
+            point.write({"kind": "discussion"})
+        discussion_type = self.env["community.meeting.agenda.type"].search(
+            [("behavior", "=", "discussion"), ("active", "=", True)], limit=1
+        )
+        with self.assertRaises(UserError), self.cr.savepoint():
+            point.write({"agenda_type_id": discussion_type.id})
+        self.assertEqual(len(meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")), 1)
+
+        series.write({"has_minutes_approval_point": False})
+        point.write({"kind": "discussion"})
+        self.assertFalse(meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval"))
+        point.unlink()
+        self.assertFalse(meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval"))
+        series.write({"has_minutes_approval_point": True})
+        self.assertEqual(len(meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")), 1)
+
+        other_series = self.env["community.meeting.series"].create(
+            {"name": "Approval enabled after meeting", "has_minutes_approval_point": True}
+        )
+        plain_series = self.env["community.meeting.series"].create({"name": "No approval point"})
+        plain_meeting = self.env["community.meeting"].create(
+            {"name": "Moved into approval series", "series_id": plain_series.id}
+        )
+        plain_meeting.write({"series_id": other_series.id})
+        self.assertEqual(
+            len(plain_meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")),
+            1,
+        )
+
+    def test_enabling_minutes_approval_adds_points_to_existing_meetings(self):
+        series = self.env["community.meeting.series"].create({"name": "Enable approval later"})
+        existing = self.env["community.meeting"].create(
+            {"name": "Already prepared", "series_id": series.id, "start_datetime": "2026-10-08 10:00:00"}
+        )
+        self.assertFalse(existing.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval"))
+        series.write({"has_minutes_approval_point": True})
+        self.assertEqual(len(existing.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")), 1)
+        unattached = self.env["community.meeting"].create(
+            {"name": "Attached after policy", "start_datetime": "2026-10-09 10:00:00"}
+        )
+        unattached.write({"series_id": series.id})
+        self.assertEqual(len(unattached.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")), 1)
+
+    def test_cancelled_meeting_can_remove_required_approval_point(self):
+        series = self.env["community.meeting.series"].create(
+            {"name": "Cancelled required approval", "has_minutes_approval_point": True}
+        )
+        meeting = self.env["community.meeting"].create(
+            {"name": "Cancelled meeting", "series_id": series.id, "start_datetime": "2026-10-08 10:00:00"}
+        )
+        point = meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
+        meeting.action_schedule()
+        meeting.action_cancel()
+
+        self.assertEqual(meeting.state, "cancelled")
+        with self.assertRaises(UserError), self.cr.savepoint():
+            point.write({"kind": "discussion"})
+        point.unlink()
+        self.assertFalse(meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval"))
 
     def test_approved_previous_minutes_are_recorded_on_later_point(self):
         series = self.env["community.meeting.series"].create(
@@ -337,12 +422,23 @@ class TestMeetingDomain(TransactionCase):
         )
         self.assertTrue(point)
         self.assertEqual(later.get_pending_minutes_for_approval()[0]["id"], previous.id)
-        self._approve_without_rendering_pdf(previous)
+        with self.assertRaises(UserError):
+            self._approve_without_rendering_pdf(previous)
+        self.assertFalse(previous.approved_revision_id)
+        with self.assertRaises(UserError), self.cr.savepoint():
+            later.with_user(self.editor).action_approve_pending_minutes(point.id, [previous.id])
+        later.action_schedule()
+        with self.assertRaises(UserError), self.cr.savepoint():
+            later.with_user(self.editor).action_approve_pending_minutes(point.id, [previous.id])
+        later.action_start_meeting()
+        with patch.object(type(self.env["ir.actions.report"]), "_render_qweb_pdf", return_value=(b"%PDF-1.4", "pdf")):
+            later.with_user(self.editor).action_approve_pending_minutes(point.id, [previous.id])
         self.assertEqual(later.get_pending_minutes_for_approval(), [])
         history = later.get_minutes_approval_history()
         self.assertEqual(len(history), 1)
         self.assertEqual(history[0]["meeting_id"], previous.id)
         self.assertEqual(point.minutes_approval_ids.meeting_id, previous)
+        self.assertEqual(point.minutes_approval_ids.revision_id, previous.approved_revision_id)
 
     def test_approved_minutes_open_read_only_in_live_view(self):
         meeting = self.env["community.meeting"].create(

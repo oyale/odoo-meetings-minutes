@@ -24,35 +24,104 @@
     </template>
     <template id="report_revision_content">
         <div class="o_meeting_minutes_document">
-            <h2><span t-out="doc['meeting']['name']"/> <small><span t-out="doc['meeting']['code']"/></small></h2>
-            <p t-if="doc.get('draft')" class="alert alert-warning"><strong>Draft — not approved.</strong> This preview reflects current saved meeting data.</p>
-            <p t-else="">Revision <span t-out="doc['revision'].revision_number"/> · Approved by <span t-out="doc['snapshot']['approval']['approver']"/> on <span t-out="doc['snapshot']['approval']['approved_at']"/></p>
-            <p><strong>Company:</strong> <span t-out="doc['meeting']['company']"/> · <strong>Organizer:</strong> <span t-out="doc['meeting']['organizer']"/></p>
-            <p><strong>Secretary:</strong> <span t-out="doc['meeting']['secretary']"/> · <strong>Attendees:</strong> <span t-out="', '.join(doc['meeting']['attendees'])"/></p>
-            <p><span t-out="doc['meeting']['start_datetime']"/> <span t-out="doc['meeting']['location']"/></p>
-            <div t-if="doc['description']"><h3>Description</h3><p t-if="doc.get('draft')" class="text-muted">Source: meeting purpose in the meeting form.</p><div t-out="doc['description']"/></div>
-            <h3>Agenda and discussion</h3>
-            <p t-if="doc.get('draft')" class="text-muted">Source: agenda points and their discussion notes.</p>
-            <t t-foreach="doc['agenda']" t-as="item">
-                <h4><span t-out="item['sequence']"/>. <span t-out="item['name']"/> (<span t-out="item['kind']"/>)</h4>
-                <p t-if="doc.get('draft')" class="text-muted">Source: agenda point, agreement and discussion records.</p>
-                <div t-if="item['description_html']" t-out="item['description_html']"/>
-                <div t-if="item['discussion_html']" t-out="item['discussion_html']"/>
-                <p t-if="item['disposition']">Disposition: <span t-out="item['disposition']"/> <span t-out="item['deferral_reason']"/></p>
-                <p t-if="item['decision_result_label']">Decision: <span t-out="item['decision_result_label']"/></p>
-                <div t-foreach="item['resolutions']" t-as="resolution"><strong t-out="resolution['title']"/><div t-out="resolution['body_html']"/></div>
-            </t>
-            <div t-if="doc['general_resolutions']"><h3>Meeting-wide resolutions</h3><p t-if="doc.get('draft')" class="text-muted">Source: meeting-wide agreements.</p><div t-foreach="doc['general_resolutions']" t-as="resolution"><strong t-out="resolution['title']"/><div t-out="resolution['body_html']"/></div></div>
-            <div t-if="doc['minutes_notes']"><h3>Minutes</h3><p t-if="doc.get('draft')" class="text-muted">Source: Meeting notes in the form or live screen.</p><div t-out="doc['minutes_notes']"/></div>
-            <h3>Follow-up actions</h3>
-            <p t-if="doc.get('draft')" class="text-muted">Source: follow-up records linked to this meeting.</p>
-            <ul><li t-foreach="doc['actions']" t-as="action"><span t-out="action['name']"/> — <span t-out="', '.join(action.get('responsibles', [])) or action['responsible']"/> — <span t-out="action['deadline']"/> (<span t-out="action['state']"/>)</li></ul>
-            <div t-if="doc['dissents']"><h3>Dissents and reservations</h3><p t-if="doc.get('draft')" class="text-muted">Source: dissents marked for inclusion in the minutes.</p><div t-foreach="doc['dissents']" t-as="dissent"><strong t-out="dissent['kind']"/> · <span t-out="dissent['author']"/> · <span t-out="dissent['scope']"/><div t-out="dissent['body_html']"/></div></div>
-            <div t-if="doc['snapshot'].get('carryovers')"><h3>Carryover</h3><p t-if="doc.get('draft')" class="text-muted">Source: meeting carryover records.</p><ul><li t-foreach="doc['snapshot']['carryovers']" t-as="carry"><span t-out="carry['origin_name']"/> — <span t-out="carry['status']"/> — <span t-out="carry['reason']"/><t t-if="carry.get('destination_series', {}).get('name')"> — <span t-out="carry['destination_series']['name']"/></t><t t-if="carry.get('destination')"> / <span t-out="carry['destination']"/></t></li></ul></div>
-            <p t-if="not doc.get('draft')" class="text-muted">Snapshot SHA-256: <span t-out="doc['revision'].snapshot_sha256"/></p>
+            <header class="o_minutes_document_header">
+                <div class="o_minutes_document_kicker">
+                    <span t-translation="on">Meeting minutes</span>
+                    <span class="o_minutes_document_code" t-out="doc['meeting']['code']"/>
+                </div>
+                <h1 class="o_minutes_document_title" t-out="doc['meeting']['name']"/>
+                <p t-if="doc.get('draft')" class="o_minutes_document_draft_status">
+                    <span class="o_minutes_status_dot" aria-hidden="true"/>
+                    <strong t-translation="on">Draft — not approved.</strong>
+                    <span t-translation="on">This preview reflects current saved meeting data.</span>
+                </p>
+                <p t-else="" class="o_minutes_document_revision">
+                    Revision <span t-out="doc['revision'].revision_number"/>
+                    <span class="o_minutes_revision_separator">·</span>
+                    Approved by <strong t-out="doc['snapshot']['approval']['approver']"/>
+                    <span class="o_minutes_revision_separator">·</span>
+                    <time t-out="doc['snapshot']['approval']['approved_at']"/>
+                </p>
+                <dl class="o_minutes_document_metadata">
+                    <div class="o_minutes_metadata_item"><dt>Company</dt><dd t-out="doc['meeting']['company']"/></div>
+                    <div class="o_minutes_metadata_item"><dt>Meeting date</dt><dd t-out="doc['meeting']['start_datetime_display']"/></div>
+                    <div class="o_minutes_metadata_item"><dt>Organizer</dt><dd t-out="doc['meeting']['organizer']"/></div>
+                    <div class="o_minutes_metadata_item"><dt>Minutes secretary</dt><dd t-out="doc['meeting']['secretary']"/></div>
+                    <div class="o_minutes_metadata_item"><dt>Location</dt><dd t-out="doc['meeting']['location'] or '—'"/></div>
+                    <div class="o_minutes_metadata_item o_minutes_metadata_attendees"><dt>Attendees</dt><dd t-out="', '.join(doc['meeting']['attendees']) or '—'"/></div>
+                </dl>
+            </header>
+
+            <section t-if="doc['description']" class="o_minutes_document_section o_minutes_purpose">
+                <h2>Description</h2>
+                <div class="o_minutes_rich_content" t-out="doc['description']"/>
+            </section>
+            <section class="o_minutes_document_section o_minutes_agenda_section">
+                <h2>Agenda and discussion</h2>
+                <div class="o_minutes_agenda" role="list">
+                    <article t-foreach="doc['agenda']" t-as="item" class="o_minutes_agenda_item" role="listitem">
+                        <span class="o_minutes_agenda_number" t-out="item['sequence']"/>
+                        <div class="o_minutes_agenda_content">
+                            <div class="o_minutes_agenda_heading">
+                                <h3 t-out="item['name']"/><span class="o_minutes_agenda_type" t-out="item['type']"/>
+                            </div>
+                            <div t-if="item['description_html']" class="o_minutes_rich_content o_minutes_point_description" t-out="item['description_html']"/>
+                            <div t-if="item['discussion_html']" class="o_minutes_rich_content o_minutes_point_discussion" t-out="item['discussion_html']"/>
+                            <p t-if="item['disposition']" class="o_minutes_point_outcome">
+                                Disposition: <strong t-out="item['disposition']"/>
+                                <span t-if="item['deferral_reason']" t-out="item['deferral_reason']"/>
+                            </p>
+                            <p t-if="item['decision_result_label']" class="o_minutes_point_outcome">Decision: <strong t-out="item['decision_result_label']"/></p>
+                            <div t-foreach="item['resolutions']" t-as="resolution" class="o_minutes_resolution">
+                                <h4 t-out="resolution['title']"/><div class="o_minutes_rich_content" t-out="resolution['body_html']"/>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+            <section t-if="doc['general_resolutions']" class="o_minutes_document_section">
+                <h2>Meeting-wide resolutions</h2>
+                <div t-foreach="doc['general_resolutions']" t-as="resolution" class="o_minutes_resolution">
+                    <h3 t-out="resolution['title']"/><div class="o_minutes_rich_content" t-out="resolution['body_html']"/>
+                </div>
+            </section>
+            <section t-if="doc['minutes_notes']" class="o_minutes_document_section o_minutes_final_notes">
+                <h2>Minutes</h2><div class="o_minutes_rich_content" t-out="doc['minutes_notes']"/>
+            </section>
+            <section t-if="doc['actions']" class="o_minutes_document_section">
+                <h2>Follow-up actions</h2>
+                <ul class="o_minutes_followups">
+                    <li t-foreach="doc['actions']" t-as="action" class="o_minutes_followup">
+                        <strong t-out="action['name']"/>
+                        <span t-out="', '.join(action.get('responsibles', [])) or action['responsible']"/>
+                        <span t-if="action['deadline']" t-out="action['deadline']"/>
+                        <span class="o_minutes_followup_state" t-out="action['state']"/>
+                    </li>
+                </ul>
+            </section>
+            <section t-if="doc['dissents']" class="o_minutes_document_section">
+                <h2>Dissents and reservations</h2>
+                <div t-foreach="doc['dissents']" t-as="dissent" class="o_minutes_dissent">
+                    <p class="o_minutes_dissent_meta"><strong t-out="dissent['kind']"/><span t-out="dissent['author']"/><span t-out="dissent['scope']"/></p>
+                    <div class="o_minutes_rich_content" t-out="dissent['body_html']"/>
+                </div>
+            </section>
+            <section t-if="doc['snapshot'].get('carryovers')" class="o_minutes_document_section">
+                <h2>Carryover</h2>
+                <ul class="o_minutes_followups">
+                    <li t-foreach="doc['snapshot']['carryovers']" t-as="carry" class="o_minutes_followup">
+                        <strong t-out="carry['origin_name']"/><span t-out="carry['status']"/><span t-out="carry['reason']"/>
+                        <span t-if="carry.get('destination_series', {}).get('name')" t-out="carry['destination_series']['name']"/>
+                        <span t-if="carry.get('destination')" t-out="carry['destination']"/>
+                    </li>
+                </ul>
+            </section>
+            <footer t-if="not doc.get('draft')" class="o_minutes_document_footer">
+                <span>Snapshot SHA-256</span><code t-out="doc['revision'].snapshot_sha256"/>
+            </footer>
         </div>
     </template>
     <template id="report_revision_preview">
-        <div class="o_meeting_minutes_preview"><t t-call="community_meetings.report_revision_content"/></div>
+        <div class="o_meeting_minutes_preview"><t t-call="community_meetings.report_revision_content" t-lang="lang"/></div>
     </template>
 </odoo>

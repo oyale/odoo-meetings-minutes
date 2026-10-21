@@ -56,21 +56,24 @@ class Series(models.Model):
         string="Project destination",
         default="inherit",
         required=True,
+        tracking=True,
     )
     meeting_project_id = fields.Many2one(
-        "project.project", check_company=True, string="Series project"
+        "project.project", check_company=True, string="Series project", tracking=True
     )
     meeting_todo_requirement = fields.Selection(
         [("inherit", "Company default")] + REQUIREMENTS,
         string="Evidence required to close a TODO",
         default="inherit",
         required=True,
+        tracking=True,
     )
     meeting_task_scope = fields.Selection(
         [("inherit", "Company default")] + SCOPES,
         string="Selectable tasks",
         default="inherit",
         required=True,
+        tracking=True,
     )
 
 

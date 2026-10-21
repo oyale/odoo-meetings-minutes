@@ -7,14 +7,16 @@ editor account, and Python Playwright installed. Example:
     ODOO_LOGIN=dev ODOO_PASSWORD=... python3 live_meeting_playwright.py
 The suite creates and removes one scheduled meeting per case.
 """
+import json
 import os
+import re
 import sys
+import tempfile
 import time
 import unittest
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from urllib.parse import urljoin
 
 from playwright.sync_api import expect
 
@@ -27,6 +29,48 @@ BASE_URL = os.environ.get("ODOO_BASE_URL", "http://localhost:8069").rstrip("/")
 DB = os.environ.get("ODOO_DB", "")
 LOGIN = os.environ.get("ODOO_LOGIN")
 PASSWORD = os.environ.get("ODOO_PASSWORD")
+
+
+class LiveWriteTrace:
+    """Track concurrent live point writes while a browser action flushes editors."""
+
+    def __init__(self, page):
+        self.page = page
+        self.rpc = []
+        self.active_note_writes = 0
+        self.max_active_note_writes = 0
+        self.empty_note_writes = []
+        page.on("request", self.on_request)
+        page.on("response", self.on_response)
+
+    def on_request(self, request):
+        if "/web/dataset/call_kw/" not in request.url:
+            return
+        payload = request.post_data_json
+        self.rpc.append({"phase": "request", "url": request.url, "payload": payload})
+        if request.url.endswith("community.meeting.agenda.item/write"):
+            self.active_note_writes += 1
+            self.max_active_note_writes = max(self.max_active_note_writes, self.active_note_writes)
+            values = payload["params"]["args"][1]
+            if values.get("discussion_notes") == "<p><br></p>":
+                self.empty_note_writes.append(payload)
+
+    def on_response(self, response):
+        if "/web/dataset/call_kw/" not in response.url:
+            return
+        payload = response.json()
+        self.rpc.append({
+            "phase": "response",
+            "url": response.url,
+            "status": response.status,
+            "payload": payload,
+        })
+        if response.url.endswith("community.meeting.agenda.item/write"):
+            self.active_note_writes -= 1
+
+    def stop(self):
+        self.page.remove_listener("request", self.on_request)
+        self.page.remove_listener("response", self.on_response)
 
 
 class LiveMeetingBrowserChecks(unittest.TestCase):
@@ -47,6 +91,18 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         cls.context = cls.session.context
         cls.page = cls.session.page
         cls.console_errors = cls.session.console_errors
+        capture_language = os.environ.get("MM_CAPTURE_LANGUAGE")
+        if capture_language:
+            user_ids = cls.session.rpc("res.users", "search", [[("login", "=", LOGIN)]])
+            if len(user_ids) != 1:
+                raise AssertionError("expected one disposable browser user")
+            cls.session.rpc("res.users", "write", [user_ids, {"lang": capture_language}])
+            cls.page.goto("%s/web/session/logout" % BASE_URL, wait_until="domcontentloaded")
+            cls.page.goto("%s/web/login?db=%s" % (BASE_URL, DB), wait_until="domcontentloaded")
+            cls.page.locator('input[name="login"]').fill(LOGIN)
+            cls.page.locator('input[name="password"]').fill(PASSWORD)
+            cls.page.locator('button[type="submit"]').click()
+            cls.page.wait_for_url("**/odoo**", timeout=30000)
 
     @classmethod
     def tearDownClass(cls):
@@ -63,7 +119,32 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.meeting_id = self.fixture.meeting_id
         self.item_ids = self.fixture.item_ids
         self.addCleanup(self.cleanup_meeting)
-        open_live_meeting(self.session, self.meeting_id)
+        if os.environ.get("MM_CAPTURE_MINUTES_PREVIEW"):
+            reviewer_ids = self.rpc(
+                "res.users", "search", [[("login", "=", os.environ["ODOO_REVIEWER_LOGIN"])]],
+            )
+            self.assertEqual(len(reviewer_ids), 1, "expected one disposable reviewer")
+            reviewer = self.rpc("res.users", "read", [reviewer_ids, ["partner_id"]])[0]
+            self.rpc("community.meeting", "write", [[self.meeting_id], {
+                "name": "Planificación del segundo trimestre",
+                "location": "Sala de reuniones",
+                "description": "<p>Revisar prioridades, calendario y recursos.</p>",
+                "minutes_notes": "<p>Se acuerda preparar una propuesta para la siguiente sesión.</p>",
+                "attendee_partner_ids": [(6, 0, [reviewer["partner_id"][0]])],
+            }])
+            agenda_names = {
+                "information": "Apertura y acuerdos anteriores",
+                "discussion": "Seguimiento del proyecto comunitario",
+                "decision": "Presupuesto del próximo trimestre",
+                "todo": "Preparar calendario de actividades",
+            }
+            for kind, item_id in self.item_ids.items():
+                values = {"name": agenda_names[kind]}
+                if kind == "discussion":
+                    values["discussion_notes"] = "<p>El equipo revisa los avances y los riesgos.</p>"
+                self.rpc("community.meeting.agenda.item", "write", [[item_id], values])
+        else:
+            open_live_meeting(self.session, self.meeting_id)
 
     def cleanup_meeting(self):
         if not self.meeting_id:
@@ -320,7 +401,11 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         )
         self.assertEqual(
             [button.inner_text().strip() for button in record_actions.locator("button").all()],
-            ["Add agreement", "Add dissent"],
+            (
+                ["Añadir acuerdo", "Añadir disenso"]
+                if self.is_spanish_ui()
+                else ["Add agreement", "Add dissent"]
+            ),
         )
         expect(record_actions.get_by_role("button", name="Add dissent")).to_be_visible()
         expect(record_actions.get_by_role("button", name="Add agreement")).to_be_visible()
@@ -387,7 +472,9 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             "minutes_draft",
         )
         self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
-        self.page.get_by_role("button", name="Open Meeting").click(timeout=30000)
+        self.page.get_by_role(
+            "button", name=re.compile("Open Meeting|Abrir reunión", re.I)
+        ).click(timeout=30000)
         self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
         self.page.get_by_role("button", name="Expand / Collapse all").click()
         card = self.card("discussion", begin=False)
@@ -396,23 +483,110 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         )
 
     def test_minutes_preview_returns_to_draft_meeting(self):
+        capture_path = os.environ.get("MM_CAPTURE_MINUTES_PREVIEW")
+        capture_language = os.environ.get("MM_CAPTURE_LANGUAGE")
+        if capture_language:
+            self.assertTrue(capture_path, "language capture requires a screenshot path")
         self.rpc("community.meeting", "action_mark_held", [[self.meeting_id]])
         self.rpc("community.meeting", "action_draft_minutes", [[self.meeting_id]])
+        if capture_language:
+            localized_html = self.rpc(
+                "community.meeting",
+                "get_minutes_preview_html",
+                [[self.meeting_id]],
+                {"context": {"lang": capture_language}},
+            )
+            self.assertIn("Orden del día y debate", localized_html)
+            for translated_label in (
+                "Acta de la reunión",
+                "Borrador — sin aprobar.",
+                "Esta vista previa refleja los datos guardados actualmente en la reunión.",
+            ):
+                self.assertIn(translated_label, localized_html)
+            self.assertNotIn("Meeting minutes", localized_html)
+            self.assertNotIn("Draft — not approved.", localized_html)
+            self.assertNotIn("This preview reflects current saved meeting data.", localized_html)
+            html_trace = os.environ.get("MM_CAPTURE_PREVIEW_HTML")
+            if html_trace:
+                Path(html_trace).write_text(localized_html)
         self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
-        self.page.get_by_role("button", name="Open Meeting").click(timeout=30000)
+        self.page.get_by_role(
+            "button", name=re.compile("Open Meeting|Abrir reunión", re.I)
+        ).click(timeout=30000)
         self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
 
-        self.page.get_by_role("button", name="Preview Minutes", exact=True).click()
+        write_trace = LiveWriteTrace(self.page)
+        self.addCleanup(write_trace.stop)
+        self.page.get_by_role("button", name=re.compile("Expand|Desplegar", re.I)).click()
+        notes = self.page.locator('.o_live_discussion_notes [contenteditable="true"]')
+        expect(notes).to_have_count(4)
+        notes.nth(0).fill("Se confirma el orden del día y el acta de la sesión anterior.")
+        notes.nth(1).fill("Se revisan los avances del proyecto y se acuerda preparar el calendario.")
+        self.page.wait_for_timeout(850)
+        self.page.get_by_role(
+            "button", name=re.compile("Preview Minutes|Vista previa del acta", re.I)
+        ).click()
         preview = self.page.locator(".o_community_minutes_preview")
-        expect(preview).to_contain_text("Draft preview · saved content")
-        expect(preview).to_contain_text("Browser Discussion case")
-        expect(preview.get_by_role("button", name="Return to meeting to edit")).to_be_visible()
+        try:
+            expect(preview).to_be_visible(timeout=10000)
+        except AssertionError:
+            debug_dir = Path(tempfile.gettempdir()) / "mm_minutes_preview_debug"
+            if capture_language:
+                debug_dir.mkdir(parents=True, exist_ok=True)
+                self.page.screenshot(path=str(debug_dir / "minutes-preview-debug-page.png"), full_page=True)
+                (debug_dir / "minutes-preview-debug-dom.html").write_text(self.page.locator("body").inner_html())
+                (debug_dir / "minutes-preview-debug-trace.json").write_text(json.dumps({
+                    "url": self.page.url,
+                    "console_errors": self.console_errors[self.errors_before:],
+                    "rpc": write_trace.rpc,
+                    "body_text": self.page.locator("body").inner_text(),
+                }, ensure_ascii=False, indent=2))
+            self.fail(
+                f"Minutes preview did not render; debug artifacts are in "
+                f"{debug_dir if capture_language else 'devctl logs'}; "
+                f"console={self.console_errors[self.errors_before:]!r} rpc={write_trace.rpc!r}"
+            )
+        expect(preview).to_contain_text(
+            re.compile(
+                "Draft preview · saved content|Vista previa del borrador · contenido guardado",
+                re.I,
+            )
+        )
+        expect(preview).to_contain_text(
+            "Seguimiento del proyecto comunitario" if capture_path else "Browser Discussion case"
+        )
+        self.assertFalse(write_trace.empty_note_writes, "opening the preview must not write untouched empty editors")
+        self.assertEqual(write_trace.max_active_note_writes, 1, "writes for a single meeting must be serialized")
+        expect(preview.locator(".o_community_minutes_preview_body")).to_be_visible()
+        if capture_path:
+            Path(capture_path).parent.mkdir(parents=True, exist_ok=True)
+            self.page.set_viewport_size({"width": 1440, "height": 2000})
+            preview.evaluate("""element => {
+                element.style.minHeight = "0";
+                element.style.height = "auto";
+                element.style.overflow = "visible";
+                for (let node = element; node; node = node.parentElement) node.scrollTop = 0;
+                window.scrollTo(0, 0);
+            }""")
+            preview.screenshot(path=capture_path)
+        if capture_language and capture_language.startswith("es"):
+            expect(preview).to_contain_text("Orden del día y debate")
+            expect(preview).to_contain_text("Fecha de la reunión")
+        expect(
+            preview.get_by_role(
+                "button",
+                name=re.compile("Return to meeting to edit|Volver a la reunión para editar", re.I),
+            )
+        ).to_be_visible()
         self.assertEqual(
             self.record("community.meeting", self.meeting_id, ["state"])["state"],
             "minutes_draft",
         )
 
-        preview.get_by_role("button", name="Return to meeting to edit").click()
+        preview.get_by_role(
+            "button",
+            name=re.compile("Return to meeting to edit|Volver a la reunión para editar", re.I),
+        ).click()
         expect(self.page.locator(".o_form_view")).to_be_visible(timeout=30000)
         self.assertEqual(
             self.record("community.meeting", self.meeting_id, ["state"])["state"],
@@ -450,30 +624,97 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
     def test_review_previous_minutes_opens_live_and_approves(self):
         series = self.rpc(
             "community.meeting.series", "create",
-            [{"name": "Review minutes series " + uuid.uuid4().hex[:8]}],
+            [{"name": "Review minutes series " + uuid.uuid4().hex[:8], "has_minutes_approval_point": True}],
         )
-        self.rpc("community.meeting", "write", [[self.meeting_id], {"series_id": series}])
+        self.rpc("community.meeting", "write", [[self.meeting_id], {
+            "series_id": series,
+            "minutes_notes": "<p>Draft text for the previous meeting.</p>",
+        }])
         self.rpc("community.meeting", "action_mark_held", [[self.meeting_id]])
         self.rpc("community.meeting", "action_draft_minutes", [[self.meeting_id]])
+        self.page.goto(
+            f"{BASE_URL}/web#model=community.meeting&id={self.meeting_id}&view_type=form"
+        )
+        expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_have_count(0)
+        self.page.get_by_role("button", name="Open Meeting").click()
+        expect(self.page.locator(".o_community_live_meeting")).to_be_visible()
+        expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_have_count(0)
+        approval_notice = (
+            "The assigned minutes secretary can approve earlier minutes during a live meeting "
+            "or while preparing minutes for an offline meeting. In a live meeting, the secretary "
+            "also needs the Editor role and edit access."
+        )
+        expect(self.page.locator(".o_live_minutes_approval")).to_contain_text(approval_notice)
+        editor_id = self.rpc("res.users", "search", [[("login", "=", LOGIN)]], {"limit": 1})[0]
         current = self.rpc("community.meeting", "create", [{
             "name": "Review previous minutes", "series_id": series,
-            "start_datetime": (datetime.utcnow() + timedelta(days=3)).strftime("%Y-%m-%d %H:%M:%S"),
+            "start_datetime": (datetime.now(timezone.utc) + timedelta(days=3))
+            .replace(tzinfo=None, microsecond=0)
+            .strftime("%Y-%m-%d %H:%M:%S"),
+            "secretary_id": editor_id,
         }])
-        agenda_type = self.rpc("community.meeting.agenda.type", "search", [[("behavior", "=", "minutes_approval")]], {"limit": 1})[0]
-        self.rpc("community.meeting.agenda.item", "create", [{"meeting_id": current, "name": "Approve previous minutes", "agenda_type_id": agenda_type}])
+        discussion_type = self.rpc(
+            "community.meeting.agenda.type", "search",
+            [[("behavior", "=", "discussion"), ("active", "=", True)]], {"limit": 1},
+        )[0]
+        running_item = self.rpc("community.meeting.agenda.item", "create", [{
+            "meeting_id": current,
+            "name": "Keep discussion timer running",
+            "kind": "discussion",
+            "agenda_type_id": discussion_type,
+        }])
         self.rpc("community.meeting", "action_schedule", [[current]])
-        self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, current))
+        self.page.goto(f"{BASE_URL}/web#model=community.meeting&id={current}&view_type=form")
         self.page.get_by_role("button", name="Open Meeting").click()
         expect(self.page.locator(".o_community_live_meeting")).to_be_visible()
         if self.page.locator(".o_live_expand").first.get_attribute("aria-expanded") == "false":
             self.page.locator(".o_live_expand").first.click()
-        self.page.get_by_role("button", name="Open minutes", exact=True).click()
-        expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_be_visible()
-        self.page.get_by_role("button", name="Approve Minutes", exact=True).click()
-        expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_have_count(0, timeout=30000)
+        approval = self.page.locator(".o_live_minutes_approval")
+        expect(approval).to_contain_text(approval_notice)
+        expect(approval.get_by_role("button", name="Approve earlier minutes", exact=True)).to_have_count(0)
+        self.page.get_by_role("button", name="Start Meeting", exact=True).click()
+        running_point = self.page.locator(".o_live_agenda_card").filter(has_text="Keep discussion timer running")
+        if running_point.locator(".o_live_expand").get_attribute("aria-expanded") == "false":
+            running_point.locator(".o_live_expand").click()
+        running_point.get_by_role("button", name="Begin point").click()
+        expect(running_point.get_by_role("button", name="Pause point")).to_be_visible()
+        running_started_at = self.record(
+            "community.meeting.agenda.item", running_item, ["actual_started_at"]
+        )["actual_started_at"]
+        approval_point = approval.locator("xpath=ancestor::article[1]")
+        if approval_point.locator(".o_live_expand").get_attribute("aria-expanded") == "false":
+            approval_point.locator(".o_live_expand").click()
+        expect(approval).to_contain_text(approval_notice)
+        expect(approval.get_by_role("button", name="Approve earlier minutes", exact=True)).to_be_visible()
+        approval.get_by_role("button", name="Open minutes").click()
+        preview = self.page.locator(".o_community_minutes_preview")
+        expect(preview).to_contain_text("Draft preview · saved content")
+        expect(preview).to_contain_text("Draft text for the previous meeting.")
+        preview.get_by_role(
+            "button", name=re.compile("Back to live meeting|Volver a la reunión en vivo", re.I)
+        ).click()
+        expect(self.page.locator(".o_community_live_meeting")).to_be_visible()
+        approval = self.page.locator(".o_live_minutes_approval")
+        self.assertIn(
+            "btn-success",
+            approval.get_by_role("button", name="Approve earlier minutes", exact=True).get_attribute("class"),
+        )
+        self.assertEqual(
+            self.record("community.meeting.agenda.item", running_item, ["actual_started_at"])["actual_started_at"],
+            running_started_at,
+            "Reviewing earlier minutes must not stop the active agenda point.",
+        )
+        running_point = self.page.locator(".o_live_agenda_card").filter(has_text="Keep discussion timer running")
+        if running_point.locator(".o_live_expand").get_attribute("aria-expanded") == "false":
+            running_point.locator(".o_live_expand").click()
+        expect(running_point.get_by_role("button", name="Pause point")).to_be_visible()
+        approval.get_by_role("button", name="Approve earlier minutes", exact=True).click()
+        expect(
+            approval.get_by_role("button", name="Approve earlier minutes", exact=True)
+        ).to_have_count(0, timeout=30000)
         self.assertEqual(self.record("community.meeting", self.meeting_id, ["state"])["state"], "approved")
         previous_code = self.record("community.meeting", self.meeting_id, ["code"])["code"]
-        self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, current))
+        self.page.goto(f"{BASE_URL}/web#model=community.meeting&id={current}&view_type=form")
         self.page.get_by_role("button", name="Open Meeting").click()
         self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
         if self.page.locator(".o_live_expand").first.get_attribute("aria-expanded") == "false":
@@ -486,6 +727,66 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(self.page.get_by_role("button", name="Add Point", exact=True)).to_have_count(0)
         expect(self.page.get_by_role("button", name="Approve Minutes", exact=True)).to_have_count(0)
         expect(self.page.locator(".o_live_rich_readonly").first).to_be_visible()
+
+    def test_offline_approver_can_approve_previous_minutes_from_point(self):
+        login = os.environ.get("ODOO_REVIEWER_LOGIN")
+        if not login:
+            self.skipTest("Disposable reviewer is not configured")
+        reviewer = self.rpc("res.users", "search", [[("login", "=", login)]], {"limit": 1})[0]
+        series = self.rpc(
+            "community.meeting.series", "create",
+            [{"name": "Offline approval " + uuid.uuid4().hex[:8], "has_minutes_approval_point": True}],
+        )
+        now = datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0)
+        previous = self.rpc("community.meeting", "create", [{
+            "name": "Offline previous minutes",
+            "series_id": series,
+            "start_datetime": (now - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S"),
+            "reader_user_ids": [[4, reviewer]],
+        }])
+        self.rpc("community.meeting.agenda.item", "create", [{
+            "meeting_id": previous, "name": "Previous agenda", "kind": "discussion",
+        }])
+        self.rpc("community.meeting", "action_schedule", [[previous]])
+        self.rpc("community.meeting", "action_mark_held", [[previous]])
+        self.rpc("community.meeting", "action_draft_minutes", [[previous]])
+        self.rpc("community.meeting", "write", [[self.meeting_id], {
+            "series_id": series, "secretary_id": reviewer, "reader_user_ids": [[4, reviewer]],
+        }])
+        self.rpc("community.meeting", "action_mark_held", [[self.meeting_id]])
+        self.rpc("community.meeting", "action_draft_minutes", [[self.meeting_id]])
+        context = self.browser.new_context()
+        try:
+            page = context.new_page()
+            page.goto(BASE_URL + "/web/login" + ((f"?db={DB}") if DB else ""))
+            page.locator('input[name="login"]').fill(login)
+            page.locator('input[name="password"]').fill(PASSWORD)
+            page.locator('button[type="submit"]').click()
+            page.wait_for_url("**/odoo**")
+            page.goto(f"{BASE_URL}/web#model=community.meeting&id={self.meeting_id}&view_type=form")
+            page.get_by_role("button", name="Open Meeting").click()
+            if page.locator(".o_live_expand").first.get_attribute("aria-expanded") == "false":
+                page.locator(".o_live_expand").first.click()
+            approval = page.locator(".o_live_minutes_approval")
+            expect(approval).to_be_visible()
+            expect(approval).to_contain_text(
+                "The assigned minutes secretary can approve earlier minutes during a live meeting "
+                "or while preparing minutes for an offline meeting. In a live meeting, the secretary "
+                "also needs the Editor role and edit access."
+            )
+            expect(approval.get_by_role("button", name="Approve earlier minutes", exact=True)).to_be_visible()
+            expect(page.get_by_role("button", name="Approve Minutes", exact=True)).to_have_count(0)
+            approval.get_by_role("button", name="Approve earlier minutes", exact=True).click()
+            expect(approval.get_by_role("button", name="Approve earlier minutes", exact=True)).to_have_count(0)
+            self.assertEqual(self.record("community.meeting", previous, ["state"], page=page)["state"], "approved")
+            meeting_state = self.record("community.meeting", self.meeting_id, ["state"], page=page)["state"]
+            self.assertEqual(meeting_state, "minutes_draft")
+            point = self.rpc("community.meeting.agenda.item", "search_read", [[
+                ("meeting_id", "=", self.meeting_id), ("kind", "=", "minutes_approval"),
+            ]], {"fields": ["disposition"]}, page=page)[0]
+            self.assertEqual(point["disposition"], "closed")
+        finally:
+            context.close()
 
     def test_agreement_followup_asks_for_series(self):
         self.retain_carryover = True
@@ -689,6 +990,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(self.outcome("decision")).to_have_text("Approved")
         card.get_by_role("button", name="Undo point result").click()
         card.get_by_role("button", name="Reopen point").click()
+        expect(self.outcome("decision")).to_have_text("Pending")
         card.get_by_role("button", name="Resume point").click()
         deadline = time.time() + 8
         point = self.record(

@@ -28,8 +28,21 @@ def meeting_series_wizard_open(context):
 def create_series_from_wizard(context):
     wizard = context.series_wizard
     wizard.locator('.o_field_widget[name="name"] input').fill(context.series_name)
-    for _ in range(3):
-        wizard.locator('button[name="action_next"]').click()
+    wizard.locator('.o_field_widget[name="carryover_policy"] label[for$="_automatic"]').click()
+    wizard.locator('button[name="action_next"]').click()
+    wizard.locator('.o_field_widget[name="duration_hours"] input').fill("2.5")
+    wizard.locator('button[name="action_next"]').click()
+    wizard.locator('.o_field_widget[name="use_company_time_tracking"] input').uncheck()
+    wizard.locator('.o_field_widget[name="time_tracking_override"] label[for$="_off"]').click()
+    wizard.locator('.o_field_widget[name="use_company_estimated_minutes"] input').uncheck()
+    estimate = wizard.locator('.o_field_widget[name="default_estimated_minutes"] input')
+    estimate.click()
+    estimate.type("12")
+    estimate.press("Tab")
+    wizard.locator('.o_field_widget[name="has_next_meeting_point"] input').check()
+    wizard.locator('.o_field_widget[name="next_meeting_rule"] label[for$="_interval_days"]').click()
+    wizard.locator('.o_field_widget[name="next_meeting_interval_days"] input').fill("14")
+    wizard.locator('button[name="action_next"]').click()
     with context.page.expect_response(
         lambda response: "/call_button/community.meeting.series.wizard/action_finish" in response.url
     ):
@@ -45,11 +58,25 @@ def series_created_with_defaults(context):
     record = context.browser_session.record(
         "community.meeting.series",
         context.series_fixture_id,
-        ["name", "duration_hours", "carryover_policy", "active"],
+        [
+            "name",
+            "duration_hours",
+            "carryover_policy",
+            "active",
+            "time_tracking",
+            "default_estimated_minutes",
+            "has_next_meeting_point",
+            "next_meeting_rule",
+            "next_meeting_interval_days",
+        ],
     )
     assert record["name"] == context.series_name, record
-    assert record["active"] and record["duration_hours"] > 0, record
-    assert record["carryover_policy"] == "review", record
+    assert record["active"] and record["duration_hours"] == 2.5, record
+    assert record["carryover_policy"] == "automatic", record
+    assert record["time_tracking"] == "off", record
+    assert record["default_estimated_minutes"] == 12, record
+    assert record["has_next_meeting_point"] and record["next_meeting_rule"] == "interval_days", record
+    assert record["next_meeting_interval_days"] == 14, record
 
 
 @given("the meeting series wizard is open with no name")

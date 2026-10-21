@@ -180,6 +180,7 @@
                         </page>
                     </notebook>
                 </sheet>
+                <chatter/>
             </form>
         </field>
     </record>
@@ -276,7 +277,7 @@
                         <div class="o_meeting_series_agenda_options">
                             <div class="o_meeting_series_agenda_option">
                                 <div class="o_meeting_series_agenda_option_header">
-                                    <label class="o_meeting_series_agenda_option_label" for="has_minutes_approval_point"><strong>Minutes approval</strong><span>Added when earlier meeting minutes are waiting for approval.</span></label>
+                                <label class="o_meeting_series_agenda_option_label" for="has_minutes_approval_point"><strong>Minutes approval</strong><span>Added to every meeting in this series. Only the assigned minutes secretary can approve earlier minutes. During a live meeting, the secretary also needs the Editor role and edit access.</span><span>Turning this off leaves pending minutes and existing approval points in place. Pending minutes can then be approved from their own meetings.</span></label>
                                     <field name="has_minutes_approval_point" widget="boolean_toggle" nolabel="1"/>
                                 </div>
                             </div>

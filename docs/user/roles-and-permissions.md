@@ -19,6 +19,20 @@ cumulative.
 > **Note:** Editor and Approver are independent: an approver who is not an editor can
 > approve minutes but cannot modify the agenda. A manager includes both.
 
+## Minutes approval routes
+
+- Anyone with read access to the meeting can open its draft preview, including
+  **Readers**. A user without access to the meeting cannot open the preview.
+- Without a later-meeting minutes-approval point, a user needs the **Approver**
+  role to approve minutes.
+- When a series uses that point, only the meeting's assigned **minutes
+  secretary** can approve earlier minutes from it. During a live meeting, that
+  person also needs the **Editor** role and effective write access to the
+  meeting. During offline preparation, the assigned secretary can approve
+  without general editing rights.
+- An Editor or Approver who is not the assigned minutes secretary cannot
+  approve earlier minutes through the later-meeting point.
+
 ## Who sees a meeting
 
 A meeting is visible to:
@@ -64,7 +78,7 @@ specific groups (see [Authorized proposer groups](admin/catalogs.md#authorized-p
 | Run the live meeting | | ✔ | | ✔ |
 | Record dissents / editorial notes | | ✔ | | ✔ |
 | Write minutes | | ✔ | | ✔ |
-| Approve minutes | | | ✔ | ✔ |
+| Approve minutes directly (without a later-meeting approval point) | | | ✔ | ✔ |
 | Start an amendment | | | | ✔ |
 | Assign per-meeting readers/editors | | ✔² | | ✔ |
 | Configure series, kinds, settings | | | | ✔ |

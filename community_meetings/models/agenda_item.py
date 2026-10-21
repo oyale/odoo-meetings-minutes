@@ -202,6 +202,14 @@ class CommunityMeetingAgendaItem(models.Model):
         for item in self:
             item._check_workflow_item(workflow_items, state)
 
+    def _lock_required_minutes_approval_meetings(self):
+        meetings = self.mapped("meeting_id").filtered(
+            lambda meeting: meeting.series_id.has_minutes_approval_point and meeting.state != "cancelled"
+        )
+        if meetings:
+            meetings._lock_live_workflow()
+            meetings.invalidate_recordset(["agenda_item_ids"])
+
     @api.constrains("disposition", "deferral_reason_code", "deferral_reason", "deferral_blocked_by")
     def _check_deferral_reason(self):
         blocked = {"blocked_point", "blocked_task", "blocked_activity", "blocked_todo"}
@@ -279,6 +287,30 @@ class CommunityMeetingAgendaItem(models.Model):
             raise UserError(_("An agenda item's carryover link cannot be changed."))
         if any(item.meeting_id.state in ("approved", "cancelled") for item in self):
             raise UserError(_("Agenda items in approved or cancelled meetings cannot be edited."))
+        if "agenda_type_id" in vals or "kind" in vals:
+            self._lock_required_minutes_approval_meetings()
+            destination_type = (
+                self.env["community.meeting.agenda.type"].browse(vals["agenda_type_id"])
+                if vals.get("agenda_type_id")
+                else self.env["community.meeting.agenda.type"].search(
+                    [("behavior", "=", vals.get("kind")), ("active", "=", True)],
+                    order="sequence, id",
+                    limit=1,
+                )
+            )
+            destination_kind = destination_type.behavior if destination_type else vals.get("kind")
+            if destination_kind != "minutes_approval":
+                meetings = self.mapped("meeting_id")
+                removing = self.filtered(lambda item: item.kind == "minutes_approval")
+                for meeting in meetings:
+                    required = meeting.series_id.has_minutes_approval_point and meeting.state != "cancelled"
+                    remaining = meeting.agenda_item_ids.filtered(
+                        lambda item: item.kind == "minutes_approval" and item not in removing
+                    )
+                    if required and not remaining:
+                        raise UserError(
+                            _("A meeting in this series must keep its minutes approval point.")
+                        )
         if "agenda_type_id" in vals:
             agenda_type = self.env["community.meeting.agenda.type"].browse(vals["agenda_type_id"])
             vals = dict(vals, kind=agenda_type.behavior)
@@ -322,6 +354,16 @@ class CommunityMeetingAgendaItem(models.Model):
             raise UserError(_("Agenda items can only be deleted from draft meetings."))
         if any(item.carryover_id.status == "accepted" for item in self if item.carryover_id):
             raise UserError(_("An accepted carryover agenda item cannot be deleted."))
+        self._lock_required_minutes_approval_meetings()
+        for meeting in self.mapped("meeting_id"):
+            approval_points = meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
+            if (
+                meeting.series_id.has_minutes_approval_point
+                and meeting.state != "cancelled"
+                and approval_points
+                and not (approval_points - self)
+            ):
+                raise UserError(_("A meeting in this series must keep its minutes approval point."))
         return super().unlink()
 
     def action_request_followup(self):

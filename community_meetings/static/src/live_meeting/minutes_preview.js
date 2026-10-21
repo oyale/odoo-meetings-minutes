@@ -36,9 +36,30 @@ export class MinutesPreview extends Component {
         });
     }
 
+    get backToMeetingLabel() {
+        return this.props.action?.params?.review_return
+            ? _t("Back to live meeting")
+            : _t("Return to meeting to edit");
+    }
+
     async backToMeeting() {
         const meetingId = this.props.action?.params?.meeting_id
             || this.props.action?.context?.active_id;
+        const reviewReturn = this.props.action?.params?.review_return;
+        if (reviewReturn?.meeting_id) {
+            if (reviewReturn.item_id) {
+                sessionStorage.setItem(
+                    `community_meetings.review_return_item.${reviewReturn.meeting_id}`,
+                    String(reviewReturn.item_id),
+                );
+            }
+            const action = await this.orm.call(
+                "community.meeting",
+                "action_open_live_meeting",
+                [[reviewReturn.meeting_id]],
+            );
+            return this.actionService.doAction(action);
+        }
         return this.actionService.doAction({
             type: "ir.actions.act_window",
             res_model: "community.meeting",

@@ -14,15 +14,26 @@ sus controles.
 En **Estructura**, los interruptores para usar los valores de la compañía en el
 seguimiento de tiempo, la política de puntos y las estimaciones empiezan
 activados. Desactiva uno para elegir un valor para la serie. **Puntos
-automáticos** permite añadir el punto de aprobación del acta cuando haya actas
-pendientes y un punto para fijar la próxima reunión en cada reunión de la serie;
-ambos empiezan desactivados. Al activar el punto de próxima reunión aparece la
-regla para proponer la fecha. Con el módulo Project, el vínculo con el proyecto
-también es opcional y empieza desactivado.
+automáticos** permite añadir un punto de aprobación del acta y un punto para
+fijar la próxima reunión en cada reunión de la serie; ambos empiezan
+desactivados. Al activar la aprobación, los aprobadores usan ese punto para las
+actas anteriores y no pueden aprobarlas directamente. Al activar el punto de
+próxima reunión aparece la regla para proponer la fecha. Con el módulo Project,
+el vínculo con el proyecto también es opcional y empieza desactivado.
 
 ![Formulario de serie](../img/series-form.png)
 
 ![Asistente Nueva serie de reuniones: paso Estructura](../img/series-structure-wizard.png)
+
+## Chatter e historial de cambios
+
+El formulario de la serie incluye un chatter. Allí quedan registrados los
+cambios de configuración, incluidos los coordinadores, los asistentes
+habituales y los tipos de seguimiento permitidos.
+Con el módulo Project, también quedan registrados el destino del proyecto y
+los cambios en la política de tareas.
+
+![Cambios de configuración de la serie registrados en el chatter](../img/series-change-history.png)
 
 ## Cabecera: Qué y Personas
 
@@ -51,7 +62,7 @@ lectura en cada reunión como *Descripción de la serie*.
 
 | Campo | Significado |
 |---|---|
-| **Punto de aprobación del acta** | Añade un primer punto para aprobar las actas anteriores. Solo aparece si hay actas pendientes. Reserva 5 minutos por acta. |
+| **Punto de aprobación del acta** | Añade un primer punto a todas las reuniones de la serie. Solo la persona asignada a la secretaría/actas puede aprobar actas anteriores. Durante una reunión en vivo, también necesita el rol Editor y permiso de edición; si la reunión se celebró sin modo en vivo, puede aprobarlas al preparar las actas. **Revisar** abre una vista previa de solo lectura y vuelve a esta reunión. La aprobación directa en la reunión anterior queda desactivada. Reserva 5 minutos por acta pendiente. |
 | **Punto de próxima reunión** | Añade un último punto para fijar la próxima fecha. Reserva 5 minutos. |
 | **Regla de próxima reunión** | Regla para proponer esa fecha: *día de la semana* (siempre martes), *día del mes* o *cada N días*. |
 

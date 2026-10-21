@@ -39,7 +39,7 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 ### Features
 
-- Editors and approvers can preview the saved minutes draft from the meeting form or live screen before approval. The preview excludes private editorial notes and does not create the official PDF; approval still creates the immutable revision and PDF.
+- Users with read access to the meeting, including Readers, can preview the saved minutes draft from the meeting form or live screen before approval. The preview excludes private editorial notes and does not create the official PDF; approval still creates the immutable revision and PDF.
 - Meeting series can define recurring agenda point templates. Selected templates create independent points in each meeting and link to the previous occurrence.
 
 ## Internal changes

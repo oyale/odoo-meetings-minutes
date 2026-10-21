@@ -70,3 +70,32 @@ def proposal_accepted_state(context):
         context.series_id,
         context.browser_session.record("community.meeting.series", context.series_id, ["name"])["name"],
     ], topic
+
+
+@when("I submit a proposal and reject it as an editor")
+def submit_and_reject_proposal(context):
+    submit_titled_proposal(context)
+    topic = context.browser_session.rpc(
+        "community.meeting.topic",
+        "search_read",
+        [[("series_id", "=", context.series_id), ("name", "=", context.proposal_name)]],
+        {"fields": ["id"]},
+    )
+    assert len(topic) == 1, topic
+    context.topic_id = topic[0]["id"]
+    context.page.goto(
+        f"{context.acceptance_config.base_url}/web#model=community.meeting.series&id={context.series_id}&view_type=form"
+    )
+    row = context.page.locator('.o_field_widget[name="pending_proposal_ids"] tr.o_data_row').filter(
+        has_text=context.proposal_name
+    )
+    expect(row).to_be_visible()
+    row.get_by_role("button", name="Reject", exact=True).click()
+
+
+@then("the proposal is rejected and is not admitted to the agenda")
+def proposal_is_rejected(context):
+    topic = context.browser_session.record(
+        "community.meeting.topic", context.topic_id, ["state", "proposal_status"]
+    )
+    assert topic["state"] == "proposed" and topic["proposal_status"] == "rejected", topic

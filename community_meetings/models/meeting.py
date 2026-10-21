@@ -78,6 +78,11 @@ class CommunityMeeting(models.Model):
         check_company=True,
         ondelete="restrict",
     )
+    requires_later_minutes_approval = fields.Boolean(
+        related="series_id.has_minutes_approval_point",
+        string="Requires approval from a later meeting",
+        readonly=True,
+    )
     series_carryover_policy = fields.Selection(related="series_id.carryover_policy", readonly=True)
     series_description = fields.Html(related="series_id.description", readonly=True, string="Series description")
     state = fields.Selection(
@@ -359,7 +364,10 @@ class CommunityMeeting(models.Model):
             raise UserError(_("Only the organizer or a meeting manager can change meeting access."))
         if any(meeting.state in ("approved", "cancelled") for meeting in self):
             raise UserError(_("Approved or cancelled meetings cannot be edited."))
-        return super().write(vals)
+        result = super().write(vals)
+        if vals.get("series_id"):
+            self._ensure_minutes_approval_point()
+        return result
 
     def _transition(self, allowed, target):
         for meeting in self:
@@ -462,9 +470,19 @@ class CommunityMeeting(models.Model):
             ],
             order="start_datetime, id",
         )
-        return [{"id": m.id, "code": m.code, "name": m.name, "state": m.state} for m in meetings]
+        return [
+            {
+                "id": m.id,
+                "code": m.code,
+                "name": m.name,
+                "state": m.state,
+                "start_datetime": m.start_datetime,
+                "location": m.location,
+            }
+            for m in meetings
+        ]
 
-    def _record_approved_previous_minutes(self):
+    def _record_approved_previous_minutes(self, revision):
         """Register this approval on the minutes-approval point of later meetings.
 
         The live "pending minutes" list is a query; without this the approval
@@ -491,9 +509,12 @@ class CommunityMeeting(models.Model):
                 [
                     ("agenda_item_id", "=", point.id),
                     ("meeting_id", "=", self.id),
+                    ("revision_id", "=", revision.id),
                 ]
             ):
-                approvals.create({"agenda_item_id": point.id, "meeting_id": self.id})
+                approvals.create(
+                    {"agenda_item_id": point.id, "meeting_id": self.id, "revision_id": revision.id}
+                )
 
     def get_minutes_approval_history(self):
         """Previously approved minutes recorded on this meeting's approval points."""
@@ -508,8 +529,12 @@ class CommunityMeeting(models.Model):
                 "id": record.id,
                 "agenda_item_id": record.agenda_item_id.id,
                 "meeting_id": record.meeting_id.id,
+                "revision_id": record.revision_id.id,
+                "revision_number": record.revision_id.revision_number if record.revision_id else False,
                 "code": record.meeting_id.code,
                 "name": record.meeting_id.name,
+                "start_datetime": record.meeting_id.start_datetime,
+                "location": record.meeting_id.location,
             }
             for record in records
         ]
@@ -615,11 +640,6 @@ class CommunityMeeting(models.Model):
     def _check_minutes_preview_access(self):
         self.ensure_one()
         self.check_access("read")
-        if not (
-            self.env.user.has_group("community_meetings.group_meeting_editor")
-            or self.env.user.has_group("community_meetings.group_meeting_approver")
-        ):
-            raise AccessError(_("Only meeting editors and approvers can preview draft minutes."))
         if self.state not in ("held", "minutes_draft"):
             raise UserError(_("Minutes preview is only available for held meetings or draft minutes."))
 
@@ -643,13 +663,31 @@ class CommunityMeeting(models.Model):
         self.ensure_one()
         self.check_access("read")
         editorial = self.env.user.has_group("community_meetings.group_meeting_editor")
-        minutes_reviewer = editorial or self.env.user.has_group("community_meetings.group_meeting_approver")
         return {
             "timezone": self.series_id.timezone or self.env.user.tz or "UTC",
             "can_edit": editorial and self.has_access("write") and self.state not in ("approved", "cancelled"),
             "can_view_editorial": editorial and self.has_access("write"),
             "can_approve": self.env.user.has_group("community_meetings.group_meeting_approver"),
-            "can_preview_minutes": minutes_reviewer,
+            "can_approve_previous_minutes": bool(
+                self.series_id.has_minutes_approval_point
+                and (
+                    (
+                        editorial
+                        and self.secretary_id == self.env.user
+                        and self.has_access("write")
+                        and self.state == "scheduled"
+                        and self.actual_start_datetime
+                        and not self.actual_end_datetime
+                    )
+                    or (
+                        self.secretary_id == self.env.user
+                        and self.state == "minutes_draft"
+                        and not self.actual_start_datetime
+                    )
+                )
+            ),
+            "requires_later_minutes_approval": bool(self.series_id.has_minutes_approval_point),
+            "can_preview_minutes": True,
             "time_tracking": self.time_tracking_enabled,
             "can_add_point": self.add_point_allowed,
         }
@@ -722,19 +760,119 @@ class CommunityMeeting(models.Model):
         return super().copy(values)
 
     def action_approve_minutes(self):
+        if not self.env.user.has_group("community_meetings.group_meeting_approver"):
+            raise AccessError(_("Only an authorized meeting approver can approve minutes."))
+        if any(meeting.series_id.has_minutes_approval_point for meeting in self):
+            raise UserError(_("Approve these minutes from a later meeting's minutes approval point."))
+        return self._approve_minutes()
+
+    def _check_previous_minutes_approval_route(self, live, offline):
+        if live:
+            # Approval authority follows the secretary assigned to this
+            # meeting; editor access alone must not grant it.
+            self.check_access("write")
+            if (
+                not self.env.user.has_group("community_meetings.group_meeting_editor")
+                or self.secretary_id != self.env.user
+            ):
+                raise AccessError(
+                    _("Only the assigned minutes secretary can approve previous minutes during a live meeting.")
+                )
+        elif offline:
+            if self.secretary_id != self.env.user:
+                raise AccessError(
+                    _(
+                        "Only the assigned minutes secretary can approve previous minutes while preparing "
+                        "offline minutes."
+                    )
+                )
+        else:
+            raise UserError(
+                _("Previous minutes can only be approved during a live meeting or while preparing offline minutes.")
+            )
+
+    def action_approve_pending_minutes(self, agenda_item_id, meeting_ids):
+        """Approve selected earlier minutes from this meeting's approval point."""
+        self.ensure_one()
+        self.check_access("read")
+        if not self.series_id.has_minutes_approval_point:
+            raise UserError(_("This series does not require approval from a later meeting."))
+        live = self.state == "scheduled" and bool(self.actual_start_datetime) and not self.actual_end_datetime
+        offline = self.state == "minutes_draft" and not self.actual_start_datetime
+        self._check_previous_minutes_approval_route(live, offline)
+        point = self.agenda_item_ids.filtered(
+            lambda item: item.id == agenda_item_id and item.kind == "minutes_approval"
+        )
+        if not point:
+            raise UserError(_("Choose a minutes approval point from this meeting."))
+        pending_ids = {row["id"] for row in self.get_pending_minutes_for_approval()}
+        selected_ids = set(meeting_ids or [])
+        if not selected_ids or not selected_ids.issubset(pending_ids):
+            raise UserError(_("Select pending minutes from an earlier meeting in this series."))
         revisions = self.env["community.meeting.revision"]
-        for meeting in self:
+        for meeting in self.env["community.meeting"].browse(sorted(selected_ids)).exists():
+            if (
+                meeting.series_id != self.series_id
+                or not meeting.start_datetime
+                or meeting.start_datetime >= self.start_datetime
+            ):
+                raise UserError(_("Only earlier meetings in this series can be approved here."))
+            revisions |= meeting._approve_minutes(approval_point=point, offline=offline)
+        if offline and not self.get_pending_minutes_for_approval():
+            point.sudo().write({"disposition": "closed"})
+        return revisions
+
+    def _check_minutes_approval_authorization(self, approval_point, offline):
+        self.ensure_one()
+        if not approval_point:
             if not self.env.user.has_group("community_meetings.group_meeting_approver"):
                 raise AccessError(_("Only an authorized meeting approver can approve minutes."))
+            return
+
+        point_meeting = approval_point.meeting_id
+        if offline:
+            if point_meeting.secretary_id != self.env.user:
+                raise AccessError(_("Only the assigned minutes secretary can approve minutes offline."))
+            if point_meeting.state != "minutes_draft" or point_meeting.actual_start_datetime:
+                raise UserError(_("Previous minutes can only be approved while preparing offline minutes."))
+        elif (
+            not self.env.user.has_group("community_meetings.group_meeting_editor")
+            or point_meeting.secretary_id != self.env.user
+        ):
+            raise AccessError(
+                _("Only the assigned minutes secretary can approve previous minutes from a live meeting.")
+            )
+        if not self.series_id.has_minutes_approval_point:
+            raise UserError(_("This series does not require approval from a later meeting."))
+
+    def _approve_minutes(self, approval_point=None, offline=False):
+        revisions = self.env["community.meeting.revision"]
+        for meeting in self:
+            meeting._check_minutes_approval_authorization(approval_point, offline)
             meeting.check_access("read")
             if meeting.state != "minutes_draft":
                 raise UserError(_("Only draft minutes can be approved."))
+            if meeting.series_id.has_minutes_approval_point and not approval_point:
+                raise UserError(_("Approve these minutes from a later meeting's minutes approval point."))
+            if approval_point and (
+                approval_point.kind != "minutes_approval"
+                or approval_point.meeting_id.series_id != meeting.series_id
+                or not approval_point.meeting_id.start_datetime
+                or approval_point.meeting_id.start_datetime <= meeting.start_datetime
+            ):
+                raise UserError(_("The minutes approval point must belong to a later meeting in this series."))
             if not meeting.agenda_item_ids:
                 raise ValidationError(_("Add at least one agenda item before approving the minutes."))
             meeting._validate_before_approval()
-            revision = self.env["community.meeting.revision"]._create_approved_revision(meeting)
+            revision = self.env["community.meeting.revision"]._create_approved_revision(
+                meeting, approval_point=approval_point, offline=offline
+            )
             meeting._set_approved_revision(revision)
-            meeting._record_approved_previous_minutes()
+            if approval_point:
+                self.env["community.meeting.minutes.approval"].sudo().create(
+                    {"agenda_item_id": approval_point.id, "meeting_id": meeting.id, "revision_id": revision.id}
+                )
+            meeting._record_approved_previous_minutes(revision)
             revisions |= revision
         return revisions
 

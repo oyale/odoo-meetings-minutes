@@ -12,14 +12,25 @@ the time, point, and recurrence choices beside their controls.
 
 In **Structure**, the company-default switches for time tracking, point policy
 and point estimates start on. Turn a switch off to choose a series-specific
-value. The **Automatic points** controls add minutes approval when minutes are
-pending and a next-meeting point to every meeting; both are optional and start
-off. Enabling the next-meeting point reveals the rule used to suggest its date.
+value. The **Automatic points** controls add a minutes-approval point to every
+meeting and a next-meeting point to every meeting; both are optional and start
+off. When minutes approval is enabled, approvers use that point for earlier
+minutes and cannot approve those minutes directly. Enabling the next-meeting
+point reveals the rule used to suggest its date.
 With the Project addon, project linking is also optional and starts off.
 
 ![Series form](../img/series-form.png)
 
 ![New Meeting Series wizard: Structure step](../img/series-structure-wizard.png)
+
+## Chatter and change history
+
+The series form includes a chatter. Changes to its settings are recorded there,
+including changes to coordinators, usual attendees and allowed follow-up types.
+With the Project addon, project destination and task policy changes are logged
+there as well.
+
+![Series setting changes recorded in the chatter](../img/series-change-history.png)
 
 ## Header: What and People
 
@@ -48,7 +59,7 @@ meeting as *Series description*.
 
 | Field | Meaning |
 |---|---|
-| **Minutes approval point** | Adds a first agenda point to approve previous minutes. Only appears when there are pending actas. Reserve: 5 minutes per pending acta. |
+| **Minutes approval point** | Adds a first agenda point to every meeting in the series. Only the assigned minutes secretary can approve earlier minutes. During a live meeting, the secretary also needs the Editor role and edit access; when preparing minutes for an offline meeting, they can approve there. **Review** opens a read-only preview and returns to this meeting. Direct approval on the earlier meeting is disabled. Reserve: 5 minutes per pending acta. |
 | **Next meeting point** | Adds a last agenda point to set the next date. Reserves 5 minutes. |
 | **Next meeting default** | Rule to pre-fill that date: *next weekday* (always Tuesday), *day of month*, or *after N days*. |
 

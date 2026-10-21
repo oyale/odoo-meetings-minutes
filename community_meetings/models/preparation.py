@@ -54,11 +54,12 @@ class Settings(models.TransientModel):
 class MeetingSeries(models.Model):
     _inherit = "community.meeting.series"
 
-    duration_hours = fields.Float(string="Default duration", default=1.0, required=True)
+    duration_hours = fields.Float(string="Default duration", default=1.0, required=True, tracking=True)
     attendee_partner_ids = fields.Many2many("res.partner", string="Default attendees")
     default_estimated_minutes = fields.Integer(
         string="Default point estimate (minutes)",
         help="Overrides the company default for points of this series.",
+        tracking=True,
     )
     company_point_estimated_minutes = fields.Integer(
         related="company_id.meeting_estimated_minutes",
@@ -67,22 +68,26 @@ class MeetingSeries(models.Model):
     coordinator_label = fields.Char(
         string="Coordination role name",
         help="Optional. Overrides the default role name from Settings → Meetings for the meetings of this series.",
+        tracking=True,
     )
     secretary_label = fields.Char(
         string="Secretary role name",
         help="Optional. Overrides the default role name from Settings → Meetings for the meetings of this series.",
+        tracking=True,
     )
     meeting_name_pattern = fields.Char(
         string="New meeting name pattern",
         default="{date} {series}",
         required=True,
         help="Use {date} for the meeting date (YYYY-MM-DD) and {series} for this series name.",
+        tracking=True,
     )
     time_tracking = fields.Selection(
         [("inherit", "Company default"), ("on", "On"), ("off", "Off")],
         default="inherit",
         required=True,
         help="Overrides the company time-tracking setting for meetings of this series.",
+        tracking=True,
     )
     company_meeting_time_tracking = fields.Boolean(
         related="company_id.meeting_time_tracking",
@@ -98,6 +103,7 @@ class MeetingSeries(models.Model):
         default="inherit",
         required=True,
         help="Overrides the company rule for when new points can be added to the meetings of this series.",
+        tracking=True,
     )
 
     def _point_estimated_minutes_default(self):
@@ -263,23 +269,7 @@ class Meeting(models.Model):
             series = meeting.series_id
             if not series:
                 continue
-            if (
-                series.has_minutes_approval_point
-                and (pending := meeting.get_pending_minutes_for_approval())
-                and not meeting.agenda_item_ids.filtered(
-                    lambda item: item.agenda_type_id.behavior == "minutes_approval"
-                )
-            ):
-                meeting.agenda_item_ids.create(
-                    {
-                        "meeting_id": meeting.id,
-                        "name": _("Approve previous minutes"),
-                        "kind": "minutes_approval",
-                        "sequence": -1,
-                        "estimated_minutes": 5 * len(pending),
-                        "presenter_partner_id": False,
-                    }
-                )
+            meeting._ensure_minutes_approval_point()
             if series.has_next_meeting_point and not meeting.agenda_item_ids.filtered(
                 lambda item: item.agenda_type_id.behavior == "next_meeting"
             ):
@@ -297,6 +287,26 @@ class Meeting(models.Model):
                         "presenter_partner_id": False,
                     }
                 )
+
+    def _ensure_minutes_approval_point(self):
+        for meeting in self:
+            if not meeting.series_id.has_minutes_approval_point:
+                continue
+            meeting._lock_live_workflow()
+            meeting.invalidate_recordset(["agenda_item_ids"])
+            if meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval"):
+                continue
+            pending = meeting.get_pending_minutes_for_approval()
+            self.env["community.meeting.agenda.item"].create(
+                {
+                    "meeting_id": meeting.id,
+                    "name": _("Approve previous minutes"),
+                    "kind": "minutes_approval",
+                    "sequence": -1,
+                    "estimated_minutes": 5 * len(pending),
+                    "presenter_partner_id": False,
+                }
+            )
 
     def write(self, vals):
         for meeting in self:
@@ -318,6 +328,7 @@ class Meeting(models.Model):
             super(Meeting, meeting).write(values)
             if "series_id" in values:
                 meeting.agenda_item_ids.topic_id._set_series(meeting.series_id)
+                meeting._ensure_minutes_approval_point()
         return True
 
     def unlink(self):
