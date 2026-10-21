@@ -12,6 +12,7 @@ from pathlib import Path
 
 from live_meeting_playwright import BASE_URL, LiveMeetingBrowserChecks
 from browser_support.localized_selectors import SpanishPlaywrightLocalization
+from browser_support.screenshot_capture import capture_checkpoint, capture_failure
 from playwright.sync_api import expect
 
 # Each entry is an observable user action, not a line/branch coverage claim.
@@ -271,16 +272,12 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
     def capture_visual_screenshot(self, name, viewport=None):
         if not hasattr(self, "_visual_capture_locale"):
             self._visual_capture_locale = "es" if self.is_spanish_ui() else "en"
-        locale = self._visual_capture_locale
-        size = viewport or self.page.evaluate(
-            "() => ({width: window.innerWidth, height: window.innerHeight})"
-        )
-        device = "mobile" if size["width"] <= 767 else "desktop"
-        target = ARTIFACTS / "visual-preparation"
-        target.mkdir(mode=0o700, parents=True, exist_ok=True)
-        self.page.screenshot(
-            path=str(target / f"{name}-{locale}-{device}.png"),
-            full_page=True,
+        capture_checkpoint(
+            self.page,
+            name,
+            self.id().replace(".", "-"),
+            self._visual_capture_locale,
+            viewport,
         )
 
     def localized_datetime(self, value):
@@ -1076,14 +1073,6 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
         expect(schedule_heading).to_be_visible()
         expect(people_heading).to_be_visible()
-        locale = (
-            "es"
-            if self.page.locator(
-                ".o_horizontal_separator",
-                has_text=re.compile("Cuándo y dónde", re.IGNORECASE),
-            ).count()
-            else "en"
-        )
         schedule_box = schedule_heading.bounding_box()
         people_box = people_heading.bounding_box()
         self.assertLess(
@@ -1091,13 +1080,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             100,
             "Schedule and people should share the desktop identity row.",
         )
-        self.page.screenshot(
-            path=str(
-                Path(os.environ["PLAYWRIGHT_ARTIFACTS"])
-                / f"meeting-form-desktop-{locale}.png"
-            ),
-            full_page=True,
-        )
+        self.capture_visual_screenshot("meeting-form-desktop")
         # The half-width desktop viewport exercises the reflow expected at
         # 200% zoom on a 1440px display while keeping the test deterministic.
         self.page.set_viewport_size({"width": 720, "height": 900})
@@ -1114,13 +1097,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             1,
             responsive,
         )
-        self.page.screenshot(
-            path=str(
-                Path(os.environ["PLAYWRIGHT_ARTIFACTS"])
-                / f"meeting-form-mobile-{locale}.png"
-            ),
-            full_page=True,
-        )
+        self.capture_visual_screenshot("meeting-form-mobile")
         self.page.set_viewport_size({"width": 1440, "height": 900})
         self.page.locator('.o_field_widget[name="location"] input').fill("Browser room")
         self.page.get_by_role(
@@ -2461,11 +2438,8 @@ class CoverageResult(unittest.TextTestResult):
         super().addError(test, err)
 
     def capture(self, test):
-        ARTIFACTS.mkdir(mode=0o700, parents=True, exist_ok=True)
         try:
-            test.page.screenshot(
-                path=str(ARTIFACTS / (test._testMethodName + ".png")), full_page=True
-            )
+            capture_failure(test.page, test.id().replace(".", "-"))
         except Exception:
             pass  # Preserve the original failure if the browser itself has died.
 

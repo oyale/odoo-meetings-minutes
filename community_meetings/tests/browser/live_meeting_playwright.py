@@ -24,6 +24,7 @@ TESTS_ROOT = Path(__file__).resolve().parents[3] / "tests"
 sys.path.insert(0, str(TESTS_ROOT))
 from browser_support.meeting import LiveMeetingFixture, open_live_meeting
 from browser_support.odoo_browser import OdooBrowserSession
+from browser_support.screenshot_capture import capture_checkpoint
 
 BASE_URL = os.environ.get("ODOO_BASE_URL", "http://localhost:8069").rstrip("/")
 DB = os.environ.get("ODOO_DB", "")
@@ -199,6 +200,17 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
     def outcome(self, kind):
         return self.card(kind, begin=False).locator(".o_live_outcome_badge")
 
+    def capture_checkpoint(self, name, viewport=None, capture_target=None):
+        locale = "es" if (self.page.locator("html").get_attribute("lang") or "").lower().startswith("es") else "en"
+        return capture_checkpoint(
+            self.page,
+            name,
+            self.id().replace(".", "-"),
+            locale,
+            viewport,
+            capture_target,
+        )
+
     def record(self, model, record_id, fields, page=None):
         return self.rpc(model, "read", [[record_id], fields], page=page)[0]
 
@@ -256,15 +268,17 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         expect(history.get_by_text("Context from the earlier meeting")).to_be_visible()
         expect(history.get_by_text("Read-only context from earlier meetings. It is not added to these minutes.")).to_be_visible()
 
-        screenshot_dir = Path(os.environ.get("MM_SCREENSHOT_DIR", "/tmp"))
-        screenshot_dir.mkdir(parents=True, exist_ok=True)
-        history.screenshot(path=str(screenshot_dir / "discussion-history-desktop.png"))
+        self.capture_checkpoint("discussion-history-desktop", capture_target=history)
         self.page.set_viewport_size({"width": 390, "height": 844})
         self.assertLessEqual(
             self.page.evaluate("document.documentElement.scrollWidth"),
             self.page.evaluate("window.innerWidth"),
         )
-        history.screenshot(path=str(screenshot_dir / "discussion-history-mobile.png"))
+        self.capture_checkpoint(
+            "discussion-history-mobile",
+            {"width": 390, "height": 844},
+            history,
+        )
         self.page.set_viewport_size({"width": 1440, "height": 1000})
 
         history.get_by_role("button", name="Start without previous notes").click()
@@ -578,7 +592,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             debug_dir = Path(tempfile.gettempdir()) / "mm_minutes_preview_debug"
             if capture_language:
                 debug_dir.mkdir(parents=True, exist_ok=True)
-                self.page.screenshot(path=str(debug_dir / "minutes-preview-debug-page.png"), full_page=True)
+                self.capture_checkpoint("minutes-preview-debug-page")
                 (debug_dir / "minutes-preview-debug-dom.html").write_text(self.page.locator("body").inner_html())
                 (debug_dir / "minutes-preview-debug-trace.json").write_text(json.dumps({
                     "url": self.page.url,
@@ -588,7 +602,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
                 }, ensure_ascii=False, indent=2))
             self.fail(
                 f"Minutes preview did not render; debug artifacts are in "
-                f"{debug_dir if capture_language else 'devctl logs'}; "
+                f"{debug_dir if capture_language else 'browser test logs'}; "
                 f"console={self.console_errors[self.errors_before:]!r} rpc={write_trace.rpc!r}"
             )
         expect(preview).to_contain_text(
@@ -608,17 +622,23 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
         self.assertFalse(write_trace.empty_note_writes, "opening the preview must not write untouched empty editors")
         self.assertEqual(write_trace.max_active_note_writes, 1, "writes for a single meeting must be serialized")
         expect(preview.locator(".o_community_minutes_preview_body")).to_be_visible()
-        if capture_path:
-            Path(capture_path).parent.mkdir(parents=True, exist_ok=True)
-            self.page.set_viewport_size({"width": 1440, "height": 2000})
-            preview.evaluate("""element => {
-                element.style.minHeight = "0";
-                element.style.height = "auto";
-                element.style.overflow = "visible";
-                for (let node = element; node; node = node.parentElement) node.scrollTop = 0;
-                window.scrollTo(0, 0);
-            }""")
-            preview.screenshot(path=capture_path)
+        self.page.set_viewport_size({"width": 1440, "height": 2000})
+        preview.evaluate("""element => {
+            element.style.minHeight = "0";
+            element.style.height = "auto";
+            element.style.overflow = "visible";
+            for (let node = element; node; node = node.parentElement) node.scrollTop = 0;
+            window.scrollTo(0, 0);
+        }""")
+        captured = self.capture_checkpoint(
+            "minutes-preview",
+            {"width": 1440, "height": 2000},
+            preview,
+        )
+        if capture_path and captured:
+            target_path = Path(capture_path)
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            target_path.write_bytes(captured[0].read_bytes())
         if capture_language and capture_language.startswith("es"):
             expect(preview).to_contain_text("Orden del día y debate")
             expect(preview).to_contain_text("Fecha de la reunión")
