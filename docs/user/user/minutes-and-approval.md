@@ -31,19 +31,24 @@ and only in **Held** or **Minutes draft** state. Readers cannot open this draft
 preview. It is read-only: opening it and choosing **Return to meeting to edit**
 leave the saved content and meeting state unchanged.
 
+![Read-only preview of saved meeting minutes](../img/minutes-preview.png)
+
 > **Tip:** The minutes-approval structural point of *later* meetings will list this acta
 > until it is approved — approve promptly to keep the queue clean.
 
 ## 2. Approve (approver)
 
 When the series requires a minutes-approval point, each pending earlier meeting
-has its own **Approve minutes** action on that point. An **Editor** can use it
-while the later meeting is live. For a meeting that happened offline, an
-**Approver** can use it while preparing that meeting's minutes. In this offline
-flow, the point closes after all earlier minutes have been approved. Direct
-approval on the earlier meeting is blocked for this series. Approval history
-links to the exact approved revision, so a later amendment is recorded
-separately.
+has its own **Approve minutes** action on that point. Only the assigned minutes
+secretary can use it. During a live meeting, the secretary also needs the
+**Editor** role and edit access to that meeting; for a meeting held offline,
+the secretary can approve while preparing its minutes. Choose **Review** beside an earlier
+meeting to open its saved draft in the read-only preview; **Back to live
+meeting** returns to the same point. Reviewing does not pause or finish an
+active agenda point. In offline preparation, the point closes after all earlier
+minutes have been approved. Direct approval on the earlier meeting is blocked
+for this series. Approval history links to the exact approved revision, so a
+later amendment is recorded separately.
 
 When a series does not use a later-meeting approval point, an **Approver**
 presses **Approve Minutes** (live screen or form header). When the point policy

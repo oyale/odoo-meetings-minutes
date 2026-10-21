@@ -62,7 +62,7 @@ lectura en cada reunión como *Descripción de la serie*.
 
 | Campo | Significado |
 |---|---|
-| **Punto de aprobación del acta** | Añade un primer punto a todas las reuniones de la serie. Los editores aprueban actas anteriores durante una reunión en vivo; si la reunión ocurrió offline, un aprobador puede hacerlo al preparar su acta. La aprobación directa en la reunión anterior queda desactivada. Reserva 5 minutos por acta pendiente. |
+| **Punto de aprobación del acta** | Añade un primer punto a todas las reuniones de la serie. Solo la persona asignada a la secretaría/actas puede aprobar actas anteriores. Durante una reunión en vivo, también necesita el rol Editor y permiso de edición; si la reunión se celebró sin modo en vivo, puede aprobarlas al preparar las actas. **Review** abre una vista previa de solo lectura y vuelve a esta reunión. La aprobación directa en la reunión anterior queda desactivada. Reserva 5 minutos por acta pendiente. |
 | **Punto de próxima reunión** | Añade un último punto para fijar la próxima fecha. Reserva 5 minutos. |
 | **Regla de próxima reunión** | Regla para proponer esa fecha: *día de la semana* (siempre martes), *día del mes* o *cada N días*. |
 

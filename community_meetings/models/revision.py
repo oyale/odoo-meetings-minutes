@@ -6,6 +6,7 @@ from typing import ClassVar
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tools import html_sanitize
+from odoo.tools.misc import format_datetime
 
 
 class CommunityMeetingRevision(models.Model):
@@ -56,10 +57,15 @@ class CommunityMeetingRevision(models.Model):
     def _build_public_content(self, meeting):
         meeting.ensure_one()
         agenda = []
-        for item in meeting.agenda_item_ids.sorted(lambda row: (row.sequence, row.id)):
+        for sequence, item in enumerate(
+            meeting.agenda_item_ids.sorted(lambda row: (row.sequence, row.id)),
+            start=1,
+        ):
             agenda.append(
                 {
-                    "sequence": item.sequence,
+                    # Internal order values reserve slots for structural points;
+                    # published minutes use clean, contiguous presentation numbers.
+                    "sequence": sequence,
                     "topic_id": item.topic_id.id,
                     "priority": item.priority,
                     "deadline": fields.Date.to_string(item.deadline) if item.deadline else "",
@@ -152,6 +158,14 @@ class CommunityMeetingRevision(models.Model):
                 "attendees": sorted(meeting.attendee_partner_ids.mapped("name")),
                 "start_datetime": fields.Datetime.to_string(meeting.start_datetime) if meeting.start_datetime else "",
                 "end_datetime": fields.Datetime.to_string(meeting.end_datetime) if meeting.end_datetime else "",
+                "start_datetime_display": format_datetime(
+                    self.env,
+                    meeting.start_datetime,
+                    tz=self.env.user.tz,
+                    dt_format="short",
+                )
+                if meeting.start_datetime
+                else "",
                 "location": meeting.location or "",
                 "meeting_url": meeting.meeting_url or "",
                 "description": self._clean_html(meeting.description),
@@ -212,14 +226,19 @@ class CommunityMeetingRevision(models.Model):
                 and point_meeting.actual_start_datetime
                 and not point_meeting.actual_end_datetime
             )
-            offline_approver_approval = (
+            offline_secretary_approval = (
                 offline
-                and self.env.user.has_group("community_meetings.group_meeting_approver")
+                and point_meeting.secretary_id == self.env.user
                 and point_meeting.state == "minutes_draft"
                 and not point_meeting.actual_start_datetime
             )
-            if not (live_editor_approval or offline_approver_approval):
-                raise AccessError(_("Only an authorized editor in a live meeting or approver preparing offline minutes can approve from this point."))
+            if not (live_editor_approval or offline_secretary_approval):
+                raise AccessError(
+                    _(
+                        "Only the assigned minutes secretary can approve from this point; live approval also "
+                        "requires the Editor role and edit access."
+                    )
+                )
             if (
                 approval_point.kind != "minutes_approval"
                 or point_meeting.series_id != meeting.series_id

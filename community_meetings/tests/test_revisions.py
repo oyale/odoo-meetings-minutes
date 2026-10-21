@@ -199,7 +199,7 @@ class TestMeetingRevisions(TransactionCase):
         self.assertEqual(history[-1].revision_id, earlier.approved_revision_id)
         self.assertNotEqual(history[0].revision_id, history[1].revision_id)
 
-    def test_offline_approver_approves_previous_minutes_from_point(self):
+    def test_assigned_secretary_approves_previous_minutes_from_point(self):
         series = self.env["community.meeting.series"].with_user(self.editor).create(
             {"name": "Offline approval policy", "has_minutes_approval_point": True}
         )
@@ -207,13 +207,38 @@ class TestMeetingRevisions(TransactionCase):
         later = self._drafted_meeting(
             "Offline minutes with approval", series=series, start_datetime="2026-11-08 10:00:00"
         )
+        secretary = self.env["res.users"].create(
+            {
+                "name": "Assigned minutes secretary",
+                "login": "assigned-minutes-secretary",
+                "groups_id": [
+                    (
+                        6,
+                        0,
+                        [
+                            self.env.ref("base.group_user").id,
+                            self.env.ref("community_meetings.group_meeting_reader").id,
+                        ],
+                    )
+                ],
+            }
+        )
+        earlier.with_user(self.editor).write({"reader_user_ids": [(4, secretary.id)]})
+        later.with_user(self.editor).write(
+            {"secretary_id": secretary.id, "reader_user_ids": [(4, secretary.id)]}
+        )
         point = later.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
         self.assertTrue(point)
         self.assertFalse(later.actual_start_datetime)
         with self.assertRaises(AccessError), self.cr.savepoint():
             later.with_user(self.editor).action_approve_pending_minutes(point.id, [earlier.id])
+        self.assertTrue(self.approver.has_group("community_meetings.group_meeting_approver"))
+        self.assertFalse(later.with_user(self.approver).get_live_capabilities()["can_approve_previous_minutes"])
+        with self.assertRaises(AccessError), self.cr.savepoint():
+            later.with_user(self.approver).action_approve_pending_minutes(point.id, [earlier.id])
+        self.assertTrue(later.with_user(secretary).get_live_capabilities()["can_approve_previous_minutes"])
         with patch.object(type(self.env["ir.actions.report"]), "_render_qweb_pdf", return_value=(b"%PDF-1.4", "pdf")):
-            revisions = later.with_user(self.approver).action_approve_pending_minutes(point.id, [earlier.id])
+            revisions = later.with_user(secretary).action_approve_pending_minutes(point.id, [earlier.id])
         self.assertEqual({revision.meeting_id for revision in revisions}, {earlier})
         self.assertEqual((earlier.state, later.state), ("approved", "minutes_draft"))
         self.assertEqual(point.disposition, "closed")
@@ -310,6 +335,23 @@ class TestMeetingRevisions(TransactionCase):
         action = meeting.with_user(self.editor).action_preview_minutes()
         self.assertEqual(action["tag"], "community_meetings.minutes_preview")
         self.assertEqual(action["params"]["meeting_id"], meeting.id)
+
+    def test_minutes_snapshot_renumbers_structural_agenda_points(self):
+        series = self.env["community.meeting.series"].with_user(self.editor).create(
+            {
+                "name": "Renumbered minutes series",
+                "has_minutes_approval_point": True,
+                "has_next_meeting_point": True,
+            }
+        )
+        meeting = self._drafted_meeting("Renumber structural points", series=series)
+
+        agenda = self.env["community.meeting.revision"]._build_public_content(meeting)["agenda"]
+
+        self.assertGreaterEqual(len(agenda), 3)
+        self.assertEqual([item["sequence"] for item in agenda], list(range(1, len(agenda) + 1)))
+        self.assertEqual(agenda[0]["kind"], "minutes_approval")
+        self.assertEqual(agenda[-1]["kind"], "next_meeting")
 
     def test_report_html_and_snapshot_are_stable_after_action_changes(self):
         _, action, revision = self._approved_meeting()

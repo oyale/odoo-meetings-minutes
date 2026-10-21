@@ -290,9 +290,11 @@ class Meeting(models.Model):
 
     def _ensure_minutes_approval_point(self):
         for meeting in self:
-            if not meeting.series_id.has_minutes_approval_point or meeting.agenda_item_ids.filtered(
-                lambda item: item.kind == "minutes_approval"
-            ):
+            if not meeting.series_id.has_minutes_approval_point:
+                continue
+            meeting._lock_live_workflow()
+            meeting.invalidate_recordset(["agenda_item_ids"])
+            if meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval"):
                 continue
             pending = meeting.get_pending_minutes_for_approval()
             self.env["community.meeting.agenda.item"].create(

@@ -71,8 +71,9 @@ class CommunityMeetingSeries(models.Model):
     has_minutes_approval_point = fields.Boolean(
         string="Minutes approval point",
         help=(
-            "Add a 'Minutes Approval' point to every meeting. Editors use it during a live meeting and "
-            "approvers use it while preparing minutes for an offline meeting to approve pending earlier minutes."
+            "Add a 'Minutes Approval' point to every meeting. Only the assigned minutes secretary can approve "
+            "earlier minutes here, whether the meeting is live or its minutes are being prepared offline. During "
+            "a live meeting, the secretary also needs the Editor role and edit access."
         ),
         tracking=True,
     )

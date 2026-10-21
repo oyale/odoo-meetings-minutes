@@ -301,6 +301,47 @@ class TestMeetingDomain(TransactionCase):
             )
         )
 
+    def test_required_minutes_approval_point_cannot_be_removed_or_retyped(self):
+        series = self.env["community.meeting.series"].create(
+            {"name": "Required approval point", "has_minutes_approval_point": True}
+        )
+        meeting = self.env["community.meeting"].create(
+            {
+                "name": "Keep approval point",
+                "series_id": series.id,
+                "start_datetime": "2026-10-08 10:00:00",
+            }
+        )
+        point = meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
+
+        with self.assertRaises(UserError), self.cr.savepoint():
+            point.unlink()
+        with self.assertRaises(UserError), self.cr.savepoint():
+            point.write({"kind": "discussion"})
+        discussion_type = self.env["community.meeting.agenda.type"].search(
+            [("behavior", "=", "discussion"), ("active", "=", True)], limit=1
+        )
+        with self.assertRaises(UserError), self.cr.savepoint():
+            point.write({"agenda_type_id": discussion_type.id})
+        self.assertEqual(len(meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")), 1)
+
+        series.write({"has_minutes_approval_point": False})
+        point.unlink()
+        self.assertFalse(meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval"))
+
+        other_series = self.env["community.meeting.series"].create(
+            {"name": "Approval enabled after meeting", "has_minutes_approval_point": True}
+        )
+        plain_series = self.env["community.meeting.series"].create({"name": "No approval point"})
+        plain_meeting = self.env["community.meeting"].create(
+            {"name": "Moved into approval series", "series_id": plain_series.id}
+        )
+        plain_meeting.write({"series_id": other_series.id})
+        self.assertEqual(
+            len(plain_meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")),
+            1,
+        )
+
     def test_enabling_minutes_approval_adds_points_to_existing_meetings(self):
         series = self.env["community.meeting.series"].create({"name": "Enable approval later"})
         existing = self.env["community.meeting"].create(
@@ -314,6 +355,23 @@ class TestMeetingDomain(TransactionCase):
         )
         unattached.write({"series_id": series.id})
         self.assertEqual(len(unattached.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")), 1)
+
+    def test_cancelled_meeting_can_remove_required_approval_point(self):
+        series = self.env["community.meeting.series"].create(
+            {"name": "Cancelled required approval", "has_minutes_approval_point": True}
+        )
+        meeting = self.env["community.meeting"].create(
+            {"name": "Cancelled meeting", "series_id": series.id, "start_datetime": "2026-10-08 10:00:00"}
+        )
+        point = meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
+        meeting.action_schedule()
+        meeting.action_cancel()
+
+        self.assertEqual(meeting.state, "cancelled")
+        with self.assertRaises(UserError), self.cr.savepoint():
+            point.write({"kind": "discussion"})
+        point.unlink()
+        self.assertFalse(meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval"))
 
     def test_approved_previous_minutes_are_recorded_on_later_point(self):
         series = self.env["community.meeting.series"].create(

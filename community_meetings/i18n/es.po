@@ -6405,6 +6405,10 @@ msgid "Meeting minutes"
 msgstr "Acta de la reunión"
 
 #. module: community_meetings
+msgid "Meeting date"
+msgstr "Fecha de la reunión"
+
+#. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
@@ -6847,12 +6851,6 @@ msgstr "No hay ninguna actividad vinculada disponible."
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "No matching contacts."
 msgstr "No hay contactos coincidentes."
-
-#. module: community_meetings
-#. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-msgid "No pending minutes."
-msgstr "No hay actas pendientes."
 
 #. module: community_meetings
 #. odoo-python
@@ -7739,12 +7737,6 @@ msgstr "Propuesta pendiente"
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-msgid "Pending minutes to approve"
-msgstr "Actas pendientes de aprobar"
-
-#. module: community_meetings
-#. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Pending only"
 msgstr "Solo pendientes"
 
@@ -8525,15 +8517,9 @@ msgid "The previous minutes could not be approved. Please refresh and retry."
 msgstr "No se pudo aprobar el acta anterior. Actualiza la página e inténtalo de nuevo."
 
 #. module: community_meetings
-#. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-msgid "Approve minutes"
-msgstr "Aprobar el acta"
-
-#. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
-msgid "Added to every meeting in this series. Editors can approve earlier minutes during a live meeting; approvers can do so while preparing minutes for an offline meeting."
-msgstr "Se añade a todas las reuniones de esta serie. Los editores pueden aprobar actas anteriores durante una reunión en vivo; los aprobadores pueden hacerlo al preparar el acta de una reunión offline."
+msgid "Added to every meeting in this series. Only the assigned minutes secretary can approve earlier minutes. During a live meeting, the secretary also needs the Editor role and edit access."
+msgstr "Se añade a todas las reuniones de esta serie. Solo la persona asignada a secretaría/actas puede aprobar actas anteriores. En directo también necesita el rol Editor y permiso de edición."
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
@@ -10840,10 +10826,46 @@ msgid "Only meeting editors can approve previous minutes from a later meeting."
 msgstr "Solo los editores pueden aprobar actas anteriores desde una reunión posterior."
 
 #. module: community_meetings
-msgid "Only an authorized editor in a live meeting or approver preparing offline minutes can approve from this point."
-msgstr "Solo un editor autorizado en una reunión en vivo o un aprobador que prepara el acta de una reunión offline puede aprobar desde este punto."
+msgid "Only the assigned minutes secretary can approve from this point; live approval also requires the Editor role and edit access."
+msgstr "Solo la persona asignada a secretaría/actas puede aprobar desde este punto; en directo también necesita el rol Editor y permiso de edición."
 
 #. module: community_meetings
 #: model:ir.model.fields,help:community_meetings.field_community_meeting_series__has_minutes_approval_point
-msgid "Add a 'Minutes Approval' point to every meeting. Editors use it during a live meeting and approvers use it while preparing minutes for an offline meeting to approve pending earlier minutes."
-msgstr "Añade un punto «Aprobación del acta» a todas las reuniones. Los editores lo usan durante una reunión en vivo y los aprobadores al preparar el acta de una reunión offline para aprobar actas anteriores pendientes."
+msgid "Add a 'Minutes Approval' point to every meeting. Only the assigned minutes secretary can approve earlier minutes here, whether the meeting is live or its minutes are being prepared offline. During a live meeting, the secretary also needs the Editor role and edit access."
+msgstr "Añade un punto «Aprobación del acta» a todas las reuniones. Solo la persona asignada a secretaría/actas puede aprobar actas anteriores, tanto en directo como al preparar actas offline. En directo también necesita el rol Editor y permiso de edición."
+
+#. module: community_meetings
+msgid "Earlier minutes awaiting approval"
+msgstr "Actas anteriores pendientes de aprobación"
+
+#. module: community_meetings
+msgid "No earlier minutes are waiting for approval."
+msgstr "No hay actas anteriores pendientes de aprobación."
+
+#. module: community_meetings
+msgid "Approve earlier minutes"
+msgstr "Aprobar actas anteriores"
+
+#. module: community_meetings
+msgid "This meeting is live. You can approve earlier minutes below."
+msgstr "Esta reunión está en directo. Puedes aprobar las actas anteriores que aparecen debajo."
+
+#. module: community_meetings
+msgid "For this live meeting, an Editor with edit access can approve earlier minutes below."
+msgstr "En esta reunión en directo, quien tenga el rol Editor y permiso para editarla puede aprobar las actas anteriores."
+
+#. module: community_meetings
+msgid "These minutes are being prepared. You can approve earlier minutes below."
+msgstr "Se está preparando el acta de esta reunión. Puedes aprobar las actas anteriores que aparecen debajo."
+
+#. module: community_meetings
+msgid "While preparing minutes for this meeting, an Approver can approve earlier minutes below."
+msgstr "Al preparar el acta de esta reunión, una persona con el rol Aprobador puede aprobar las actas anteriores."
+
+#. module: community_meetings
+msgid "Approval is available here during a live meeting for an Editor with edit access, or while preparing minutes for a meeting held without using the live meeting screen for an Approver."
+msgstr "Aquí se pueden aprobar actas anteriores durante una reunión en directo (Editor con permiso de edición) o al preparar el acta de una reunión celebrada sin usar la pantalla de reunión en directo (Aprobador)."
+
+#. module: community_meetings
+msgid "The assigned minutes secretary can approve earlier minutes during a live meeting or while preparing minutes for an offline meeting. In a live meeting, the secretary also needs the Editor role and edit access."
+msgstr "La persona asignada a secretaría/actas puede aprobar actas anteriores en directo o al preparar actas offline. En directo también necesita el rol Editor y permiso de edición."

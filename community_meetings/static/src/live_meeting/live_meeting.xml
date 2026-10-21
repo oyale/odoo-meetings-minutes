@@ -3,7 +3,9 @@
     <t t-name="community_meetings.LiveMeeting">
         <main class="o_community_live_meeting">
             <div class="o_live_topbar">
-                <div class="o_live_topbar_navigation"><button class="btn btn-secondary" t-att-disabled="state.saving > 0" t-on-click="close"><i class="fa fa-arrow-left me-1" aria-hidden="true"/> Back to Meetings</button></div>
+                <div class="o_live_topbar_navigation">
+                    <button class="btn btn-secondary" t-att-disabled="state.saving > 0" t-on-click="close"><i class="fa fa-arrow-left me-1" aria-hidden="true"/> Back to Meetings</button>
+                </div>
                 <div class="o_live_workflow_buttons">
                   <t t-if="state.capabilities?.can_edit">
                     <button t-if="state.meeting.state === 'scheduled' and !state.meeting.actual_start_datetime and timingEnabled" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="startMeeting">Start Meeting</button>
@@ -34,7 +36,7 @@
                     <div class="o_live_header_primary">
                         <div class="o_live_header_chip o_live_header_coordinator"><i class="fa fa-user-circle-o" aria-hidden="true"/><span class="o_live_header_chip_label" t-out="state.meeting.coordinator_role_label || 'Coordinator'"/><span t-if="locked" class="o_live_header_chip_value" t-out="label(state.meeting.organizer_id)"/><select t-else="" class="form-select form-select-sm o_live_header_chip_select" aria-label="Coordinator" t-on-change="(ev) => this.saveHeaderField('organizer_id', ev.target.value)"><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id" t-att-selected="state.meeting.organizer_id?.[0] === user.id"><t t-out="user.name"/></option></select></div>
                         <div class="o_live_header_chip o_live_header_secretary"><i class="fa fa-pencil-square-o" aria-hidden="true"/><span class="o_live_header_chip_label" t-out="state.meeting.secretary_role_label || 'Minutes secretary'"/><span t-if="locked" class="o_live_header_chip_value" t-out="label(state.meeting.secretary_id) or 'Not set'"/><select t-else="" class="form-select form-select-sm o_live_header_chip_select" aria-label="Minutes secretary" t-on-change="(ev) => this.saveHeaderField('secretary_id', ev.target.value)"><option value="">Not set</option><option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id" t-att-selected="state.meeting.secretary_id?.[0] === user.id"><t t-out="user.name"/></option></select></div>
-                        <div class="o_live_header_chip"><i class="fa fa-clock-o" aria-hidden="true"/><span class="o_live_header_chip_label"><t t-if="state.meeting.actual_start_datetime">Started</t><t t-else="">Starts</t></span><strong t-out="dateTime(state.meeting.actual_start_datetime || state.meeting.start_datetime)"/></div>
+                        <div class="o_live_header_chip"><i class="fa fa-clock-o" aria-hidden="true"/><span class="o_live_header_chip_label"><t t-if="state.meeting.actual_start_datetime">Started</t><t t-else="">Starts</t></span><strong t-out="clockTime(state.meeting.actual_start_datetime || state.meeting.start_datetime)"/></div>
                         <div t-if="state.meeting.duration_minutes" class="o_live_header_chip o_live_duration_chip" title="Estimated meeting duration"><i class="fa fa-hourglass-half" aria-hidden="true"/><span class="o_live_header_chip_label">Estimated</span><strong><t t-out="durationLabel(state.meeting.duration_minutes)"/></strong></div>
                         <div class="o_live_header_chip o_live_attendees"><i class="fa fa-users" aria-hidden="true"/><span class="o_live_header_chip_label">Attendees</span><strong t-out="attendees()"/><button t-if="!locked and !state.attendeeEditorOpen" class="btn btn-link btn-sm" aria-label="Edit attendees" t-on-click="toggleAttendeeEditor">Edit</button></div>
                     </div>
@@ -151,21 +153,58 @@
                                 <t t-else=""><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></t>
                             </div>
                             <div t-if="typeBehavior(item) === 'minutes_approval'" class="o_live_subsection o_live_minutes_approval">
-                                <label class="form-label">Pending minutes to approve</label>
-                                <ul t-if="state.pendingMinutes.length" class="list-unstyled mb-0">
-                                    <li t-foreach="state.pendingMinutes" t-as="pm" t-key="pm.id" class="d-flex align-items-center gap-2">
-                                        <span><t t-out="pm.code"/> — <t t-out="pm.name"/> (<t t-out="stateLabel(pm.state)"/>)</span>
-                                        <button class="btn btn-sm btn-link p-0" t-on-click="() => this.openMeeting(pm.id)" aria-label="Open minutes">Review</button>
-                                        <button t-if="canApprovePreviousMinutes" class="btn btn-sm btn-outline-primary" t-on-click="() => this.approvePreviousMinutes(item, pm.id)">Approve minutes</button>
-                                    </li>
-                                </ul>
-                                <p t-if="!state.pendingMinutes.length" class="text-muted mb-0">No pending minutes.</p>
-                                <div t-if="approvalsFor(item).length" class="mt-2">
-                                    <label class="form-label">Approved previous minutes</label>
-                                    <ul class="list-unstyled mb-0">
-                                        <li t-foreach="approvalsFor(item)" t-as="approved" t-key="approved.id" class="d-flex align-items-center gap-2">
-                                            <span><i class="fa fa-check text-success" aria-hidden="true"/> <t t-out="approved.code"/> — <t t-out="approved.name"/><small t-if="approved.revision_number" class="text-muted ms-2">Revision <t t-out="approved.revision_number"/></small></span>
-                                            <button class="btn btn-sm btn-link p-0" t-on-click="() => this.openMeeting(approved.meeting_id)" aria-label="Open minutes">Review</button>
+                                <div class="o_live_minutes_approval_intro">
+                                    <span class="o_live_minutes_approval_icon" aria-hidden="true"><i class="fa fa-file-text-o"/></span>
+                                    <div>
+                                        <div class="o_live_minutes_approval_title_row">
+                                            <h3 class="o_live_minutes_approval_title">Earlier minutes awaiting approval</h3>
+                                            <details class="o_live_minutes_approval_help">
+                                                <summary aria-label="Earlier minutes awaiting approval" title="Earlier minutes awaiting approval"><i class="fa fa-question-circle" aria-hidden="true"/></summary>
+                                                <p class="o_live_minutes_approval_guidance"><t t-out="minutesApprovalRouteGuidance"/></p>
+                                            </details>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div t-if="state.pendingMinutes.length" class="o_live_minutes_approval_section">
+                                    <ul class="o_live_minutes_approval_list">
+                                        <li t-foreach="state.pendingMinutes" t-as="pm" t-key="pm.id" class="o_live_minutes_approval_entry is-pending">
+                                            <div class="o_live_minutes_approval_identity">
+                                                <span class="o_live_minutes_approval_reference" t-out="pm.code"/>
+                                                <div class="o_live_minutes_approval_name_state">
+                                                    <strong t-out="pm.name"/>
+                                                    <span class="o_live_minutes_approval_state"><i class="fa fa-calendar-o" aria-hidden="true"/> <t t-out="meetingDate(pm.start_datetime)"/></span>
+                                                    <span t-if="pm.location" class="o_live_minutes_approval_state"><i class="fa fa-map-marker" aria-hidden="true"/> <t t-out="pm.location"/></span>
+                                                    <span t-else="" class="o_live_minutes_approval_state" t-out="stateLabel(pm.state)"/>
+                                                </div>
+                                            </div>
+                                            <div class="o_live_minutes_approval_actions">
+                                                <button class="btn btn-sm btn-primary" t-on-click="() => this.reviewMinutes(item, pm.id)" aria-label="Open minutes"><i class="fa fa-eye" aria-hidden="true"/> Review</button>
+                                                <button t-if="canApprovePreviousMinutes" class="btn btn-sm o_live_minutes_approve_button" t-att-class="minutesReviewed(pm.id) ? 'btn-success' : 'btn-outline-secondary'" t-on-click="() => this.approvePreviousMinutes(item, pm.id)"><i class="fa fa-check" aria-hidden="true"/> Approve earlier minutes</button>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div t-else="" class="o_live_minutes_approval_empty">
+                                    <i class="fa fa-check-circle" aria-hidden="true"/>
+                                    <span>No earlier minutes are waiting for approval.</span>
+                                </div>
+                                <div t-if="approvalsFor(item).length" class="o_live_minutes_approval_history">
+                                    <h4 class="o_live_minutes_approval_history_title">Approved previous minutes</h4>
+                                    <ul class="o_live_minutes_approval_list">
+                                        <li t-foreach="approvalsFor(item)" t-as="approved" t-key="approved.id" class="o_live_minutes_approval_entry is-approved">
+                                            <div class="o_live_minutes_approval_identity">
+                                                <span class="o_live_minutes_approval_reference" t-out="approved.code"/>
+                                                <div class="o_live_minutes_approval_name_state">
+                                                    <strong t-out="approved.name"/>
+                                                    <span class="o_live_minutes_approval_state"><i class="fa fa-calendar-o" aria-hidden="true"/> <t t-out="meetingDate(approved.start_datetime)"/></span>
+                                                    <span t-if="approved.location" class="o_live_minutes_approval_state"><i class="fa fa-map-marker" aria-hidden="true"/> <t t-out="approved.location"/></span>
+                                                    <span t-if="approved.revision_number" class="o_live_minutes_approval_revision">Revision <t t-out="approved.revision_number"/></span>
+                                                </div>
+                                            </div>
+                                            <div class="o_live_minutes_approval_actions">
+                                                <span class="o_live_minutes_approval_confirmed"><i class="fa fa-check" aria-hidden="true"/> Approved</span>
+                                                <button class="btn btn-sm btn-outline-secondary" t-on-click="() => this.openMeeting(approved.meeting_id)" aria-label="Open minutes"><i class="fa fa-eye" aria-hidden="true"/> Review</button>
+                                            </div>
                                         </li>
                                     </ul>
                                 </div>

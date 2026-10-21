@@ -1,0 +1,1 @@
+Only the user assigned as a meeting's minutes secretary can approve earlier minutes from its approval point, both during a live meeting and while preparing minutes offline. In a live meeting, that secretary also needs the Editor role and edit access.
