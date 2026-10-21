@@ -1,7 +1,7 @@
 import uuid
 
 from odoo import Command, _, api, fields, models
-from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 
 class CommunityMeeting(models.Model):
@@ -191,18 +191,13 @@ class CommunityMeeting(models.Model):
 
     def action_schedule(self):
         self._lock_calendar_event()
-        for meeting in self:
-            meeting.check_access("write")
-        if not (
-            self.env.user.has_group("community_meetings.group_meeting_editor")
-            or self.env.user.has_group("community_meetings.group_meeting_manager")
-        ):
-            raise AccessError(_("You are not allowed to schedule meetings."))
-        if any(not meeting.start_datetime for meeting in self):
-            raise ValidationError(_("Set a meeting date and time before scheduling it."))
-        self._ensure_calendar_end_datetime()
         result = super().action_schedule()
         self._sync_calendar_event()
+        return result
+
+    def _prepare_schedule_transition(self):
+        result = super()._prepare_schedule_transition()
+        self._ensure_calendar_end_datetime()
         return result
 
     def action_cancel(self):
