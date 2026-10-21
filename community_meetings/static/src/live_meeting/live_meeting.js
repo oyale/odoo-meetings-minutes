@@ -49,7 +49,7 @@ export class LiveMeeting extends Component {
         this.actionService = useService("action");
         this.notification = useService("notification");
         this.dialog = useService("dialog");
-        this.state = useState({ loading: true, saving: 0, saveError: false, saveErrorDetail: "", unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, headerDraft: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissentReasons: [], dissents: [], actions: [], relatedActionsById: {}, resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "activity", activity_type_id: false }, expanded: {}, expandedNotes: {}, relatedTopicOpenId: false, relatedActionOpenId: false, focusMode: false, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], pendingMinutes: [], minutesApprovals: [], defaultOwner: false });
+        this.state = useState({ loading: true, saving: 0, saveError: false, saveErrorDetail: "", unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, headerDraft: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissentReasons: [], dissents: [], actions: [], relatedActionsById: {}, resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "activity", activity_type_id: false }, expanded: {}, expandedNotes: {}, relatedTopicOpenId: false, relatedActionOpenId: false, focusMode: false, reorderMode: false, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], pendingMinutes: [], minutesApprovals: [], defaultOwner: false });
         this.pendingWrites = new Map();
         this.editors = new Map();
         this.editorTimers = new Map();
@@ -87,6 +87,8 @@ export class LiveMeeting extends Component {
     get meetingPaused() { return Boolean(this.state.meeting.actual_paused_at); }
     get readOnly() { return this.locked || this.meetingPaused; }
     get canAddPoint() { return Boolean(this.state.capabilities?.can_add_point); }
+    get canReorderPoints() { return Boolean(this.state.capabilities?.can_reorder_points); }
+    get meetingInProgress() { return this.state.meeting.state === "scheduled" && Boolean(this.state.meeting.actual_start_datetime) && !this.state.meeting.actual_end_datetime; }
     get canApprovePreviousMinutes() {
         return Boolean(this.state.capabilities?.can_approve_previous_minutes);
     }
@@ -111,7 +113,7 @@ export class LiveMeeting extends Component {
         const editorial = this.state.capabilities.can_view_editorial;
         const [meetings, items, types, dissents, actions, resolutions, privateNotes] = await Promise.all([
             this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "company_id", "start_datetime", "end_datetime", "actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_end_datetime", "actual_duration_minutes", "organizer_id", "secretary_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id", "duration_minutes", "coordinator_role_label", "secretary_role_label"]),
-            this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "topic_id", "sequence", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "discussion_history", "discard_previous_discussion", "deferral_reason", "deferral_reason_code", "deferral_blocked_by", "presenter_partner_id", "priority", "deadline", "estimated_minutes", "actual_minutes", "actual_seconds", "actual_started_at", "has_started", "review_next_meeting", "is_followup", "topic_state", "topic_outcome", "next_meeting_datetime"], { order: "sequence, id" }),
+            this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "topic_id", "sequence", "reorderable", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "discussion_history", "discard_previous_discussion", "deferral_reason", "deferral_reason_code", "deferral_blocked_by", "presenter_partner_id", "priority", "deadline", "estimated_minutes", "actual_minutes", "actual_seconds", "actual_started_at", "has_started", "review_next_meeting", "is_followup", "topic_state", "topic_outcome", "next_meeting_datetime"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.agenda.type", [], ["name", "behavior", "active"], { order: "sequence, name", context: { active_test: false } }),
             editorial ? this.orm.searchRead("community.meeting.dissent", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "body", "reason_id", "author_display_name", "author_partner_id"], { order: "sequence, id" }) : this.orm.call("community.meeting", "get_live_dissents", [[this.meetingId]]),
             this.orm.searchRead("community.meeting.action", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "name", "description", "responsible_user_id", "deadline", "state"], { order: "deadline, id" }),
@@ -606,6 +608,48 @@ export class LiveMeeting extends Component {
     get activeItemPosition() {
         const index = this.visibleItems.findIndex((item) => item.id === this.state.activeItemId);
         return index < 0 ? 0 : index + 1;
+    }
+    canMoveAgendaItem(item, direction) {
+        if (!this.canReorderPoints || !item.reorderable || ["minutes_approval", "next_meeting"].includes(this.typeBehavior(item))) return false;
+        const index = this.state.items.findIndex((row) => row.id === item.id);
+        const neighbor = this.state.items[index + direction];
+        return Boolean(neighbor && neighbor.reorderable && !["minutes_approval", "next_meeting"].includes(this.typeBehavior(neighbor)));
+    }
+    toggleReorderMode() { this.state.reorderMode = !this.state.reorderMode; }
+    reorderModeLabel() {
+        return this.state.reorderMode ? _t("Done reordering") : _t("Reorder agenda");
+    }
+    reorderButtonLabel(item, direction) {
+        const index = this.state.items.findIndex((row) => row.id === item.id);
+        const position = index + 1;
+        const total = this.state.items.length;
+        return direction < 0
+            ? _t("Move %(point)s up from position %(position)s of %(total)s", {
+                  point: item.name,
+                  position,
+                  total,
+              })
+            : _t("Move %(point)s down from position %(position)s of %(total)s", {
+                  point: item.name,
+                  position,
+                  total,
+              });
+    }
+    async moveAgendaItem(item, direction) {
+        if (!this.canMoveAgendaItem(item, direction) || this.state.saving || this.state.submitting.reorder) return;
+        this.state.submitting.reorder = true;
+        try {
+            if (!await this.flushEditors()) return;
+            const ordered = this.state.items.map((row) => row.id);
+            const index = ordered.indexOf(item.id);
+            [ordered[index], ordered[index + direction]] = [ordered[index + direction], ordered[index]];
+            await this.orm.call("community.meeting", "action_reorder_agenda_items", [[this.meetingId], ordered]);
+            await this.load();
+        } catch (error) {
+            this.notification.add(_t("The agenda order could not be saved. Refresh and try again."), { type: "danger" });
+        } finally {
+            this.state.submitting.reorder = false;
+        }
     }
     get completedCount() { return this.state.items.filter((item) => ["discussed", "closed"].includes(item.disposition)).length; }
     get unresolvedItems() {

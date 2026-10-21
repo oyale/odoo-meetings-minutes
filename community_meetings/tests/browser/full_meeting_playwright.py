@@ -10,8 +10,11 @@ import unittest
 import uuid
 from pathlib import Path
 
-from live_meeting_playwright import BASE_URL, LiveMeetingBrowserChecks
+TESTS_ROOT = Path(__file__).resolve().parents[3] / "tests"
+sys.path.insert(0, str(TESTS_ROOT))
+
 from browser_support.localized_selectors import SpanishPlaywrightLocalization
+from live_meeting_playwright import BASE_URL, LiveMeetingBrowserChecks
 from browser_support.screenshot_capture import capture_checkpoint, capture_failure
 from playwright.sync_api import expect
 
@@ -143,7 +146,9 @@ ACTIONS = {
     "test_series_creation": ["create series", "new meeting from series"],
     "test_recurring_agenda_template_selection_and_lineage": [
         "create a recurring agenda template",
+        "set whether its occurrence can be reordered",
         "include and skip template per meeting",
+        "keep the occurrence fixed in the meeting agenda",
         "link occurrence to previous occurrence",
     ],
     "test_carryover_request": [
@@ -716,6 +721,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         )
 
     def test_session_lifecycle(self):
+        spanish_ui = self.is_spanish_ui()
         self.rpc("community.meeting", "write", [[self.meeting_id], {"duration_minutes": 95}])
         self.page.reload(wait_until="domcontentloaded")
         expect(self.page.locator(".o_live_duration_chip")).to_contain_text("01:35")
@@ -723,6 +729,59 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         expect(
             self.page.get_by_role("button", name="Finish Meeting", exact=True)
         ).to_be_visible()
+        reorder_toggle = self.page.locator(".o_live_reorder_mode_toggle")
+        expect(reorder_toggle).to_be_visible()
+        expect(self.page.locator(".o_live_reorder_controls")).to_have_count(0)
+        self.capture_visual_screenshot("live-agenda-reordering-hidden")
+        reorder_toggle.click()
+        expect(reorder_toggle).to_have_attribute("aria-pressed", "true")
+        expect(self.page.locator(".o_live_reorder_controls").first).to_be_visible()
+        expect(reorder_toggle).to_contain_text(
+            "Hecho" if self.is_spanish_ui() else "Done reordering"
+        )
+        self.capture_visual_screenshot("live-agenda-reordering-active")
+        move_down = self.page.get_by_role(
+            "button",
+            name=(
+                "Bajar Browser Information case desde la posición 1 de 4"
+                if spanish_ui
+                else "Move Browser Information case down from position 1 of 4"
+            ),
+        )
+        expect(move_down).to_be_visible()
+        move_down.focus()
+        move_down.press("Enter")
+        expect(self.page.locator(".o_live_agenda_card").first).to_contain_text(
+            "Browser Discussion case"
+        )
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        mobile_move_down = self.page.get_by_role(
+            "button",
+            name=(
+                "Bajar Browser Discussion case desde la posición 1 de 4"
+                if spanish_ui
+                else "Move Browser Discussion case down from position 1 of 4"
+            ),
+        )
+        expect(mobile_move_down).to_be_visible()
+        expect(mobile_move_down).to_be_enabled()
+        mobile_move_down.tap()
+        expect(self.page.locator(".o_live_agenda_card").first).to_contain_text(
+            "Browser Information case"
+        )
+        self.capture_visual_screenshot("live-agenda-reordering-active")
+        self.page.set_viewport_size({"width": 1440, "height": 1000})
+        toggle_name = "Hecho" if spanish_ui else "Done reordering"
+        self.page.get_by_role("button", name=toggle_name, exact=True).click()
+        closed_toggle_name = "Reordenar agenda" if spanish_ui else "Reorder agenda"
+        expect(self.page.get_by_role("button", name=closed_toggle_name, exact=True)).to_have_attribute(
+            "aria-pressed", "false"
+        )
+        expect(self.page.locator(".o_live_reorder_controls")).to_have_count(0)
+        self.page.reload(wait_until="domcontentloaded")
+        expect(self.page.locator(".o_live_agenda_card").first).to_contain_text(
+            "Browser Information case"
+        )
         self.assertTrue(
             self.record(
                 "community.meeting", self.meeting_id, ["actual_start_datetime"]
@@ -1117,6 +1176,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         self.rpc("community.meeting", "unlink", [[record_id]])
 
     def test_create_meeting_and_point(self):
+        spanish_ui = self.is_spanish_ui()
         name = "Browser created " + uuid.uuid4().hex[:8]
         self.page.goto(
             BASE_URL + "/odoo/action-community_meetings.action_community_meetings"
@@ -1127,10 +1187,12 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         wizard.locator('.o_field_widget[name="name"] input').fill(name)
         for _ in range(3):
             wizard.locator('button[name="action_next"]').click()
-        wizard.locator('button[name="action_add_point"]').click()
-        point = self.page.get_by_role("dialog").last
-        point.locator('.o_field_widget[name="name"] input').fill("Created agenda title")
-        point.locator('button[name="action_save"]').click()
+        for title in ("Created agenda title", "Second agenda title"):
+            wizard.locator('button[name="action_add_point"]').click()
+            point = self.page.get_by_role("dialog").last
+            point.locator('.o_field_widget[name="name"] input').fill(title)
+            point.locator('button[name="action_save"]').click()
+            wizard = self.page.get_by_role("dialog").last
         wizard = self.page.get_by_role("dialog").last
         expect(wizard.locator('.o_field_widget[name="line_ids"]')).to_contain_text(
             "Created agenda title"
@@ -1150,9 +1212,33 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "community.meeting.agenda.item",
             "search_read",
             [[("meeting_id", "=", rows[0])]],
-            {"fields": ["name"]},
+            {"fields": ["name"], "order": "sequence,id"},
         )
-        self.assertEqual([i["name"] for i in items], ["Created agenda title"])
+        self.assertEqual(
+            [i["name"] for i in items],
+            ["Created agenda title", "Second agenda title"],
+        )
+        agenda_tab_name = "Orden del día" if spanish_ui else "Agenda"
+        agenda_tab = self.page.get_by_role("tab", name=agenda_tab_name, exact=True)
+        if agenda_tab.count():
+            agenda_tab.click()
+        agenda_rows = self.page.locator(
+            '.o_field_widget[name="agenda_item_ids"] tr.o_data_row'
+        )
+        expect(agenda_rows).to_have_count(2)
+        move_down_name = "Bajar" if spanish_ui else "Move down"
+        agenda_rows.nth(0).get_by_role("button", name=move_down_name).click()
+        expect(agenda_rows.nth(0)).to_contain_text("Second agenda title")
+        persisted_order = self.rpc(
+            "community.meeting.agenda.item",
+            "search_read",
+            [[("meeting_id", "=", rows[0])]],
+            {"fields": ["name"], "order": "sequence,id"},
+        )
+        self.assertEqual(
+            [item["name"] for item in persisted_order],
+            ["Second agenda title", "Created agenda title"],
+        )
 
     def test_series_creation(self):
         name = "Browser series " + uuid.uuid4().hex[:8]
@@ -1262,15 +1348,35 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             has_text=template_name
         )
         expect(template_row).to_be_visible()
+        reorderable_toggle = template_row.locator(
+            '.o_field_widget[name="reorderable"] input[type="checkbox"]'
+        )
+        self.assertEqual(
+            reorderable_toggle.count(),
+            1,
+            "Could not identify the recurring-point toggle in the rendered row: "
+            + template_row.evaluate("el => el.outerHTML"),
+        )
+        expect(reorderable_toggle).to_be_checked()
+        reorderable_toggle.click()
+        expect(reorderable_toggle).not_to_be_checked()
+        self.page.locator(".o_form_button_save").click()
+        self.capture_visual_screenshot("series-form-recurring-template")
         template_ids = self.rpc(
             "community.meeting.series.agenda.template", "search",
             [[("series_id", "=", series_id), ("name", "=", template_name)]],
         )
         self.assertEqual(len(template_ids), 1)
-        self.rpc(
+        template_values = self.rpc(
             "community.meeting.series.agenda.template", "write",
             [template_ids, {"estimated_minutes": 12}],
         )
+        self.assertTrue(template_values)
+        template_values = self.rpc(
+            "community.meeting.series.agenda.template", "read",
+            [template_ids, ["reorderable"]],
+        )
+        self.assertFalse(template_values[0]["reorderable"])
 
         def create_meeting(title, start, include):
             self.page.goto(
@@ -1319,6 +1425,32 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         later_meeting = create_meeting(
             series_name + " later", "11/16/2026 10:00:00", True
         )
+
+        for meeting_id in (first_meeting, later_meeting):
+            occurrence_values = self.rpc(
+                "community.meeting.agenda.item", "search_read",
+                [[("meeting_id", "=", meeting_id), ("name", "=", template_name)]],
+                {"fields": ["reorderable"]},
+            )
+            self.assertEqual(len(occurrence_values), 1)
+            self.assertFalse(occurrence_values[0]["reorderable"])
+
+        self.page.goto(
+            "%s/web#model=community.meeting&id=%s&view_type=form"
+            % (BASE_URL, first_meeting)
+        )
+        agenda_tab_name = "Orden del día" if self.is_spanish_ui() else "Agenda"
+        agenda_tab = self.page.get_by_role("tab", name=agenda_tab_name, exact=True)
+        if agenda_tab.count():
+            agenda_tab.click()
+        occurrence_row = self.page.locator(
+            '.o_field_widget[name="agenda_item_ids"] tr.o_data_row'
+        ).filter(has_text=template_name)
+        expect(occurrence_row).to_be_visible()
+        move_up_name = "Subir" if self.is_spanish_ui() else "Move up"
+        move_down_name = "Bajar" if self.is_spanish_ui() else "Move down"
+        expect(occurrence_row.get_by_role("button", name=move_up_name)).to_have_count(0)
+        expect(occurrence_row.get_by_role("button", name=move_down_name)).to_have_count(0)
 
         def recurring_topic(meeting_id):
             item_ids = self.rpc(

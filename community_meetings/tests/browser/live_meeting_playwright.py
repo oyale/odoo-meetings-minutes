@@ -86,6 +86,7 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             PASSWORD,
             headless=os.environ.get("PLAYWRIGHT_HEADFUL") != "1",
             viewport={"width": 1440, "height": 1000},
+            has_touch=True,
         )
         cls.playwright = cls.session.playwright
         cls.browser = cls.session.browser
@@ -98,12 +99,31 @@ class LiveMeetingBrowserChecks(unittest.TestCase):
             if len(user_ids) != 1:
                 raise AssertionError("expected one disposable browser user")
             cls.session.rpc("res.users", "write", [user_ids, {"lang": capture_language}])
-            cls.page.goto("%s/web/session/logout" % BASE_URL, wait_until="domcontentloaded")
-            cls.page.goto("%s/web/login?db=%s" % (BASE_URL, DB), wait_until="domcontentloaded")
-            cls.page.locator('input[name="login"]').fill(LOGIN)
-            cls.page.locator('input[name="password"]').fill(PASSWORD)
-            cls.page.locator('button[type="submit"]').click()
-            cls.page.wait_for_url("**/odoo**", timeout=30000)
+            cls.session.close()
+            cls.session = OdooBrowserSession.login(
+                BASE_URL,
+                DB,
+                LOGIN,
+                PASSWORD,
+                headless=os.environ.get("PLAYWRIGHT_HEADFUL") != "1",
+                viewport={"width": 1440, "height": 1000},
+                has_touch=True,
+            )
+            cls.playwright = cls.session.playwright
+            cls.browser = cls.session.browser
+            cls.context = cls.session.context
+            cls.page = cls.session.page
+            cls.console_errors = cls.session.console_errors
+            session_info = cls.page.request.post(
+                BASE_URL + "/web/session/get_session_info",
+                data={"jsonrpc": "2.0", "method": "call", "params": {}, "id": 1},
+            ).json()
+            actual_language = session_info.get("result", {}).get("user_context", {}).get("lang")
+            if actual_language != capture_language:
+                cls.session.close()
+                raise AssertionError(
+                    f"Expected browser session language {capture_language!r}, got {actual_language!r}."
+                )
 
     @classmethod
     def tearDownClass(cls):

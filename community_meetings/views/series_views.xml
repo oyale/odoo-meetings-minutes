@@ -78,6 +78,7 @@
                                     <field name="name"/>
                                     <field name="agenda_type_id"/>
                                     <field name="priority"/>
+                                    <field name="reorderable" widget="boolean_toggle" optional="show"/>
                                     <field name="estimated_minutes"/>
                                     <field name="show_previous_discussion" optional="show" invisible="agenda_type_id.behavior in ['minutes_approval', 'next_meeting']"/>
                                 </list>
@@ -88,6 +89,7 @@
                                             <field name="name"/>
                                             <field name="agenda_type_id" widget="meeting_agenda_type_rich"/>
                                             <field name="priority"/>
+                                            <field name="reorderable" widget="boolean_toggle" help="When disabled, each occurrence stays in its original position in the meeting agenda."/>
                                             <field name="estimated_minutes" widget="meeting_point_minutes"/>
                                             <field name="presenter_partner_id"/>
                                             <field name="show_previous_discussion" invisible="agenda_type_id.behavior in ['minutes_approval', 'next_meeting']"/>
@@ -138,6 +140,15 @@
                                     </div>
                                     <div class="text-muted" invisible="add_point_policy != 'draft'">
                                         Points can only be added while the meeting is a draft.
+                                    </div>
+                                </group>
+                                <group string="Reordering points" name="reorder_point_group">
+                                    <field name="reorder_point_policy" widget="radio" options="{'horizontal': true}"/>
+                                    <div class="text-muted" invisible="reorder_point_policy == 'draft'">
+                                        Draft only: points can be reordered while preparing the meeting. Before it starts: also while scheduled. While it runs: also during the live meeting. Reordering is locked once the meeting is marked held.
+                                    </div>
+                                    <div class="text-muted" invisible="reorder_point_policy != 'draft'">
+                                        Points can only be reordered while the meeting is a draft.
                                     </div>
                                 </group>
                                 <group string="Time tracking" name="time_tracking_group">
@@ -258,6 +269,18 @@
                             <p class="o_meeting_series_hint" invisible="not use_company_add_point_policy">Controls when people can add agenda points. This series inherits the company rule. Turn off the switch to choose a value for this series.</p>
                             <field name="add_point_policy_override" widget="radio" options="{'horizontal': True}" invisible="use_company_add_point_policy" nolabel="1"/>
                         </div>
+                        <div class="o_meeting_series_policy">
+                            <div class="o_meeting_series_policy_header">
+                                <h4>Reordering points</h4>
+                                <div class="o_meeting_series_policy_toggle">
+                                    <field name="use_company_reorder_point_policy" widget="boolean_toggle" nolabel="1"/>
+                                    <label for="use_company_reorder_point_policy" string="Company default"/>
+                                </div>
+                            </div>
+                            <field name="reorder_point_policy" invisible="1"/>
+                            <p class="o_meeting_series_hint" invisible="not use_company_reorder_point_policy">Editors can reorder points under the company rule. Turn off the switch to choose when this series allows reordering. Reordering is locked when a meeting is marked held.</p>
+                            <field name="reorder_point_policy_override" widget="radio" options="{'horizontal': True}" invisible="use_company_reorder_point_policy" nolabel="1"/>
+                        </div>
                     </div>
                     <div class="o_meeting_series_panel">
                         <h3>Agenda defaults</h3>
@@ -329,6 +352,7 @@
                             <field name="carryover_policy" readonly="1"/>
                             <field name="time_tracking" readonly="1"/>
                             <field name="add_point_policy" readonly="1"/>
+                            <field name="reorder_point_policy_override" readonly="1"/>
                             <field name="has_minutes_approval_point" readonly="1"/>
                             <field name="has_next_meeting_point" readonly="1"/>
                             <field name="next_meeting_rule" readonly="1" invisible="not has_next_meeting_point"/>

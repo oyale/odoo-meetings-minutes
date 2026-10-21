@@ -44,6 +44,7 @@ class OdooBrowserSession:
         *,
         headless: bool = True,
         viewport: dict[str, int] | None = None,
+        has_touch: bool = False,
     ) -> OdooBrowserSession:
         if not all((base_url, database, login, password)):
             raise ValueError("base URL, database, login, and password are required")
@@ -62,7 +63,10 @@ class OdooBrowserSession:
                 headless=headless,
                 args=chromium_args,
             )
-            context = browser.new_context(viewport=viewport or {"width": 1440, "height": 1000})
+            context = browser.new_context(
+                viewport=viewport or {"width": 1440, "height": 1000},
+                has_touch=has_touch,
+            )
             page = context.new_page()
             session = cls(playwright, browser, context, page, base_url, database)
             login_url = urljoin(base_url.rstrip("/") + "/", "web/login")
