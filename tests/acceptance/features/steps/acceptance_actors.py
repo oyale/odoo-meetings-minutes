@@ -8,9 +8,5 @@ def login_as_configured_actor(context, role: str):
     if not login or not password:
         raise AssertionError(f"This scenario requires configured ODOO_{role.upper()}_LOGIN")
     session = context.browser_session
-    session.page.goto(f"{config.base_url}/web/session/logout?redirect=/web/login?db={config.database}")
-    session.page.locator('input[name="login"]').fill(login)
-    session.page.locator('input[name="password"]').fill(password)
-    session.page.locator('button[type="submit"]').click()
-    session.page.wait_for_url("**/odoo**", timeout=30000)
+    session.switch_user(login, password)
     return session
