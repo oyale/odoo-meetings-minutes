@@ -68,11 +68,12 @@ class Meeting(models.Model):
 
     def get_followup_defaults(self, item_id=False):
         values = super().get_followup_defaults(item_id)
-        if self.env.user.has_group("project.group_project_user"):
-            allowed = values["allowed_kinds"]
-            for code in ("project_task", "project_todo"):
-                if code not in allowed:
-                    allowed.append(code)
+        if not self.env.user.has_group("project.group_project_user"):
+            values["allowed_kinds"] = [
+                code for code in values["allowed_kinds"] if code not in ("project_task", "project_todo")
+            ]
+            if values["kind"] not in values["allowed_kinds"]:
+                values["kind"] = values["allowed_kinds"][0] if values["allowed_kinds"] else False
         return values
 
     def _project_policy(self):

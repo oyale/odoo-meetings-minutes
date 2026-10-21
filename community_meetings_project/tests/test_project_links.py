@@ -79,6 +79,15 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
             )
         )
 
+    def test_project_followup_types_respect_series_allowlist(self):
+        activity = self.env.ref("community_meetings.followup_kind_activity")
+        self.series.sudo().write({"followup_allowed_kinds": [(6, 0, activity.ids)]})
+
+        defaults = self.meetings[0].get_followup_defaults(self.item.id)
+
+        self.assertEqual(defaults["allowed_kinds"], ["activity"])
+        self.assertEqual(defaults["kind"], "activity")
+
     def test_project_todo_container_creates_private_task(self):
         meeting = self.env["community.meeting"].with_user(self.editor).create({"name": "Todo container"})
         item = (

@@ -167,10 +167,6 @@ def post_init_allow_project_kinds(env):
     for company in env["res.company"].search([]):
         if not company.followup_allowed_kinds:
             company.followup_allowed_kinds = [(6, 0, (activity | kinds).ids)]
-    for series in env["community.meeting.series"].search([]):
-        if series.followup_allowed_kinds:
-            missing = kinds - series.followup_allowed_kinds
-            series.followup_allowed_kinds = [(4, kind.id) for kind in missing]
 
 
 class CommunityMeetingAgendaItem(models.Model):
