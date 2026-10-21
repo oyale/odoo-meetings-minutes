@@ -495,6 +495,128 @@ class TestMeetingRevisions(TransactionCase):
         self.assertEqual(first.pdf_attachment_id.raw, first_pdf)
         self.assertEqual(meeting.approved_revision_id, second)
 
+    def test_direct_minutes_approval_requires_the_approver_role(self):
+        meeting = self._drafted_meeting("Direct approval authorization")
+        reader = self.env["res.users"].create(
+            {
+                "name": "Minutes Reader",
+                "login": "minutes-reader-revision-test",
+                "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
+            }
+        )
+        meeting.with_user(self.editor).write({"reader_user_ids": [(4, reader.id)]})
+        self.assertFalse(reader.has_group("community_meetings.group_meeting_approver"))
+        with self.assertRaises(AccessError), self.cr.savepoint():
+            meeting.with_user(reader)._approve_minutes()
+        with self.assertRaises(AccessError), self.cr.savepoint():
+            meeting.with_user(reader).action_approve_minutes()
+
+    def test_offline_approval_requires_the_assigned_secretary_and_draft_point_meeting(self):
+        series = (
+            self.env["community.meeting.series"]
+            .with_user(self.editor)
+            .create({"name": "Offline secretary authorization", "has_minutes_approval_point": True})
+        )
+        earlier = self._drafted_meeting("Earlier offline approval", series=series)
+        later = (
+            self.env["community.meeting"]
+            .with_user(self.editor)
+            .create(
+                {
+                    "name": "Later offline approval",
+                    "series_id": series.id,
+                    "start_datetime": "2026-11-12 10:00:00",
+                    "secretary_id": self.approver.id,
+                }
+            )
+        )
+        point = later.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
+        self.assertTrue(point)
+        with self.assertRaises(AccessError), self.cr.savepoint():
+            earlier.with_user(self.editor)._approve_minutes(point, offline=True)
+
+        later.with_user(self.editor).write({"secretary_id": self.editor.id})
+        with self.assertRaises(UserError), self.cr.savepoint():
+            earlier.with_user(self.editor)._approve_minutes(point, offline=True)
+
+    def test_later_approval_point_cannot_cross_series(self):
+        first_series = (
+            self.env["community.meeting.series"]
+            .with_user(self.editor)
+            .create({"name": "First approval series", "has_minutes_approval_point": True})
+        )
+        second_series = (
+            self.env["community.meeting.series"]
+            .with_user(self.editor)
+            .create({"name": "Second approval series", "has_minutes_approval_point": True})
+        )
+        earlier = self._drafted_meeting("Minutes in first series", series=first_series)
+        later = self._drafted_meeting(
+            "Approval point in another series", series=second_series, start_datetime="2026-11-12 10:00:00"
+        )
+        later.with_user(self.editor).write({"secretary_id": self.editor.id})
+        point = later.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
+
+        with self.assertRaises(UserError), self.cr.savepoint():
+            earlier.with_user(self.editor)._approve_minutes(point, offline=True)
+
+    def test_approved_revision_is_immutable_and_pdf_download_checks_access(self):
+        meeting, _action, revision = self._approved_meeting()
+        with self.assertRaises(UserError), self.cr.savepoint():
+            revision.write({"snapshot_json": "{}"})
+        with self.assertRaises(UserError), self.cr.savepoint():
+            revision.unlink()
+        with self.assertRaises(UserError), self.cr.savepoint():
+            revision.copy()
+
+        download = revision.with_user(self.approver).action_download_pdf()
+        self.assertEqual(download["type"], "ir.actions.act_url")
+        self.assertEqual(download["url"], f"/web/content/{revision.pdf_attachment_id.id}?download=true")
+
+        outsider = self.env["res.users"].create(
+            {
+                "name": "Revision download outsider",
+                "login": "revision-download-outsider",
+                "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
+            }
+        )
+        with self.assertRaises(AccessError), self.cr.savepoint():
+            revision.with_user(outsider).action_download_pdf()
+
+        revision_without_pdf = (
+            self.env["community.meeting.revision"]
+            .sudo()
+            .create(
+                {
+                    "meeting_id": meeting.id,
+                    "revision_number": 99,
+                    "created_by_id": self.approver.id,
+                    "created_at": "2026-11-01 10:00:00",
+                    "approved_by_id": self.approver.id,
+                    "approved_at": "2026-11-01 10:00:00",
+                    "snapshot_json": "{}",
+                    "snapshot_sha256": "0" * 64,
+                    "status": "approved",
+                }
+            )
+        )
+        with self.assertRaises(UserError), self.cr.savepoint():
+            revision_without_pdf.with_user(self.approver).action_download_pdf()
+
+    def test_invalid_pdf_render_rolls_back_revision_and_approval(self):
+        meeting = self._drafted_meeting("Invalid PDF approval")
+        report_model = self.env["ir.actions.report"]
+        with (
+            patch.object(type(report_model), "_render_qweb_pdf", return_value=(b"not a PDF", "pdf")),
+            self.assertRaises(UserError),
+            self.cr.savepoint(),
+        ):
+            meeting.with_user(self.approver).action_approve_minutes()
+
+        self.assertEqual(meeting.state, "minutes_draft")
+        self.assertFalse(meeting.approved_revision_id)
+        self.assertFalse(meeting.revision_ids)
+
     def test_agenda_type_can_be_changed_only_through_an_immutable_revision_amendment(
         self,
     ):
