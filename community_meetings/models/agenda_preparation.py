@@ -28,10 +28,10 @@ class AgendaPreparation(models.Model):
                 ]
             )
             .filtered(
-                lambda t: (
-                    not t.destination_meeting_id
-                    or t.destination_meeting_id.state == "cancelled"
-                    or t.destination_meeting_id.start_datetime >= start
+                lambda transfer: (
+                    not transfer.destination_meeting_id
+                    or transfer.destination_meeting_id.state == "cancelled"
+                    or transfer.destination_meeting_id.start_datetime >= start
                 )
             )
         )
@@ -46,7 +46,13 @@ class AgendaPreparation(models.Model):
                     ("origin_action_id.meeting_id.start_datetime", "<", start),
                 ]
             )
-            .filtered(lambda t: not t.participation_ids.filtered(lambda i: i.meeting_id.state != "cancelled"))
+            .filtered(
+                lambda topic: (
+                    not topic.participation_ids.filtered(
+                        lambda participation: participation.meeting_id.state != "cancelled"
+                    )
+                )
+            )
         )
         # A source whose carryover for this series was already dismissed or
         # cancelled must not be offered again: re-adding it would reuse the closed
@@ -63,14 +69,22 @@ class AgendaPreparation(models.Model):
             {f"agenda_item:{source.id}:series:{series.id}" for source in sources}
             | {f"action:{topic.origin_action_id.id}:series:{series.id}" for topic in promoted}
         )
-        results, represented = [], set()
+        candidates, represented = self._agenda_transfer_candidates(transfers, promoted)
+        candidates.extend(self._agenda_source_candidates(sources, represented, promoted, series, closed))
+        candidates.extend(self._agenda_promoted_candidates(promoted, series, closed))
+        candidates.extend(self._agenda_proposal_candidates(proposals))
+        return candidates
+
+    @api.model
+    def _agenda_transfer_candidates(self, transfers, promoted):
+        candidates, represented = [], set()
         for transfer in transfers:
             source = transfer.origin_agenda_item_id
             if transfer.origin_action_id in promoted.origin_action_id:
                 continue
             if source:
                 represented.add(source.topic_id.id)
-            results.append(
+            candidates.append(
                 {
                     "key": f"transfer:{transfer.id}",
                     "transfer_id": transfer.id,
@@ -80,6 +94,11 @@ class AgendaPreparation(models.Model):
                     "reason": transfer.reason,
                 }
             )
+        return candidates, represented
+
+    @api.model
+    def _agenda_source_candidates(self, sources, represented, promoted, series, closed):
+        candidates = []
         for source in sources:
             if source.topic_id.id in represented:
                 continue
@@ -88,7 +107,7 @@ class AgendaPreparation(models.Model):
             if not source.review_next_meeting and source.topic_id in promoted.origin_topic_id:
                 continue
             represented.add(source.topic_id.id)
-            results.append(
+            candidates.append(
                 {
                     "key": f"source:{source.id}",
                     "source_id": source.id,
@@ -97,10 +116,15 @@ class AgendaPreparation(models.Model):
                     "reason": source.deferral_reason,
                 }
             )
+        return candidates
+
+    @api.model
+    def _agenda_promoted_candidates(self, promoted, series, closed):
+        candidates = []
         for topic in promoted:
             if f"action:{topic.origin_action_id.id}:series:{series.id}" in closed:
                 continue
-            results.append(
+            candidates.append(
                 {
                     "key": f"topic:{topic.id}",
                     "topic_id": topic.id,
@@ -109,17 +133,20 @@ class AgendaPreparation(models.Model):
                     "reason": _("Follow-up promoted from a closed point."),
                 }
             )
-        for proposal in proposals:
-            results.append(
-                {
-                    "key": f"proposal:{proposal.id}",
-                    "topic_id": proposal.id,
-                    "name": proposal.name,
-                    "origin_meeting_id": False,
-                    "reason": _("Proposed point"),
-                }
-            )
-        return results
+        return candidates
+
+    @api.model
+    def _agenda_proposal_candidates(self, proposals):
+        return [
+            {
+                "key": f"proposal:{proposal.id}",
+                "topic_id": proposal.id,
+                "name": proposal.name,
+                "origin_meeting_id": False,
+                "reason": _("Proposed point"),
+            }
+            for proposal in proposals
+        ]
 
     @api.model
     def _closed_carryover_keys(self, cycle_keys):

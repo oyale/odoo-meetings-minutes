@@ -42,13 +42,17 @@ def meeting_has_previewable_minutes(context):
 
 @when("I choose Preview Minutes")
 def choose_preview_minutes(context):
-    context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Preview Minutes'), exact=True).click()
+    context.page.get_by_role(
+        "button", name=context.browser_session.ui_text("community_meetings", "Preview Minutes"), exact=True
+    ).click()
 
 
 @then("the saved minutes open in a read-only preview")
 def preview_is_read_only(context):
     preview = context.page.locator(".o_community_minutes_preview")
-    expect(preview).to_contain_text(context.browser_session.ui_text('community_meetings', 'Draft preview · saved content'))
+    expect(preview).to_contain_text(
+        context.browser_session.ui_text("community_meetings", "Draft preview · saved content")
+    )
     expect(preview).to_contain_text("Browser Discussion case")
     expect(preview.locator('[contenteditable="true"]')).to_have_count(0)
     expect(preview.get_by_role("textbox")).to_have_count(0)
@@ -56,7 +60,13 @@ def preview_is_read_only(context):
 
 @then("I can choose Return to meeting to edit")
 def return_action_is_available(context):
-    expect(context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Return to meeting to edit'), exact=True)).to_be_visible()
+    expect(
+        context.page.get_by_role(
+            "button",
+            name=context.browser_session.ui_text("community_meetings", "Return to meeting to edit"),
+            exact=True,
+        )
+    ).to_be_visible()
 
 
 @then("the meeting and saved draft remain unchanged")
@@ -79,7 +89,9 @@ def preview_did_not_write(context):
 
 @when("I choose Return to meeting to edit")
 def return_to_meeting_editor(context):
-    context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Return to meeting to edit'), exact=True).click()
+    context.page.get_by_role(
+        "button", name=context.browser_session.ui_text("community_meetings", "Return to meeting to edit"), exact=True
+    ).click()
 
 
 @then("I return to the meeting editor")

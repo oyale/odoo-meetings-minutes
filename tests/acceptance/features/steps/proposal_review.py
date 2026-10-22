@@ -33,8 +33,12 @@ def submit_titled_proposal(context):
         exact=True,
     ).click()
     dialog.locator('.o_field_widget[name="name"] input').fill(context.proposal_name)
-    dialog.get_by_role("radio", name=context.browser_session.ui_text('community_meetings', 'Discussion'), exact=True).click()
-    dialog.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Add point'), exact=True).click()
+    dialog.get_by_role(
+        "radio", name=context.browser_session.ui_text("community_meetings", "Discussion"), exact=True
+    ).click()
+    dialog.get_by_role(
+        "button", name=context.browser_session.ui_text("community_meetings", "Add point"), exact=True
+    ).click()
     expect(dialog).not_to_be_visible()
 
 
@@ -56,7 +60,9 @@ def proposal_visible_and_accepted(context):
         has_text=context.proposal_name
     )
     expect(proposal_row).to_be_visible()
-    proposal_row.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Accept'), exact=True).click()
+    proposal_row.get_by_role(
+        "button", name=context.browser_session.ui_text("community_meetings", "Accept"), exact=True
+    ).click()
     expect(proposal_row).to_have_count(0)
 
 
@@ -90,7 +96,7 @@ def submit_and_reject_proposal(context):
         has_text=context.proposal_name
     )
     expect(row).to_be_visible()
-    row.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Reject'), exact=True).click()
+    row.get_by_role("button", name=context.browser_session.ui_text("community_meetings", "Reject"), exact=True).click()
 
 
 @then("the proposal is rejected and is not admitted to the agenda")

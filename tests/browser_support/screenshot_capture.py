@@ -22,7 +22,7 @@ def _configured_viewports() -> list[dict[str, Any]]:
     except json.JSONDecodeError as error:
         raise ValueError("MM_PLAYWRIGHT_SCREENSHOT_VIEWPORTS must contain a JSON list") from error
     if not isinstance(viewports, list):
-        raise ValueError("MM_PLAYWRIGHT_SCREENSHOT_VIEWPORTS must contain a JSON list")
+        raise TypeError("MM_PLAYWRIGHT_SCREENSHOT_VIEWPORTS must contain a JSON list")
     for viewport in viewports:
         if (
             not isinstance(viewport, dict)
@@ -45,22 +45,16 @@ def capture_checkpoint(
     capture_target=None,
 ) -> list[Path]:
     """Capture a named visual checkpoint according to the current run settings."""
-    if os.environ.get("MM_PLAYWRIGHT_SCREENSHOTS", "checkpoints").lower() in {
-        "off", "0", "false", "no"
-    }:
+    if os.environ.get("MM_PLAYWRIGHT_SCREENSHOTS", "checkpoints").lower() in {"off", "0", "false", "no"}:
         return []
 
     selected = {
-        value.strip()
-        for value in os.environ.get("MM_PLAYWRIGHT_SCREENSHOT_NAMES", "").split(",")
-        if value.strip()
+        value.strip() for value in os.environ.get("MM_PLAYWRIGHT_SCREENSHOT_NAMES", "").split(",") if value.strip()
     }
     if selected and name not in selected:
         return []
 
-    root = Path(
-        os.environ.get("MM_PLAYWRIGHT_SCREENSHOT_DIR", "/tmp/meeting-playwright")
-    )
+    root = Path(os.environ.get("MM_PLAYWRIGHT_SCREENSHOT_DIR", "/tmp/meeting-playwright"))
     root.mkdir(mode=0o700, parents=True, exist_ok=True)
     target = root / _safe_name(test_id)
     target.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -76,8 +70,11 @@ def capture_checkpoint(
         for size in viewports:
             page.set_viewport_size({"width": size["width"], "height": size["height"]})
             filename = "{}-{}-{}-{}x{}.png".format(
-                _safe_name(name), _safe_name(locale), _safe_name(size["name"]),
-                size["width"], size["height"],
+                _safe_name(name),
+                _safe_name(locale),
+                _safe_name(size["name"]),
+                size["width"],
+                size["height"],
             )
             path = target / filename
             if capture_target is None:
@@ -93,13 +90,9 @@ def capture_checkpoint(
 
 def capture_failure(page, test_id: str) -> Path | None:
     """Save the current page after a failed browser test, unless captures are off."""
-    if os.environ.get("MM_PLAYWRIGHT_SCREENSHOTS", "checkpoints").lower() in {
-        "off", "0", "false", "no"
-    }:
+    if os.environ.get("MM_PLAYWRIGHT_SCREENSHOTS", "checkpoints").lower() in {"off", "0", "false", "no"}:
         return None
-    root = Path(
-        os.environ.get("MM_PLAYWRIGHT_SCREENSHOT_DIR", "/tmp/meeting-playwright")
-    )
+    root = Path(os.environ.get("MM_PLAYWRIGHT_SCREENSHOT_DIR", "/tmp/meeting-playwright"))
     root.mkdir(mode=0o700, parents=True, exist_ok=True)
     target = root / _safe_name(test_id)
     target.mkdir(mode=0o700, parents=True, exist_ok=True)

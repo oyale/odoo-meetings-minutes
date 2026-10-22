@@ -32,12 +32,18 @@ def submit_proposal_without_title(context):
     dialog = context.page.get_by_role("dialog")
     dialog.locator('.o_field_widget[name="proposal_series_id"] input').click()
     context.page.get_by_role("option", name=context.proposal_series_name, exact=True).click()
-    dialog.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Add point'), exact=True).click()
+    dialog.get_by_role(
+        "button", name=context.browser_session.ui_text("community_meetings", "Add point"), exact=True
+    ).click()
 
 
 @then("the title validation is shown and no proposal is saved")
 def proposal_title_validation_and_no_write(context):
-    expect(context.page.get_by_text(context.browser_session.ui_text('community_meetings', 'Enter a title and select a point type.'), exact=True)).to_be_visible()
+    expect(
+        context.page.get_by_text(
+            context.browser_session.ui_text("community_meetings", "Enter a title and select a point type."), exact=True
+        )
+    ).to_be_visible()
     proposals = context.browser_session.rpc(
         "community.meeting.topic",
         "search_read",

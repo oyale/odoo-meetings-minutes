@@ -21,34 +21,56 @@ def running_meeting_with_postponable_point(context):
 
 def _start_meeting_and_point(context):
     card = context.page.locator(f"#agenda-card-{context.agenda_item_id}")
-    start_meeting = context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Start Meeting'), exact=True)
+    start_meeting = context.page.get_by_role(
+        "button", name=context.browser_session.ui_text("community_meetings", "Start Meeting"), exact=True
+    )
     if start_meeting.count():
         start_meeting.click()
-    expect(context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Finish Meeting'), exact=True)).to_be_visible()
-    begin_point = card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Begin point'), exact=True)
+    expect(
+        context.page.get_by_role(
+            "button", name=context.browser_session.ui_text("community_meetings", "Finish Meeting"), exact=True
+        )
+    ).to_be_visible()
+    begin_point = card.get_by_role(
+        "button", name=context.browser_session.ui_text("community_meetings", "Begin point"), exact=True
+    )
     if begin_point.count():
         begin_point.click()
-    expect(card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Pause point'), exact=True)).to_be_visible()
+    expect(
+        card.get_by_role(
+            "button", name=context.browser_session.ui_text("community_meetings", "Pause point"), exact=True
+        )
+    ).to_be_visible()
     return card
 
 
 @when("I postpone the point with a reason")
 def postpone_point_with_reason(context):
     card = _start_meeting_and_point(context)
-    postpone = card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Postpone agenda point'), exact=True)
+    postpone = card.get_by_role(
+        "button", name=context.browser_session.ui_text("community_meetings", "Postpone agenda point"), exact=True
+    )
     expect(postpone).to_be_visible()
     postpone.click()
-    reason = card.get_by_label(context.browser_session.ui_text('community_meetings', 'Reason for postponing'), exact=True)
+    reason = card.get_by_label(
+        context.browser_session.ui_text("community_meetings", "Reason for postponing"), exact=True
+    )
     expect(reason).to_be_visible()
     context.postponement_reason = f"Acceptance reason {uuid4().hex[:8]}"
     reason.fill(context.postponement_reason)
-    card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Leave postponed'), exact=True).click()
+    card.get_by_role(
+        "button", name=context.browser_session.ui_text("community_meetings", "Leave postponed"), exact=True
+    ).click()
 
 
 @then("the point is postponed and marked for review at the next meeting")
 def point_is_marked_for_next_meeting_review(context):
     card = context.page.locator(f"#agenda-card-{context.agenda_item_id}")
-    expect(card.get_by_text(context.browser_session.ui_text('community_meetings', 'Will be reviewed at the next meeting'), exact=True)).to_be_visible()
+    expect(
+        card.get_by_text(
+            context.browser_session.ui_text("community_meetings", "Will be reviewed at the next meeting"), exact=True
+        )
+    ).to_be_visible()
     item = context.browser_session.rpc(
         "community.meeting.agenda.item",
         "read",
@@ -62,7 +84,9 @@ def point_is_marked_for_next_meeting_review(context):
 @when("I mark the point for review at the next meeting")
 def mark_point_for_next_meeting_review(context):
     card = _start_meeting_and_point(context)
-    checkbox = card.get_by_role("checkbox", name=context.browser_session.ui_text('community_meetings', 'Review at next meeting'), exact=True)
+    checkbox = card.get_by_role(
+        "checkbox", name=context.browser_session.ui_text("community_meetings", "Review at next meeting"), exact=True
+    )
     checkbox.check()
     expect(checkbox).to_be_checked()
 
@@ -71,7 +95,9 @@ def mark_point_for_next_meeting_review(context):
 def review_choice_remains_checked_after_reopening(context):
     open_live_meeting(context.browser_session, context.meeting_id)
     card = context.page.locator(f"#agenda-card-{context.agenda_item_id}")
-    checkbox = card.get_by_role("checkbox", name=context.browser_session.ui_text('community_meetings', 'Review at next meeting'), exact=True)
+    checkbox = card.get_by_role(
+        "checkbox", name=context.browser_session.ui_text("community_meetings", "Review at next meeting"), exact=True
+    )
     expect(checkbox).to_be_checked()
     item = context.browser_session.rpc(
         "community.meeting.agenda.item",
@@ -84,7 +110,9 @@ def review_choice_remains_checked_after_reopening(context):
 @when("I clear the review choice")
 def clear_next_meeting_review(context):
     card = context.page.locator(f"#agenda-card-{context.agenda_item_id}")
-    checkbox = card.get_by_role("checkbox", name=context.browser_session.ui_text('community_meetings', 'Review at next meeting'), exact=True)
+    checkbox = card.get_by_role(
+        "checkbox", name=context.browser_session.ui_text("community_meetings", "Review at next meeting"), exact=True
+    )
     checkbox.uncheck()
     expect(checkbox).not_to_be_checked()
 
@@ -93,7 +121,9 @@ def clear_next_meeting_review(context):
 def review_choice_remains_clear_after_reopening(context):
     open_live_meeting(context.browser_session, context.meeting_id)
     card = context.page.locator(f"#agenda-card-{context.agenda_item_id}")
-    checkbox = card.get_by_role("checkbox", name=context.browser_session.ui_text('community_meetings', 'Review at next meeting'), exact=True)
+    checkbox = card.get_by_role(
+        "checkbox", name=context.browser_session.ui_text("community_meetings", "Review at next meeting"), exact=True
+    )
     expect(checkbox).not_to_be_checked()
     item = context.browser_session.rpc(
         "community.meeting.agenda.item",

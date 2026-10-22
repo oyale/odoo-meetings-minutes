@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Detect product/code changes in the commit named by a release tag."""
 
 from __future__ import annotations
@@ -6,7 +5,6 @@ from __future__ import annotations
 import os
 import re
 import subprocess
-from pathlib import Path
 
 ADDONS = (
     "community_meetings",
@@ -14,9 +12,7 @@ ADDONS = (
     "community_meetings_project",
     "community_meetings_extension_demo",
 )
-MANIFEST_VERSION = re.compile(
-    r"(?m)^(\s*['\"]version['\"]\s*:\s*)['\"][^'\"]+['\"](,?\s*)$"
-)
+MANIFEST_VERSION = re.compile(r"(?m)^(\s*['\"]version['\"]\s*:\s*)['\"][^'\"]+['\"](,?\s*)$")
 METAPACKAGE_VERSION = re.compile(r'(?m)^version = "[^"]+"$')
 
 
@@ -56,9 +52,8 @@ def is_documentation_or_generated(path: str) -> bool:
         if not path.startswith(prefix):
             continue
         relative = path.removeprefix(prefix)
-        return (
-            relative in {"CHANGELOG.md", "README.md", "README.rst"}
-            or relative.startswith(("readme/", "docs/", "static/description/"))
+        return relative in {"CHANGELOG.md", "README.md", "README.rst"} or relative.startswith(
+            ("readme/", "docs/", "static/description/")
         )
     return False
 
@@ -90,7 +85,11 @@ def has_code_changes(tag: str) -> bool:
 def main() -> None:
     tag = os.environ["RELEASE_TAG"]
     changed = has_code_changes(tag)
-    print("Release commit changes code; the test suite is required." if changed else "Release commit only changes release metadata/docs.")
+    print(
+        "Release commit changes code; the test suite is required."
+        if changed
+        else "Release commit only changes release metadata/docs."
+    )
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
         output.write(f"code_changed={str(changed).lower()}\n")
 

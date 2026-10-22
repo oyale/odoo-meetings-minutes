@@ -28,9 +28,7 @@ def _decode_po_string(path: Path, number: int, raw: str) -> str:
     return value
 
 
-def _apply_po_field(
-    entry: _Entry, name: str, index: int | None, value: str
-) -> None:
+def _apply_po_field(entry: _Entry, name: str, index: int | None, value: str) -> None:
     if name == "msgctxt":
         entry.context = value
     elif name == "msgid":
@@ -95,6 +93,7 @@ def _parse_po(path: Path) -> list[_Entry]:
         raise ValueError(f"{path}: missing gettext header entry")
     return entries
 
+
 def _validate_po(path: Path) -> None:
     executable = shutil.which("msgfmt")
     if not executable:
@@ -152,8 +151,7 @@ class CatalogLookup:
             raise ValueError(f"{module}/{self.language}: {msgid!r} is ambiguous in {path}; pass context")
         if len(matches) != 1:
             raise ValueError(
-                f"{module}/{self.language}: expected one catalog entry for {msgid!r} in {path}, "
-                f"found {len(matches)}"
+                f"{module}/{self.language}: expected one catalog entry for {msgid!r} in {path}, found {len(matches)}"
             )
         entry = matches[0]
         if entry.plural is not None and plural_index is None:

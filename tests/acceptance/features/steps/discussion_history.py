@@ -79,12 +79,12 @@ def _accept_pending_point(context) -> None:
     base_url = context.acceptance_config.base_url
     page.goto(f"{base_url}/web#model=community.meeting&id={context.later_meeting_id}&view_type=form")
     assert_meeting_form(page, context.later_meeting_name)
-    page.get_by_role("tab", name=context.browser_session.ui_text('community_meetings', 'Incoming Carryovers')).click()
+    page.get_by_role("tab", name=context.browser_session.ui_text("community_meetings", "Incoming Carryovers")).click()
     incoming = page.locator('.o_field_widget[name="incoming_carryover_ids"]')
     row = incoming.locator("tr.o_data_row").filter(has_text=context.point_name)
     expect(row).to_be_visible()
     row.locator('button[name="action_accept"]').click()
-    expect(row).to_contain_text(context.browser_session.ui_text('community_meetings', 'Accepted'))
+    expect(row).to_contain_text(context.browser_session.ui_text("community_meetings", "Accepted"))
 
 
 @given("an accepted point has earlier debate notes and a destination meeting")
@@ -146,23 +146,31 @@ def earlier_notes_are_read_only(context):
 @when("I hide the previous discussion")
 def hide_previous_discussion(context):
     history = context.page.locator(f"#agenda-card-{context.current_item_id} .o_live_previous_discussion")
-    history.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Start without previous notes')).click()
+    history.get_by_role(
+        "button", name=context.browser_session.ui_text("community_meetings", "Start without previous notes")
+    ).click()
     dialog = context.page.locator(".modal").last
     expect(dialog).to_contain_text("The original notes and this meeting’s notes are preserved.")
-    dialog.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Start without previous notes')).click()
+    dialog.get_by_role(
+        "button", name=context.browser_session.ui_text("community_meetings", "Start without previous notes")
+    ).click()
     expect(history).to_contain_text("This point starts without earlier discussion.")
 
 
 @when("I start the current meeting and point")
 def start_current_meeting_and_point(context):
-    start_meeting = context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Start Meeting'))
+    start_meeting = context.page.get_by_role(
+        "button", name=context.browser_session.ui_text("community_meetings", "Start Meeting")
+    )
     expect(start_meeting).to_be_visible()
     start_meeting.click()
     card = context.page.locator(f"#agenda-card-{context.current_item_id}")
-    begin_point = card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Begin point'))
+    begin_point = card.get_by_role("button", name=context.browser_session.ui_text("community_meetings", "Begin point"))
     expect(begin_point).to_be_visible()
     begin_point.click()
-    expect(card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Pause point'))).to_be_visible()
+    expect(
+        card.get_by_role("button", name=context.browser_session.ui_text("community_meetings", "Pause point"))
+    ).to_be_visible()
 
 
 @then("the source notes are preserved and hidden on the current point")
@@ -207,7 +215,9 @@ def restore_previous_discussion(context):
     history = card.locator(".o_live_previous_discussion")
     expect(history).to_be_visible()
     expect(history).to_contain_text("This point starts without earlier discussion.")
-    history.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Show previous notes')).click()
+    history.get_by_role(
+        "button", name=context.browser_session.ui_text("community_meetings", "Show previous notes")
+    ).click()
     expect(history).to_be_visible()
     expect(history).to_contain_text(SOURCE_NOTES)
     source_item = context.browser_session.record(

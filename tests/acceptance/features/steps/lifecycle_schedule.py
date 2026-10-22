@@ -33,7 +33,9 @@ def schedule_draft_from_form(context):
 
 @then("the form explains that a date and time are required")
 def schedule_error_is_visible(context):
-    expect(context.page.get_by_role("dialog")).to_contain_text(context.browser_session.ui_text('community_meetings', 'Set a meeting date and time before scheduling it.'))
+    expect(context.page.get_by_role("dialog")).to_contain_text(
+        context.browser_session.ui_text("community_meetings", "Set a meeting date and time before scheduling it.")
+    )
 
 
 @then("the meeting remains a draft without a scheduled date")
