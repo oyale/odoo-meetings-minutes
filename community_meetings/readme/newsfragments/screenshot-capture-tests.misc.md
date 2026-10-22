@@ -1,1 +1,1 @@
-Adds direct unit coverage for the shared Playwright screenshot policy helper.
+The screenshot policy helper now has direct unit tests for its capture settings.

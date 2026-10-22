@@ -1,1 +1,1 @@
-Centralize named browser screenshot capture settings in shared test support.
+Shared browser tests now use named capture checkpoints with common viewport and retention settings.

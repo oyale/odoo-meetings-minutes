@@ -1,1 +1,1 @@
-Regenerate the generated marketplace description from the current addon README sources.
+The generated marketplace description now matches the current addon README.
