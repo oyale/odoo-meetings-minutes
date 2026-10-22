@@ -38,17 +38,17 @@ def unfinished_point_and_destination_exist(context):
 @when("I request to move the point to that meeting")
 def request_point_carryover(context):
     card = context.page.locator(f"#agenda-card-{context.source_item_id}")
-    start_meeting = context.page.get_by_role("button", name="Start Meeting", exact=True)
+    start_meeting = context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Start Meeting'), exact=True)
     if start_meeting.count():
         start_meeting.click()
-    expect(context.page.get_by_role("button", name="Finish Meeting", exact=True)).to_be_visible()
-    begin_point = card.get_by_role("button", name="Begin point", exact=True)
+    expect(context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Finish Meeting'), exact=True)).to_be_visible()
+    begin_point = card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Begin point'), exact=True)
     if begin_point.count():
         begin_point.click()
-    expect(card.get_by_role("button", name="Pause point", exact=True)).to_be_visible()
-    card.get_by_role("button", name="Postpone agenda point", exact=True).click()
-    card.get_by_label("Reason for postponing", exact=True).fill("Continue in the destination meeting")
-    card.get_by_role("button", name="Move to another meeting", exact=True).click()
+    expect(card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Pause point'), exact=True)).to_be_visible()
+    card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Postpone agenda point'), exact=True).click()
+    card.get_by_label(context.browser_session.ui_text('community_meetings', 'Reason for postponing'), exact=True).fill("Continue in the destination meeting")
+    card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Move to another meeting'), exact=True).click()
 
     dialog = context.page.get_by_role("dialog").last
     destination = dialog.locator('.o_field_widget[name="destination_meeting_id"] input')
@@ -57,7 +57,7 @@ def request_point_carryover(context):
     with context.page.expect_response(
         lambda response: "/call_button/community.meeting.carryover.wizard/action_request" in response.url
     ):
-        dialog.get_by_role("button", name="Request Move", exact=True).click()
+        dialog.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Request Move'), exact=True).click()
     expect(dialog).not_to_be_visible()
 
     transfers = context.browser_session.rpc(
@@ -77,9 +77,9 @@ def request_point_carryover(context):
 @then("I accept it there and the linked point appears in that meeting")
 def destination_editor_accepts_point(context):
     open_live_meeting(context.browser_session, context.destination_meeting_id)
-    incoming = context.page.get_by_role("region", name="Points to continue")
+    incoming = context.page.get_by_role("region", name=context.browser_session.ui_text('community_meetings', 'Points to continue'))
     with context.page.expect_response(lambda response: "/community.meeting.carryover/action_accept" in response.url):
-        incoming.get_by_role("button", name="Accept").click()
+        incoming.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Accept')).click()
 
     destination_item = context.browser_session.rpc(
         "community.meeting.carryover", "read", [[context.carryover_id], ["status", "destination_item_id"]]
@@ -106,6 +106,6 @@ def editor_dismisses_carryover(context):
     )
     expect(row).to_be_visible()
     with context.page.expect_response(lambda response: "/community.meeting.carryover/action_dismiss" in response.url):
-        row.get_by_role("button", name="Dismiss", exact=True).click()
+        row.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Dismiss'), exact=True).click()
     status = context.browser_session.record("community.meeting.carryover", context.carryover_id, ["status"])["status"]
     assert status == "dismissed", status

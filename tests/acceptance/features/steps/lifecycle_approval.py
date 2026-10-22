@@ -58,7 +58,7 @@ def approve_empty_minutes_from_form(context):
 @then("the form explains that an agenda point is required")
 def agenda_requirement_is_visible(context):
     expect(context.page.get_by_role("dialog")).to_contain_text(
-        "Add at least one agenda item before approving the minutes."
+        context.browser_session.ui_text('community_meetings', 'Add at least one agenda item before approving the minutes.')
     )
 
 

@@ -42,10 +42,10 @@ def reader_attempts_minutes_preview(context):
 @then("the reader can open the read-only preview and the endpoint returns its content")
 def reader_can_preview_minutes(context):
     page = context.reader_page
-    expect(page.get_by_role("button", name="Preview Minutes", exact=True)).to_be_visible()
+    expect(page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Preview Minutes'), exact=True)).to_be_visible()
     rendered = context.reader_session.rpc("community.meeting", "get_minutes_preview_html", [[context.meeting_id]])
     assert context.meeting_name in rendered
-    page.get_by_role("button", name="Preview Minutes", exact=True).click()
+    page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Preview Minutes'), exact=True).click()
     preview = page.locator(".o_community_minutes_preview")
     expect(preview).to_be_visible()
     expect(preview).to_contain_text(context.meeting_name)

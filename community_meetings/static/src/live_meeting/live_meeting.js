@@ -523,6 +523,7 @@ export class LiveMeeting extends Component {
         }
         return item.disposition;
     }
+    pointTimerActionLabel(item) { return item.has_started ? _t("Resume point") : _t("Begin point"); }
     pointOutcomeLabel(item) {
         if (this.typeBehavior(item) === "todo" && item.disposition === "open" && this.hasTodoAction(item)) return _t("Task assigned");
         if (this.typeBehavior(item) === "information" && item.disposition === "discussed") return _t("Done");

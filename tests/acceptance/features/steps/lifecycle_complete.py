@@ -23,12 +23,12 @@ def create_and_schedule_meeting_with_agenda_point(context):
         wizard.locator('button[name="action_next"]').click()
     agenda_step = wizard.locator('.o_meeting_create_step:has(button[name="action_add_point"])')
     expect(agenda_step).to_be_visible()
-    agenda_step.get_by_role("button", name="Add Point", exact=True).click()
+    agenda_step.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Add Point'), exact=True).click()
     point_dialog = context.page.get_by_role("dialog").last
     context.agenda_point_name = f"Lifecycle point {uuid4().hex[:6]}"
     point_dialog.locator('.o_field_widget[name="name"] input').fill(context.agenda_point_name)
-    point_dialog.get_by_role("radio", name="Discussion", exact=True).click()
-    point_dialog.get_by_role("button", name="Add point", exact=True).click()
+    point_dialog.get_by_role("radio", name=context.browser_session.ui_text('community_meetings', 'Discussion'), exact=True).click()
+    point_dialog.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Add point'), exact=True).click()
     expect(context.page.locator(".o_meeting_point_wizard")).to_have_count(0)
     expect(wizard.locator('.o_field_widget[name="line_ids"]')).to_contain_text(context.agenda_point_name)
     wizard.locator('button[name="action_next"]').click()
@@ -60,18 +60,18 @@ def hold_meeting_in_live_agenda(context):
         f"{context.acceptance_config.base_url}/web#model=community.meeting&id={context.meeting_id}&view_type=form"
     )
     assert_meeting_form(context.page, context.meeting_name)
-    context.page.get_by_role("button", name="Open Meeting", exact=True).click()
-    context.page.get_by_role("button", name="Start Meeting", exact=True).click()
-    expect(context.page.get_by_role("button", name="Finish Meeting", exact=True)).to_be_visible()
+    context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Open Meeting'), exact=True).click()
+    context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Start Meeting'), exact=True).click()
+    expect(context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Finish Meeting'), exact=True)).to_be_visible()
     card = context.page.locator(".o_live_agenda_card").filter(has_text=context.agenda_point_name)
     expect(card).to_be_visible()
-    if card.get_by_role("button", name="Begin point", exact=True).count():
-        card.get_by_role("button", name="Begin point", exact=True).click()
-        card.get_by_role("button", name="Done", exact=True).click()
+    if card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Begin point'), exact=True).count():
+        card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Begin point'), exact=True).click()
+        card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Done'), exact=True).click()
     else:
         raise AssertionError("The agenda discussion point could not be started")
     with context.page.expect_response(lambda response: "/community.meeting/action_mark_held" in response.url):
-        context.page.get_by_role("button", name="Finish Meeting", exact=True).click()
+        context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Finish Meeting'), exact=True).click()
     record = context.browser_session.record("community.meeting", context.meeting_id, ["state"])
     assert record["state"] == "held", record
     context.page.goto(
@@ -81,7 +81,7 @@ def hold_meeting_in_live_agenda(context):
     with context.page.expect_response(
         lambda response: "/call_button/community.meeting/action_draft_minutes" in response.url
     ):
-        context.page.get_by_role("button", name="Prepare Minutes", exact=True).click()
+        context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Prepare Minutes'), exact=True).click()
     record = context.browser_session.record("community.meeting", context.meeting_id, ["state"])
     assert record["state"] == "minutes_draft", record
 
@@ -107,7 +107,7 @@ def approve_minutes_as_distinct_actor(context):
     with context.approver_session.page.expect_response(
         lambda response: "/call_button/community.meeting/action_approve_minutes" in response.url
     ) as approval_response:
-        context.approver_session.page.get_by_role("button", name="Approve Minutes", exact=True).click()
+        context.approver_session.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Approve Minutes'), exact=True).click()
     assert approval_response.value.status == 200, approval_response.value.status
 
 
@@ -124,8 +124,8 @@ def same_meeting_approved_with_pdf(context):
         f"{context.acceptance_config.base_url}/web#model=community.meeting&id={context.meeting_id}&view_type=form"
     )
     assert_meeting_form(page, context.meeting_name)
-    page.get_by_role("tab", name="Approved Revisions", exact=True).click()
-    download_button = page.get_by_role("button", name="PDF", exact=True)
+    page.get_by_role("tab", name=context.browser_session.ui_text('community_meetings', 'Approved Revisions'), exact=True).click()
+    download_button = page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'PDF'), exact=True)
     expect(download_button).to_be_visible()
     with page.expect_response(
         lambda response: "/web/content/" in response.url and response.request.method == "GET"

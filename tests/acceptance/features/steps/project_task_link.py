@@ -50,26 +50,26 @@ def meeting_with_project_followup(context):
 @when("I create the follow-up task in the alternate project")
 def create_followup_task_in_alternate_project(context):
     card = context.page.locator(f"#agenda-card-{context.agenda_item_id}")
-    start_meeting = context.page.get_by_role("button", name="Start Meeting", exact=True)
+    start_meeting = context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Start Meeting'), exact=True)
     if start_meeting.count():
         start_meeting.click()
-    expect(context.page.get_by_role("button", name="Finish Meeting", exact=True)).to_be_visible()
-    begin_point = card.get_by_role("button", name="Begin point", exact=True)
+    expect(context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Finish Meeting'), exact=True)).to_be_visible()
+    begin_point = card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Begin point'), exact=True)
     if begin_point.count():
         begin_point.click()
-    expect(card.get_by_role("button", name="Pause point", exact=True)).to_be_visible()
+    expect(card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Pause point'), exact=True)).to_be_visible()
 
-    card.get_by_role("button", name="Add follow-up", exact=True).click()
+    card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Add follow-up'), exact=True).click()
     form = card.locator(".o_live_task_form")
-    form.get_by_label("Task name", exact=True).fill(context.followup_name)
-    form.get_by_label("Follow-up type", exact=True).select_option("project_task")
-    form.get_by_role("button", name="Add follow-up", exact=True).click()
-    expect(card).to_contain_text("Project task required")
-    card.get_by_role("button", name="Create Project task", exact=True).click()
+    form.get_by_label(context.browser_session.ui_text('community_meetings', 'Task name'), exact=True).fill(context.followup_name)
+    form.get_by_label(context.browser_session.ui_text('community_meetings', 'Follow-up type'), exact=True).select_option("project_task")
+    form.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Add follow-up'), exact=True).click()
+    expect(card).to_contain_text(context.browser_session.ui_text('community_meetings_project', 'Project task required'))
+    card.get_by_role("button", name=context.browser_session.ui_text('community_meetings_project', 'Create Project task'), exact=True).click()
 
     dialog = context.page.get_by_role("dialog").last
     context.task_dialog = dialog
-    dialog.get_by_label("Choose a different project", exact=True).check()
+    dialog.get_by_label(context.browser_session.ui_text('community_meetings_project', 'Choose a different project'), exact=True).check()
     project_field = dialog.locator('.o_field_widget[name="project_id"] input')
     expect(project_field).to_be_visible()
     project_field.fill(context.alternate_project_name)
@@ -138,21 +138,21 @@ def project_followup_and_existing_task(context):
 @when("I select the existing task in the follow-up wizard")
 def select_existing_task(context):
     card = context.page.locator(f"#agenda-card-{context.agenda_item_id}")
-    start_meeting = context.page.get_by_role("button", name="Start Meeting", exact=True)
+    start_meeting = context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Start Meeting'), exact=True)
     if start_meeting.count():
         start_meeting.click()
-    expect(context.page.get_by_role("button", name="Finish Meeting", exact=True)).to_be_visible()
-    begin_point = card.get_by_role("button", name="Begin point", exact=True)
+    expect(context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Finish Meeting'), exact=True)).to_be_visible()
+    begin_point = card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Begin point'), exact=True)
     if begin_point.count():
         begin_point.click()
-    expect(card.get_by_role("button", name="Pause point", exact=True)).to_be_visible()
-    card.get_by_role("button", name="Add follow-up", exact=True).click()
+    expect(card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Pause point'), exact=True)).to_be_visible()
+    card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Add follow-up'), exact=True).click()
     form = card.locator(".o_live_task_form")
-    form.get_by_label("Task name", exact=True).fill(context.followup_name)
-    form.get_by_label("Follow-up type", exact=True).select_option("project_task")
-    form.get_by_role("button", name="Add follow-up", exact=True).click()
-    expect(card).to_contain_text("Project task required")
-    card.get_by_role("button", name="Create Project task", exact=True).click()
+    form.get_by_label(context.browser_session.ui_text('community_meetings', 'Task name'), exact=True).fill(context.followup_name)
+    form.get_by_label(context.browser_session.ui_text('community_meetings', 'Follow-up type'), exact=True).select_option("project_task")
+    form.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Add follow-up'), exact=True).click()
+    expect(card).to_contain_text(context.browser_session.ui_text('community_meetings_project', 'Project task required'))
+    card.get_by_role("button", name=context.browser_session.ui_text('community_meetings_project', 'Create Project task'), exact=True).click()
 
     dialog = context.page.get_by_role("dialog").last
     task_field = dialog.locator('.o_field_widget[name="existing_task_id"] input')
@@ -161,7 +161,7 @@ def select_existing_task(context):
     with context.page.expect_response(
         lambda response: "/call_button/community.meeting.project.task.wizard/action_create" in response.url
     ):
-        dialog.get_by_role("button", name="Create and Link", exact=True).click()
+        dialog.get_by_role("button", name=context.browser_session.ui_text('community_meetings_project', 'Create and Link'), exact=True).click()
 
 
 @then("the existing task is linked to the meeting follow-up")

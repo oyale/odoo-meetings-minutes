@@ -1,5 +1,5 @@
 from odoo.exceptions import AccessError, UserError, ValidationError
-from odoo.tests import TransactionCase, tagged
+from odoo.tests import Form, TransactionCase, tagged
 
 
 @tagged("post_install", "-at_install")
@@ -44,6 +44,12 @@ class TestAgendaReordering(TransactionCase):
             [{"meeting_id": meeting.id, "name": name} for name in names]
         )
         return meeting, items
+
+    def test_meeting_form_onchange_handles_virtual_agenda_items(self):
+        meeting, _items = self._meeting_with_points()
+
+        with Form(meeting) as form:
+            form.start_datetime = "2026-11-02 11:00:00"
 
     def test_fixed_point_keeps_its_slot_and_is_not_movable(self):
         meeting, items = self._meeting_with_points()

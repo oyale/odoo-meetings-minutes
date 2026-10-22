@@ -108,8 +108,8 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         )
         expect(preview).to_contain_text(task_name)
         expect(preview).to_contain_text(project_name)
-        expect(preview.get_by_role("button", name="Open Project task")).to_be_visible()
-        preview.get_by_role("button", name="Open Project task").click()
+        expect(preview.get_by_role("button", name=self.ui_text("community_meetings_project", "Open Project task"))).to_be_visible()
+        preview.get_by_role("button", name=self.ui_text("community_meetings_project", "Open Project task")).click()
         dialog = self.page.locator(".o_dialog .o_form_view")
         expect(self.page.get_by_text(task_name, exact=True)).to_be_visible()
 
@@ -156,21 +156,21 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         )
         self.open_live(self.meeting_id)
         card = self.card("todo")
-        card.get_by_role("button", name="Add follow-up", exact=True).click()
-        card.get_by_label("Task name", exact=True).fill(
+        card.get_by_role("button", name=self.ui_text("community_meetings", "Add follow-up"), exact=True).click()
+        card.get_by_label(self.ui_text("community_meetings", "Task name"), exact=True).fill(
             "Assigned follow-up with Project"
         )
-        card.get_by_label("Follow-up type", exact=True).select_option("project_task")
-        card.get_by_role("button", name="Add follow-up", exact=True).click()
-        expect(self.outcome("todo")).to_have_text("Project task required")
-        expect(card.get_by_role("button", name="Done")).to_be_disabled()
-        card.get_by_role("button", name="Create Project task").click()
+        card.get_by_label(self.ui_text("community_meetings_project", "Follow-up type"), exact=True).select_option("project_task")
+        card.get_by_role("button", name=self.ui_text("community_meetings", "Add follow-up"), exact=True).click()
+        expect(self.outcome("todo")).to_have_text(self.ui_text("community_meetings_project", "Project task required"))
+        expect(card.get_by_role("button", name=self.ui_text("community_meetings", "Done"))).to_be_disabled()
+        card.get_by_role("button", name=self.ui_text("community_meetings_project", "Create Project task")).click()
         dialog = self.page.get_by_role("dialog").last
-        expect(dialog.get_by_label("Choose a different project")).to_be_visible()
+        expect(dialog.get_by_label(self.ui_text("community_meetings_project", "Choose a different project"))).to_be_visible()
         expect(
             dialog.locator('.o_field_widget[name="project_id"] input')
         ).not_to_be_visible()
-        dialog.get_by_label("Choose a different project").check()
+        dialog.get_by_label(self.ui_text("community_meetings_project", "Choose a different project")).check()
         project_field = dialog.locator('.o_field_widget[name="project_id"] input')
         expect(project_field).to_be_visible()
         project_field.fill(alternate_project_name)
@@ -198,9 +198,9 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
             for task_id in action["project_task_ids"]
         }
         self.assertTrue(set(task["id"] for task in created_tasks) & linked_task_ids)
-        expect(card.get_by_role("button", name="Done")).to_be_enabled()
-        card.get_by_role("button", name="Done").click()
-        expect(self.outcome("todo")).to_have_text("Resolved")
+        expect(card.get_by_role("button", name=self.ui_text("community_meetings", "Done"))).to_be_enabled()
+        card.get_by_role("button", name=self.ui_text("community_meetings", "Done")).click()
+        expect(self.outcome("todo")).to_have_text(self.ui_text("community_meetings", "Resolved"))
 
     def test_project_task_wizard_can_link_an_existing_task(self):
         calendar_fields = self.rpc(
@@ -264,7 +264,7 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
 
         self.open_live(self.meeting_id)
         card = self.card("todo")
-        card.get_by_role("button", name="Create Project task").click()
+        card.get_by_role("button", name=self.ui_text("community_meetings_project", "Create Project task")).click()
         dialog = self.page.get_by_role("dialog").last
         self.capture_visual_screenshot("project-task-wizard")
         self.page.set_viewport_size({"width": 390, "height": 844})
@@ -273,14 +273,14 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         )
         self.assertLessEqual(dialog.evaluate("el => el.scrollWidth - el.clientWidth"), 1)
         self.page.set_viewport_size({"width": 1440, "height": 1000})
-        expect(dialog.get_by_text("Follow-up context")).to_be_visible()
+        expect(dialog.get_by_text(self.ui_text("community_meetings_project", "Follow-up context"))).to_be_visible()
         expect(
             dialog.locator('.o_field_widget[name="followup_name"]')
         ).to_contain_text(followup_name)
         expect(
             dialog.locator('.o_field_widget[name="followup_deadline"]')
         ).to_contain_text(
-            "30/11/2026" if self.is_spanish_ui() else "11/30/2026"
+            self.localized_date("2026-11-30")
         )
 
         task_field = dialog.locator('.o_field_widget[name="existing_task_id"] input')
@@ -303,11 +303,11 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
     def test_convert_project_todo_to_project_task(self):
         self.open_live(self.meeting_id)
         card = self.card("discussion")
-        card.get_by_role("button", name="Add follow-up", exact=True).click()
+        card.get_by_role("button", name=self.ui_text("community_meetings", "Add follow-up"), exact=True).click()
         form = card.locator(".o_live_task_form")
-        form.get_by_label("Task name").fill("Private to-do follow-up")
-        form.get_by_label("Follow-up type").select_option("project_todo")
-        form.get_by_role("button", name="Add follow-up").click()
+        form.get_by_label(self.ui_text("community_meetings", "Task name")).fill("Private to-do follow-up")
+        form.get_by_label(self.ui_text("community_meetings_project", "Follow-up type")).select_option("project_todo")
+        form.get_by_role("button", name=self.ui_text("community_meetings", "Add follow-up")).click()
         row = card.locator(".o_live_followup_task").last
         expect(row).to_be_visible()
         todo = self.wait_action_record("Private to-do follow-up")
@@ -321,9 +321,9 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
 
         convert = row.locator(".o_live_followup_convert")
         expect(convert).to_have_count(1)
-        convert.get_by_role("button", name="Convert follow-up").click()
-        self.page.get_by_role("button", name="Project task", exact=True).click()
-        expect(row.locator(".o_live_followup_badges .badge").first).to_have_text("Project task")
+        convert.get_by_role("button", name=self.ui_text("community_meetings", "Convert follow-up")).click()
+        self.page.get_by_role("button", name=self.ui_text("community_meetings_project", "Project task"), exact=True).click()
+        expect(row.locator(".o_live_followup_badges .badge").first).to_have_text(self.ui_text("community_meetings_project", "Project task"))
         converted = self.wait_action_record("Private to-do follow-up")
         self.assertEqual(converted["followup_kind"], "project_task")
         after = self.record(

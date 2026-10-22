@@ -34,7 +34,7 @@ def attempt_minutes_preview(context):
 
 @then("the preview action is unavailable in the meeting form")
 def preview_action_is_unavailable(context):
-    expect(context.page.get_by_role("button", name="Preview Minutes", exact=True)).to_have_count(0)
+    expect(context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Preview Minutes'), exact=True)).to_have_count(0)
 
 
 @then("the server explains that the meeting must be held first")

@@ -21,6 +21,7 @@
         "data/dissent_reasons.xml",
         "report/meeting_report.xml",
         "views/meeting_views.xml",
+        "views/webclient_language.xml",
         "views/agenda_type_views.xml",
         "views/meeting_kind_views.xml",
         "views/menus.xml",

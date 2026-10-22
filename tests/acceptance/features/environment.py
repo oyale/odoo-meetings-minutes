@@ -72,6 +72,7 @@ def before_scenario(context, scenario):
         context.acceptance_config.password,
         headless=not context.acceptance_config.headful,
     )
+    context.browser_session.verify_locale(context.browser_session.effective_locale() or "")
     context.page = context.browser_session.page
     context.live_meeting_fixture = None
     context.additional_browser_sessions = []

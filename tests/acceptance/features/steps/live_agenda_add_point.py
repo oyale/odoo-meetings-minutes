@@ -23,12 +23,12 @@ def running_meeting_accepts_new_points(context):
 @when("I add a discussion point from the live agenda")
 def add_discussion_point_from_live_agenda(context):
     page = context.page
-    page.get_by_role("button", name="Add Point", exact=True).click()
+    page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Add Point'), exact=True).click()
     dialog = page.get_by_role("dialog")
     expect(dialog).to_be_visible()
     dialog.locator('.o_field_widget[name="name"] input').fill(context.point_name)
-    dialog.get_by_role("radio", name="Discussion", exact=True).click()
-    dialog.get_by_role("button", name="Add point", exact=True).click()
+    dialog.get_by_role("radio", name=context.browser_session.ui_text('community_meetings', 'Discussion'), exact=True).click()
+    dialog.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Add point'), exact=True).click()
     expect(dialog).to_have_count(0)
 
 

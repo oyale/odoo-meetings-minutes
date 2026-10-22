@@ -23,7 +23,7 @@ def editable_meeting_series_open(context):
 
 @when("I add a recurring discussion point and prepare a meeting")
 def add_recurring_point_and_prepare(context):
-    context.page.get_by_role("tab", name="Recurring agenda").click()
+    context.page.get_by_role("tab", name=context.browser_session.ui_text('community_meetings', 'Recurring agenda')).click()
     template_list = context.page.locator('.o_field_widget[name="recurring_point_ids"]')
     template_list.get_by_text("Add a line", exact=True).click()
     new_row = template_list.locator("tr.o_data_row").last

@@ -23,27 +23,27 @@ def unfinished_point_without_series(context):
 @when("I request to move the point without choosing a destination")
 def request_carryover_without_destination(context):
     card = context.page.locator(f"#agenda-card-{context.agenda_item_id}")
-    start_meeting = context.page.get_by_role("button", name="Start Meeting", exact=True)
+    start_meeting = context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Start Meeting'), exact=True)
     if start_meeting.count():
         start_meeting.click()
-    expect(context.page.get_by_role("button", name="Finish Meeting", exact=True)).to_be_visible()
-    begin_point = card.get_by_role("button", name="Begin point", exact=True)
+    expect(context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Finish Meeting'), exact=True)).to_be_visible()
+    begin_point = card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Begin point'), exact=True)
     if begin_point.count():
         begin_point.click()
-    expect(card.get_by_role("button", name="Pause point", exact=True)).to_be_visible()
+    expect(card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Pause point'), exact=True)).to_be_visible()
 
-    card.get_by_role("button", name="Postpone agenda point", exact=True).click()
-    card.get_by_label("Reason for postponing", exact=True).fill("Continue in a suitable meeting")
-    card.get_by_role("button", name="Move to another meeting", exact=True).click()
+    card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Postpone agenda point'), exact=True).click()
+    card.get_by_label(context.browser_session.ui_text('community_meetings', 'Reason for postponing'), exact=True).fill("Continue in a suitable meeting")
+    card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Move to another meeting'), exact=True).click()
     dialog = context.page.get_by_role("dialog").last
-    expect(dialog.get_by_role("button", name="Request Move", exact=True)).to_be_visible()
-    dialog.get_by_role("button", name="Request Move", exact=True).click()
+    expect(dialog.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Request Move'), exact=True)).to_be_visible()
+    dialog.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Request Move'), exact=True).click()
 
 
 @then("the destination error appears and no carryover is created")
 def destination_error_without_carryover(context):
     expect(
-        context.page.get_by_text("Choose an explicit destination for meetings outside a series.", exact=True)
+        context.page.get_by_text(context.browser_session.ui_text('community_meetings', 'Choose an explicit destination for meetings outside a series.'), exact=True)
     ).to_be_visible()
     transfers = context.browser_session.rpc(
         "community.meeting.carryover",

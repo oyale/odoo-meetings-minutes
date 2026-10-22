@@ -16,7 +16,7 @@ def add_point_form_open(context):
     context.meeting_id = fixture.meeting_id
     context.stale_point_name = f"Stale point {uuid4().hex[:8]}"
     open_live_meeting(context.browser_session, fixture.meeting_id)
-    context.page.get_by_role("button", name="Add Point", exact=True).click()
+    context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Add Point'), exact=True).click()
     dialog = context.page.get_by_role("dialog").last
     dialog.locator('.o_field_widget[name="name"] input').fill(context.stale_point_name)
     context.stale_form = dialog
@@ -43,7 +43,7 @@ def other_session_finishes_meeting(context):
 
 @then("the stale save is rejected and no new agenda point exists")
 def stale_point_is_rejected(context):
-    expect(context.page.get_by_text("New points cannot be added to this meeting anymore.", exact=True)).to_be_visible()
+    expect(context.page.get_by_text(context.browser_session.ui_text('community_meetings', 'New points cannot be added to this meeting anymore.'), exact=True)).to_be_visible()
     count = context.browser_session.rpc(
         "community.meeting.agenda.item",
         "search_count",

@@ -131,7 +131,7 @@ class CommunityMeetingAgendaItem(models.Model):
             item.can_move_up = False
             item.can_move_down = False
         for meeting in self.mapped("meeting_id"):
-            items = meeting.agenda_item_ids.sorted(lambda row: (row.sequence, row.id))
+            items = meeting.agenda_item_ids.sorted(lambda row: row.sequence)
             positions = {item.id: index for index, item in enumerate(items)}
             meeting_item_ids = [row.id for row in self if row.meeting_id == meeting]
             for item in self.browse(meeting_item_ids):

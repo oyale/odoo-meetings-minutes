@@ -56,7 +56,7 @@ def active_recurring_template_for_lineage(context):
     context.page.goto(
         f"{context.acceptance_config.base_url}/web#model=community.meeting.series&id={context.series_id}&view_type=form"
     )
-    context.page.get_by_role("tab", name="Recurring agenda").click()
+    context.page.get_by_role("tab", name=context.browser_session.ui_text('community_meetings', 'Recurring agenda')).click()
     template_list = context.page.locator('.o_field_widget[name="recurring_point_ids"]')
     template_list.get_by_text("Add a line", exact=True).click()
     row = template_list.locator("tr.o_data_row").last

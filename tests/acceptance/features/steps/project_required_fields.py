@@ -48,31 +48,31 @@ def choose_alternate_project_without_selection(context):
     expand_button = card.locator(".o_live_expand")
     if expand_button.get_attribute("aria-expanded") == "false":
         expand_button.click()
-    start_meeting = context.page.get_by_role("button", name="Start Meeting", exact=True)
+    start_meeting = context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Start Meeting'), exact=True)
     if start_meeting.count():
         start_meeting.click()
-    expect(context.page.get_by_role("button", name="Finish Meeting", exact=True)).to_be_visible()
-    begin_point = card.get_by_role("button", name="Begin point", exact=True)
+    expect(context.page.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Finish Meeting'), exact=True)).to_be_visible()
+    begin_point = card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Begin point'), exact=True)
     if begin_point.count():
         begin_point.click()
-    expect(card.get_by_role("button", name="Pause point", exact=True)).to_be_visible()
-    card.get_by_role("button", name="Add follow-up", exact=True).click()
+    expect(card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Pause point'), exact=True)).to_be_visible()
+    card.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Add follow-up'), exact=True).click()
     form = card.locator(".o_live_task_form")
-    form.get_by_label("Task name", exact=True).fill(context.project_followup_name)
-    form.get_by_label("Follow-up type", exact=True).select_option("project_task")
-    form.get_by_role("button", name="Add follow-up", exact=True).click()
-    expect(card).to_contain_text("Project task required")
-    card.get_by_role("button", name="Create Project task", exact=True).click()
+    form.get_by_label(context.browser_session.ui_text('community_meetings', 'Task name'), exact=True).fill(context.project_followup_name)
+    form.get_by_label(context.browser_session.ui_text('community_meetings', 'Follow-up type'), exact=True).select_option("project_task")
+    form.get_by_role("button", name=context.browser_session.ui_text('community_meetings', 'Add follow-up'), exact=True).click()
+    expect(card).to_contain_text(context.browser_session.ui_text('community_meetings_project', 'Project task required'))
+    card.get_by_role("button", name=context.browser_session.ui_text('community_meetings_project', 'Create Project task'), exact=True).click()
     dialog = context.page.get_by_role("dialog").last
-    dialog.get_by_label("Choose a different project", exact=True).check()
+    dialog.get_by_label(context.browser_session.ui_text('community_meetings_project', 'Choose a different project'), exact=True).check()
     context.project_task_name = dialog.locator('.o_field_widget[name="name"] input').input_value()
     assert context.project_task_name, "The wizard should prefill the new task name."
-    dialog.get_by_role("button", name="Create and Link", exact=True).click()
+    dialog.get_by_role("button", name=context.browser_session.ui_text('community_meetings_project', 'Create and Link'), exact=True).click()
 
 
 @then("the project-required error appears and no task is linked")
 def project_required_error_without_link(context):
-    expect(context.page.get_by_text("Choose the project for this task.", exact=True)).to_be_visible()
+    expect(context.page.get_by_text(context.browser_session.ui_text('community_meetings_project', 'Choose the project for this task.'), exact=True)).to_be_visible()
     actions = context.browser_session.rpc(
         "community.meeting.action",
         "search_read",
