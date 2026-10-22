@@ -12,8 +12,11 @@
         align-items: center;
         gap: 12px;
     }
-    .o_live_reorder_controls { display: inline-flex; align-items: center; gap: 3px; margin-left: auto; padding: 2px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 7px; background: var(--body-bg, #fff); }
-    .o_live_reorder_controls .btn { display: inline-grid; width: 30px; height: 30px; place-items: center; padding: 0; }
+    .o_live_agenda_row { margin-bottom: 12px; }
+    .o_live_agenda_row.o_live_reorder_active { display: grid; grid-template-columns: 38px minmax(0, 1fr); align-items: start; gap: 8px; }
+    .o_live_agenda_row .o_live_agenda_card { margin-bottom: 0; }
+    .o_live_reorder_rail { position: sticky; top: 72px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 7px; }
+    .o_live_reorder_rail .btn { display: inline-grid; width: 34px; height: 34px; place-items: center; padding: 0; }
     .o_live_topbar { justify-content: space-between; position: sticky; top: 0; z-index: 5; gap: 14px; margin: -24px -24px 0; padding: 8px 24px; border-bottom: 1px solid var(--border-color, #e5e7eb); background: var(--body-bg, #fff); box-shadow: 0 2px 8px rgba(32, 36, 40, .06); }
     .o_live_topbar_navigation, .o_live_topbar_feedback { display: flex; align-items: center; min-width: 0; }
     .o_live_topbar_feedback { flex: 1; justify-content: flex-end; color: var(--body-color, #495057); font-size: .875rem; text-align: right; }
@@ -303,7 +306,8 @@
         .o_live_type_badge, .o_live_type, .o_live_type_edit, .o_live_outcome_badge, .o_live_priority, .o_live_point_edit { width: auto; flex: none; }
         .o_live_estimate_badge { flex: none; padding: 4px 7px; font-size: .72rem; }
         .o_live_point_timer { flex: none; justify-content: flex-end; margin-left: auto; }
-        .o_live_reorder_controls { flex: none; margin-left: auto; }
+        .o_live_agenda_row.o_live_reorder_active { grid-template-columns: 36px minmax(0, 1fr); gap: 5px; }
+        .o_live_reorder_rail .btn { width: 32px; height: 32px; }
         .o_live_next_meeting_feature { grid-template-columns: minmax(0, 1fr); gap: 8px; margin-right: 12px; margin-left: 12px; padding: 12px; }
         .o_live_next_meeting_feature input { max-width: none; }
         .o_live_notes_heading { align-items: flex-start; flex-direction: column; gap: 4px; }

@@ -8,6 +8,8 @@
                 </div>
                 <div class="o_live_workflow_buttons">
                   <t t-if="state.capabilities?.can_edit">
+                    <button t-if="state.meeting.state === 'draft'" class="btn btn-primary" t-att-disabled="state.saving > 0 or state.submitting['meeting:' + meetingId]" t-on-click="scheduleMeeting">Schedule Meeting</button>
+                    <button t-if="['draft', 'scheduled'].includes(state.meeting.state)" class="btn btn-outline-danger" t-att-disabled="state.saving > 0 or state.submitting['meeting:' + meetingId]" t-on-click="cancelMeeting">Cancel Meeting</button>
                     <button t-if="state.meeting.state === 'scheduled' and !state.meeting.actual_start_datetime and timingEnabled" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="startMeeting">Start Meeting</button>
                     <button t-if="state.meeting.state === 'scheduled' and state.meeting.actual_start_datetime and !meetingPaused and timingEnabled" class="btn btn-outline-secondary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="pauseMeeting">Pause Meeting</button>
                     <button t-if="state.meeting.state === 'scheduled' and meetingPaused and timingEnabled" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="resumeMeeting">Resume Meeting</button>
@@ -89,7 +91,7 @@
                     <div class="o_live_section_title">
                         <div><h2>Agenda</h2><span class="text-muted"><t t-if="state.focusMode">Point <t t-out="activeItemPosition"/> of <t t-out="visibleItems.length"/> · </t><t t-out="completedCount"/> of <t t-out="state.items.length"/> points completed</span></div>
                         <div class="o_live_agenda_tools"><button t-if="!locked and canAddPoint" class="btn btn-primary" t-on-click="addPoint">Add Point</button>
-                            <button t-if="meetingInProgress and canReorderPoints" class="btn btn-outline-secondary o_live_reorder_mode_toggle" t-att-aria-pressed="state.reorderMode ? 'true' : 'false'" t-on-click="toggleReorderMode"><i t-att-class="state.reorderMode ? 'fa fa-check' : 'fa fa-arrows-v'" aria-hidden="true"/> <t t-esc="reorderModeLabel()"/></button>
+                            <button t-if="canReorderPoints" class="btn btn-outline-secondary o_live_reorder_mode_toggle" t-att-aria-pressed="state.reorderMode ? 'true' : 'false'" t-on-click="toggleReorderMode"><i t-att-class="state.reorderMode ? 'fa fa-check' : 'fa fa-arrows-v'" aria-hidden="true"/> <t t-esc="reorderModeLabel()"/></button>
                             <button class="btn btn-outline-secondary" t-att-disabled="!visibleItems.length" t-on-click="() => this.navigateItem(-1)" title="Previous point" aria-label="Previous agenda point"><i class="fa fa-arrow-up" aria-hidden="true"/></button>
                             <button class="btn btn-outline-secondary" t-att-disabled="!visibleItems.length" t-on-click="() => this.navigateItem(1)" title="Next point" aria-label="Next agenda point"><i class="fa fa-arrow-down" aria-hidden="true"/></button>
                             <button class="btn btn-outline-secondary" t-att-aria-pressed="state.showPendingOnly" t-on-click="togglePending">Pending only</button>
@@ -99,7 +101,12 @@
                     </div>
                     <t t-if="!state.items.length"><p class="text-muted">There are no agenda points in this meeting.</p></t>
                     <t t-elif="!visibleItems.length"><p class="text-muted">There are no pending agenda points.</p></t>
-                    <article t-att-id="'agenda-card-' + item.id" t-att-class="'o_live_agenda_card ' + (state.activeItemId === item.id ? 'o_live_current' : '')" t-foreach="displayedItems" t-as="item" t-key="item.id">
+                    <div t-att-class="'o_live_agenda_row ' + (state.reorderMode and canReorderPoints and item.reorderable and !['minutes_approval', 'next_meeting'].includes(typeBehavior(item)) ? 'o_live_reorder_active' : '')" t-foreach="displayedItems" t-as="item" t-key="item.id">
+                        <div t-if="state.reorderMode and canReorderPoints and item.reorderable and !['minutes_approval', 'next_meeting'].includes(typeBehavior(item))" class="o_live_reorder_rail" role="group" aria-label="Reorder agenda point">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" t-att-disabled="!canMoveAgendaItem(item, -1) or state.saving > 0 or state.submitting.reorder" t-on-click="(ev) => { ev.stopPropagation(); this.moveAgendaItem(item, -1); }" title="Move point up" t-att-aria-label="reorderButtonLabel(item, -1)"><i class="fa fa-arrow-up" aria-hidden="true"/></button>
+                            <button class="btn btn-sm btn-outline-secondary" type="button" t-att-disabled="!canMoveAgendaItem(item, 1) or state.saving > 0 or state.submitting.reorder" t-on-click="(ev) => { ev.stopPropagation(); this.moveAgendaItem(item, 1); }" title="Move point down" t-att-aria-label="reorderButtonLabel(item, 1)"><i class="fa fa-arrow-down" aria-hidden="true"/></button>
+                        </div>
+                        <article t-att-id="'agenda-card-' + item.id" t-att-class="'o_live_agenda_card ' + (state.activeItemId === item.id ? 'o_live_current' : '')">
                         <div class="o_live_card_header">
                             <button class="o_live_expand" t-on-click="() => this.toggle(item)" t-att-aria-expanded="state.expanded[item.id] ? 'true' : 'false'" t-att-aria-controls="'agenda-panel-' + item.id">
                                 <i t-att-class="state.expanded[item.id] ? 'fa fa-chevron-down' : 'fa fa-chevron-right'" aria-hidden="true"/>
@@ -109,10 +116,6 @@
                             <span t-if="item.presenter_partner_id" class="o_tag o_live_presenter_badge" t-att-title="'Presented by ' + label(item.presenter_partner_id)" t-att-aria-label="'Presented by ' + label(item.presenter_partner_id)"><img class="o_avatar o_avatar_small" t-att-src="'/web/image/res.partner/' + item.presenter_partner_id[0] + '/avatar_128'" t-att-alt="''"/><span class="visually-hidden">Presented by <t t-out="label(item.presenter_partner_id)"/></span></span>
                             <span t-if="item.priority !== '1'" t-att-class="'o_live_priority o_live_priority_' + item.priority" t-att-title="priorityLabel(item)" t-att-aria-label="priorityLabel(item)"><i class="fa fa-flag" aria-hidden="true"/><span class="visually-hidden" t-out="priorityLabel(item)"/></span>
                             <span t-if="!state.editingTypes[item.id] or !item.actual_started_at" class="badge text-bg-light o_live_type_badge" t-att-title="label(item.agenda_type_id)" t-att-aria-label="label(item.agenda_type_id)"><i t-attf-class="fa #{typeIcon(item)}" aria-hidden="true"/><span class="visually-hidden" t-out="label(item.agenda_type_id)"/></span>
-                            <div t-if="canReorderPoints and (!meetingInProgress or state.reorderMode) and item.reorderable and !['minutes_approval', 'next_meeting'].includes(typeBehavior(item))" class="o_live_reorder_controls" role="group" aria-label="Reorder agenda points">
-                                <button class="btn btn-sm btn-outline-secondary" type="button" t-att-disabled="!canMoveAgendaItem(item, -1) or state.saving > 0 or state.submitting.reorder" t-on-click="(ev) => { ev.stopPropagation(); this.moveAgendaItem(item, -1); }" title="Move point up" t-att-aria-label="reorderButtonLabel(item, -1)"><i class="fa fa-arrow-up" aria-hidden="true"/></button>
-                                <button class="btn btn-sm btn-outline-secondary" type="button" t-att-disabled="!canMoveAgendaItem(item, 1) or state.saving > 0 or state.submitting.reorder" t-on-click="(ev) => { ev.stopPropagation(); this.moveAgendaItem(item, 1); }" title="Move point down" t-att-aria-label="reorderButtonLabel(item, 1)"><i class="fa fa-arrow-down" aria-hidden="true"/></button>
-                            </div>
                             <button t-if="item.actual_started_at and !readOnly and !state.editingTypes[item.id]" class="btn btn-link o_live_type_edit" t-on-click="() => this.toggleTypeEditor(item)" title="Change point type" aria-label="Change point type"><i class="fa fa-pencil" aria-hidden="true"/></button>
                             <select t-if="state.editingTypes[item.id] and item.actual_started_at" class="form-select o_live_type" t-att-value="item.agenda_type_id[0]" t-att-disabled="readOnly" t-on-change="(ev) => this.updateItem(item, 'agenda_type_id', ev.target.value)" aria-label="Point type">
                                 <option t-foreach="state.types" t-as="type" t-key="type.id" t-att-value="type.id" t-att-disabled="!type.active"><t t-out="type.name"/><t t-if="!type.active"> (archived)</t></option>
@@ -425,6 +428,7 @@
                             </t>
                         </div>
                     </article>
+                    </div>
                 </section>
 
                 <section t-att-class="state.focusMode ? 'o_live_minutes o_live_minutes_hidden_focus' : 'o_live_minutes'">

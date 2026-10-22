@@ -962,7 +962,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         expect(self.page.get_by_role("button", name=self.ui_text("community_meetings", "Add Point"))).to_be_enabled()
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Edit attendees")).click()
         expect(self.page.get_by_role("button", name=self.ui_text("community_meetings", "Save attendees"))).to_be_visible()
-        self.page.get_by_role("button", name=self.ui_text("community_meetings", "Cancel")).click()
+        self.page.get_by_role("button", name=self.ui_text("community_meetings", "Cancel"), exact=True).click()
 
         self.page.get_by_label(self.ui_text("community_meetings", "Meeting name")).fill("Paused meeting header edited")
         self.page.get_by_label(self.ui_text("community_meetings", "Meeting name")).press("Tab")

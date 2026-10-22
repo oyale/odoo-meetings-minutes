@@ -1204,6 +1204,22 @@ export class LiveMeeting extends Component {
             this.state.submitting[key] = false;
         }
     }
+    async scheduleMeeting() {
+        if (!await this.flushEditors()) return;
+        return this.transition("action_schedule", "scheduled");
+    }
+    async cancelMeeting() {
+        if (!await this.flushEditors()) return;
+        this.dialog.add(ConfirmationDialog, {
+            title: _t("Cancel this meeting?"),
+            body: _t("This meeting will be marked as cancelled."),
+            confirmLabel: _t("Cancel meeting"),
+            cancelLabel: _t("Keep meeting"),
+            confirmClass: "btn-danger",
+            confirm: () => this.transition("action_cancel", "cancelled"),
+            cancel: () => {},
+        });
+    }
     async markHeld() {
         if (!await this.flushEditors()) return;
         const unresolved = this.unresolvedItems;

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-21 19:50+0000\n"
+"POT-Creation-Date: 2026-10-22 11:54+0000\n"
 "PO-Revision-Date: 2026-10-18 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
@@ -3872,6 +3872,24 @@ msgstr "Cancelar"
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Cancel Meeting"
+msgstr "Cancelar reunión"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Cancel meeting"
+msgstr "Cancelar reunión"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Cancel this meeting?"
+msgstr "¿Cancelar esta reunión?"
+
+#. module: community_meetings
+#. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting__display_state__cancelled
@@ -4310,7 +4328,7 @@ msgstr "Contenido"
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 msgid "Continue meeting"
-msgstr "Continuar reunión"
+msgstr "Cancelar reunión"
 
 #. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_create_wizard__step__carryover
@@ -4479,7 +4497,7 @@ msgstr "Fecha de creación"
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Create Meeting"
-msgstr "Crear reunión"
+msgstr "Cancelar reunión"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
@@ -6685,6 +6703,12 @@ msgstr "Unirse a la reunión"
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Keep meeting"
+msgstr "Mantener reunión"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 msgid "Keep previous notes"
 msgstr "Mantener notas anteriores"
 
@@ -7522,7 +7546,7 @@ msgstr "Tipo de la siguiente actividad"
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_item__kind__next_meeting
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_type__behavior__next_meeting
 msgid "Next Meeting"
-msgstr "Próxima reunión"
+msgstr "Mantener reunión"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -7543,7 +7567,7 @@ msgstr "Siguiente día del mes"
 #: code:addons/community_meetings/models/preparation.py:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Next meeting"
-msgstr "Próxima reunión"
+msgstr "Mantener reunión"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -8659,7 +8683,7 @@ msgstr "Personas a invitar"
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Plan this meeting"
-msgstr "Planifica esta reunión"
+msgstr "¿Cancelar esta reunión?"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
@@ -9304,8 +9328,8 @@ msgstr "Reordenar agenda"
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-msgid "Reorder agenda points"
-msgstr "Reordenar puntos de agenda"
+msgid "Reorder agenda point"
+msgstr "Reordenar punto de agenda"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__reorder_point_policy
@@ -9632,6 +9656,12 @@ msgstr "Programar"
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Schedule Meeting"
+msgstr "Programar reunión"
+
+#. module: community_meetings
+#. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting__display_state__scheduled
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting__state__scheduled
@@ -9647,7 +9677,7 @@ msgstr "Programadas en el pasado"
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 msgid "Scheduling"
-msgstr "Programación"
+msgstr "Programar reunión"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
@@ -10528,6 +10558,12 @@ msgstr "Esta reunión ya ha sido creada."
 #: code:addons/community_meetings/models/meeting.py:0
 msgid "This meeting is already paused."
 msgstr "Esta reunión ya está en pausa."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "This meeting will be marked as cancelled."
+msgstr "La reunión se marcará como cancelada."
 
 #. module: community_meetings
 #. odoo-python

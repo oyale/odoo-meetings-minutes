@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-21 19:50+0000\n"
-"PO-Revision-Date: 2026-10-21 19:50+0000\n"
+"POT-Creation-Date: 2026-10-22 11:54+0000\n"
+"PO-Revision-Date: 2026-10-22 11:54+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -3787,6 +3787,24 @@ msgstr ""
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Cancel Meeting"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Cancel meeting"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Cancel this meeting?"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting__display_state__cancelled
@@ -6532,6 +6550,12 @@ msgstr ""
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Keep meeting"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 msgid "Keep previous notes"
 msgstr ""
 
@@ -9055,7 +9079,7 @@ msgstr ""
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-msgid "Reorder agenda points"
+msgid "Reorder agenda point"
 msgstr ""
 
 #. module: community_meetings
@@ -9368,6 +9392,12 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__step__schedule
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
 msgid "Schedule"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Schedule Meeting"
 msgstr ""
 
 #. module: community_meetings
@@ -10211,6 +10241,12 @@ msgstr ""
 #. odoo-python
 #: code:addons/community_meetings/models/meeting.py:0
 msgid "This meeting is already paused."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "This meeting will be marked as cancelled."
 msgstr ""
 
 #. module: community_meetings

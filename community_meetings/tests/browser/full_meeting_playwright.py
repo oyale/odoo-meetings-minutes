@@ -727,17 +727,24 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         self.rpc("community.meeting", "write", [[self.meeting_id], {"duration_minutes": 95}])
         self.page.reload(wait_until="domcontentloaded")
         expect(self.page.locator(".o_live_duration_chip")).to_contain_text("01:35")
+        reorder_toggle = self.page.locator(".o_live_reorder_mode_toggle")
+        expect(reorder_toggle).to_be_visible()
+        expect(self.page.locator(".o_live_reorder_rail")).to_have_count(0)
+        reorder_toggle.click()
+        expect(self.page.locator(".o_live_reorder_rail").first).to_be_visible()
+        reorder_toggle.click()
+        expect(self.page.locator(".o_live_reorder_rail")).to_have_count(0)
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Start Meeting"), exact=True).click()
         expect(
             self.page.get_by_role("button", name=self.ui_text("community_meetings", "Finish Meeting"), exact=True)
         ).to_be_visible()
         reorder_toggle = self.page.locator(".o_live_reorder_mode_toggle")
         expect(reorder_toggle).to_be_visible()
-        expect(self.page.locator(".o_live_reorder_controls")).to_have_count(0)
+        expect(self.page.locator(".o_live_reorder_rail")).to_have_count(0)
         self.capture_visual_screenshot("live-agenda-reordering-hidden")
         reorder_toggle.click()
         expect(reorder_toggle).to_have_attribute("aria-pressed", "true")
-        expect(self.page.locator(".o_live_reorder_controls").first).to_be_visible()
+        expect(self.page.locator(".o_live_reorder_rail").first).to_be_visible()
         expect(reorder_toggle).to_contain_text(self.ui_text("community_meetings", "Done reordering"))
         self.capture_visual_screenshot("live-agenda-reordering-active")
         move_down_label = self.ui_text(
@@ -773,7 +780,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         ).to_have_attribute(
             "aria-pressed", "false"
         )
-        expect(self.page.locator(".o_live_reorder_controls")).to_have_count(0)
+        expect(self.page.locator(".o_live_reorder_rail")).to_have_count(0)
         self.page.reload(wait_until="domcontentloaded")
         expect(self.page.locator(".o_live_agenda_card").first).to_contain_text(
             "Browser Information case"
@@ -1250,9 +1257,22 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             '.o_field_widget[name="agenda_item_ids"] tr.o_data_row'
         )
         expect(agenda_rows).to_have_count(2)
-        agenda_rows.nth(0).get_by_role(
+        move_down = agenda_rows.nth(0).get_by_role(
             "button", name=self.ui_text("community_meetings", "Move down")
-        ).click()
+        )
+        move_down_box = move_down.bounding_box()
+        name_cell = agenda_rows.nth(0).get_by_role("cell").filter(
+            has_text="Created agenda title"
+        )
+        name_box = name_cell.bounding_box()
+        self.assertIsNotNone(move_down_box)
+        self.assertIsNotNone(name_box)
+        self.assertLessEqual(
+            move_down_box["x"] + move_down_box["width"],
+            name_box["x"],
+            "The move control overlaps the agenda point name.",
+        )
+        move_down.click()
         expect(agenda_rows.nth(0)).to_contain_text("Second agenda title")
         persisted_order = self.rpc(
             "community.meeting.agenda.item",
@@ -1288,12 +1308,53 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         expect(series_wizard).not_to_be_visible()
         rows = self.rpc("community.meeting.series", "search", [[("name", "=", name)]])
         self.assertEqual(len(rows), 1)
+        wizard_save_errors = []
+
+        def has_wizard_endpoint(response, method):
+            return response.url.split("?", 1)[0].endswith(
+                f"/community.meeting.create.wizard/{method}"
+            )
+
+        def capture_wizard_save_error(response):
+            if not has_wizard_endpoint(response, "web_save"):
+                return
+            try:
+                payload = response.json()
+            except ValueError as error:
+                wizard_save_errors.append(
+                    f"web_save returned invalid JSON (HTTP {response.status}): {error}"
+                )
+                return
+            if response.status >= 400 or payload.get("error"):
+                wizard_save_errors.append(
+                    f"web_save failed (HTTP {response.status}): {payload!r}"
+                )
+
+        self.page.on("response", capture_wizard_save_error)
+        self.addCleanup(
+            self.page.remove_listener, "response", capture_wizard_save_error
+        )
+        self.addCleanup(
+            lambda: self.assertFalse(
+                wizard_save_errors,
+                "Meeting wizard save errors: " + repr(wizard_save_errors),
+            )
+        )
         self.addCleanup(self.rpc, "community.meeting.series", "unlink", [rows])
-        self.page.locator('button[name="action_new_meeting"]').click()
+        # Wait until Odoo has loaded and initialized the wizard before closing it.
+        # The response listener above catches any unexpected deferred web_save.
+        with self.page.expect_response(
+            lambda response: has_wizard_endpoint(response, "onchange")
+        ):
+            self.page.locator('button[name="action_new_meeting"]').click()
+        meeting_wizard = self.page.get_by_role("dialog").last
         expect(
-            self.page.locator('.o_field_widget[name="series_id"] input')
+            meeting_wizard.locator('.o_field_widget[name="series_id"] input')
         ).to_have_value(name)
-        # Leave the unsaved meeting without persisting it.
+        meeting_wizard.get_by_role(
+            "button", name=self.ui_text("community_meetings", "Cancel")
+        ).click()
+        expect(meeting_wizard).not_to_be_visible()
 
     def test_mobile_new_meeting_wizard_with_many_attendees(self):
         suffix = uuid.uuid4().hex[:8]
@@ -1953,6 +2014,44 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         card.locator(".o_live_expand").click()
         expect(card.locator(".o_live_planned")).to_contain_text("Detailed topic")
 
+    def test_live_draft_meeting_can_be_scheduled_and_cancelled(self):
+        meeting_id = self.rpc(
+            "community.meeting",
+            "create",
+            [{"name": "Browser lifecycle " + uuid.uuid4().hex[:8], "start_datetime": "2030-01-01 10:00:00"}],
+        )
+
+        def cleanup_meeting():
+            state = self.record("community.meeting", meeting_id, ["state"])["state"]
+            if state in ("draft", "scheduled"):
+                self.rpc("community.meeting", "action_cancel", [[meeting_id]])
+            self.rpc("community.meeting", "unlink", [[meeting_id]])
+
+        self.addCleanup(cleanup_meeting)
+        self.open_live(meeting_id)
+        schedule = self.page.get_by_role(
+            "button", name=self.ui_text("community_meetings", "Schedule Meeting"), exact=True
+        )
+        expect(schedule).to_be_visible()
+        schedule.click()
+        self.wait_field("community.meeting", meeting_id, "state", "scheduled")
+        cancel = self.page.get_by_role(
+            "button", name=self.ui_text("community_meetings", "Cancel Meeting"), exact=True
+        )
+        expect(cancel).to_be_visible()
+        cancel.click()
+        dialog = self.page.get_by_role("dialog")
+        expect(dialog).to_contain_text(
+            self.ui_text("community_meetings", "This meeting will be marked as cancelled.")
+        )
+        dialog.get_by_role(
+            "button", name=self.ui_text("community_meetings", "Cancel meeting"), exact=True
+        ).click()
+        self.wait_field("community.meeting", meeting_id, "state", "cancelled")
+        expect(
+            self.page.get_by_role("button", name=self.ui_text("community_meetings", "Schedule Meeting"), exact=True)
+        ).to_have_count(0)
+
     def test_live_view_is_available_in_draft_and_respects_add_policy(self):
         series = self.rpc(
             "community.meeting.series",
@@ -1969,10 +2068,28 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "start_datetime": "2030-01-01 10:00:00",
         }])
         self.addCleanup(self.delete_draft, draft)
+        self.rpc(
+            "community.meeting.agenda.item",
+            "create",
+            [{"meeting_id": draft, "name": "Draft reorder point one"}],
+        )
+        self.rpc(
+            "community.meeting.agenda.item",
+            "create",
+            [{"meeting_id": draft, "name": "Draft reorder point two"}],
+        )
         self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, draft))
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Open Meeting")).click()
         expect(self.page.locator(self.ui_selector("community_meetings", '.o_live_header input[aria-label="Meeting name"]', "Meeting name"))).to_have_value(re.compile("Draft workspace"))
         expect(self.page.get_by_role("button", name=self.ui_text("community_meetings", "Add Point"), exact=True)).to_be_visible()
+        reorder_toggle = self.page.locator(".o_live_reorder_mode_toggle")
+        expect(reorder_toggle).to_be_visible()
+        expect(self.page.locator(".o_live_reorder_rail")).to_have_count(0)
+        reorder_toggle.click()
+        expect(reorder_toggle).to_have_attribute("aria-pressed", "true")
+        expect(self.page.locator(".o_live_reorder_rail").first).to_be_visible()
+        reorder_toggle.click()
+        expect(self.page.locator(".o_live_reorder_rail")).to_have_count(0)
 
     def test_live_header_shows_coordinator_before_minutes_secretary(self):
         self.open_live(self.meeting_id)
