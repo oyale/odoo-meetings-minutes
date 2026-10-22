@@ -10385,8 +10385,8 @@ msgid ""
 "The selected agenda exceeds the estimated meeting duration by %(minutes)s "
 "min."
 msgstr ""
-"La agenda seleccionada supera la duración estimada de la reunión en %"
-"(minutes)s min."
+"La agenda seleccionada supera la duración estimada de la reunión en "
+"%(minutes)s min."
 
 #. module: community_meetings
 #. odoo-python
