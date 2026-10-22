@@ -11,34 +11,28 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 ### Features
 
-- The live meeting view now supports scheduling and cancelling draft meetings, and exposes agenda reordering in every phase allowed by the meeting policy. Controls sit to the left of agenda cards on desktop and above them on mobile, where they provide larger touch targets. (58-live-workflow-controls)
+- The live meeting view now supports scheduling and cancelling draft meetings, and exposes agenda reordering in every phase allowed by the meeting policy. Controls sit to the left of agenda cards on desktop and above them on mobile, where they provide larger touch targets.
 - Meeting editors can move agenda points up or down in preparation and during a live meeting, within a company or series policy. The order is locked when the meeting is marked held; minutes-approval and next-meeting points retain their structural positions. (agenda-point-reordering)
 - All recorded dissents are included in minute previews and approved revisions.
   The inclusion checkbox has been removed; private editorial notes remain
-  separate from the minutes. (#104)
+  separate from the minutes.
 
 ### Bugfixes
 
 - Follow-up type policies now inherit from the most specific point through the series to the company, and an empty effective policy no longer crashes the defaults wizard. (follow-up-policy-inheritance)
 - Repeated requests to add a recurring agenda point to a meeting now reuse the existing occurrence. (recurring-point-idempotency)
-- Changing meeting details no longer raises an Odoo error while agenda rows are still being edited; move controls remain ordered by agenda sequence. (#57)
-- The web client now declares the signed-in user's interface language and shows Spanish translations for JavaScript control names. (#58)
+- Changing meeting details no longer raises an Odoo error while agenda rows are still being edited; move controls remain ordered by agenda sequence.
+- The web client now declares the signed-in user's interface language and shows Spanish translations for JavaScript control names.
 - Agenda review reasons for submitted proposals now follow the active user's interface language.
-
-### Misc
-
-- 58-live-controls-browser-tests, browser-screenshot-controls, carryover-validation, scheduling-preflight, screenshot-capture-tests, wizard-save-response-check, #58
 
 ## Internal changes
 
-- **carryover-validation** — Carryover destination checks now share one validator across wizard and model entry points.
-- **58-live-controls-browser-tests** — Browser checks cover agenda reordering in draft meetings, verify desktop controls sit left of each card and mobile controls sit above it with 44px touch targets, and distinguish attendee-editor cancellation from meeting cancellation.
-- **scheduling-preflight** — Meeting scheduling checks now run through one shared transition hook, including calendar end-time validation.
-- **browser-screenshot-controls** — Shared browser tests now use named capture checkpoints with common viewport and retention settings.
-- **wizard-save-response-check** — The browser regression closes the unsaved meeting wizard and reports errors returned by its save endpoint.
-- **58** — Browser test support resolves addon-owned labels from their catalogs and requires session, bundle, and document locales to agree.
-- **precommit-quality** — Python lint and formatting issues in the addon and shared browser support are resolved.
-- **screenshot-capture-tests** — The screenshot policy helper now has direct unit tests for its capture settings.
+- Carryover destinations are checked by one shared validator from both the wizard and model flows.
+- Meeting scheduling uses a shared transition hook that also validates Calendar-specific end times.
+- Browser checks cover agenda reordering across supported phases, verify desktop and mobile control placement, distinguish cancelling attendee edits from cancelling a meeting, and resolve localized labels from each addon's translation catalog.
+- Browser checks report save errors when closing an unsaved meeting wizard.
+- Named screenshot checkpoints share viewport and retention settings, and the capture policy has direct unit tests.
+- The addon and shared browser support now pass the configured Python lint and formatting checks.
 
 ## Community Meetings 18.0.6.2.6 (2026-10-21)
 =============================================

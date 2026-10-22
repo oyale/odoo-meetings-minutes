@@ -14,14 +14,10 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 - Project task follow-up types now respect configured policies and are only offered to users with Project access. (project-follow-up-policy)
 - The Project task wizard now displays its context and follow-up headings in Spanish when the Odoo interface is Spanish. (project-task-wizard-translations)
 
-### Misc
-
-- #58
-
 ## Internal changes
 
-- **generated-description-refresh** — The generated marketplace description now matches the current addon README.
-- **58** — Project browser and acceptance checks resolve translated labels from the project catalog.
+- The generated marketplace description matches the current addon README.
+- Project browser and acceptance checks resolve translated interface labels from the addon's translation catalog.
 
 ## Community Meetings Project 18.0.3.1.6 (2026-10-21)
 =====================================================

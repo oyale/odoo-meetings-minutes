@@ -12,7 +12,7 @@ ADDONS = (
     "community_meetings_project",
     "community_meetings_extension_demo",
 )
-DOCUMENTATION_FILES = {"README.md", "README.rst"}
+DOCUMENTATION_FILES = {"CHANGELOG.md", "README.md", "README.rst"}
 DOCUMENTATION_DIRECTORIES = ("readme/", "static/description/")
 
 

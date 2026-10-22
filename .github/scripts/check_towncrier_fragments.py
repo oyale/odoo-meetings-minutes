@@ -23,10 +23,11 @@ def main() -> int:
         text=True,
     ).splitlines()
 
+    # Correcting generated history must not create a duplicate release fragment.
     changed_addons = [
         (addon, config)
         for addon, config in ADDONS.items()
-        if any(path.startswith(f"{addon}/") for path in changed_paths)
+        if any(path.startswith(f"{addon}/") and path != f"{addon}/CHANGELOG.md" for path in changed_paths)
     ]
 
     if not changed_addons:
