@@ -54,9 +54,15 @@ Después los botones **Añadir punto** desaparecen y el servidor también lo
 impide. Cada serie puede sobrescribirlo (ver
 [Series → Políticas](series.md#políticas)).
 
-> **Nota:** nunca se añaden puntos a reuniones cuyo acta ya está redactada
-> (Celebrada/Acta en borrador/Aprobada) — eso se registra como seguimiento o
-> propuesta nueva.
+El límite también se aplica a importaciones, integraciones, formularios de agenda
+y arrastres aceptados. No se pueden añadir puntos ordinarios después de celebrar
+la reunión, mientras se prepara su acta, ni tras aprobarla o cancelarla. Registra
+los asuntos nuevos como seguimientos o propuestas nuevas.
+
+Al activar la aprobación de actas anteriores en una serie, la app puede insertar
+su punto obligatorio de aprobación en reuniones existentes en borrador,
+programadas, celebradas o con acta en borrador. Esa adaptación interna no reabre
+la incorporación de puntos ordinarios.
 
 ## Reordenar puntos de agenda
 

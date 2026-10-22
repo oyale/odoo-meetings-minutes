@@ -6,7 +6,7 @@ in. Two entries:
 - Menu **Meetings → Propose a point**: choose the target series.
 - Series form → **Propose a point** button (series pre-selected).
 
-![Propose a point](img/propose-point.png)
+![Propose a point](../img/propose-point.png)
 
 ## The proposal
 
@@ -47,3 +47,15 @@ for history.
 
 The review list shows name, proposer and priority. Accept or reject one by one.
 Rejection is visible in the point's history; nothing is deleted.
+
+Acceptance requires an Editor or Manager who can edit the proposal, including
+when using integrations. An Editor can review their own proposal. Acceptance
+records the reviewer and response date; proposing alone does not grant access
+to the destination meeting.
+
+![Reviewed proposal status](../img/proposal-review-status.png)
+
+After upgrading, an older point may show **Admitted without recorded review**.
+It remains available in its existing open or closed state. This label identifies
+an earlier admission for which a completed review was not recorded; it does not
+attribute a reviewer or response date retrospectively.

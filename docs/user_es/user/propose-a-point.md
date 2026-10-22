@@ -6,7 +6,7 @@ deciden qué entra. Dos accesos:
 - Menú **Reuniones → Proponer un punto**: elige la serie de destino.
 - Formulario de serie → botón **Proponer un punto** (serie preseleccionada).
 
-![Proponer un punto](img/propose-point.png)
+![Proponer un punto](../img/propose-point.png)
 
 ## La propuesta
 
@@ -42,3 +42,15 @@ congelan para la historia.
 
 La lista de revisión muestra nombre, proponente y prioridad. Acepta o rechaza una
 a una. El rechazo queda visible en el historial del punto; no se borra nada.
+
+Aceptar exige ser Editor o Gestor con permiso de escritura sobre la propuesta,
+también desde integraciones. Un Editor puede revisar su propia propuesta. La
+aceptación registra el revisor y la fecha de respuesta; proponer no concede
+acceso a la reunión de destino.
+
+![Estado de una propuesta revisada](../img/proposal-review-status.png)
+
+Tras actualizar, un punto antiguo puede mostrar **Admitida sin revisión registrada**.
+Conserva su estado abierto o cerrado. La etiqueta identifica una admisión anterior
+sin revisión completada registrada; no atribuye retrospectivamente un revisor
+ni una fecha de respuesta.

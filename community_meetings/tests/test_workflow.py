@@ -297,11 +297,11 @@ class TestMeetingWorkflow(TransactionCase):
         meeting = self.env["community.meeting"].with_user(self.editor).create({
             "name": "Change agenda type", "start_datetime": "2026-11-01 10:00:00",
         })
-        meeting.with_user(self.editor).action_schedule()
-        meeting.with_user(self.editor).action_mark_held()
         item = self.env["community.meeting.agenda.item"].with_user(self.editor).create({
             "meeting_id": meeting.id, "name": "Agenda point", "kind": "decision",
         })
+        meeting.with_user(self.editor).action_schedule()
+        meeting.with_user(self.editor).action_mark_held()
         agreement = self._decision_agreement(item)
         agreement.write({"status": "withdrawn"})
         item.with_user(self.editor).write({"kind": "information"})

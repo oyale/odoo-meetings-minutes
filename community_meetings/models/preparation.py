@@ -4,6 +4,8 @@ from typing import ClassVar
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
+from .agenda_item import _REQUIRED_MINUTES_APPROVAL_CREATION
+
 
 class Company(models.Model):
     _inherit = "res.company"
@@ -324,7 +326,9 @@ class Meeting(models.Model):
             if meeting.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval"):
                 continue
             pending = meeting.get_pending_minutes_for_approval()
-            self.env["community.meeting.agenda.item"].create(
+            self.env["community.meeting.agenda.item"].with_context(
+                _meeting_required_minutes_approval=_REQUIRED_MINUTES_APPROVAL_CREATION,
+            ).create(
                 {
                     "meeting_id": meeting.id,
                     "name": _("Approve previous minutes"),
