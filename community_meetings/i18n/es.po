@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-22 18:18+0000\n"
+"POT-Creation-Date: 2026-10-22 19:44+0000\n"
 "PO-Revision-Date: 2026-10-18 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
@@ -363,6 +363,16 @@ msgstr "La referencia de una reunión no se puede cambiar."
 #: code:addons/community_meetings/models/series.py:0
 msgid "A meeting series cannot be moved to another company."
 msgstr "Una serie de reuniones no se puede mover a otra compañía."
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid ""
+"A meeting that has started cannot be cancelled; mark it as held to close "
+"timers and preserve history."
+msgstr ""
+"Una reunión iniciada no se puede cancelar; márcala como celebrada para cerrar "
+"los cronómetros y conservar el historial."
 
 #. module: community_meetings
 #. odoo-python
@@ -7593,6 +7603,11 @@ msgid "Next meeting point"
 msgstr "Punto de próxima reunión"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Next meeting:"
+msgstr "Próxima reunión:"
+
+#. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Next point"
@@ -8846,6 +8861,12 @@ msgstr "Punto aplazado"
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__deferral_reason
 msgid "Postponement reason"
 msgstr "Motivo del aplazamiento"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Preparation pending"
+msgstr "Preparación pendiente"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -11231,6 +11252,14 @@ msgstr "puntos completados"
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
 msgid "{date} {series}"
 msgstr "{date} {series}"
+
+#, fuzzy
+#~ msgid "Time Tracking Session Mode"
+#~ msgstr "Seguimiento de tiempo"
+
+#, fuzzy
+#~ msgid "Time tracking mode captured when the live meeting starts."
+#~ msgstr "El seguimiento de tiempo está desactivado para esta reunión."
 
 #~ msgid "Only proposed points can be admitted."
 #~ msgstr "Solo se pueden admitir puntos propuestos."

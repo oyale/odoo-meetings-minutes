@@ -81,6 +81,18 @@ class CommunityMeetingRevision(models.Model):
                     "decision_result_label": dict(
                         item._fields["decision_result"]._description_selection(self.env)
                     ).get(item.decision_result, ""),
+                    "next_meeting_datetime": (
+                        fields.Datetime.to_string(item.next_meeting_datetime) if item.next_meeting_datetime else ""
+                    ),
+                    "next_meeting_datetime_display": format_datetime(
+                        self.env,
+                        item.next_meeting_datetime,
+                        tz=timezone,
+                        dt_format="short",
+                    )
+                    if item.next_meeting_datetime
+                    else "",
+                    "next_meeting_timezone": timezone if item.next_meeting_datetime else "",
                     "deferral_reason": item.deferral_reason or "",
                     "deferral_reason_code": item.deferral_reason_code or "",
                     "resolutions": [

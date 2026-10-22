@@ -184,9 +184,18 @@ class CommunityMeeting(models.Model):
         ),
     ]
 
-    @api.depends("series_id.time_tracking", "company_id.meeting_time_tracking")
+    @api.depends(
+        "series_id.time_tracking",
+        "company_id.meeting_time_tracking",
+        "actual_start_datetime",
+    )
     def _compute_time_tracking_enabled(self):
         for meeting in self:
+            if meeting.actual_start_datetime:
+                # Starting a session is only allowed while tracking is on. Keep
+                # that session mode stable even if inherited defaults change.
+                meeting.time_tracking_enabled = True
+                continue
             series_mode = meeting.series_id.time_tracking or "inherit"
             meeting.time_tracking_enabled = (
                 meeting.company_id.meeting_time_tracking if series_mode == "inherit" else series_mode == "on"
@@ -656,6 +665,17 @@ class CommunityMeeting(models.Model):
         return self._transition(("held",), "minutes_draft")
 
     def action_cancel(self):
+        for meeting in self.sorted("id"):
+            meeting.check_access("write")
+            self.env.cr.execute("SELECT id FROM community_meeting WHERE id = %s FOR UPDATE", [meeting.id])
+            meeting.invalidate_recordset(["actual_start_datetime"])
+            if meeting.actual_start_datetime:
+                raise UserError(
+                    _(
+                        "A meeting that has started cannot be cancelled; mark it as held "
+                        "to close timers and preserve history."
+                    )
+                )
         return self._transition(("draft", "scheduled"), "cancelled")
 
     def action_open_live_meeting(self):

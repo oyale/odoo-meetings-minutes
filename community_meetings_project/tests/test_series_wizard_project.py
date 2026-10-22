@@ -7,15 +7,23 @@ class TestSeriesWizardProject(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.editor = cls.env["res.users"].create({
-            "name": "Series Wizard Project Editor",
-            "login": "series-wizard-project-editor-test",
-            "groups_id": [(6, 0, [
-                cls.env.ref("base.group_user").id,
-                cls.env.ref("community_meetings.group_meeting_editor").id,
-                cls.env.ref("project.group_project_manager").id,
-            ])],
-        })
+        cls.editor = cls.env["res.users"].create(
+            {
+                "name": "Series Wizard Project Editor",
+                "login": "series-wizard-project-editor-test",
+                "groups_id": [
+                    (
+                        6,
+                        0,
+                        [
+                            cls.env.ref("base.group_user").id,
+                            cls.env.ref("community_meetings.group_meeting_editor").id,
+                            cls.env.ref("project.group_project_manager").id,
+                        ],
+                    )
+                ],
+            }
+        )
 
     def _wizard(self, **values):
         return self.env["community.meeting.series.wizard"].with_user(self.editor).create(values)
@@ -30,13 +38,21 @@ class TestSeriesWizardProject(TransactionCase):
 
     def test_create_a_new_project(self):
         wizard = self._wizard(
-            name="New project series", link_project=True,
-            new_project=True, new_project_name="Fresh project",
+            name="New project series",
+            link_project=True,
+            new_project=True,
+            new_project_name="Fresh project",
         )
         wizard.action_finish()
         series = wizard.created_series_id
         self.assertEqual(series.meeting_project_id.name, "Fresh project")
         self.assertEqual(series.meeting_project_id.company_id, series.company_id)
+        created_project = series.meeting_project_id
+        project_count = self.env["project.project"].search_count([("name", "=", "Fresh project")])
+        wizard.action_finish()
+        self.assertEqual(wizard.created_series_id, series)
+        self.assertEqual(series.meeting_project_id, created_project)
+        self.assertEqual(self.env["project.project"].search_count([("name", "=", "Fresh project")]), project_count)
 
     def test_no_project_is_allowed(self):
         wizard = self._wizard(name="No project series")

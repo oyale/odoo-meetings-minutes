@@ -34,6 +34,11 @@ El acta aprobada usa la zona de la serie; si la reunión es independiente, usa
 la de la compañía y, si tampoco está configurada, UTC. La zona aparece junto a
 la hora.
 
+Si la agenda incluye un punto de **Próxima reunión**, su fecha y hora acordadas
+aparecen en la vista previa y quedan fijadas en la revisión aprobada y el PDF,
+con la misma zona del acta. Los cambios posteriores en el calendario de la serie
+no reescriben una revisión aprobada.
+
 En estado **Celebrada** o **Acta en borrador**, la vista previa es de solo
 lectura: abrirla y volver a la reunión no cambia el contenido guardado ni su
 estado. Cualquier persona con acceso de lectura a la reunión puede abrirla;
@@ -62,6 +67,10 @@ acta** (pantalla en vivo o cabecera del formulario). Si la serie usa ese punto,
 el acta actual queda pendiente para que se apruebe desde el punto de una reunión
 posterior; la acción directa queda bloqueada. Consulta [Roles y permisos](../roles-and-permissions.md)
 para saber quién puede seguir cada ruta de aprobación.
+
+Una reunión anterior que siga **Celebrada** aparece como **Preparación
+pendiente**: prepara primero su acta. Solo se puede aprobar desde el punto de la
+reunión posterior cuando su estado sea **Acta en borrador**.
 
 La aprobación:
 

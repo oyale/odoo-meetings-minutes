@@ -457,6 +457,44 @@ class TestMeetingRevisions(TransactionCase):
         self.assertEqual(agenda[0]["kind"], "minutes_approval")
         self.assertEqual(agenda[-1]["kind"], "next_meeting")
 
+    def test_minutes_snapshot_preserves_agreed_next_meeting_datetime_and_timezone(self):
+        series = (
+            self.env["community.meeting.series"]
+            .with_user(self.editor)
+            .create(
+                {
+                    "name": "Next meeting snapshot",
+                    "timezone": "Europe/Madrid",
+                    "has_next_meeting_point": True,
+                }
+            )
+        )
+        meeting = self._drafted_meeting("Next meeting snapshot", series=series)
+        next_point = meeting.agenda_item_ids.filtered(lambda item: item.kind == "next_meeting")
+        next_point.write({"next_meeting_datetime": "2026-11-15 09:30:00"})
+
+        item = next(
+            row
+            for row in self.env["community.meeting.revision"]._build_public_content(meeting, timezone=series.timezone)[
+                "agenda"
+            ]
+            if row["kind"] == "next_meeting"
+        )
+
+        self.assertEqual(item["next_meeting_datetime"], "2026-11-15 09:30:00")
+        self.assertEqual(item["next_meeting_timezone"], "Europe/Madrid")
+        self.assertTrue(item["next_meeting_datetime_display"])
+
+        revision = self._approve_without_rendering_pdf(meeting.with_user(self.approver))
+        frozen = json.loads(revision.snapshot_json)["agenda"][-1]
+        self.assertEqual(frozen["next_meeting_datetime"], "2026-11-15 09:30:00")
+        report_html, report_type = self.env["ir.actions.report"]._render_qweb_html(
+            "community_meetings.report_revision_document", revision.ids
+        )
+        self.assertEqual(report_type, "html")
+        self.assertIn(item["next_meeting_datetime_display"].encode(), report_html)
+        self.assertIn(b"Europe/Madrid", report_html)
+
     def test_approved_minutes_follow_reordered_agenda(self):
         series = (
             self.env["community.meeting.series"]

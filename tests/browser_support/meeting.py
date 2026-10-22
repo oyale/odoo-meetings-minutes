@@ -88,7 +88,13 @@ class LiveMeetingFixture:
         self.session.rpc("community.meeting", "action_draft_minutes", [[self.meeting_id]])
 
     def cleanup(self) -> bool:
-        state = self.session.record("community.meeting", self.meeting_id, ["state"])["state"]
+        record = self.session.record("community.meeting", self.meeting_id, ["state", "actual_start_datetime"])
+        state = record["state"]
+        if state == "scheduled" and record["actual_start_datetime"]:
+            # Started sessions must be finished as held; cancellation is reserved
+            # for meetings that never began.
+            self.session.rpc("community.meeting", "action_mark_held", [[self.meeting_id]])
+            return False
         if state not in ("draft", "scheduled"):
             # The workflow intentionally disallows deleting held or draft-minute records.
             return False

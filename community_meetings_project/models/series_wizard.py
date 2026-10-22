@@ -9,6 +9,7 @@ class SeriesWizard(models.TransientModel):
     project_id = fields.Many2one("project.project", string="Project")
     new_project = fields.Boolean(string="Project source", default=False)
     new_project_name = fields.Char(string="New project name")
+    created_project_id = fields.Many2one("project.project", readonly=True, copy=False)
 
     @api.onchange("link_project")
     def _onchange_link_project(self):
@@ -26,21 +27,25 @@ class SeriesWizard(models.TransientModel):
                 name = (self.new_project_name or series.name or "").strip()
                 if not name:
                     raise ValidationError(_("Enter a name for the new project."))
-                project = self.env["project.project"].create(
-                    {
-                        "name": name,
-                        "company_id": series.company_id.id,
-                    }
-                )
+                project = self.created_project_id or series.meeting_project_id
+                if not project:
+                    project = self.env["project.project"].create(
+                        {
+                            "name": name,
+                            "company_id": series.company_id.id,
+                        }
+                    )
+                    self.created_project_id = project
+                project.check_access("read")
+                if project.company_id and project.company_id != series.company_id:
+                    raise ValidationError(_("The project must belong to the series company."))
             else:
                 project = self.project_id
                 if not project:
                     raise ValidationError(_("Choose a project or create a new one."))
                 project.check_access("read")
                 if project.company_id and project.company_id != series.company_id:
-                    raise ValidationError(
-                        _("The project must belong to the series company.")
-                    )
+                    raise ValidationError(_("The project must belong to the series company."))
             series.write(
                 {
                     "meeting_project_id": project.id,

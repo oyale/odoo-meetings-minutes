@@ -78,6 +78,10 @@
                                 <span t-if="item['deferral_reason']" t-out="item['deferral_reason']"/>
                             </p>
                             <p t-if="item['decision_result_label']" class="o_minutes_point_outcome">Decision: <strong t-out="item['decision_result_label']"/></p>
+                            <p t-if="item.get('next_meeting_datetime_display')" class="o_minutes_point_outcome">
+                                Next meeting: <strong t-out="item['next_meeting_datetime_display']"/>
+                                <span t-if="item.get('next_meeting_timezone')" t-out="' (' + item['next_meeting_timezone'] + ')'"/>
+                            </p>
                             <div t-foreach="item['resolutions']" t-as="resolution" class="o_minutes_resolution">
                                 <h4 t-out="resolution['title']"/><div class="o_minutes_rich_content" t-out="resolution['body_html']"/>
                             </div>
