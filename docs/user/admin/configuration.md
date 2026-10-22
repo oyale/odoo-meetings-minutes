@@ -51,9 +51,14 @@ and reports.
 After that the **Add Point** buttons disappear and the server rejects attempts.
 Series can override this per series (see [Series → Policies](series.md#policies)).
 
-> **Note:** Points are never added to meetings whose minutes are already written
-> (Held/Minutes draft/Approved) — record those as follow-ups or new proposals
-> instead.
+This limit also applies to imports, integrations, agenda forms and accepted
+carryovers. Ordinary points cannot be added after a meeting is held, while
+preparing its minutes, or after approval or cancellation. Record new matters as
+follow-ups or new proposals instead.
+
+When a series enables approval of previous minutes, the app can still insert
+its required approval point into existing draft, scheduled, held or minutes-draft
+meetings. This internal adaptation does not reopen ordinary agenda additions.
 
 ## Reordering agenda points
 

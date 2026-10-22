@@ -75,6 +75,7 @@ class MeetingTopic(models.Model):
             ("accepted", "Accepted"),
             ("rejected", "Rejected"),
             ("withdrawn", "Withdrawn"),
+            ("legacy_admitted", "Admitted without recorded review"),
         ],
         copy=False,
         index=True,
@@ -148,7 +149,7 @@ class MeetingTopic(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            if vals.get("proposal_status") in ("accepted", "rejected", "withdrawn"):
+            if vals.get("proposal_status") in ("accepted", "rejected", "withdrawn", "legacy_admitted"):
                 raise ValidationError(_("Use a proposal workflow action to change its status."))
             vals.pop("responded_by_id", None)
             vals.pop("responded_at", None)
@@ -255,10 +256,8 @@ class MeetingTopic(models.Model):
         )
 
     def action_admit(self):
-        self.check_access("write")
-        if any(t.state != "proposed" for t in self):
-            raise UserError(_("Only proposed points can be admitted."))
-        return super().write({"state": "open"})
+        """Compatibility entry point; admission is always an authorized review."""
+        return self.action_accept_proposal()
 
     def _check_proposal_review_access(self):
         if not (
@@ -458,6 +457,7 @@ class AgendaParticipation(models.Model):
     @api.model_create_multi
     # Synchronize reusable topics with meeting-specific agenda participation.
     def create(self, vals_list):  # noqa: C901
+        vals_list = self._prepare_agenda_creation(vals_list)
         prepared = []
         pending_topic_indexes = []
         pending_topic_values = []

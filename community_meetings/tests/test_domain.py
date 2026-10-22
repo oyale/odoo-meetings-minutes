@@ -378,9 +378,6 @@ class TestMeetingDomain(TransactionCase):
                 "start_datetime": "2026-10-01 10:00:00",
             }
         )
-        previous.action_schedule()
-        previous.action_mark_held()
-        previous.action_draft_minutes()
         self.env["community.meeting.agenda.item"].create(
             {
                 "meeting_id": previous.id,
@@ -388,6 +385,9 @@ class TestMeetingDomain(TransactionCase):
                 "kind": "discussion",
             }
         )
+        previous.action_schedule()
+        previous.action_mark_held()
+        previous.action_draft_minutes()
         later = self.env["community.meeting"].create(
             {
                 "name": "Later",
@@ -420,12 +420,12 @@ class TestMeetingDomain(TransactionCase):
         meeting = self.env["community.meeting"].create(
             {"name": "Approved live view", "start_datetime": "2026-11-02 10:00:00"}
         )
-        meeting.action_schedule()
-        meeting.action_mark_held()
-        meeting.action_draft_minutes()
         self.env["community.meeting.agenda.item"].create(
             {"meeting_id": meeting.id, "name": "Topic", "kind": "discussion"}
         )
+        meeting.action_schedule()
+        meeting.action_mark_held()
+        meeting.action_draft_minutes()
         self._approve_without_rendering_pdf(meeting)
         self.assertEqual(meeting.state, "approved")
         action = meeting.action_open_live_meeting()

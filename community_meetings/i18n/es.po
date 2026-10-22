@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-22 11:54+0000\n"
+"POT-Creation-Date: 2026-10-22 18:18+0000\n"
 "PO-Revision-Date: 2026-10-18 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
@@ -874,6 +874,11 @@ msgstr "Añadir puntos"
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__add_point_policy_override
 msgid "Adding points for this series"
 msgstr "Añadir puntos para esta serie"
+
+#. module: community_meetings
+#: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_topic__proposal_status__legacy_admitted
+msgid "Admitted without recorded review"
+msgstr "Admitida sin revisión registrada"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_topic_form
@@ -7512,6 +7517,7 @@ msgstr ""
 
 #. module: community_meetings
 #. odoo-python
+#: code:addons/community_meetings/models/agenda_item.py:0
 #: code:addons/community_meetings/models/creation_wizard.py:0
 #: code:addons/community_meetings/models/preparation.py:0
 msgid "New points cannot be added to this meeting anymore."
@@ -8019,12 +8025,6 @@ msgstr "Solo se pueden convertir los seguimientos abiertos."
 msgid "Only pending or proposed carryovers can be retargeted."
 msgstr ""
 "Solo se puede cambiar el destino de los traspasos pendientes o propuestos."
-
-#. module: community_meetings
-#. odoo-python
-#: code:addons/community_meetings/models/topic.py:0
-msgid "Only proposed points can be admitted."
-msgstr "Solo se pueden admitir puntos propuestos."
 
 #. module: community_meetings
 #. odoo-python
@@ -11231,6 +11231,9 @@ msgstr "puntos completados"
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
 msgid "{date} {series}"
 msgstr "{date} {series}"
+
+#~ msgid "Only proposed points can be admitted."
+#~ msgstr "Solo se pueden admitir puntos propuestos."
 
 #~ msgid "<strong>Company:</strong>"
 #~ msgstr "<strong>Compañía:</strong>"

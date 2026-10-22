@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-22 11:54+0000\n"
-"PO-Revision-Date: 2026-10-22 11:54+0000\n"
+"POT-Creation-Date: 2026-10-22 18:18+0000\n"
+"PO-Revision-Date: 2026-10-22 18:18+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -812,6 +812,11 @@ msgstr ""
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__add_point_policy_override
 msgid "Adding points for this series"
+msgstr ""
+
+#. module: community_meetings
+#: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_topic__proposal_status__legacy_admitted
+msgid "Admitted without recorded review"
 msgstr ""
 
 #. module: community_meetings
@@ -7335,6 +7340,7 @@ msgstr ""
 
 #. module: community_meetings
 #. odoo-python
+#: code:addons/community_meetings/models/agenda_item.py:0
 #: code:addons/community_meetings/models/creation_wizard.py:0
 #: code:addons/community_meetings/models/preparation.py:0
 msgid "New points cannot be added to this meeting anymore."
@@ -7817,12 +7823,6 @@ msgstr ""
 #. odoo-python
 #: code:addons/community_meetings/models/carryover.py:0
 msgid "Only pending or proposed carryovers can be retargeted."
-msgstr ""
-
-#. module: community_meetings
-#. odoo-python
-#: code:addons/community_meetings/models/topic.py:0
-msgid "Only proposed points can be admitted."
 msgstr ""
 
 #. module: community_meetings

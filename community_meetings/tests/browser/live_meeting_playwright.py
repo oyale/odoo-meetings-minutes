@@ -797,6 +797,117 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         expect(self.page.get_by_role("button", name=self.ui_text("community_meetings", "Approve Minutes"), exact=True)).to_have_count(0)
         expect(self.page.locator(".o_live_rich_readonly").first).to_be_visible()
 
+    def test_proposal_admission_requires_review_over_rpc(self):
+        login = os.environ.get("ODOO_REVIEWER_LOGIN")
+        if not login:
+            self.fail("This regression requires a disposable reviewer without Editor")
+        series = self.rpc("community.meeting.series", "create", [{
+            "name": "Programme planning " + uuid.uuid4().hex[:8],
+        }])
+        context = self.browser.new_context()
+        try:
+            page = context.new_page()
+            page.goto(BASE_URL + "/web/login" + ((f"?db={DB}") if DB else ""))
+            page.locator('input[name="login"]').fill(login)
+            page.locator('input[name="password"]').fill(PASSWORD)
+            page.locator('button[type="submit"]').click()
+            page.wait_for_url("**/odoo**")
+            reviewer = self.rpc("res.users", "search", [[("login", "=", login)]], {"limit": 1})[0]
+            self.assertFalse(self.rpc("res.users", "has_group", [
+                [reviewer], "community_meetings.group_meeting_editor",
+            ], page=page))
+            point_type = self.rpc("community.meeting.agenda.type", "search", [[
+                ("behavior", "=", "discussion"), ("active", "=", True),
+            ]], {"limit": 1})[0]
+            self.rpc("community.meeting.topic", "propose", [{
+                "name": "An intervention proposed by an internal user", "series_id": series,
+                "agenda_type_id": point_type,
+            }], page=page)
+            topic = self.rpc("community.meeting.topic", "search", [[
+                ("series_id", "=", series), ("submitted_by_user_id", "=", reviewer),
+            ]], page=page)[0]
+            for method in ("action_admit", "action_accept_proposal"):
+                with self.subTest(method=method), self.assertRaisesRegex(AssertionError, "AccessError"):
+                    self.rpc("community.meeting.topic", method, [[topic]], page=page)
+            state = self.record("community.meeting.topic", topic, [
+                "state", "proposal_status", "responded_by_id", "responded_at",
+            ], page=page)
+            self.assertEqual(state, {
+                "id": topic, "state": "proposed", "proposal_status": "submitted",
+                "responded_by_id": False, "responded_at": False,
+            })
+            self.rpc("community.meeting.topic", "action_admit", [[topic]])
+            state = self.record(
+                "community.meeting.topic", topic, ["state", "proposal_status", "responded_at"], page=page,
+            )
+            self.assertEqual(state["state"], "open")
+            self.assertEqual(state["proposal_status"], "accepted")
+            self.assertTrue(state["responded_at"])
+            own_name = (
+                "Revisar el programa comunitario"
+                if self.effective_locale().startswith("es") else "Review the community programme"
+            )
+            self.rpc("community.meeting.topic", "propose", [{
+                "name": own_name, "series_id": series, "agenda_type_id": point_type,
+                "presenter_partner_id": False,
+            }])
+            own_topic = self.rpc("community.meeting.topic", "search", [[
+                ("series_id", "=", series), ("name", "=", own_name),
+            ]])[0]
+            self.rpc("community.meeting.topic", "action_admit", [[own_topic]])
+            self.page.goto(f"{BASE_URL}/web#model=community.meeting.topic&id={own_topic}&view_type=form")
+            badge = self.page.locator('.o_field_widget[name="proposal_status"]')
+            expect(badge).to_contain_text(self.ui_text("community_meetings", "Accepted"))
+            self.capture_checkpoint("proposal-review-status")
+        finally:
+            context.close()
+
+    def test_legacy_admission_upgrade_status(self):
+        topics = self.rpc("community.meeting.topic", "search", [[
+            ("name", "=", "An intervention proposed by an internal user"),
+            ("proposal_status", "=", "legacy_admitted"),
+        ]])
+        if not topics:
+            self.skipTest("Requires a pre-upgrade admission fixture from the previous version")
+        for topic in topics:
+            state = self.record("community.meeting.topic", topic, [
+                "state", "proposal_status", "responded_by_id", "responded_at",
+            ])
+            self.assertEqual(state["state"], "open")
+            self.assertEqual(state["proposal_status"], "legacy_admitted")
+            self.assertFalse(state["responded_by_id"])
+            self.assertFalse(state["responded_at"])
+        self.page.goto(f"{BASE_URL}/web#model=community.meeting.topic&id={topics[0]}&view_type=form")
+        expect(self.page.locator('.o_field_widget[name="proposal_status"]')).to_contain_text(
+            self.ui_text("community_meetings", "Admitted without recorded review")
+        )
+        self.capture_checkpoint("legacy-proposal-review-status")
+
+    def test_addition_deadline_blocks_ui_and_rpc(self):
+        series = self.rpc("community.meeting.series", "create", [{
+            "name": "Draft-only additions " + uuid.uuid4().hex[:8], "add_point_policy": "draft",
+        }])
+        self.rpc("community.meeting", "write", [[self.meeting_id], {"series_id": series}])
+        open_live_meeting(self.session, self.meeting_id)
+        expect(self.page.get_by_role(
+            "button", name=self.ui_text("community_meetings", "Add Point"), exact=True,
+        )).to_have_count(0)
+        for model, method, args in (
+            ("community.meeting.agenda.item", "create", [{"meeting_id": self.meeting_id, "name": "Direct bypass"}]),
+            ("community.meeting", "write", [
+                [self.meeting_id], {"agenda_item_ids": [[0, 0, {"name": "Nested bypass"}]]},
+            ]),
+            ("community.meeting", "action_add_point_live", [[self.meeting_id]]),
+        ):
+            with self.subTest(method=method), self.assertRaisesRegex(
+                AssertionError, "odoo.exceptions.(UserError|ValidationError)",
+            ):
+                self.rpc(model, method, args)
+        self.assertEqual(self.rpc("community.meeting.agenda.item", "search_count", [[
+            ("meeting_id", "=", self.meeting_id), ("name", "in", ["Direct bypass", "Nested bypass"]),
+        ]]), 0)
+        self.capture_checkpoint("agenda-addition-deadline")
+
     def test_offline_approver_can_approve_previous_minutes_from_point(self):
         login = os.environ.get("ODOO_REVIEWER_LOGIN")
         if not login:

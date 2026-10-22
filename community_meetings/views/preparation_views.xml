@@ -8,6 +8,7 @@
             <group string="Point details">
                 <field name="agenda_type_id" widget="meeting_agenda_type"/>
                 <field name="state" readonly="1"/>
+                <field name="proposal_status" readonly="1" class="text-wrap" invisible="not proposal_status"/>
                 <field name="outcome" readonly="1"/>
                 <field name="postponed" readonly="1"/>
                 <field name="presenter_partner_id"/>

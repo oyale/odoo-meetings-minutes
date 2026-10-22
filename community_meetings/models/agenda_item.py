@@ -1,6 +1,10 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 
+# Only server-owned insertion of a required approval point may cross the
+# ordinary addition deadline. A JSON/RPC context value cannot supply this token.
+_REQUIRED_MINUTES_APPROVAL_CREATION = object()
+
 
 class CommunityMeetingAgendaItem(models.Model):
     _name = "community.meeting.agenda.item"
@@ -323,6 +327,37 @@ class CommunityMeetingAgendaItem(models.Model):
                 vals.pop("decision_result", None)
             values_list.append(vals)
         return super().create(values_list)
+
+    @api.model
+    def _prepare_agenda_creation(self, vals_list):
+        """Validate all destinations before creating their persistent topics."""
+        if not self.env.user.has_group("community_meetings.group_meeting_editor"):
+            raise UserError(_("You are not allowed to edit agendas."))
+        defaults = self.default_get(["meeting_id"]) if any("meeting_id" not in vals for vals in vals_list) else {}
+        values_list = [{**defaults, **vals} for vals in vals_list]
+        meetings = self.env["community.meeting"].browse([vals.get("meeting_id") for vals in values_list])
+        meetings.check_access("write")
+        meetings._lock_live_workflow()
+        meetings.invalidate_recordset(["add_point_policy", "add_point_allowed", "agenda_item_ids"])
+        structural = self.env.context.get("_meeting_required_minutes_approval") is _REQUIRED_MINUTES_APPROVAL_CREATION
+        for values in values_list:
+            meeting = self.env["community.meeting"].browse(values.get("meeting_id"))
+            kind = (
+                self.env["community.meeting.agenda.type"].browse(values["agenda_type_id"]).behavior
+                if values.get("agenda_type_id")
+                else values.get("kind")
+            )
+            required_approval = (
+                structural
+                and kind == "minutes_approval"
+                and not values.get("topic_id")
+                and meeting.series_id.has_minutes_approval_point
+                and meeting.state in ("draft", "scheduled", "held", "minutes_draft")
+                and not meeting.agenda_item_ids.filtered(lambda row: row.kind == "minutes_approval")
+            )
+            if not meeting.add_point_allowed and not required_approval:
+                raise UserError(_("New points cannot be added to this meeting anymore."))
+        return values_list
 
     # Keep these checks ordered at the workflow boundary for live point writes.
     def write(self, vals):  # noqa: C901
