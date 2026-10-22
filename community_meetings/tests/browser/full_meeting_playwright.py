@@ -744,7 +744,18 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         self.capture_visual_screenshot("live-agenda-reordering-hidden")
         reorder_toggle.click()
         expect(reorder_toggle).to_have_attribute("aria-pressed", "true")
-        expect(self.page.locator(".o_live_reorder_rail").first).to_be_visible()
+        first_rail = self.page.locator(".o_live_reorder_rail").first
+        first_card = self.page.locator(".o_live_agenda_card").first
+        expect(first_rail).to_be_visible()
+        rail_box = first_rail.bounding_box()
+        card_box = first_card.bounding_box()
+        self.assertIsNotNone(rail_box)
+        self.assertIsNotNone(card_box)
+        self.assertLess(
+            rail_box["x"] + rail_box["width"],
+            card_box["x"],
+            "The live reorder controls must sit to the left of the agenda card.",
+        )
         expect(reorder_toggle).to_contain_text(self.ui_text("community_meetings", "Done reordering"))
         self.capture_visual_screenshot("live-agenda-reordering-active")
         move_down_label = self.ui_text(
@@ -759,6 +770,22 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "Browser Discussion case"
         )
         self.page.set_viewport_size({"width": 390, "height": 844})
+        mobile_rail = self.page.locator(".o_live_reorder_rail").first
+        mobile_card = self.page.locator(".o_live_agenda_card").first
+        mobile_rail_box = mobile_rail.bounding_box()
+        mobile_card_box = mobile_card.bounding_box()
+        self.assertIsNotNone(mobile_rail_box)
+        self.assertIsNotNone(mobile_card_box)
+        self.assertLessEqual(
+            mobile_rail_box["y"] + mobile_rail_box["height"],
+            mobile_card_box["y"],
+            "On mobile, reorder controls must appear above the agenda card.",
+        )
+        for button in mobile_rail.locator(".btn").all():
+            button_box = button.bounding_box()
+            self.assertIsNotNone(button_box)
+            self.assertGreaterEqual(button_box["width"], 44)
+            self.assertGreaterEqual(button_box["height"], 44)
         mobile_move_down_label = self.ui_text(
             "community_meetings",
             "Move %(point)s down from position %(position)s of %(total)s",

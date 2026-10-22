@@ -306,8 +306,9 @@
         .o_live_type_badge, .o_live_type, .o_live_type_edit, .o_live_outcome_badge, .o_live_priority, .o_live_point_edit { width: auto; flex: none; }
         .o_live_estimate_badge { flex: none; padding: 4px 7px; font-size: .72rem; }
         .o_live_point_timer { flex: none; justify-content: flex-end; margin-left: auto; }
-        .o_live_agenda_row.o_live_reorder_active { grid-template-columns: 36px minmax(0, 1fr); gap: 5px; }
-        .o_live_reorder_rail .btn { width: 32px; height: 32px; }
+        .o_live_agenda_row.o_live_reorder_active { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+        .o_live_reorder_rail { position: static; flex-direction: row; justify-content: flex-start; gap: 8px; padding-top: 0; }
+        .o_live_reorder_rail .btn { width: 44px; height: 44px; }
         .o_live_next_meeting_feature { grid-template-columns: minmax(0, 1fr); gap: 8px; margin-right: 12px; margin-left: 12px; padding: 12px; }
         .o_live_next_meeting_feature input { max-width: none; }
         .o_live_notes_heading { align-items: flex-start; flex-direction: column; gap: 4px; }
