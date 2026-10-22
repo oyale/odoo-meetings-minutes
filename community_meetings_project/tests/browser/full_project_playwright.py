@@ -273,7 +273,11 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         )
         self.assertLessEqual(dialog.evaluate("el => el.scrollWidth - el.clientWidth"), 1)
         self.page.set_viewport_size({"width": 1440, "height": 1000})
-        expect(dialog.get_by_text(self.ui_text("community_meetings_project", "Follow-up context"))).to_be_visible()
+        expect(
+            dialog.get_by_text(
+                self.ui_text("community_meetings_project", "Follow-up context")
+            )
+        ).to_be_visible()
         expect(
             dialog.locator('.o_field_widget[name="followup_name"]')
         ).to_contain_text(followup_name)

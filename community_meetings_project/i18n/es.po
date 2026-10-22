@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Community Meetings Project 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 14:46+0000\n"
+"POT-Creation-Date: 2026-10-22 11:34+0000\n"
 "PO-Revision-Date: 2026-10-17 14:46+0000\n"
 "Last-Translator: Community Meetings contributors\n"
 "Language-Team: Spanish\n"
@@ -15,6 +15,15 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
+msgid ""
+"<strong>Link a project</strong><span>Keep this series connected to a project "
+"for its tasks and follow-ups.</span>"
+msgstr ""
+"<strong>Vincular un proyecto</strong><span>Mantén esta serie vinculada a un "
+"proyecto para sus tareas y seguimientos.</span>"
 
 #. module: community_meetings_project
 #. odoo-python
@@ -67,6 +76,12 @@ msgid "Any accessible project"
 msgstr "Cualquier proyecto accesible"
 
 #. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
+msgid "Archived"
+msgstr "Archivada"
+
+#. module: community_meetings_project
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_agenda_item__project_requirement_snapshot__project
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_todo_requirement__project
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_todo_requirement__project
@@ -81,6 +96,12 @@ msgid "Assigned meeting task or Odoo activity"
 msgstr "Tarea de reunión o actividad de Odoo asignada"
 
 #. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
+msgid "Assigned to:"
+msgstr "Asignada a:"
+
+#. module: community_meetings_project
 #: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
 msgid "Cancel"
 msgstr "Cancelar"
@@ -89,6 +110,11 @@ msgstr "Cancelar"
 #: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__choose_another_project
 msgid "Choose a different project"
 msgstr "Elegir otro proyecto"
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
+msgid "Choose a project"
+msgstr "Elige un proyecto"
 
 #. module: community_meetings_project
 #. odoo-python
@@ -101,6 +127,11 @@ msgstr "Elige un proyecto o crea uno nuevo."
 #: code:addons/community_meetings_project/models/project_links.py:0
 msgid "Choose a project or select an existing task."
 msgstr "Elige un proyecto o selecciona una tarea existente."
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
+msgid "Choose an existing task"
+msgstr "Elegir una tarea existente"
 
 #. module: community_meetings_project
 #. odoo-python
@@ -194,9 +225,9 @@ msgid "Create a Meeting Series"
 msgstr "Crear una serie de reuniones"
 
 #. module: community_meetings_project
-#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series_wizard__new_project
-msgid "Create a new project"
-msgstr "Crear un proyecto nuevo"
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
+msgid "Create a new task"
+msgstr "Crear una tarea nueva"
 
 #. module: community_meetings_project
 #: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
@@ -232,6 +263,12 @@ msgid "Display Name"
 msgstr "Nombre mostrado"
 
 #. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
+msgid "Due"
+msgstr "Vence"
+
+#. module: community_meetings_project
 #. odoo-python
 #: code:addons/community_meetings_project/models/series_wizard.py:0
 msgid "Enter a name for the new project."
@@ -256,6 +293,11 @@ msgid "Existing tasks"
 msgstr "Tareas existentes"
 
 #. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__followup_name
+msgid "Follow-up"
+msgstr "Seguimiento"
+
+#. module: community_meetings_project
 #: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_links
 msgid "Follow-up Actions"
 msgstr "Acciones de seguimiento"
@@ -264,6 +306,21 @@ msgstr "Acciones de seguimiento"
 #: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_project_policy
 msgid "Follow-up and Task Policy"
 msgstr "Política de seguimiento y tareas"
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
+msgid "Follow-up context"
+msgstr "Contexto del seguimiento"
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__followup_deadline
+msgid "Follow-up deadline"
+msgstr "Fecha límite del seguimiento"
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__followup_responsible_user_ids
+msgid "Follow-up owners"
+msgstr "Responsables del seguimiento"
 
 #. module: community_meetings_project
 #: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_action__followup_kind
@@ -309,7 +366,20 @@ msgstr "Vincular un proyecto"
 #. odoo-python
 #: code:addons/community_meetings_project/models/project_links.py:0
 msgid "Link a Project task to a follow-up action before resolving this TODO."
-msgstr "Vincula una tarea de proyecto a una acción de seguimiento antes de resolver esta tarea pendiente."
+msgstr ""
+"Vincula una tarea de proyecto a una acción de seguimiento antes de resolver "
+"esta tarea pendiente."
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
+msgid "Link a project task"
+msgstr "Vincular una tarea de proyecto"
+
+#. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
+msgid "Linked Project tasks"
+msgstr "Tareas de proyecto vinculadas"
 
 #. module: community_meetings_project
 #. odoo-python
@@ -378,8 +448,15 @@ msgid "One or more linked tasks are unavailable."
 msgstr "Una o más tareas vinculadas no están disponibles."
 
 #. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
+msgid "Open Project task"
+msgstr "Abrir tarea del proyecto"
+
+#. module: community_meetings_project
 #: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__project_id
 #: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series_wizard__project_id
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
 msgid "Project"
 msgstr "Proyecto"
 
@@ -409,6 +486,11 @@ msgstr "Destino de las tareas"
 
 #. module: community_meetings_project
 #: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
+msgid "Project link"
+msgstr "Vínculo con el proyecto"
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
 msgid "Project name"
 msgstr "Nombre del proyecto"
 
@@ -417,6 +499,11 @@ msgstr "Nombre del proyecto"
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_project_mode__series
 msgid "Project per series"
 msgstr "Proyecto por serie"
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series_wizard__new_project
+msgid "Project source"
+msgstr "Origen del proyecto"
 
 #. module: community_meetings_project
 #. odoo-javascript
@@ -445,7 +532,15 @@ msgstr "Falta la tarea de proyecto"
 #. odoo-python
 #: code:addons/community_meetings_project/models/project_links.py:0
 msgid "Project tasks can only be linked to Project task follow-ups."
-msgstr "Las tareas de proyecto solo se pueden vincular a seguimientos de tipo tarea de proyecto."
+msgstr ""
+"Las tareas de proyecto solo se pueden vincular a seguimientos de tipo tarea "
+"de proyecto."
+
+#. module: community_meetings_project
+#. odoo-javascript
+#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
+msgid "Project:"
+msgstr "Proyecto:"
 
 #. module: community_meetings_project
 #: model:ir.model,name:community_meetings_project.model_community_meeting_carryover_wizard
@@ -539,7 +634,9 @@ msgstr "El requisito de tarea se registra mediante el flujo del punto."
 #. odoo-javascript
 #: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
 msgid "This meeting policy requires a Project task linked to the follow-up."
-msgstr "La política de esta reunión exige una tarea de proyecto vinculada al seguimiento."
+msgstr ""
+"La política de esta reunión exige una tarea de proyecto vinculada al "
+"seguimiento."
 
 #. module: community_meetings_project
 #. odoo-javascript
@@ -554,96 +651,12 @@ msgid "To-do"
 msgstr "Por hacer"
 
 #. module: community_meetings_project
-#. odoo-javascript
-#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
-msgid "Linked Project tasks"
-msgstr "Tareas de proyecto vinculadas"
-
-#. module: community_meetings_project
-#. odoo-javascript
-#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
-msgid "Open Project task"
-msgstr "Abrir tarea del proyecto"
-
-#. module: community_meetings_project
-#. odoo-javascript
-#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
-msgid "Project:"
-msgstr "Proyecto:"
-
-#. module: community_meetings_project
-#. odoo-javascript
-#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
-msgid "Assigned to:"
-msgstr "Asignada a:"
-
-#. module: community_meetings_project
-#. odoo-javascript
-#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
-msgid "Due"
-msgstr "Vence"
-
-#. module: community_meetings_project
-#. odoo-javascript
-#: code:addons/community_meetings_project/static/src/live_meeting/live_meeting.xml:0
-msgid "Archived"
-msgstr "Archivada"
-#. module: community_meetings_project
-#: code:addons/community_meetings_project/views/preparation_views.xml:0
-msgid "Follow-up"
-msgstr "Seguimiento"
-
-#. module: community_meetings_project
-#: code:addons/community_meetings_project/views/preparation_views.xml:0
-msgid "Follow-up owners"
-msgstr "Responsables del seguimiento"
-
-#. module: community_meetings_project
-#: code:addons/community_meetings_project/views/preparation_views.xml:0
-msgid "Follow-up deadline"
-msgstr "Fecha límite del seguimiento"
-
-#. module: community_meetings_project
-#: code:addons/community_meetings_project/views/preparation_views.xml:0
-msgid "Link a project task"
-msgstr "Vincular una tarea de proyecto"
-
-#. module: community_meetings_project
-#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
-msgid "Link a project"
-msgstr "Vincular un proyecto"
-
-#. module: community_meetings_project
-#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
-msgid "Keep this series connected to a project for its tasks and follow-ups."
-msgstr "Mantén esta serie vinculada a un proyecto para sus tareas y seguimientos."
-
-#. module: community_meetings_project
-#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
-msgid "Project link"
-msgstr "Vínculo con el proyecto"
-
-#. module: community_meetings_project
-#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
-msgid "Choose a project"
-msgstr "Elige un proyecto"
-
-#. module: community_meetings_project
-#: code:addons/community_meetings_project/views/preparation_views.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
 msgid "Use an existing task or create one from this follow-up."
 msgstr "Usa una tarea existente o crea una desde este seguimiento."
 
-#. module: community_meetings_project
-#: code:addons/community_meetings_project/views/preparation_views.xml:0
-msgid "Follow-up context"
-msgstr "Contexto del seguimiento"
+#~ msgid "Create a new project"
+#~ msgstr "Crear un proyecto nuevo"
 
-#. module: community_meetings_project
-#: code:addons/community_meetings_project/views/preparation_views.xml:0
-msgid "Choose an existing task"
-msgstr "Elegir una tarea existente"
-
-#. module: community_meetings_project
-#: code:addons/community_meetings_project/views/preparation_views.xml:0
-msgid "Create a new task"
-msgstr "Crear una tarea nueva"
+#~ msgid "Link a project"
+#~ msgstr "Vincular un proyecto"

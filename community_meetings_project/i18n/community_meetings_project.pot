@@ -6,14 +6,21 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 18:37+0000\n"
-"PO-Revision-Date: 2026-10-17 18:37+0000\n"
+"POT-Creation-Date: 2026-10-22 11:34+0000\n"
+"PO-Revision-Date: 2026-10-22 11:34+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: \n"
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
+msgid ""
+"<strong>Link a project</strong><span>Keep this series connected to a project"
+" for its tasks and follow-ups.</span>"
+msgstr ""
 
 #. module: community_meetings_project
 #. odoo-python
@@ -42,27 +49,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__action_id
 msgid "Action"
 msgstr ""
-
-#. module: community_meetings_project
-#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
-msgid "Link a project"
-msgstr ""
-
-#. module: community_meetings_project
-#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
-msgid "Keep this series connected to a project for its tasks and follow-ups."
-msgstr ""
-
-#. module: community_meetings_project
-#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
-msgid "Project link"
-msgstr ""
-
-#. module: community_meetings_project
-#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
-msgid "Choose a project"
-msgstr ""
-
 
 #. module: community_meetings_project
 #: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_links__agenda_item_ids
@@ -123,6 +109,11 @@ msgid "Choose a different project"
 msgstr ""
 
 #. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
+msgid "Choose a project"
+msgstr ""
+
+#. module: community_meetings_project
 #. odoo-python
 #: code:addons/community_meetings_project/models/series_wizard.py:0
 msgid "Choose a project or create a new one."
@@ -132,6 +123,11 @@ msgstr ""
 #. odoo-python
 #: code:addons/community_meetings_project/models/project_links.py:0
 msgid "Choose a project or select an existing task."
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
+msgid "Choose an existing task"
 msgstr ""
 
 #. module: community_meetings_project
@@ -226,8 +222,8 @@ msgid "Create a Meeting Series"
 msgstr ""
 
 #. module: community_meetings_project
-#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series_wizard__new_project
-msgid "Create a new project"
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
+msgid "Create a new task"
 msgstr ""
 
 #. module: community_meetings_project
@@ -294,6 +290,11 @@ msgid "Existing tasks"
 msgstr ""
 
 #. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__followup_name
+msgid "Follow-up"
+msgstr ""
+
+#. module: community_meetings_project
 #: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_links
 msgid "Follow-up Actions"
 msgstr ""
@@ -301,6 +302,21 @@ msgstr ""
 #. module: community_meetings_project
 #: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_project_policy
 msgid "Follow-up and Task Policy"
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
+msgid "Follow-up context"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__followup_deadline
+msgid "Follow-up deadline"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__followup_responsible_user_ids
+msgid "Follow-up owners"
 msgstr ""
 
 #. module: community_meetings_project
@@ -347,6 +363,11 @@ msgstr ""
 #. odoo-python
 #: code:addons/community_meetings_project/models/project_links.py:0
 msgid "Link a Project task to a follow-up action before resolving this TODO."
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
+msgid "Link a project task"
 msgstr ""
 
 #. module: community_meetings_project
@@ -430,6 +451,7 @@ msgstr ""
 #. module: community_meetings_project
 #: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_wizard__project_id
 #: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series_wizard__project_id
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
 msgid "Project"
 msgstr ""
 
@@ -459,6 +481,11 @@ msgstr ""
 
 #. module: community_meetings_project
 #: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
+msgid "Project link"
+msgstr ""
+
+#. module: community_meetings_project
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_series_wizard_project
 msgid "Project name"
 msgstr ""
 
@@ -466,6 +493,11 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__community_meeting_series__meeting_project_mode__series
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__meeting_project_mode__series
 msgid "Project per series"
+msgstr ""
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series_wizard__new_project
+msgid "Project source"
 msgstr ""
 
 #. module: community_meetings_project
@@ -608,42 +640,8 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings_project.selection__res_company__followup_default_kind__project_todo
 msgid "To-do"
 msgstr ""
-#. module: community_meetings_project
-#: code:addons/community_meetings_project/views/preparation_views.xml:0
-msgid "Follow-up"
-msgstr ""
 
 #. module: community_meetings_project
-#: code:addons/community_meetings_project/views/preparation_views.xml:0
-msgid "Follow-up owners"
-msgstr ""
-
-#. module: community_meetings_project
-#: code:addons/community_meetings_project/views/preparation_views.xml:0
-msgid "Follow-up deadline"
-msgstr ""
-
-#. module: community_meetings_project
-#: code:addons/community_meetings_project/views/preparation_views.xml:0
-msgid "Link a project task"
-msgstr ""
-
-#. module: community_meetings_project
-#: code:addons/community_meetings_project/views/preparation_views.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings_project.view_community_meeting_project_task_wizard
 msgid "Use an existing task or create one from this follow-up."
-msgstr ""
-
-#. module: community_meetings_project
-#: code:addons/community_meetings_project/views/preparation_views.xml:0
-msgid "Follow-up context"
-msgstr ""
-
-#. module: community_meetings_project
-#: code:addons/community_meetings_project/views/preparation_views.xml:0
-msgid "Choose an existing task"
-msgstr ""
-
-#. module: community_meetings_project
-#: code:addons/community_meetings_project/views/preparation_views.xml:0
-msgid "Create a new task"
 msgstr ""
