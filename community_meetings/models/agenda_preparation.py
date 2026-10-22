@@ -137,16 +137,18 @@ class AgendaPreparation(models.Model):
 
     @api.model
     def _agenda_proposal_candidates(self, proposals):
-        return [
-            {
-                "key": f"proposal:{proposal.id}",
-                "topic_id": proposal.id,
-                "name": proposal.name,
-                "origin_meeting_id": False,
-                "reason": _("Proposed point"),
-            }
-            for proposal in proposals
-        ]
+        candidates = []
+        for proposal in proposals:
+            candidates.append(
+                {
+                    "key": f"proposal:{proposal.id}",
+                    "topic_id": proposal.id,
+                    "name": proposal.name,
+                    "origin_meeting_id": False,
+                    "reason": _("Proposed point"),
+                }
+            )
+        return candidates
 
     @api.model
     def _closed_carryover_keys(self, cycle_keys):
