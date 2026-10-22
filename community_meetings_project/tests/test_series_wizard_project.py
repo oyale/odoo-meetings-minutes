@@ -60,6 +60,31 @@ class TestSeriesWizardProject(TransactionCase):
         self.assertFalse(wizard.created_series_id.meeting_project_id)
         self.assertEqual(wizard.created_series_id.meeting_project_mode, "inherit")
 
+    def test_project_creation_failure_rolls_back_the_series(self):
+        wizard = self._wizard(
+            name="Atomic project series",
+            link_project=True,
+            new_project=True,
+            new_project_name="   ",
+        )
+        series_count = self.env["community.meeting.series"].search_count([("name", "=", "Atomic project series")])
+        project_count = self.env["project.project"].search_count([("name", "=", "Atomic project series")])
+
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            wizard.action_finish()
+
+        wizard.invalidate_recordset(["created_series_id", "created_project_id"])
+        self.assertFalse(wizard.created_series_id)
+        self.assertFalse(wizard.created_project_id)
+        self.assertEqual(
+            self.env["community.meeting.series"].search_count([("name", "=", "Atomic project series")]),
+            series_count,
+        )
+        self.assertEqual(
+            self.env["project.project"].search_count([("name", "=", "Atomic project series")]),
+            project_count,
+        )
+
     def test_link_requires_a_project_or_creation(self):
         wizard = self._wizard(name="Missing project series", link_project=True)
         with self.assertRaises(ValidationError), self.cr.savepoint():
