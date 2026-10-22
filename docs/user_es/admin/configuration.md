@@ -34,6 +34,10 @@ e informes.
 |---|---|
 | **Registrar el tiempo de reuniones y puntos** (sí/no) | **Activado** (por defecto): la reunión en vivo muestra *Iniciar / Pausar / Reanudar reunión*, los puntos tienen cronómetro, las notas de discusión solo se editan con el cronómetro del punto en marcha y se registran las duraciones reales. **Desactivado**: sin cronómetros — la reunión en vivo es editable desde el principio y simplemente se *finaliza* la reunión. |
 
+El ajuste efectivo queda fijado al iniciar una reunión en vivo. Los cambios en
+los valores de compañía o serie se aplican a reuniones posteriores y no
+desactivan los cronómetros de una sesión pausada.
+
 > **Consejo:** desactiva el seguimiento de tiempo en organizaciones que no quieran
 > cronómetros. El flujo de agenda (acuerdos, discrepancias, seguimientos, actas)
 > funciona exactamente igual.

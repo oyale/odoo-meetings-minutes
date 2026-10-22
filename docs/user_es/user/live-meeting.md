@@ -105,3 +105,6 @@ reunión como **Celebrada**.
 los puntos sin terminar para revisión y promueve los seguimientos finalizados a
 puntos de la próxima reunión. Después toca redactar el acta →
 [Actas y aprobación](minutes-and-approval.md).
+
+Cuando una reunión ya ha empezado, **Cancelar** deja de estar disponible: usa
+**Finalizar reunión** para cerrar los cronómetros y conservar el historial real.

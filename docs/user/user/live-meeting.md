@@ -12,7 +12,8 @@ the form.
 - **Back to Meetings** — safe exit (warns about unsaved edits).
 - **Workflow buttons** — depend on state and policy:
   - *Start Meeting* / *Pause Meeting* / *Resume Meeting* — only with time
-    tracking **on**.
+    tracking **on**. The setting is captured when the meeting starts, so
+    changing company or series defaults does not strand a paused live meeting.
   - *Finish Meeting* — ends the meeting (with time tracking off it is available
     directly on a scheduled meeting; a confirmation dialog protects the
     retroactive *Record as Already Held* path).
@@ -107,3 +108,6 @@ with a reason reverts a completed point.
 unfinished points for review and promotes finished follow-ups into next-meeting
 points. Then you are ready to write the minutes →
 [Minutes and approval](minutes-and-approval.md).
+
+Once a meeting has started, **Cancel** is no longer available: use **Finish
+Meeting** to close its timers and preserve the actual session history.

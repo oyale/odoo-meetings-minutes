@@ -97,6 +97,38 @@ class TestOptionalTiming(TransactionCase):
         meeting.with_user(self.editor).action_start_meeting()
         self.assertTrue(meeting.actual_start_datetime)
 
+    def test_time_tracking_mode_is_fixed_when_live_meeting_starts(self):
+        meeting = self._scheduled_meeting(tracking="on")
+        meeting.with_user(self.editor).action_start_meeting()
+        meeting.with_user(self.editor).action_pause_meeting()
+
+        self.series.time_tracking = "off"
+        meeting.invalidate_recordset(["time_tracking_enabled"])
+        self.assertTrue(meeting.time_tracking_enabled)
+        meeting.with_user(self.editor).action_resume_meeting()
+
+        self.assertFalse(meeting.actual_paused_at)
+        self.assertTrue(meeting.time_tracking_enabled)
+
+    def test_started_meeting_must_be_marked_held_instead_of_cancelled(self):
+        meeting = self._scheduled_meeting(tracking="on")
+        meeting.with_user(self.editor).action_start_meeting()
+        item = (
+            self.env["community.meeting.agenda.item"]
+            .with_user(self.editor)
+            .create({"meeting_id": meeting.id, "name": "Timed point"})
+        )
+        item.action_start_timing()
+
+        with self.assertRaises(UserError), self.cr.savepoint():
+            meeting.with_user(self.editor).action_cancel()
+
+        self.assertEqual(meeting.state, "scheduled")
+        self.assertTrue(item.actual_started_at)
+        meeting.with_user(self.editor).action_mark_held()
+        self.assertFalse(item.actual_started_at)
+        self.assertTrue(meeting.actual_end_datetime)
+
     def test_capabilities_include_time_tracking(self):
         meeting = (
             self.env["community.meeting"].with_user(self.editor).create({"name": "Cap", "series_id": self.series.id})

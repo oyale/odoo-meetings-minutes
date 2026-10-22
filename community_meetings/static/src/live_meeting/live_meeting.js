@@ -1191,7 +1191,7 @@ export class LiveMeeting extends Component {
         try {
             await this.orm.call("community.meeting", method, [[this.meetingId]]);
             this.state.meeting.state = state;
-            const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["actual_start_datetime", "actual_end_datetime", "actual_duration_minutes"]);
+            const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_end_datetime", "actual_duration_minutes"]);
             Object.assign(this.state.meeting, saved);
             await this.refreshCapabilities();
             if (state === "held") {

@@ -9,7 +9,7 @@
                 <div class="o_live_workflow_buttons">
                   <t t-if="state.capabilities?.can_edit">
                     <button t-if="state.meeting.state === 'draft'" class="btn btn-primary" t-att-disabled="state.saving > 0 or state.submitting['meeting:' + meetingId]" t-on-click="scheduleMeeting">Schedule Meeting</button>
-                    <button t-if="['draft', 'scheduled'].includes(state.meeting.state)" class="btn btn-outline-danger" t-att-disabled="state.saving > 0 or state.submitting['meeting:' + meetingId]" t-on-click="cancelMeeting">Cancel Meeting</button>
+                    <button t-if="['draft', 'scheduled'].includes(state.meeting.state) and !state.meeting.actual_start_datetime" class="btn btn-outline-danger" t-att-disabled="state.saving > 0 or state.submitting['meeting:' + meetingId]" t-on-click="cancelMeeting">Cancel Meeting</button>
                     <button t-if="state.meeting.state === 'scheduled' and !state.meeting.actual_start_datetime and timingEnabled" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="startMeeting">Start Meeting</button>
                     <button t-if="state.meeting.state === 'scheduled' and state.meeting.actual_start_datetime and !meetingPaused and timingEnabled" class="btn btn-outline-secondary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="pauseMeeting">Pause Meeting</button>
                     <button t-if="state.meeting.state === 'scheduled' and meetingPaused and timingEnabled" class="btn btn-primary" t-att-disabled="state.submitting['meeting:' + meetingId]" t-on-click="resumeMeeting">Resume Meeting</button>
@@ -181,13 +181,14 @@
                                                 <div class="o_live_minutes_approval_name_state">
                                                     <strong t-out="pm.name"/>
                                                     <span class="o_live_minutes_approval_state"><i class="fa fa-calendar-o" aria-hidden="true"/> <t t-out="meetingDate(pm.start_datetime)"/></span>
+                                                    <span t-if="pm.state === 'held'" class="o_live_minutes_approval_state">Preparation pending</span>
                                                     <span t-if="pm.location" class="o_live_minutes_approval_state"><i class="fa fa-map-marker" aria-hidden="true"/> <t t-out="pm.location"/></span>
                                                     <span t-else="" class="o_live_minutes_approval_state" t-out="stateLabel(pm.state)"/>
                                                 </div>
                                             </div>
                                             <div class="o_live_minutes_approval_actions">
                                                 <button class="btn btn-sm btn-primary" t-on-click="() => this.reviewMinutes(item, pm.id)" aria-label="Open minutes"><i class="fa fa-eye" aria-hidden="true"/> Review</button>
-                                                <button t-if="canApprovePreviousMinutes" class="btn btn-sm o_live_minutes_approve_button" t-att-class="minutesReviewed(pm.id) ? 'btn-success' : 'btn-outline-secondary'" t-on-click="() => this.approvePreviousMinutes(item, pm.id)"><i class="fa fa-check" aria-hidden="true"/> Approve earlier minutes</button>
+                                                <button t-if="canApprovePreviousMinutes and pm.state === 'minutes_draft'" class="btn btn-sm o_live_minutes_approve_button" t-att-class="minutesReviewed(pm.id) ? 'btn-success' : 'btn-outline-secondary'" t-on-click="() => this.approvePreviousMinutes(item, pm.id)"><i class="fa fa-check" aria-hidden="true"/> Approve earlier minutes</button>
                                             </div>
                                         </li>
                                     </ul>

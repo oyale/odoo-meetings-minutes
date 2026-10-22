@@ -33,6 +33,10 @@ and reports.
 |---|---|
 | **Track meeting and point time** (on/off) | When **on** (default): the live meeting shows *Start / Pause / Resume meeting*, points have *Begin/Pause* timers, discussion notes are only editable while their point timer runs, and actual durations are recorded. When **off**: no timers at all — the live meeting is editable from the start and you simply *Finish* the meeting when done. |
 
+The effective setting is fixed when a live meeting starts. Changes to company or
+series defaults apply to later meetings and do not disable timers in a paused
+session.
+
 > **Tip:** Turn time tracking off for organizations that find stopwatches stressful. The
 > agenda workflow (agreements, dissents, follow-ups, minutes) works identically.
 

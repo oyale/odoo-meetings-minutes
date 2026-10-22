@@ -30,6 +30,11 @@ The preview shows the meeting time in your user timezone. Approved minutes use
 the series timezone; standalone meetings use the company timezone, then UTC if
 neither is set. The timezone is printed beside the time.
 
+When the agenda includes a **Next Meeting** point, its agreed date and time are
+included in the preview and frozen in the approved revision and PDF, using the
+same minutes timezone. Later changes to the series schedule do not rewrite an
+approved revision.
+
 In **Held** or **Minutes draft** state, the preview is read-only: opening it and
 choosing **Return to meeting to edit** leave the saved content and meeting state
 unchanged. Anyone with read access to the meeting can open this preview; see
@@ -50,6 +55,10 @@ finish an active agenda point. In offline preparation, the point closes after
 all earlier minutes have been approved. Direct approval on the earlier meeting
 is blocked for this series. Approval history links to the exact approved
 revision, so a later amendment is recorded separately.
+
+An earlier meeting still in **Held** state is marked **Preparation pending**;
+prepare its minutes first. Only a meeting in **Minutes draft** can be approved
+from the later meeting's point.
 
 When a series does not use a later-meeting approval point, approve the minutes
 with **Approve Minutes** (live screen or form header). When the point policy is
