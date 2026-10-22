@@ -7,6 +7,58 @@ Each addon changelog starts with its first release prepared after this change;
 the combined history below retains the existing suite release notes.
 
 <!-- towncrier release notes start -->
+## Odoo Meetings Minutes 18.0.20261022.0 (2026-10-22)
+
+### Addon versions
+
+| Addon | Odoo module version |
+|---|---:|
+| [Community Meetings](community_meetings/CHANGELOG.md) | `18.0.6.2.7` |
+| [Calendar Integration](community_meetings_calendar/CHANGELOG.md) | `18.0.1.0.5` |
+| [Project Integration](community_meetings_project/CHANGELOG.md) | `18.0.3.1.7` |
+| [Extension Demo](community_meetings_extension_demo/CHANGELOG.md) | `18.0.1.0.1` |
+
+=====================================================
+
+## Community Meetings
+
+### Features
+
+- The live meeting view now supports scheduling and cancelling draft meetings, and exposes agenda reordering in every phase allowed by the meeting policy. Controls sit to the left of agenda cards on desktop and above them on mobile, where they provide larger touch targets. (58-live-workflow-controls)
+- Meeting editors can move agenda points up or down in preparation and during a live meeting, within a company or series policy. The order is locked when the meeting is marked held; minutes-approval and next-meeting points retain their structural positions. (agenda-point-reordering)
+- All recorded dissents are included in minute previews and approved revisions.
+  The inclusion checkbox has been removed; private editorial notes remain
+  separate from the minutes. (#104)
+
+### Bugfixes
+
+- Follow-up type policies now inherit from the most specific point through the series to the company, and an empty effective policy no longer crashes the defaults wizard. (follow-up-policy-inheritance)
+- Repeated requests to add a recurring agenda point to a meeting now reuse the existing occurrence. (recurring-point-idempotency)
+- Changing meeting details no longer raises an Odoo error while agenda rows are still being edited; move controls remain ordered by agenda sequence. (#57)
+- The web client now declares the signed-in user's interface language and shows Spanish translations for JavaScript control names. (#58)
+- Agenda review reasons for submitted proposals now follow the active user's interface language.
+
+### Misc
+
+- 58-live-controls-browser-tests, browser-screenshot-controls, carryover-validation, scheduling-preflight, screenshot-capture-tests, wizard-save-response-check, #58
+## Calendar Integration
+
+### Misc
+
+- 58-selector-migration, scheduling-preflight
+## Project Integration
+
+### Bugfixes
+
+- Project task follow-up types now respect configured policies and are only offered to users with Project access. (project-follow-up-policy)
+- The Project task wizard now displays its context and follow-up headings in Spanish when the Odoo interface is Spanish. (project-task-wizard-translations)
+
+### Misc
+
+- #58
+## Extension Demo
+
+No significant changes.
 ## Odoo Meetings Minutes 18.0.20261021.1 (2026-10-21)
 
 ### Addon versions

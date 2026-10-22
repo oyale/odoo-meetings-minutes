@@ -1,1 +1,0 @@
-Browser checks cover agenda reordering in draft meetings, verify desktop controls sit left of each card and mobile controls sit above it with 44px touch targets, and distinguish attendee-editor cancellation from meeting cancellation.

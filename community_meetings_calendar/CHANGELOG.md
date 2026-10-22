@@ -4,6 +4,21 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings Calendar 18.0.1.0.5 (2026-10-22)
+======================================================
+
+## Release notes
+
+### Misc
+
+- 58-selector-migration, scheduling-preflight
+
+## Internal changes
+
+- **generated-description-refresh** — The generated marketplace description now matches the current addon README.
+- **scheduling-preflight** — Calendar meeting scheduling now uses the shared access and state preflight before validating calendar-specific end times.
+- **58-selector-migration** — Calendar browser selectors for translated UI messages now resolve those messages from the addon translation catalog.
+
 ## Community Meetings Calendar 18.0.1.0.4 (2026-10-21)
 ======================================================
 
