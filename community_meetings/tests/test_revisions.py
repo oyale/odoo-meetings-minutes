@@ -703,6 +703,29 @@ class TestMeetingRevisions(TransactionCase):
         self.assertEqual(item["next_meeting_datetime_display"], "")
         self.assertEqual(item["next_meeting_timezone"], "")
 
+    def test_legacy_snapshot_dissents_render_inside_their_point(self):
+        meeting = self._drafted_meeting("Legacy dissent")
+        agenda_item = meeting.agenda_item_ids[0]
+        snapshot = self.env["community.meeting.revision"]._build_public_content(meeting)
+        for point in snapshot["agenda"]:
+            point.pop("dissents", None)
+        snapshot["dissents"] = [
+            {
+                "kind": "Dissent",
+                "body": "<p>Legacy dissent</p>",
+                "author": "Legacy author",
+                "scope": agenda_item.name,
+            }
+        ]
+
+        doc = self.env["report.community_meetings.report_revision_document"]._prepare_document(
+            snapshot, draft=True, lang="en_US"
+        )
+
+        point = next(point for point in doc["agenda"] if point["name"] == agenda_item.name)
+        self.assertEqual(len(point["dissents"]), 1)
+        self.assertIn("Legacy dissent", str(point["dissents"][0]["body_html"]))
+
     def test_approved_minutes_follow_reordered_agenda(self):
         series = (
             self.env["community.meeting.series"]

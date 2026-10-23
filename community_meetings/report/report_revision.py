@@ -144,6 +144,7 @@ class MeetingRevisionReport(models.AbstractModel):
                 actions_by_item.setdefault(action["agenda_item_id"], []).append(prepared)
             if action.get("agenda_item"):
                 actions_by_name.setdefault(action["agenda_item"], []).append(prepared)
+        legacy_dissents = snapshot.get("dissents", [])
         agenda = []
         for item in snapshot["agenda"]:
             disposition = item.get("disposition") or ""
@@ -151,6 +152,10 @@ class MeetingRevisionReport(models.AbstractModel):
             item_actions = actions_by_item.get(item.get("id"))
             if item_actions is None:
                 item_actions = actions_by_name.get(item.get("name"), [])
+            item_dissents = item.get("dissents")
+            if item_dissents is None:
+                scopes = {item.get("name")} | {resolution.get("title") for resolution in item.get("resolutions", [])}
+                item_dissents = [dissent for dissent in legacy_dissents if dissent.get("scope") in scopes]
             agenda.append(
                 {
                     **item,
@@ -166,7 +171,7 @@ class MeetingRevisionReport(models.AbstractModel):
                         for related in item.get("related", [])
                     ],
                     "resolutions": [resolution_doc(resolution) for resolution in item.get("resolutions", [])],
-                    "dissents": [dissent_doc(dissent) for dissent in item.get("dissents", [])],
+                    "dissents": [dissent_doc(dissent) for dissent in item_dissents],
                     "actions": item_actions,
                     "minutes_approvals": self._prepare_minutes_approvals(item, meeting, revision, lang),
                 }
