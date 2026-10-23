@@ -75,7 +75,7 @@
                 </dl>
             </header>
 
-            <section t-if="doc['description']" class="o_minutes_document_section o_minutes_purpose">
+            <section t-if="doc.get('has_description')" class="o_minutes_document_section o_minutes_purpose">
                 <h2>Description</h2>
                 <div class="o_minutes_rich_content" t-out="doc['description']"/>
             </section>
@@ -128,7 +128,7 @@
                     <h3 t-out="resolution['title']"/><div class="o_minutes_rich_content" t-out="resolution['body_html']"/>
                 </div>
             </section>
-            <section t-if="doc['minutes_notes']" class="o_minutes_document_section o_minutes_final_notes">
+            <section t-if="doc.get('has_minutes_notes')" class="o_minutes_document_section o_minutes_final_notes">
                 <h2>Minutes</h2><div class="o_minutes_rich_content" t-out="doc['minutes_notes']"/>
             </section>
             <section t-if="doc['actions']" class="o_minutes_document_section">

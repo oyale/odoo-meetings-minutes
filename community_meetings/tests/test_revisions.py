@@ -432,8 +432,13 @@ class TestMeetingRevisions(TransactionCase):
         meeting.with_user(self.editor).action_start_meeting()
         meeting.with_user(self.editor).action_mark_held()
         meeting.with_user(self.editor).action_draft_minutes()
+        meeting.with_user(self.editor).write({"minutes_notes": "<p><br></p>"})
         revision = self._approve_without_rendering_pdf(meeting.with_user(self.approver))
         snapshot = json.loads(revision.snapshot_json)
+        report_model = self.env["report.community_meetings.report_revision_document"]
+        document = report_model._prepare_document(snapshot, revision=revision)
+        self.assertFalse(document["has_minutes_notes"])
+        self.assertFalse(document["has_description"])
         self.assertEqual(snapshot["meeting"]["end_datetime"], "2026-11-01 12:00:00")
         self.assertNotIn("end_datetime_display", snapshot["meeting"])
         self.assertTrue(snapshot["meeting"]["actual_start_datetime_display"])
@@ -452,6 +457,7 @@ class TestMeetingRevisions(TransactionCase):
         self.assertNotIn(b"Location", html)
         self.assertIn(b"Discussed", html)
         self.assertNotIn(b">discussed<", html)
+        self.assertNotIn(b"<h2>Minutes</h2>", html)
 
     def test_draft_preview_contains_only_public_content_and_has_no_write_effects(self):
         meeting = self._drafted_meeting("Draft preview content")

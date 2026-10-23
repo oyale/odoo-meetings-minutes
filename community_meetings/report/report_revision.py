@@ -3,6 +3,7 @@ import json
 from markupsafe import Markup
 
 from odoo import api, models
+from odoo.tools import is_html_empty
 
 
 class MeetingRevisionReport(models.AbstractModel):
@@ -61,6 +62,8 @@ class MeetingRevisionReport(models.AbstractModel):
             "snapshot": snapshot,
             "draft": draft,
             "meeting": meeting,
+            "has_description": not is_html_empty(meeting.get("description")),
+            "has_minutes_notes": not is_html_empty(meeting.get("minutes_notes")),
             "description": Markup(meeting["description"]),
             "minutes_notes": Markup(meeting["minutes_notes"]),
             "agenda": agenda,
