@@ -10,7 +10,7 @@ import { ensureJQuery } from "@web/core/ensure_jquery";
 import { useService } from "@web/core/utils/hooks";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { usePopover } from "@web/core/popover/popover_hook";
-import { createMentionAnchor, DiscussionMentionPicker } from "./discussion_mention_picker";
+import { createMentionAnchor, createMentionElement, detectMentionTrigger, DiscussionMentionPicker } from "./discussion_mention_picker";
 
 const { DateTime } = luxon;
 
@@ -365,6 +365,14 @@ export class LiveMeeting extends Component {
     richTextStarter(key, recordId, model, field) {
         return (wysiwyg) => this.startRichText(key, wysiwyg, recordId, model, field);
     }
+    async fetchDiscussionMentionSuggestions(recordId, { search, offset, limit }) {
+        return this.orm.call(
+            "community.meeting.agenda.item",
+            "get_discussion_mention_suggestions",
+            [[recordId]],
+            { search, offset, limit },
+        );
+    }
     async startRichText(key, wysiwyg, recordId, model, field) {
         this.editors.set(key, wysiwyg);
         this.editorMeta.set(key, { recordId, model, field });
@@ -396,15 +404,10 @@ export class LiveMeeting extends Component {
         if (model === "community.meeting.agenda.item" && field === "discussion_notes") {
             const editable = wysiwyg.$editable[0];
             const onInput = (event) => {
-                if (event.data !== "@" || event.isComposing || editable.getAttribute("contenteditable") !== "true") return;
+                const trigger = detectMentionTrigger(event, editable);
+                if (!trigger) return;
+                const { caret, replacement } = trigger;
                 const selection = editable.ownerDocument.getSelection();
-                if (!selection?.isCollapsed || selection.anchorNode?.nodeType !== Node.TEXT_NODE) return;
-                const offset = selection.anchorOffset;
-                const text = selection.anchorNode.textContent;
-                if (text[offset - 1] !== "@" || (offset > 1 && /[\w@]/.test(text[offset - 2]))) return;
-                const caret = selection.getRangeAt(0).cloneRange();
-                const replacement = caret.cloneRange();
-                replacement.setStart(selection.anchorNode, offset - 1);
                 this.mentionPopover.close();
                 this.activeMention = { key, recordId, model, field };
                 clearTimeout(this.editorTimers.get(key));
@@ -415,27 +418,31 @@ export class LiveMeeting extends Component {
                 };
                 this.mentionAnchor = createMentionAnchor(caret, editable);
                 this.mentionPopover.open(this.mentionAnchor.element, {
-                    itemId: recordId,
+                    label: _t("Attribute an intervention"),
+                    hint: _t("Mentions do not notify people or give access to the meeting."),
+                    cancelLabel: _t("Keep a literal @"),
+                    errorMessage: _t("Contacts could not be loaded. Check that this discussion is still editable."),
+                    fetchSuggestions: (params) => this.fetchDiscussionMentionSuggestions(recordId, params),
+                    canPick: () => {
+                        const item = this.state.items.find((row) => row.id === recordId);
+                        return Boolean(item) && this.canEditDiscussion(item);
+                    },
                     onCancel: () => {
                         this.mentionPopover.close();
                         restore();
                     },
                     onSelect: (option) => {
-                        const item = this.state.items.find((row) => row.id === recordId);
-                        if (!this.canEditDiscussion(item) || !replacement.startContainer.isConnected) {
+                        if (!replacement.startContainer.isConnected) {
                             this.mentionPopover.close();
                             return;
                         }
                         editable.focus();
                         selection.removeAllRanges();
                         selection.addRange(replacement);
-                        const mention = document.createElement("span");
-                        mention.className = "o_meeting_person_mention";
-                        mention.dataset.oeModel = "res.partner";
-                        mention.dataset.oeId = option.partnerId;
-                        mention.setAttribute("contenteditable", "false");
-                        mention.setAttribute("style", "background-color: #e9ecef; border-radius: 0.25rem; padding: 0 0.2em;");
-                        mention.textContent = `@${option.name}`;
+                        const mention = createMentionElement({
+                            partnerId: option.partnerId,
+                            name: option.name,
+                        });
                         wysiwyg.odooEditor.historyPauseSteps();
                         try {
                             wysiwyg.odooEditor.execCommand("insert", mention);

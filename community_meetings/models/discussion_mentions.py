@@ -8,9 +8,46 @@ from odoo.exceptions import AccessError, ValidationError
 from odoo.osv import expression
 
 
-def _mention_nodes(value):
+def mention_nodes(value):
     root = html.fragment_fromstring(value or "", create_parent="div")
     return root, root.xpath(".//*[contains(concat(' ', normalize-space(@class), ' '), ' o_meeting_person_mention ')]")
+
+
+def normalize_mentions(value, previous_html, resolve_label, invalid_message):
+    """Canonicalize mention spans into inert HTML.
+
+    ``resolve_label(identifier)`` returns the canonical label for a new mention
+    or raises. Historical mentions keep their recorded label.
+    """
+    root, nodes = mention_nodes(value)
+    if not nodes:
+        return value
+    _previous_root, previous = mention_nodes(previous_html)
+    historical = {(node.get("data-oe-id"), node.text_content()) for node in previous}
+    for node in nodes:
+        identifier = node.get("data-oe-id", "")
+        if node.get("data-oe-model") != "res.partner" or not identifier.isdecimal() or int(identifier) <= 0:
+            raise ValidationError(invalid_message)
+        label = node.text_content()
+        if (identifier, label) not in historical:
+            label = resolve_label(identifier)
+        # Canonical inert HTML: no navigation, remote image or executable payload.
+        tail = node.tail
+        node.clear()
+        node.tag = "span"
+        node.attrib.update(
+            {
+                "data-oe-model": "res.partner",
+                "data-oe-id": identifier,
+                "class": "o_meeting_person_mention",
+                "contenteditable": "false",
+            }
+        )
+        node.text = label
+        node.tail = tail
+    return str(escape(root.text or "")) + "".join(
+        etree.tostring(child, encoding="unicode", method="html") for child in root
+    )
 
 
 class AgendaDiscussionMentions(models.Model):
@@ -52,43 +89,22 @@ class AgendaDiscussionMentions(models.Model):
             )
         return [{"id": partner.id, "name": partner.name} for partner in candidates]
 
-    def _normalize_discussion_mentions(self, value, previous_html=""):
+    def _mention_label(self, identifier):
+        partner = self.env["res.partner"].search(
+            expression.AND([self._mention_partner_domain(), [("id", "=", int(identifier))]]),
+            limit=1,
+        )
+        if not partner:
+            raise AccessError(_("This contact is not available for a discussion mention."))
+        return "@" + partner.name
+
+    def _normalize_mentions(self, value, previous_html=""):
         self.ensure_one()
-        root, nodes = _mention_nodes(value)
-        if not nodes:
-            return value
-        _previous_root, previous = _mention_nodes(previous_html)
-        historical = {(node.get("data-oe-id"), node.text_content()) for node in previous}
-        for node in nodes:
-            identifier = node.get("data-oe-id", "")
-            if node.get("data-oe-model") != "res.partner" or not identifier.isdecimal() or int(identifier) <= 0:
-                raise ValidationError(_("Choose a valid contact for the discussion mention."))
-            label = node.text_content()
-            if (identifier, label) not in historical:
-                partner = self.env["res.partner"].search(
-                    expression.AND([self._mention_partner_domain(), [("id", "=", int(identifier))]]),
-                    limit=1,
-                )
-                if not partner:
-                    raise AccessError(_("This contact is not available for a discussion mention."))
-                label = "@" + partner.name
-            # Canonical inert HTML: no navigation, remote image or executable payload.
-            tail = node.tail
-            node.clear()
-            node.tag = "span"
-            node.attrib.update(
-                {
-                    "data-oe-model": "res.partner",
-                    "data-oe-id": identifier,
-                    "class": "o_meeting_person_mention",
-                    "contenteditable": "false",
-                    "style": "background-color: #e9ecef; border-radius: 0.25rem; padding: 0 0.2em;",
-                }
-            )
-            node.text = label
-            node.tail = tail
-        return str(escape(root.text or "")) + "".join(
-            etree.tostring(child, encoding="unicode", method="html") for child in root
+        return normalize_mentions(
+            value,
+            previous_html,
+            self._mention_label,
+            _("Choose a valid contact for the discussion mention."),
         )
 
     @api.model_create_multi
@@ -96,7 +112,7 @@ class AgendaDiscussionMentions(models.Model):
         records = super().create(vals_list)
         for record in records:
             if record.discussion_notes:
-                normalized = record._normalize_discussion_mentions(record.discussion_notes)
+                normalized = record._normalize_mentions(record.discussion_notes)
                 if normalized != record.discussion_notes:
                     record.write({"discussion_notes": normalized})
         return records
@@ -106,8 +122,6 @@ class AgendaDiscussionMentions(models.Model):
             return super().write(vals)
         for record in self:
             values = dict(vals)
-            values["discussion_notes"] = record._normalize_discussion_mentions(
-                vals["discussion_notes"], record.discussion_notes
-            )
+            values["discussion_notes"] = record._normalize_mentions(vals["discussion_notes"], record.discussion_notes)
             super(AgendaDiscussionMentions, record).write(values)
         return True
