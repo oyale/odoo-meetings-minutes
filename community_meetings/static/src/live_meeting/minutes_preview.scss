@@ -285,40 +285,79 @@
                 }
             }
 
-            .o_minutes_followups {
+            .o_minutes_actions {
                 margin: 0;
                 padding: 0;
                 list-style: none;
             }
 
-            .o_minutes_followup {
-                display: grid;
-                grid-template-columns: minmax(0, 1.5fr) minmax(8rem, 1fr) auto auto;
-                align-items: baseline;
-                gap: .45rem 1rem;
-                padding: .75rem 0;
+            .o_minutes_action {
+                padding: .95rem 0;
                 border-top: 1px solid var(--minutes-rule);
-                font-size: .86rem;
             }
 
-            .o_minutes_followup_state {
-                color: var(--minutes-muted);
-                font-size: .75rem;
-                text-transform: capitalize;
-            }
-
-            .o_minutes_followup_title {
+            .o_minutes_action_title {
                 display: flex;
                 flex-wrap: wrap;
                 align-items: baseline;
-                gap: .35rem;
+                gap: .5rem;
+                margin-bottom: .3rem;
+
+                strong {
+                    font-family: var(--minutes-body);
+                    font-size: .96rem;
+                }
             }
 
-            .o_minutes_followup_kind {
+            .o_minutes_action_kind {
                 color: var(--minutes-muted);
                 font-size: .72rem;
                 letter-spacing: .05em;
                 text-transform: uppercase;
+            }
+
+            .o_minutes_action_meta {
+                display: flex;
+                flex-wrap: wrap;
+                gap: .25rem 1rem;
+                color: var(--minutes-muted);
+                font-size: .82rem;
+
+                strong {
+                    color: var(--minutes-ink);
+                    font-weight: 600;
+                }
+            }
+
+            .o_minutes_action_description {
+                margin-top: .4rem;
+                color: var(--minutes-ink);
+                font-size: .86rem;
+            }
+
+            .o_minutes_point_followups {
+                margin-top: .9rem;
+                padding-top: .75rem;
+                border-top: 1px solid var(--minutes-rule);
+
+                h4 {
+                    margin: 0 0 .35rem;
+                    font-family: var(--minutes-body);
+                    font-size: .88rem;
+                    font-weight: 700;
+                }
+
+                ul {
+                    margin: 0;
+                    padding: 0;
+                    list-style: none;
+                }
+
+                li {
+                    padding: .25rem 0;
+                    color: var(--minutes-ink);
+                    font-size: .86rem;
+                }
             }
 
             .o_minutes_metadata_scheduled {
@@ -389,8 +428,6 @@
                 .o_minutes_document_metadata { grid-template-columns: minmax(0, 1fr); gap: .7rem; }
                 .o_minutes_document_section { margin-top: 2rem; }
                 .o_minutes_agenda_item { grid-template-columns: 2rem minmax(0, 1fr); gap: .65rem; }
-                .o_minutes_followup { grid-template-columns: minmax(0, 1fr) auto; }
-                .o_minutes_followup > :nth-child(2) { grid-column: 1; }
             }
         }
     }

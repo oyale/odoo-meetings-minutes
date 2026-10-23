@@ -36,10 +36,28 @@ class MeetingRevisionReport(models.AbstractModel):
                 "status_label": resolution_statuses.get(resolution.get("status"), resolution.get("status", "")),
             }
 
+        actions = []
+        actions_by_item = {}
+        actions_by_name = {}
+        for action in snapshot["actions"]:
+            prepared = {
+                **action,
+                "description_html": Markup(action.get("description") or ""),
+                "state_label": action_states.get(action.get("state"), action.get("state", "")),
+                "kind_label": action_kinds.get(action.get("followup_kind"), action.get("followup_kind", "")),
+            }
+            actions.append(prepared)
+            if action.get("agenda_item_id"):
+                actions_by_item.setdefault(action["agenda_item_id"], []).append(prepared)
+            if action.get("agenda_item"):
+                actions_by_name.setdefault(action["agenda_item"], []).append(prepared)
         agenda = []
         for item in snapshot["agenda"]:
             disposition = item.get("disposition") or ""
             decision = item.get("decision_result") or ""
+            item_actions = actions_by_item.get(item.get("id"))
+            if item_actions is None:
+                item_actions = actions_by_name.get(item.get("name"), [])
             agenda.append(
                 {
                     **item,
@@ -55,6 +73,7 @@ class MeetingRevisionReport(models.AbstractModel):
                         for related in item.get("related", [])
                     ],
                     "resolutions": [resolution_doc(resolution) for resolution in item.get("resolutions", [])],
+                    "actions": item_actions,
                 }
             )
         return {
@@ -68,14 +87,7 @@ class MeetingRevisionReport(models.AbstractModel):
             "minutes_notes": Markup(meeting["minutes_notes"]),
             "agenda": agenda,
             "general_resolutions": [resolution_doc(resolution) for resolution in snapshot["general_resolutions"]],
-            "actions": [
-                {
-                    **action,
-                    "state_label": action_states.get(action.get("state"), action.get("state", "")),
-                    "kind_label": action_kinds.get(action.get("followup_kind"), action.get("followup_kind", "")),
-                }
-                for action in snapshot["actions"]
-            ],
+            "actions": actions,
             "dissents": [{**dissent, "body_html": Markup(dissent["body"])} for dissent in snapshot["dissents"]],
             "carryovers": [
                 {

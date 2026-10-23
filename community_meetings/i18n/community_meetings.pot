@@ -5049,6 +5049,7 @@ msgstr ""
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Due date"
 msgstr ""
 
@@ -6102,6 +6103,7 @@ msgstr ""
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_settings_followups
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Follow-ups"
 msgstr ""
 
@@ -9259,6 +9261,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__presenter_partner_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_agenda_template__presenter_partner_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__presenter_partner_id
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Responsible"
 msgstr ""
 
@@ -11020,4 +11023,9 @@ msgstr ""
 #: code:addons/community_meetings/report/meeting_report.xml:0
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Moved to"
+msgstr ""
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "From point"
 msgstr ""

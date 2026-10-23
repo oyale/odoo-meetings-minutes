@@ -110,6 +110,7 @@ class CommunityMeetingRevision(models.Model):
                 {
                     # Internal order values reserve slots for structural points;
                     # published minutes use clean, contiguous presentation numbers.
+                    "id": item.id,
                     "sequence": sequence,
                     "topic_id": item.topic_id.id,
                     "priority": item.priority,
@@ -282,6 +283,8 @@ class CommunityMeetingRevision(models.Model):
                     "description": self._clean_html(action.description),
                     "resolution": action.resolution_id.title if action.resolution_id else "",
                     "agenda_item": action.agenda_item_id.name if action.agenda_item_id else "",
+                    "agenda_item_id": action.agenda_item_id.id or 0,
+                    "activity_type": action.followup_activity_type_id.name or "",
                     "responsible": action.responsible_user_id.name or "",
                     "responsibles": sorted(action.responsible_user_ids.mapped("name")),
                     "followup_kind": action.followup_kind,

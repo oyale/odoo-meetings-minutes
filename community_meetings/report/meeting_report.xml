@@ -118,6 +118,18 @@
                                     </li>
                                 </ul>
                             </div>
+                            <div t-if="item.get('actions')" class="o_minutes_point_followups">
+                                <h4>Follow-ups</h4>
+                                <ul>
+                                    <li t-foreach="item['actions']" t-as="action" t-key="action_index">
+                                        <strong t-out="action['name']"/>
+                                        <span t-if="action.get('kind_label')"> · <t t-out="action['kind_label']"/></span>
+                                        <span t-if="action.get('activity_type')"> · <t t-out="action['activity_type']"/></span>
+                                        <span t-if="action.get('state_label')"> · <t t-out="action['state_label']"/></span>
+                                        <span t-if="action.get('deadline')"> · <t t-out="action['deadline']"/></span>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
                     </article>
                 </div>
@@ -133,15 +145,20 @@
             </section>
             <section t-if="doc['actions']" class="o_minutes_document_section">
                 <h2>Follow-up actions</h2>
-                <ul class="o_minutes_followups">
-                    <li t-foreach="doc['actions']" t-as="action" class="o_minutes_followup">
-                        <div class="o_minutes_followup_title">
+                <ul class="o_minutes_actions">
+                    <li t-foreach="doc['actions']" t-as="action" t-key="action_index" class="o_minutes_action">
+                        <div class="o_minutes_action_title">
                             <strong t-out="action['name']"/>
-                            <span t-if="action.get('kind_label')" class="o_minutes_followup_kind" t-out="action['kind_label']"/>
+                            <span t-if="action.get('kind_label')" class="o_minutes_action_kind" t-out="action['kind_label']"/>
+                            <span t-if="action.get('activity_type')" class="o_minutes_action_kind" t-out="action['activity_type']"/>
                         </div>
-                        <span t-out="', '.join(action.get('responsibles', [])) or action['responsible']"/>
-                        <span t-if="action['deadline']" t-out="action['deadline']"/>
-                        <span class="o_minutes_followup_state" t-out="action.get('state_label') or action['state']"/>
+                        <div class="o_minutes_action_meta">
+                            <span t-if="action.get('agenda_item')"><span t-translation="on">From point</span>: <strong t-out="action['agenda_item']"/></span>
+                            <span t-if="action.get('responsibles') or action.get('responsible')"><span t-translation="on">Responsible</span>: <strong t-out="', '.join(action.get('responsibles', [])) or action['responsible']"/></span>
+                            <span t-if="action.get('deadline')"><span t-translation="on">Due date</span>: <strong t-out="action['deadline']"/></span>
+                            <span t-if="action.get('state_label')"><span t-translation="on">Status</span>: <strong t-out="action['state_label']"/></span>
+                        </div>
+                        <div t-if="action.get('description_html')" class="o_minutes_action_description" t-out="action['description_html']"/>
                     </li>
                 </ul>
             </section>
