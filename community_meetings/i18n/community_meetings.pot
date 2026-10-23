@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 18:32+0000\n"
-"PO-Revision-Date: 2026-10-23 18:32+0000\n"
+"POT-Creation-Date: 2026-10-23 21:09+0000\n"
+"PO-Revision-Date: 2026-10-23 21:09+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -126,11 +126,6 @@ msgstr ""
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 msgid "<span class=\"o_stat_text\">Propose a point</span>"
-msgstr ""
-
-#. module: community_meetings
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "<span>Snapshot SHA-256</span>"
 msgstr ""
 
 #. module: community_meetings
@@ -7447,6 +7442,12 @@ msgid "Next"
 msgstr ""
 
 #. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting__activity_calendar_event_id
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__activity_calendar_event_id
+msgid "Next Activity Calendar Event"
+msgstr ""
+
+#. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__activity_date_deadline
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__activity_date_deadline
 msgid "Next Activity Deadline"
@@ -9755,6 +9756,11 @@ msgstr ""
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_revision__snapshot_json
 msgid "Snapshot Json"
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Snapshot SHA-256"
 msgstr ""
 
 #. module: community_meetings

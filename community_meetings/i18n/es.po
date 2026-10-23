@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 18:32+0000\n"
+"POT-Creation-Date: 2026-10-23 21:09+0000\n"
 "PO-Revision-Date: 2026-10-18 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
@@ -83,6 +83,8 @@ msgid ""
 "<span class=\"o_meeting_point_more_icon\"><i class=\"fa fa-magic\" aria-"
 "hidden=\"true\" title=\"Additional details\"/></span>"
 msgstr ""
+"<span class=\"o_meeting_point_more_icon\"><i class=\"fa fa-magic\" a"
+"ria-hidden=\"true\" title=\"Detalles adicionales\"/></span>"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
@@ -90,6 +92,8 @@ msgid ""
 "<span class=\"o_meeting_point_related_icon\"><i class=\"fa fa-link\" "
 "title=\"Related points\" aria-hidden=\"true\"/></span>"
 msgstr ""
+"<span class=\"o_meeting_point_related_icon\"><i class=\"fa fa-link\""
+" title=\"Puntos relacionados\" aria-hidden=\"true\"/></span>"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
@@ -97,6 +101,8 @@ msgid ""
 "<span class=\"o_meeting_point_responsible_icon\"><i class=\"fa fa-user-"
 "circle-o\" title=\"Responsible\" aria-hidden=\"true\"/></span>"
 msgstr ""
+"<span class=\"o_meeting_point_responsible_icon\"><i class=\"fa fa-u"
+"ser-circle-o\" title=\"Responsable\" aria-hidden=\"true\"/></span>"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
@@ -104,6 +110,8 @@ msgid ""
 "<span class=\"o_meeting_point_sparkle\"><i class=\"fa fa-calendar-check-o\" "
 "aria-hidden=\"true\" title=\"When and what for\"/></span>"
 msgstr ""
+"<span class=\"o_meeting_point_sparkle\"><i class=\"fa fa-calendar-c"
+"heck-o\" aria-hidden=\"true\" title=\"Cuándo y para qué\"/></span>"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
@@ -111,6 +119,8 @@ msgid ""
 "<span class=\"o_meeting_when_icon\"><i class=\"fa fa-calendar\" "
 "title=\"Estimated Start Datetime\" aria-hidden=\"true\"/></span>"
 msgstr ""
+"<span class=\"o_meeting_when_icon\"><i class=\"fa fa-calendar\" titl"
+"e=\"Fecha y hora de inicio estimada\" aria-hidden=\"true\"/></span>"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
@@ -118,6 +128,8 @@ msgid ""
 "<span class=\"o_meeting_when_icon\"><i class=\"fa fa-clock-o\" "
 "title=\"Approximate duration\" aria-hidden=\"true\"/></span>"
 msgstr ""
+"<span class=\"o_meeting_when_icon\"><i class=\"fa fa-clock-o\" title"
+"=\"Duración aproximada\" aria-hidden=\"true\"/></span>"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
@@ -126,6 +138,10 @@ msgid ""
 "title=\"Meeting title\" aria-hidden=\"true\"/></span><span><strong>Meeting "
 "name</strong><small>Give this meeting a clear name</small></span>"
 msgstr ""
+"<span class=\"o_meeting_when_icon\"><i class=\"fa fa-pencil\" title="
+"\"Título de la reunión\" aria-hidden=\"true\"/></span><span><strong>"
+"Nombre de la reunión</strong><small>Asigna un nombre claro a est"
+"a reunión</small></span>"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
@@ -136,12 +152,6 @@ msgstr "<span class=\"o_stat_text\">Nueva reunión</span>"
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 msgid "<span class=\"o_stat_text\">Propose a point</span>"
 msgstr "<span class=\"o_stat_text\">Proponer un punto</span>"
-
-#. module: community_meetings
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-#, fuzzy
-msgid "<span>Snapshot SHA-256</span>"
-msgstr "SHA-256 de la instantánea"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
@@ -158,10 +168,11 @@ msgid ""
 "<strong>Estimated duration</strong><small>Hours:minutes (1:00 = 1 hour).</"
 "small>"
 msgstr ""
+"<strong>Duración estimada</strong><small>Horas:minutos (1:00 = 1"
+" hora).</small>"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
-#, fuzzy
 msgid ""
 "<strong>Minutes approval</strong><span>Added to every meeting in this "
 "series. Only the assigned minutes secretary can approve earlier minutes. "
@@ -170,18 +181,23 @@ msgid ""
 "approval points in place. Pending minutes can then be approved from their "
 "own meetings.</span>"
 msgstr ""
-"Se añade a todas las reuniones de esta serie. Solo la persona asignada a "
-"secretaría/actas puede aprobar actas anteriores. En directo también necesita "
-"el rol Editor y permiso de edición."
+"<strong>Aprobación del acta</strong><span>Se añade a todas las r"
+"euniones de esta serie. Solo la persona asignada a la secretaría"
+" de actas puede aprobar actas anteriores. Durante una reunión en"
+" vivo también necesita el rol Editor y permisos de edición.</spa"
+"n><span>Al desactivar esta opción, las actas pendientes y los pu"
+"ntos de aprobación existentes se mantienen. Las actas pendientes"
+" podrán aprobarse desde sus propias reuniones.</span>"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
-#, fuzzy
 msgid ""
 "<strong>Next meeting date</strong><span>Adds a point to agree on the next "
 "date at every meeting in this series.</span>"
 msgstr ""
-"Añade un punto para acordar la próxima fecha en cada reunión de esta serie."
+"<strong>Fecha de la próxima reunión</strong><span>Añade un punto"
+" en cada reunión de esta serie para acordar la próxima fecha.</s"
+"pan>"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_preparation
@@ -213,13 +229,12 @@ msgstr ""
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
-#, fuzzy
 msgid ""
 "<strong>Start date and time</strong><small>When should the meeting begin?</"
 "small>"
 msgstr ""
-"<strong>Responsable</strong><small>¿Quién presentará este punto y guiará el "
-"debate?</small>"
+"<strong>Fecha y hora de inicio</strong><small>¿Cuándo debe empez"
+"ar la reunión?</small>"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
@@ -334,10 +349,10 @@ msgstr "Una reunión no se puede mover a otra compañía."
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/agenda_item.py:0
-#, fuzzy
 msgid "A meeting in this series must keep its minutes approval point."
 msgstr ""
-"Aprueba esta acta desde el punto de aprobación de una reunión posterior."
+"Una reunión de esta serie debe conservar su punto de aprobación "
+"del acta."
 
 #. module: community_meetings
 #. odoo-python
@@ -786,9 +801,8 @@ msgstr ""
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
-#, fuzzy
 msgid "Add an agreement title before saving."
-msgstr "Añade un título al acuerdo antes de guardar."
+msgstr "Añade un título al acuerdo antes de guardarlo."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -3838,15 +3852,13 @@ msgstr "Calcular la próxima fecha según"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__can_move_down
-#, fuzzy
 msgid "Can Move Down"
-msgstr "Bajar"
+msgstr "Puede moverse hacia abajo"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__can_move_up
-#, fuzzy
 msgid "Can Move Up"
-msgstr "Subir"
+msgstr "Puede moverse hacia arriba"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__add_point_allowed
@@ -4198,12 +4210,13 @@ msgstr "Elige cuándo empieza, qué nombre tendrá y cuánto tiempo reservar."
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
-#, fuzzy
 msgid ""
 "Choose when points can be added and set the agenda defaults. You can define "
 "recurring points from the series after it is created."
 msgstr ""
-"Elige cuándo se pueden añadir puntos y qué puntos recurrentes crea la serie."
+"Elige cuándo se pueden añadir puntos y establece los valores pre"
+"determinados de la agenda. Puedes definir puntos recurrentes des"
+"de la serie después de crearla."
 
 #. module: community_meetings
 #. odoo-python
@@ -4218,9 +4231,8 @@ msgstr "Elige qué puntos quieres incluir en esta reunión."
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__clear_topic
-#, fuzzy
 msgid "Clear Topic"
-msgstr "Tema previsto"
+msgstr "Limpiar tema"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -4448,7 +4460,7 @@ msgstr "Nombre del rol de coordinación"
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Coordinator"
-msgstr ""
+msgstr "Coordinación"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__coordinator_role_label
@@ -7139,9 +7151,8 @@ msgstr "Tarjetas de tipo de punto de agenda"
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
-#, fuzzy
 msgid "Meeting carryover decision"
-msgstr "Origen: registros de traspaso de la reunión."
+msgstr "Decisión de traspaso"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
@@ -7217,9 +7228,8 @@ msgstr "Estimación de duración del punto"
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/fields/point_options/point_options.js:0
-#, fuzzy
 msgid "Meeting point extra options"
-msgstr "Estimación de duración del punto"
+msgstr "Opciones adicionales del punto de agenda"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -7626,6 +7636,12 @@ msgstr "Ya no se pueden añadir puntos nuevos a esta reunión."
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
 msgid "Next"
 msgstr "Siguiente"
+
+#. module: community_meetings
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting__activity_calendar_event_id
+#: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__activity_calendar_event_id
+msgid "Next Activity Calendar Event"
+msgstr "Siguiente evento del calendario de actividades"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__activity_date_deadline
@@ -8120,7 +8136,6 @@ msgstr "Solo un acuerdo activo puede determinar la decisión de un punto."
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/resolution.py:0
-#, fuzzy
 msgid "Only one active agreement can determine a point's decision."
 msgstr "Solo un acuerdo activo puede determinar la decisión de un punto."
 
@@ -8172,42 +8187,41 @@ msgstr ""
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/meeting.py:0
-#, fuzzy
 msgid "Only the assigned minutes secretary can approve minutes offline."
-msgstr "Solo un aprobador de reuniones autorizado puede aprobar el acta."
+msgstr ""
+"Solo la persona asignada a la secretaría de actas puede aprobar "
+"el acta fuera de una reunión en vivo."
 
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/meeting.py:0
-#, fuzzy
 msgid ""
 "Only the assigned minutes secretary can approve previous minutes during a "
 "live meeting."
 msgstr ""
-"Solo los editores pueden aprobar actas anteriores durante una reunión en "
-"vivo."
+"Solo la persona asignada a la secretaría de actas puede aprobar "
+"actas anteriores durante una reunión en vivo."
 
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/meeting.py:0
-#, fuzzy
 msgid ""
 "Only the assigned minutes secretary can approve previous minutes from a live "
 "meeting."
 msgstr ""
-"Solo los editores pueden aprobar actas anteriores durante una reunión en "
-"vivo."
+"Solo la persona asignada a la secretaría de actas puede aprobar "
+"actas anteriores desde una reunión en vivo."
 
 #. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/meeting.py:0
-#, fuzzy
 msgid ""
 "Only the assigned minutes secretary can approve previous minutes while "
 "preparing offline minutes."
 msgstr ""
-"Solo los aprobadores pueden aprobar actas anteriores al preparar el acta de "
-"una reunión offline."
+"Solo la persona asignada a la secretaría de actas puede aprobar "
+"actas anteriores mientras prepara el acta fuera de una reunión e"
+"n vivo."
 
 #. module: community_meetings
 #. odoo-python
@@ -8702,9 +8716,8 @@ msgstr "Participación"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_topic_form
-#, fuzzy
 msgid "Participation history"
-msgstr "Participación"
+msgstr "Historial de participación"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_proposal_grant__partner_id
@@ -8992,9 +9005,8 @@ msgstr "Preparar una reunión"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carry_review_line__presentation_reason
-#, fuzzy
 msgid "Presentation Reason"
-msgstr "Motivo de disenso"
+msgstr "Motivo de presentación"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -9286,21 +9298,18 @@ msgstr "Registrado por"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_create_wizard__recurring_line_ids
-#, fuzzy
 msgid "Recurring Line"
-msgstr "Agenda recurrente"
+msgstr "Punto recurrente"
 
 #. module: community_meetings
 #: model:ir.model,name:community_meetings.model_community_meeting_series_agenda_template
-#, fuzzy
 msgid "Recurring Meeting Agenda Point"
-msgstr "Punto de agenda recurrente"
+msgstr "Punto de agenda recurrente de la reunión"
 
 #. module: community_meetings
 #: model:ir.model,name:community_meetings.model_community_meeting_recurring_point_review_line
-#, fuzzy
 msgid "Recurring Point for Meeting Preparation"
-msgstr "Puntos recurrentes de esta serie"
+msgstr "Punto recurrente para preparar la reunión"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
@@ -9444,15 +9453,13 @@ msgstr "Reabierto: %s"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__reorder_point_policy
-#, fuzzy
 msgid "Reorder Point Policy"
-msgstr "Política de añadir puntos"
+msgstr "Política de reordenación de puntos"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__reorder_points_allowed
-#, fuzzy
 msgid "Reorder Points Allowed"
-msgstr "Reordenar puntos"
+msgstr "Permitir reordenar los puntos"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -9642,9 +9649,8 @@ msgstr "Volver a la reunión para editar"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_point_wizard
-#, fuzzy
 msgid "Reuse an existing point"
-msgstr "Punto existente"
+msgstr "Reutilizar un punto existente"
 
 #. module: community_meetings
 #. odoo-python
@@ -9858,9 +9864,8 @@ msgstr "Selecciona un acta pendiente de una reunión anterior de esta serie."
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_create_wizard__selected_minutes
-#, fuzzy
 msgid "Selected Minutes"
-msgstr "Puntos seleccionados"
+msgstr "Minutos seleccionados"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
@@ -10028,6 +10033,11 @@ msgid "Snapshot Json"
 msgstr "JSON de la instantánea"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Snapshot SHA-256"
+msgstr "SHA-256 de la instantánea"
+
+#. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_revision__snapshot_sha256
 msgid "Snapshot Sha256"
 msgstr "SHA-256 de la instantánea"
@@ -10149,6 +10159,9 @@ msgid ""
 "Today: Activity date is today\n"
 "Planned: Future activities."
 msgstr ""
+"Estado según las actividades\nVencida: ya pasó la fecha límite\nHo"
+"y: la actividad tiene fecha de hoy\nPlanificada: actividades futu"
+"ras."
 
 #. module: community_meetings
 #. odoo-javascript
@@ -10276,9 +10289,8 @@ msgstr "Estado de la tarea"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_recurring_point_review_line__template_id
-#, fuzzy
 msgid "Template"
-msgstr "Relacionados"
+msgstr "Plantilla"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -11434,6 +11446,10 @@ msgid "{date} {series}"
 msgstr "{date} {series}"
 
 #, fuzzy
+#~ msgid "<span>Snapshot SHA-256</span>"
+#~ msgstr "SHA-256 de la instantánea"
+
+#, fuzzy
 #~ msgid "<span class=\"o_minutes_revision_separator\">·</span>"
 #~ msgstr "<span class=\"o_stat_text\">Proponer un punto</span>"
 
@@ -11513,9 +11529,6 @@ msgstr "{date} {series}"
 
 #~ msgid "Series: %s"
 #~ msgstr "Serie: %s"
-
-#~ msgid "Snapshot SHA-256:"
-#~ msgstr "SHA-256 de la instantánea:"
 
 #~ msgid "There are no points to carry over into this meeting."
 #~ msgstr "No hay puntos para traspasar a esta reunión."
