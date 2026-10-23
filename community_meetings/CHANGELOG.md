@@ -9,27 +9,13 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 ## Release notes
 
-### Bugfixes
-
-- Focus mode fits the active point card in the available height by shrinking the discussion editor, and the Enlarge editor control still expands it when needed.
-- Focus mode keeps the point card compact before the point starts, expands it to the available height when the editor appears, and keeps the card in view when the point starts.
-
-## Internal changes
-
-- Remove unsupported QWeb t-key attributes from the minutes report so the Odoo log checker sees a clean render.
-
-## Community Meetings 18.0.6.2.9 (2026-10-23)
-=============================================
-
-## Release notes
-
 ### Features
 
 - Agreements and dissents in meeting minutes render as cards, like follow-up
   actions, including their decision and agreement status.
 - An expanded agenda point shows its responsible person, point type, estimate and
-  priority aligned with the point title. In focus mode the discussion editor uses
-  more of the available height and keeps the enlarge/reduce control.
+  priority aligned with the point title. In focus mode the discussion editor
+  keeps the enlarge/reduce control.
 - Approved minutes show a single revision sentence with the meeting code, the
   approval source (later agenda point, offline preparation, live meeting or
   manual approval), the localized approval date and the timezone. The point name
@@ -56,6 +42,8 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 ### Bugfixes
 
+- Focus mode fits the active point card in the available height by shrinking the discussion editor, and the Enlarge editor control still expands it when needed.
+- Focus mode keeps the point card compact before the point starts, expands it to the available height when the editor appears, and keeps the card in view when the point starts.
 - Dissents and reservations in meeting minutes now appear inside the agenda point and agreement they belong to, rather than in a separate report section.
 - Long presenter, status and transfer labels in the minutes preview now wrap inside the report instead of overflowing the page.
 - Older approved revisions keep their recorded dissents inside the agenda point after the minutes report layout change.
@@ -73,11 +61,11 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 ### Improved Documentation
 
-- The English and Spanish minutes preview documentation screenshots now show a realistic meeting with presenters, decisions, follow-ups and a dissent.
-- The English and Spanish minutes preview documentation screenshots show a dissent inside its agenda point.
+- The English and Spanish minutes preview documentation screenshots show a realistic meeting with presenters, decisions, follow-ups and a dissent inside its agenda point.
 
 ## Internal changes
 
+- Remove unsupported QWeb t-key attributes from the minutes report so the Odoo log checker sees a clean render.
 - Add a browser capture fixture that builds a representative meeting for the minutes preview documentation screenshots.
 
 ## Community Meetings 18.0.6.2.8 (2026-10-23)

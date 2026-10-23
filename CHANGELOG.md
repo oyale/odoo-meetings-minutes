@@ -22,41 +22,13 @@ the combined history below retains the existing suite release notes.
 
 ## Community Meetings
 
-### Bugfixes
-
-- Focus mode fits the active point card in the available height by shrinking the discussion editor, and the Enlarge editor control still expands it when needed.
-- Focus mode keeps the point card compact before the point starts, expands it to the available height when the editor appears, and keeps the card in view when the point starts.
-## Calendar Integration
-
-No significant changes.
-## Project Integration
-
-No significant changes.
-## Extension Demo
-
-No significant changes.
-## Odoo Meetings Minutes 18.0.20261023.1 (2026-10-23)
-
-### Addon versions
-
-| Addon | Odoo module version |
-|---|---:|
-| [Community Meetings](community_meetings/CHANGELOG.md) | `18.0.6.2.9` |
-| [Calendar Integration](community_meetings_calendar/CHANGELOG.md) | `18.0.1.0.6` |
-| [Project Integration](community_meetings_project/CHANGELOG.md) | `18.0.3.1.8` |
-| [Extension Demo](community_meetings_extension_demo/CHANGELOG.md) | `18.0.1.0.1` |
-
-=====================================================
-
-## Community Meetings
-
 ### Features
 
 - Agreements and dissents in meeting minutes render as cards, like follow-up
   actions, including their decision and agreement status.
 - An expanded agenda point shows its responsible person, point type, estimate and
-  priority aligned with the point title. In focus mode the discussion editor uses
-  more of the available height and keeps the enlarge/reduce control.
+  priority aligned with the point title. In focus mode the discussion editor
+  keeps the enlarge/reduce control.
 - Approved minutes show a single revision sentence with the meeting code, the
   approval source (later agenda point, offline preparation, live meeting or
   manual approval), the localized approval date and the timezone. The point name
@@ -83,6 +55,8 @@ No significant changes.
 
 ### Bugfixes
 
+- Focus mode fits the active point card in the available height by shrinking the discussion editor, and the Enlarge editor control still expands it when needed.
+- Focus mode keeps the point card compact before the point starts, expands it to the available height when the editor appears, and keeps the card in view when the point starts.
 - Dissents and reservations in meeting minutes now appear inside the agenda point and agreement they belong to, rather than in a separate report section.
 - Long presenter, status and transfer labels in the minutes preview now wrap inside the report instead of overflowing the page.
 - Older approved revisions keep their recorded dissents inside the agenda point after the minutes report layout change.
@@ -100,8 +74,8 @@ No significant changes.
 
 ### Improved Documentation
 
-- The English and Spanish minutes preview documentation screenshots now show a realistic meeting with presenters, decisions, follow-ups and a dissent.
-- The English and Spanish minutes preview documentation screenshots show a dissent inside its agenda point.
+- The English and Spanish minutes preview documentation screenshots show a realistic meeting with presenters, decisions, follow-ups and a dissent inside its agenda point.
+
 ## Calendar Integration
 
 No significant changes.
