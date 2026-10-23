@@ -4,6 +4,37 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings 18.0.6.2.8 (2026-10-23)
+=============================================
+
+## Release notes
+
+### Features
+
+- Type @ in an editable point's discussion to attribute an intervention to a contact. Mentions preserve the recorded name in notes and minutes without notifying the person or granting meeting access.
+
+### Bugfixes
+
+- Returning from live notes to a form no longer resubmits unchanged rich text after server sanitization. Edits made while a save is pending remain marked as unsaved until their own save completes.
+- Ordinary agenda additions, including imports and accepted carryovers, obey the meeting’s configured addition deadline. Enabling previous-minutes approval can still insert its required structural point into existing draft, scheduled, held or minutes-draft meetings.
+- Every proposal admission requires an authorized reviewer and records the reviewer and response date. After upgrading, earlier admissions without a completed recorded review keep their operational state and display an explicit historical status.
+- Minutes previews and approved revisions now include the agreed next-meeting date and time, displayed in the minutes timezone and frozen with the approved PDF.
+- Changing company or series time-tracking defaults during a live meeting no longer disables that session's timers; pausing and resuming also updates the live controls immediately.
+- Earlier meetings whose minutes are still in Held state are marked as awaiting preparation and cannot be approved from a later meeting until their minutes enter draft.
+- A meeting that has started can no longer be cancelled; finish it as Held to close its timers and preserve the actual session history.
+- Earlier minutes that are still held can be prepared from the later meeting's live approval point before review and approval. The minutes preview scrolls, and refreshing it preserves the meeting and return point.
+
+### Improved Documentation
+
+- The English and Spanish live-meeting guides explain person attribution with @, contact visibility, and how recorded names are preserved without notifications.
+
+## Internal changes
+
+- Regression coverage checks that empty approval queues and readers without approval authority are handled correctly.
+- Regression coverage includes empty agreed meeting dates, amendment snapshots, and read-only access to the previous-minutes approval queue.
+- Browser diagnostics handle RPC responses evicted during navigation and capture rendered evidence when live-screen setup fails.
+- Concurrency tests can synchronize independent database transactions.
+
 ## Community Meetings 18.0.6.2.7 (2026-10-22)
 =============================================
 

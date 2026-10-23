@@ -4,6 +4,20 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings Project 18.0.3.1.8 (2026-10-23)
+=====================================================
+
+## Release notes
+
+### Bugfixes
+
+- Retrying series creation with a new Project no longer creates duplicate projects or changes the series' existing project link.
+
+## Internal changes
+
+- Generated marketplace description metadata is up to date.
+- Regression coverage confirms a failed series and Project wizard finish rolls back the created series.
+
 ## Community Meetings Project 18.0.3.1.7 (2026-10-22)
 =====================================================
 
@@ -16,7 +30,6 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 ## Internal changes
 
-- The generated marketplace description matches the current addon README.
 - Project browser and acceptance checks resolve translated interface labels from the addon's translation catalog.
 
 ## Community Meetings Project 18.0.3.1.6 (2026-10-21)

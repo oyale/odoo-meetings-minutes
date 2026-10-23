@@ -4,12 +4,21 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings Calendar 18.0.1.0.6 (2026-10-23)
+======================================================
+
+## Release notes
+
+## Internal changes
+
+- Regression coverage confirms a started meeting cannot be cancelled through the Calendar bridge or have its event removed.
+- Generated marketplace description metadata is up to date.
+
 ## Community Meetings Calendar 18.0.1.0.5 (2026-10-22)
 ======================================================
 
 ## Internal changes
 
-- The generated marketplace description matches the current addon README.
 - Calendar scheduling checks use the shared access and state preflight, then validate Calendar-specific event end times.
 - Calendar browser checks resolve translated interface labels from the addon's translation catalog.
 

@@ -7,6 +7,52 @@ Each addon changelog starts with its first release prepared after this change;
 the combined history below retains the existing suite release notes.
 
 <!-- towncrier release notes start -->
+## Odoo Meetings Minutes 18.0.20261023.0 (2026-10-23)
+
+### Addon versions
+
+| Addon | Odoo module version |
+|---|---:|
+| [Community Meetings](community_meetings/CHANGELOG.md) | `18.0.6.2.8` |
+| [Calendar Integration](community_meetings_calendar/CHANGELOG.md) | `18.0.1.0.6` |
+| [Project Integration](community_meetings_project/CHANGELOG.md) | `18.0.3.1.8` |
+| [Extension Demo](community_meetings_extension_demo/CHANGELOG.md) | `18.0.1.0.1` |
+
+=====================================================
+
+## Community Meetings
+
+### Features
+
+- Type @ in an editable point's discussion to attribute an intervention to a contact. Mentions preserve the recorded name in notes and minutes without notifying the person or granting meeting access.
+
+### Bugfixes
+
+- Returning from live notes to a form no longer resubmits unchanged rich text after server sanitization. Edits made while a save is pending remain marked as unsaved until their own save completes.
+- Ordinary agenda additions, including imports and accepted carryovers, obey the meeting’s configured addition deadline. Enabling previous-minutes approval can still insert its required structural point into existing draft, scheduled, held or minutes-draft meetings.
+- Every proposal admission requires an authorized reviewer and records the reviewer and response date. After upgrading, earlier admissions without a completed recorded review keep their operational state and display an explicit historical status.
+- Minutes previews and approved revisions now include the agreed next-meeting date and time, displayed in the minutes timezone and frozen with the approved PDF.
+- Changing company or series time-tracking defaults during a live meeting no longer disables that session's timers; pausing and resuming also updates the live controls immediately.
+- Earlier meetings whose minutes are still in Held state are marked as awaiting preparation and cannot be approved from a later meeting until their minutes enter draft.
+- A meeting that has started can no longer be cancelled; finish it as Held to close its timers and preserve the actual session history.
+- Earlier minutes that are still held can be prepared from the later meeting's live approval point before review and approval. The minutes preview scrolls, and refreshing it preserves the meeting and return point.
+
+### Improved Documentation
+
+- The English and Spanish live-meeting guides explain person attribution with @, contact visibility, and how recorded names are preserved without notifications.
+
+## Calendar Integration
+
+No user-facing changes.
+
+## Project Integration
+
+### Bugfixes
+
+- Retrying series creation with a new Project no longer creates duplicate projects or changes the series' existing project link.
+## Extension Demo
+
+No significant changes.
 ## Odoo Meetings Minutes 18.0.20261022.0 (2026-10-22)
 
 ### Addon versions
