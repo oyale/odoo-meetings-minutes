@@ -163,31 +163,6 @@
                         </section>
                         <section t-if="item.description" class="o_live_planned" aria-label="Point description"><h3>Point description</h3><div t-out="safeHtml(item.description)"/></section>
                         <div t-att-id="'agenda-panel-' + item.id" t-att-class="'o_live_card_body ' + (state.expanded[item.id] ? '' : 'd-none')">
-                            <section t-if="item.discussion_history?.available" class="o_live_subsection o_live_previous_discussion" aria-label="Previous discussion">
-                                <div class="o_live_notes_heading">
-                                    <h3 class="h6 mb-0"><i class="fa fa-history" aria-hidden="true"/> Previous discussion</h3>
-                                    <button t-if="canEditDiscussionHistory(item) and !item.discard_previous_discussion" class="btn btn-sm btn-outline-secondary" t-on-click="(ev) => { ev.stopPropagation(); this.setDiscussionHistory(item, true); }">Start without previous notes</button>
-                                    <button t-if="canEditDiscussionHistory(item) and item.discard_previous_discussion" class="btn btn-sm btn-outline-primary" t-on-click="(ev) => { ev.stopPropagation(); this.setDiscussionHistory(item, false); }">Show previous notes</button>
-                                </div>
-                                <p t-if="item.discard_previous_discussion" class="text-muted mb-0">This point starts without earlier discussion. Its notes remain available on the original meeting.</p>
-                                <t t-else="">
-                                    <p class="text-muted mb-2">Read-only context from earlier meetings. It is not added to these minutes.</p>
-                                    <details t-foreach="item.discussion_history.entries" t-as="entry" t-key="entry.item_id" t-att-open="entry_index === 0 ? true : undefined">
-                                        <summary><t t-out="entry.meeting_code"/> — <t t-out="entry.meeting_name"/><span class="text-muted ms-2"><t t-out="historyDate(entry)"/></span></summary>
-                                        <div class="o_live_previous_discussion_content" t-out="safeHtml(entry.notes)"/>
-                                        <button class="btn btn-sm btn-link px-0" t-on-click="(ev) => { ev.stopPropagation(); this.openMeeting(entry.meeting_id); }">Open source meeting</button>
-                                    </details>
-                                </t>
-                            </section>
-                            <div t-if="item.has_started or draftingMinutes or timingEnabled" class="o_live_subsection o_live_discussion_notes">
-                                <div class="o_live_notes_heading">
-                                    <label class="form-label" t-att-for="'discussion-' + item.id"><i class="fa fa-pencil-square-o" aria-hidden="true"/> Discussion notes</label>
-                                    <button t-if="canEditDiscussion(item)" class="btn btn-sm btn-link" t-att-aria-expanded="state.expandedNotes[item.id] ? 'true' : 'false'" t-on-click="() => this.toggleNotesExpanded(item)"><i t-att-class="state.expandedNotes[item.id] ? 'fa fa-compress' : 'fa fa-expand'" aria-hidden="true"/> <t t-if="state.expandedNotes[item.id]">Reduce editor</t><t t-else="">Enlarge editor</t></button>
-                                </div>
-                                <t t-if="canEditDiscussion(item)"><div t-att-class="'o_live_richtext ' + (state.expandedNotes[item.id] ? 'o_live_richtext_expanded' : '')"><t t-component="Wysiwyg" t-props="{ options: richTextOptions(item.discussion_notes, 'discussion_notes:' + item.id, 'community.meeting.agenda.item', item.id, 'discussion_notes'), editingValue: item.discussion_notes || '', startWysiwyg: richTextStarter('discussion_notes:' + item.id, item.id, 'community.meeting.agenda.item', 'discussion_notes') }"/></div></t>
-                                <t t-else=""><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></t>
-                                <small t-if="canEditDiscussion(item)" class="text-muted d-block">Type @ to attribute an intervention without notifying the person.</small>
-                            </div>
                             <div t-if="typeBehavior(item) === 'minutes_approval'" class="o_live_subsection o_live_minutes_approval">
                                 <div class="o_live_minutes_approval_intro">
                                     <span class="o_live_minutes_approval_icon" aria-hidden="true"><i class="fa fa-file-text-o"/></span>
@@ -246,6 +221,31 @@
                                         </li>
                                     </ul>
                                 </div>
+                            </div>
+                            <section t-if="item.discussion_history?.available" class="o_live_subsection o_live_previous_discussion" aria-label="Previous discussion">
+                                <div class="o_live_notes_heading">
+                                    <h3 class="h6 mb-0"><i class="fa fa-history" aria-hidden="true"/> Previous discussion</h3>
+                                    <button t-if="canEditDiscussionHistory(item) and !item.discard_previous_discussion" class="btn btn-sm btn-outline-secondary" t-on-click="(ev) => { ev.stopPropagation(); this.setDiscussionHistory(item, true); }">Start without previous notes</button>
+                                    <button t-if="canEditDiscussionHistory(item) and item.discard_previous_discussion" class="btn btn-sm btn-outline-primary" t-on-click="(ev) => { ev.stopPropagation(); this.setDiscussionHistory(item, false); }">Show previous notes</button>
+                                </div>
+                                <p t-if="item.discard_previous_discussion" class="text-muted mb-0">This point starts without earlier discussion. Its notes remain available on the original meeting.</p>
+                                <t t-else="">
+                                    <p class="text-muted mb-2">Read-only context from earlier meetings. It is not added to these minutes.</p>
+                                    <details t-foreach="item.discussion_history.entries" t-as="entry" t-key="entry.item_id" t-att-open="entry_index === 0 ? true : undefined">
+                                        <summary><t t-out="entry.meeting_code"/> — <t t-out="entry.meeting_name"/><span class="text-muted ms-2"><t t-out="historyDate(entry)"/></span></summary>
+                                        <div class="o_live_previous_discussion_content" t-out="safeHtml(entry.notes)"/>
+                                        <button class="btn btn-sm btn-link px-0" t-on-click="(ev) => { ev.stopPropagation(); this.openMeeting(entry.meeting_id); }">Open source meeting</button>
+                                    </details>
+                                </t>
+                            </section>
+                            <div t-if="item.has_started or draftingMinutes or timingEnabled" class="o_live_subsection o_live_discussion_notes">
+                                <div class="o_live_notes_heading">
+                                    <label class="form-label" t-att-for="'discussion-' + item.id"><i class="fa fa-pencil-square-o" aria-hidden="true"/> Discussion notes</label>
+                                    <button t-if="canEditDiscussion(item)" class="btn btn-sm btn-link" t-att-aria-expanded="state.expandedNotes[item.id] ? 'true' : 'false'" t-on-click="() => this.toggleNotesExpanded(item)"><i t-att-class="state.expandedNotes[item.id] ? 'fa fa-compress' : 'fa fa-expand'" aria-hidden="true"/> <t t-if="state.expandedNotes[item.id]">Reduce editor</t><t t-else="">Enlarge editor</t></button>
+                                </div>
+                                <t t-if="canEditDiscussion(item)"><div t-att-class="'o_live_richtext ' + (state.expandedNotes[item.id] ? 'o_live_richtext_expanded' : '')"><t t-component="Wysiwyg" t-props="{ options: richTextOptions(item.discussion_notes, 'discussion_notes:' + item.id, 'community.meeting.agenda.item', item.id, 'discussion_notes'), editingValue: item.discussion_notes || '', startWysiwyg: richTextStarter('discussion_notes:' + item.id, item.id, 'community.meeting.agenda.item', 'discussion_notes') }"/></div></t>
+                                <t t-else=""><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></t>
+                                <small t-if="canEditDiscussion(item)" class="text-muted d-block">Type @ to attribute an intervention without notifying the person.</small>
                             </div>
                             <div t-if="item.deadline" class="text-muted o_live_point_meta"><i class="fa fa-calendar-o me-1" aria-hidden="true"/>Due <t t-out="item.deadline"/></div>
                             <div t-if="hasPointRelations(item)" class="o_live_related_points">

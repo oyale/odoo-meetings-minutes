@@ -1107,6 +1107,15 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                 ("meeting_id", "=", self.meeting_id), ("kind", "=", "minutes_approval"),
             ]], {"fields": ["disposition"]}, page=page)[0]
             self.assertEqual(point["disposition"], "closed")
+            approval_card = page.locator(f"#agenda-card-{point['id']}")
+            if approval_card.locator(".o_live_expand").get_attribute("aria-expanded") == "false":
+                approval_card.locator(".o_live_expand").click()
+            approved_history = approval_card.locator(".o_live_minutes_approval")
+            expect(approved_history).to_be_visible()
+            expect(approved_history).to_contain_text(
+                self.ui_text("community_meetings", "Approved previous minutes")
+            )
+            expect(approved_history).to_contain_text("Offline previous minutes")
         finally:
             context.close()
 
