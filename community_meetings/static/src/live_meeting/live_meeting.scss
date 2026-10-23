@@ -369,13 +369,14 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
+    margin: 8px 18px 0 42px;
     padding-top: 8px;
 }
 .o_live_point_details {
     display: flex;
     flex-wrap: wrap;
     gap: 8px 18px;
-    margin-top: 10px;
+    margin: 10px 18px 0 42px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--border-color, #d9e0e6);
 }
@@ -404,4 +405,12 @@
 .o_community_live_meeting .o_live_focus_mode .o_live_richtext_expanded .odoo-editor-editable,
 .o_community_live_meeting .o_live_focus_mode .o_live_richtext_expanded .note-editable {
     min-height: clamp(400px, 68vh, 980px);
+}
+
+@media (max-width: 800px) {
+    .o_live_collapsed_outcome,
+    .o_live_point_details {
+        margin-right: 16px;
+        margin-left: 16px;
+    }
 }

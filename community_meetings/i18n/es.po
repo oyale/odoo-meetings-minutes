@@ -11654,16 +11654,6 @@ msgstr "{date} {series}"
 #~ msgstr "Aprobado por"
 
 #. module: community_meetings
-#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-msgid "Debate type"
-msgstr "Tipo de debate"
-
-#. module: community_meetings
-#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-msgid "Estimate"
-msgstr "Estimación"
-
-#. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 msgid "Add an agreement title before saving."

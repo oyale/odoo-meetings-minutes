@@ -142,12 +142,12 @@
                             </div>
                             <div t-if="item.agenda_type_id" class="o_live_point_details_item">
                                 <i t-attf-class="fa #{typeIcon(item)}" aria-hidden="true"/>
-                                <span class="o_live_point_details_label">Debate type</span>
+                                <span class="o_live_point_details_label">Point type</span>
                                 <strong t-out="label(item.agenda_type_id)"/>
                             </div>
                             <div t-if="item.estimated_minutes" class="o_live_point_details_item">
                                 <i class="fa fa-clock-o" aria-hidden="true"/>
-                                <span class="o_live_point_details_label">Estimate</span>
+                                <span class="o_live_point_details_label">Estimated</span>
                                 <strong><t t-out="item.estimated_minutes"/> min</strong>
                             </div>
                             <div t-if="item.priority !== '1'" class="o_live_point_details_item">
