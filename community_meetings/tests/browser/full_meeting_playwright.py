@@ -77,7 +77,7 @@ ACTIONS = {
     "test_focus_mode_presents_one_point_at_a_time": [
         "switch to one-point focus mode",
         "navigate between focused points",
-        "hide meeting notes and editor controls in focus mode",
+        "keep the focused point editor and enlarge control in focus mode",
         "check mobile focus layout for overflow",
         "return to full agenda",
     ],
@@ -1087,7 +1087,7 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             card_bottom = cards.first.evaluate("el => el.getBoundingClientRect().bottom")
             footer_bottom = footer.evaluate("el => el.getBoundingClientRect().bottom")
             self.assertLessEqual(footer_bottom, card_bottom + 1, "Focus card border must contain the point action footer")
-        expect(cards.first.get_by_role("button", name=self.ui_text("community_meetings", "Enlarge editor"))).to_have_count(0)
+        expect(cards.first.get_by_role("button", name=self.ui_text("community_meetings", "Enlarge editor"))).to_be_visible()
         expect(self.page.locator(".o_live_minutes")).to_be_hidden()
         self.page.set_viewport_size({"width": 390, "height": 844})
         main = self.page.locator("main.o_community_live_meeting")
