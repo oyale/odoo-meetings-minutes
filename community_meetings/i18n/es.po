@@ -2718,6 +2718,7 @@ msgstr "Las reuniones aprobadas o canceladas no se pueden editar."
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__minutes_approval_ids
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Approved previous minutes"
 msgstr "Actas anteriores aprobadas"
 

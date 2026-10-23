@@ -2,7 +2,7 @@ import json
 
 from markupsafe import Markup
 
-from odoo import api, models
+from odoo import api, fields, models
 from odoo.tools import is_html_empty
 from odoo.tools.misc import format_datetime
 
@@ -66,6 +66,43 @@ class MeetingRevisionReport(models.AbstractModel):
         return approval
 
     @api.model
+    def _prepare_minutes_approvals(self, item, meeting, revision, lang):
+        timezone = meeting.get("actual_start_timezone") or meeting.get("start_timezone") or ""
+        rows = item.get("minutes_approvals")
+        if rows is None and revision and item.get("kind") == "minutes_approval" and item.get("id"):
+            records = (
+                self.env["community.meeting.minutes.approval"]
+                .sudo()
+                .search([("agenda_item_id", "=", item["id"])], order="id")
+            )
+            rows = [
+                {
+                    "meeting_code": record.meeting_id.code or "",
+                    "meeting_name": record.meeting_id.name or "",
+                    "revision_number": (record.revision_id.revision_number if record.revision_id else False),
+                    "start_datetime": (
+                        fields.Datetime.to_string(record.meeting_id.start_datetime)
+                        if record.meeting_id.start_datetime
+                        else ""
+                    ),
+                }
+                for record in records
+            ]
+        prepared = []
+        for row in rows or []:
+            row = dict(row)
+            if row.get("start_datetime"):
+                row["start_datetime_display"] = format_datetime(
+                    self.env,
+                    row["start_datetime"],
+                    tz=timezone or False,
+                    dt_format="short",
+                    lang_code=lang,
+                )
+            prepared.append(row)
+        return prepared
+
+    @api.model
     def _prepare_document(self, snapshot, revision=None, draft=False, lang=None):
         lang = lang or self.env.lang or self.env.user.lang
         meeting = snapshot["meeting"]
@@ -127,6 +164,7 @@ class MeetingRevisionReport(models.AbstractModel):
                     ],
                     "resolutions": [resolution_doc(resolution) for resolution in item.get("resolutions", [])],
                     "actions": item_actions,
+                    "minutes_approvals": self._prepare_minutes_approvals(item, meeting, revision, lang),
                 }
             )
         return {

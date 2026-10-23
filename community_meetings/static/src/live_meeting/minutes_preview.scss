@@ -358,6 +358,32 @@
                 font-size: .86rem;
             }
 
+            .o_minutes_point_minutes_approvals {
+                margin-top: .8rem;
+                padding: .75rem .85rem;
+                border: 1px solid var(--minutes-rule);
+                border-radius: .5rem;
+                background: var(--minutes-accent-soft);
+
+                h4 {
+                    margin: 0 0 .35rem;
+                    font-family: var(--minutes-body);
+                    font-size: .88rem;
+                    font-weight: 700;
+                }
+
+                ul {
+                    margin: 0;
+                    padding: 0;
+                    list-style: none;
+                }
+
+                li {
+                    padding: .25rem 0;
+                    font-size: .86rem;
+                }
+            }
+
             .o_minutes_point_followups {
                 margin-top: .9rem;
                 padding: .75rem .85rem;

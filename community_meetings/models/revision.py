@@ -148,6 +148,25 @@ class CommunityMeetingRevision(models.Model):
                     "next_meeting_timezone": timezone if item.next_meeting_datetime else "",
                     "deferral_reason": item.deferral_reason or "",
                     "deferral_reason_code": item.deferral_reason_code or "",
+                    "minutes_approvals": [
+                        {
+                            "meeting_code": record.meeting_id.code or "",
+                            "meeting_name": record.meeting_id.name or "",
+                            "revision_number": (record.revision_id.revision_number if record.revision_id else False),
+                            "start_datetime": fields.Datetime.to_string(record.meeting_id.start_datetime)
+                            if record.meeting_id.start_datetime
+                            else "",
+                            "start_datetime_display": format_datetime(
+                                self.env,
+                                record.meeting_id.start_datetime,
+                                tz=timezone,
+                                dt_format="short",
+                            )
+                            if record.meeting_id.start_datetime
+                            else "",
+                        }
+                        for record in item.minutes_approval_ids.sorted("id")
+                    ],
                     "resolutions": [
                         {
                             "title": resolution.title,

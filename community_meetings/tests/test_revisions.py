@@ -208,6 +208,16 @@ class TestMeetingRevisions(TransactionCase):
         self.assertEqual(doc["snapshot"]["approval"]["meeting_code"], later.code)
         self.assertEqual(doc["snapshot"]["approval"]["origin"], "meeting")
         self.assertEqual(record.revision_id, first_revision)
+        later_snapshot = self.env["community.meeting.revision"]._build_public_content(later)
+        approval_item = next(row for row in later_snapshot["agenda"] if row["kind"] == "minutes_approval")
+        self.assertEqual(approval_item["minutes_approvals"][0]["meeting_code"], earlier.code)
+        self.assertEqual(
+            approval_item["minutes_approvals"][0]["revision_number"],
+            first_revision.revision_number,
+        )
+        preview_html = report_model._render_preview(later)
+        self.assertIn("Approved previous minutes", preview_html)
+        self.assertIn(earlier.code, preview_html)
 
         earlier.with_user(self.manager).action_start_amendment()
         earlier.agenda_item_ids[0].with_user(self.manager).write({"discussion_notes": "Amended discussion"})

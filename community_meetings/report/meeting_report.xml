@@ -122,6 +122,17 @@
                                 Next meeting: <strong t-out="item['next_meeting_datetime_display']"/>
                                 <span t-if="item.get('next_meeting_timezone')" t-out="' (' + item['next_meeting_timezone'] + ')'"/>
                             </p>
+                            <div t-if="item.get('minutes_approvals')" class="o_minutes_point_minutes_approvals">
+                                <h4><span t-translation="on">Approved previous minutes</span></h4>
+                                <ul>
+                                    <li t-foreach="item['minutes_approvals']" t-as="approved" t-key="approved_index">
+                                        <strong t-out="approved.get('meeting_code')"/>
+                                        <span t-if="approved.get('meeting_name')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="approved.get('meeting_name')"/></span>
+                                        <span t-if="approved.get('revision_number')"><span class="o_minutes_separator" aria-hidden="true"/> <span t-translation="on">Revision</span> <t t-out="approved['revision_number']"/></span>
+                                        <span t-if="approved.get('start_datetime_display')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="approved['start_datetime_display']"/></span>
+                                    </li>
+                                </ul>
+                            </div>
                             <div t-foreach="item['resolutions']" t-as="resolution" class="o_minutes_resolution">
                                 <h4 t-out="resolution['title']"/><div class="o_minutes_rich_content" t-out="resolution['body_html']"/>
                                 <p t-if="resolution.get('decision_outcome_label')" class="o_minutes_point_outcome">Decision: <strong t-out="resolution['decision_outcome_label']"/></p>
