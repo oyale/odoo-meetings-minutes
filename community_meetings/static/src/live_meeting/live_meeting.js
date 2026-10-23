@@ -845,16 +845,18 @@ export class LiveMeeting extends Component {
             for (const item of this.state.items) this.state.expanded[item.id] = item.id === this.state.activeItemId;
             if (active) {
                 this.state.expandedNotes[active.id] = false;
-                requestAnimationFrame(() => requestAnimationFrame(() => {
-                    const main = document.querySelector("main.o_community_live_meeting");
-                    const card = document.getElementById(`agenda-card-${active.id}`);
-                    if (main && card) {
-                        const offset = card.getBoundingClientRect().top - main.getBoundingClientRect().top - 24;
-                        main.scrollTop += offset;
-                    }
-                }));
+                this.scrollFocusCard(active.id);
             }
         }
+    }
+    scrollFocusCard(itemId) {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            const main = document.querySelector("main.o_community_live_meeting");
+            const card = document.getElementById(`agenda-card-${itemId}`);
+            if (main && card) {
+                main.scrollTop += card.getBoundingClientRect().top - main.getBoundingClientRect().top - 24;
+            }
+        }));
     }
     toggleNotesExpanded(item) {
         this.state.expandedNotes[item.id] = !this.state.expandedNotes[item.id];
@@ -896,6 +898,7 @@ export class LiveMeeting extends Component {
             for (const point of this.state.items) this.state.expanded[point.id] = false;
             this.state.activeItemId = item.id;
             this.state.expanded[item.id] = true;
+            if (this.state.focusMode) this.scrollFocusCard(item.id);
         } catch (error) {
             this.notification.add(_t("The point timer could not be started."), { type: "danger" });
         }

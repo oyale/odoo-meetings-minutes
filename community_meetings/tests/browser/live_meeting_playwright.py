@@ -494,6 +494,57 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         self.assertAlmostEqual(reduced["card"]["height"], metrics["card"]["height"], delta=1)
         self.assertLessEqual(reduced["card"]["bottom"], reduced["main"]["bottom"] + 1, reduced)
 
+    def test_focus_mode_starts_compact_and_grows_when_the_point_starts(self):
+        self.page.set_viewport_size({"width": 1440, "height": 1000})
+        self.page.get_by_role(
+            "button", name=self.ui_text("community_meetings", "Focus on one point")
+        ).click()
+        card = self.page.locator(".o_live_focus_mode .o_live_agenda_card").first
+        expect(card).to_be_visible()
+        self.page.wait_for_timeout(150)
+        before = self.page.evaluate("""() => {
+            const main = document.querySelector('main.o_community_live_meeting');
+            const card = document.querySelector('.o_live_focus_mode .o_live_agenda_card');
+            const box = (node) => node ? {
+                top: node.getBoundingClientRect().top,
+                bottom: node.getBoundingClientRect().bottom,
+                height: node.getBoundingClientRect().height,
+            } : null;
+            return {main: box(main), card: box(card), editor: Boolean(card?.querySelector('.o_live_richtext'))};
+        }""")
+        self.assertLess(before["card"]["height"], before["main"]["height"], before)
+        self.assertFalse(before["editor"])
+        self.assertLessEqual(before["card"]["bottom"], before["main"]["bottom"] + 1, before)
+
+        start = self.page.get_by_role(
+            "button", name=self.ui_text("community_meetings", "Start Meeting")
+        )
+        if start.count():
+            start.click()
+            self.page.wait_for_timeout(150)
+        begin = card.get_by_role(
+            "button", name=self.ui_text("community_meetings", "Begin point")
+        )
+        self.assertTrue(begin.count(), "expected the focused point play control")
+        begin.first.click()
+        self.page.wait_for_timeout(150)
+
+        after = self.page.evaluate("""() => {
+            const main = document.querySelector('main.o_community_live_meeting');
+            const card = document.querySelector('.o_live_focus_mode .o_live_agenda_card');
+            const editor = card?.querySelector('.o_live_richtext');
+            const box = (node) => node ? {
+                top: node.getBoundingClientRect().top,
+                bottom: node.getBoundingClientRect().bottom,
+                height: node.getBoundingClientRect().height,
+            } : null;
+            return {main: box(main), card: box(card), editor: box(editor)};
+        }""")
+        self.assertGreater(after["card"]["height"], before["card"]["height"])
+        self.assertIsNotNone(after["editor"])
+        self.assertLessEqual(after["card"]["bottom"], after["main"]["bottom"] + 1, after)
+        self.assertGreaterEqual(after["card"]["top"], after["main"]["top"], after)
+
     def test_previous_discussion_is_read_only_and_can_be_cleared_or_restored(self):
         destination = self.record("community.meeting", self.meeting_id, ["start_datetime"])
         source_start = datetime.strptime(destination["start_datetime"], "%Y-%m-%d %H:%M:%S") - timedelta(days=1)

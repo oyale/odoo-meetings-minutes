@@ -332,6 +332,10 @@
         max-height: none;
         overflow: visible;
     }
+    .o_live_focus_mode .o_live_agenda_card:not(:has(.o_live_richtext)) {
+        height: auto;
+        max-height: calc(100dvh - 70px);
+    }
     .o_live_focus_mode .o_live_card_body { display: flex; min-height: 0; flex: 1; flex-direction: column; }
     .o_live_focus_mode .o_live_discussion_notes { display: flex; min-height: 0; flex: 1; flex-direction: column; }
     .o_live_focus_mode .o_live_richtext { flex: 1 1 auto; min-height: 0; overflow: auto; }
