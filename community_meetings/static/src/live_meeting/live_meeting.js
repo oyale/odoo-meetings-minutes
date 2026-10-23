@@ -10,7 +10,7 @@ import { ensureJQuery } from "@web/core/ensure_jquery";
 import { useService } from "@web/core/utils/hooks";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { usePopover } from "@web/core/popover/popover_hook";
-import { createMentionAnchor, DiscussionMentionPicker } from "./discussion_mention_picker";
+import { createMentionAnchor, createMentionElement, detectMentionTrigger, DiscussionMentionPicker } from "./discussion_mention_picker";
 
 const { DateTime } = luxon;
 
@@ -64,7 +64,7 @@ export class LiveMeeting extends Component {
                 if (mention) void this.saveRichText(mention.key, mention.recordId, mention.model, mention.field);
             },
         });
-        this.state = useState({ loading: true, saving: 0, saveError: false, saveErrorDetail: "", unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, headerDraft: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissentReasons: [], dissents: [], actions: [], relatedActionsById: {}, resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "activity", activity_type_id: false }, expanded: {}, expandedNotes: {}, relatedTopicOpenId: false, relatedActionOpenId: false, focusMode: false, reorderMode: false, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], pendingMinutes: [], minutesApprovals: [], defaultOwner: false });
+        this.state = useState({ loading: true, saving: 0, saveError: false, saveErrorDetail: "", unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, headerDraft: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissentReasons: [], dissents: [], actions: [], relatedActionsById: {}, resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "activity", activity_type_id: false }, expanded: {}, expandedNotes: {}, relatedTopicOpenId: false, relatedActionOpenId: false, focusMode: false, reorderMode: false, returnMeeting: false, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], pendingMinutes: [], minutesApprovals: [], defaultOwner: false });
         this.pendingWrites = new Map();
         this.editors = new Map();
         this.editorTimers = new Map();
@@ -117,6 +117,7 @@ export class LiveMeeting extends Component {
         );
     }
     get draftingMinutes() { return ["held", "minutes_draft"].includes(this.state.meeting.state); }
+    get backLabel() { return this.state.returnMeeting ? _t("Back to live meeting") : _t("Back to Meetings"); }
     get canPreviewMinutes() {
         return this.draftingMinutes && Boolean(this.state.capabilities?.can_preview_minutes);
     }
@@ -128,10 +129,14 @@ export class LiveMeeting extends Component {
             this.notification.add(_t("Could not identify the meeting to open. Return to the Meetings list and open it again."), { type: "danger" });
             return;
         }
+        const liveReturn = this.props.action?.params?.live_return;
+        this.state.returnMeeting = liveReturn?.meeting_id
+            ? { meeting_id: liveReturn.meeting_id, item_id: liveReturn.item_id || false }
+            : false;
         await this.refreshCapabilities();
         const editorial = this.state.capabilities.can_view_editorial;
         const [meetings, items, types, dissents, actions, resolutions, privateNotes] = await Promise.all([
-            this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "company_id", "start_datetime", "end_datetime", "actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_end_datetime", "actual_duration_minutes", "organizer_id", "secretary_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id", "duration_minutes", "coordinator_role_label", "secretary_role_label"]),
+            this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "approved_revision_id", "company_id", "start_datetime", "end_datetime", "actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_end_datetime", "actual_duration_minutes", "organizer_id", "secretary_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id", "duration_minutes", "coordinator_role_label", "secretary_role_label"]),
             this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "topic_id", "sequence", "reorderable", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "discussion_history", "discard_previous_discussion", "deferral_reason", "deferral_reason_code", "deferral_blocked_by", "presenter_partner_id", "priority", "deadline", "estimated_minutes", "actual_minutes", "actual_seconds", "actual_started_at", "has_started", "review_next_meeting", "is_followup", "topic_state", "topic_outcome", "next_meeting_datetime"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.agenda.type", [], ["name", "behavior", "active"], { order: "sequence, name", context: { active_test: false } }),
             editorial ? this.orm.searchRead("community.meeting.dissent", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "body", "reason_id", "author_display_name", "author_partner_id"], { order: "sequence, id" }) : this.orm.call("community.meeting", "get_live_dissents", [[this.meetingId]]),
@@ -365,6 +370,14 @@ export class LiveMeeting extends Component {
     richTextStarter(key, recordId, model, field) {
         return (wysiwyg) => this.startRichText(key, wysiwyg, recordId, model, field);
     }
+    async fetchDiscussionMentionSuggestions(recordId, { search, offset, limit }) {
+        return this.orm.call(
+            "community.meeting.agenda.item",
+            "get_discussion_mention_suggestions",
+            [[recordId]],
+            { search, offset, limit },
+        );
+    }
     async startRichText(key, wysiwyg, recordId, model, field) {
         this.editors.set(key, wysiwyg);
         this.editorMeta.set(key, { recordId, model, field });
@@ -396,15 +409,10 @@ export class LiveMeeting extends Component {
         if (model === "community.meeting.agenda.item" && field === "discussion_notes") {
             const editable = wysiwyg.$editable[0];
             const onInput = (event) => {
-                if (event.data !== "@" || event.isComposing || editable.getAttribute("contenteditable") !== "true") return;
+                const trigger = detectMentionTrigger(event, editable);
+                if (!trigger) return;
+                const { caret, replacement } = trigger;
                 const selection = editable.ownerDocument.getSelection();
-                if (!selection?.isCollapsed || selection.anchorNode?.nodeType !== Node.TEXT_NODE) return;
-                const offset = selection.anchorOffset;
-                const text = selection.anchorNode.textContent;
-                if (text[offset - 1] !== "@" || (offset > 1 && /[\w@]/.test(text[offset - 2]))) return;
-                const caret = selection.getRangeAt(0).cloneRange();
-                const replacement = caret.cloneRange();
-                replacement.setStart(selection.anchorNode, offset - 1);
                 this.mentionPopover.close();
                 this.activeMention = { key, recordId, model, field };
                 clearTimeout(this.editorTimers.get(key));
@@ -415,27 +423,31 @@ export class LiveMeeting extends Component {
                 };
                 this.mentionAnchor = createMentionAnchor(caret, editable);
                 this.mentionPopover.open(this.mentionAnchor.element, {
-                    itemId: recordId,
+                    label: _t("Attribute an intervention"),
+                    hint: _t("Mentions do not notify people or give access to the meeting."),
+                    cancelLabel: _t("Keep a literal @"),
+                    errorMessage: _t("Contacts could not be loaded. Check that this discussion is still editable."),
+                    fetchSuggestions: (params) => this.fetchDiscussionMentionSuggestions(recordId, params),
+                    canPick: () => {
+                        const item = this.state.items.find((row) => row.id === recordId);
+                        return Boolean(item) && this.canEditDiscussion(item);
+                    },
                     onCancel: () => {
                         this.mentionPopover.close();
                         restore();
                     },
                     onSelect: (option) => {
-                        const item = this.state.items.find((row) => row.id === recordId);
-                        if (!this.canEditDiscussion(item) || !replacement.startContainer.isConnected) {
+                        if (!replacement.startContainer.isConnected) {
                             this.mentionPopover.close();
                             return;
                         }
                         editable.focus();
                         selection.removeAllRanges();
                         selection.addRange(replacement);
-                        const mention = document.createElement("span");
-                        mention.className = "o_meeting_person_mention";
-                        mention.dataset.oeModel = "res.partner";
-                        mention.dataset.oeId = option.partnerId;
-                        mention.setAttribute("contenteditable", "false");
-                        mention.setAttribute("style", "background-color: #e9ecef; border-radius: 0.25rem; padding: 0 0.2em;");
-                        mention.textContent = `@${option.name}`;
+                        const mention = createMentionElement({
+                            partnerId: option.partnerId,
+                            name: option.name,
+                        });
                         wysiwyg.odooEditor.historyPauseSteps();
                         try {
                             wysiwyg.odooEditor.execCommand("insert", mention);
@@ -634,7 +646,7 @@ export class LiveMeeting extends Component {
         const value = this.pointOutcome(item);
         return value === "approved" || value === "closed" || value === "discussed" ? "fa-check-circle"
             : value === "denied" ? "fa-times-circle"
-                : value === "deferred" ? "fa-pause-circle"
+                : value === "deferred" ? "fa-hourglass-half"
                     : value === "in_progress" ? "fa-play-circle" : "fa-clock-o";
     }
     typeIcon(item) {
@@ -670,6 +682,7 @@ export class LiveMeeting extends Component {
         const [saved] = await this.orm.read("community.meeting.agenda.item", [itemId], ["disposition", "decision_result", "topic_state", "topic_outcome", "is_followup", "actual_started_at", "actual_minutes", "actual_seconds"]);
         Object.assign(item, saved);
         if (!item.actual_started_at) this.setPointEditorsEditable(item, false);
+        this.collapseResolvedPoint(item);
         const resolutions = await this.orm.searchRead("community.meeting.resolution", [["agenda_item_id", "=", itemId]], ["agenda_item_id", "title", "body", "status", "decision_outcome"], { order: "id" });
         const refreshed = new Map(resolutions.map((row) => [row.id, row]));
         this.state.resolutions = this.state.resolutions
@@ -748,14 +761,29 @@ export class LiveMeeting extends Component {
     }
     get completedCount() { return this.state.items.filter((item) => ["discussed", "closed"].includes(item.disposition)).length; }
     get unresolvedItems() {
-        return this.state.items.filter((item) =>
-            !["discussed", "closed"].includes(item.disposition)
-            || (this.typeBehavior(item) === "decision" && !this.decisionAgreement(item))
-        );
+        return this.state.items.filter((item) => {
+            if (item.disposition === "deferred") return false;
+            if (["discussed", "closed"].includes(item.disposition)) {
+                return this.typeBehavior(item) === "decision" && !this.decisionAgreement(item);
+            }
+            return true;
+        });
     }
     canStartPoint(item) {
         return item.disposition !== "closed"
             && !(this.typeBehavior(item) === "information" && item.disposition === "discussed");
+    }
+    isResolvedPoint(item) {
+        return ["approved", "denied", "closed"].includes(item.disposition)
+            || (item.disposition === "discussed" && this.typeBehavior(item) !== "decision");
+    }
+    collapseResolvedPoint(item) {
+        if (!this.state.focusMode && this.isResolvedPoint(item)) this.state.expanded[item.id] = false;
+    }
+    beginReopen(item) {
+        this.state.expanded[item.id] = true;
+        this.state.activeItemId = item.id;
+        this.state.reopening[item.id] = "";
     }
     canCompletePoint(item) {
         if (item.is_followup) return true;
@@ -972,6 +1000,10 @@ export class LiveMeeting extends Component {
     async openMeeting(id) {
         if (!await this.flushEditors()) return;
         const action = await this.orm.call("community.meeting", "action_open_live_meeting", [[id]]);
+        action.params = {
+            ...action.params,
+            live_return: { meeting_id: this.meetingId, item_id: this.state.activeItemId || 0 },
+        };
         return this.actionService.doAction(action);
     }
     async openFollowupActivity(id) {
@@ -986,7 +1018,7 @@ export class LiveMeeting extends Component {
     }
     async approveMinutes() {
         if (!await this.flushEditors()) return;
-        await this.transition("action_approve_minutes", "approved");
+        await this.transition("action_approve_minutes_live", "approved");
     }
     async approvePreviousMinutes(item, meetingId) {
         if (!await this.flushEditors()) return;
@@ -1033,6 +1065,7 @@ export class LiveMeeting extends Component {
             const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "actual_started_at", "actual_minutes", "actual_seconds"]);
             Object.assign(item, saved);
             if (!item.actual_started_at) this.setPointEditorsEditable(item, false);
+            this.collapseResolvedPoint(item);
         });
     }
 
@@ -1109,6 +1142,7 @@ export class LiveMeeting extends Component {
             Object.assign(item, saved);
             if (!item.actual_started_at) this.setPointEditorsEditable(item, false);
             delete this.state.deferrals[item.id];
+            if (!this.state.focusMode) this.state.expanded[item.id] = false;
         });
     }
 
@@ -1236,7 +1270,11 @@ export class LiveMeeting extends Component {
     }
     async addResolution(item) {
         const form = this.state.newResolution[item.id] || {};
-        if (!form.title?.trim() || !await this.flushEditors()) return;
+        if (!form.title?.trim()) {
+            this.notification.add(_t("Add an agreement title before saving."), { type: "warning" });
+            return;
+        }
+        if (!await this.flushEditors()) return;
         await this.createRecord(`resolution:${item.id}`, "community.meeting.resolution", {
             meeting_id: this.meetingId, agenda_item_id: item.id, title: form.title.trim(), body: form.body || false,
             decision_outcome: this.typeBehavior(item) === "decision" ? (this.newDecisionOutcome(item) || false) : false,
@@ -1297,7 +1335,7 @@ export class LiveMeeting extends Component {
         try {
             await this.orm.call("community.meeting", method, [[this.meetingId]]);
             this.state.meeting.state = state;
-            const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_end_datetime", "actual_duration_minutes"]);
+            const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_end_datetime", "actual_duration_minutes", "approved_revision_id"]);
             Object.assign(this.state.meeting, saved);
             await this.refreshCapabilities();
             if (state === "held") {
@@ -1420,8 +1458,18 @@ export class LiveMeeting extends Component {
             this.notification.add(_t("Save the pending edits before leaving this meeting."), { type: "warning" });
             return;
         }
+        if (this.state.returnMeeting?.meeting_id) return this.returnToSourceMeeting();
         if (this.props.close) return this.props.close();
         return this.actionService.doAction({ type: "ir.actions.act_window", res_model: "community.meeting", views: [[false, "list"], [false, "form"]], target: "current" });
+    }
+    async returnToSourceMeeting() {
+        const returnMeeting = this.state.returnMeeting;
+        this.state.returnMeeting = false;
+        if (returnMeeting.item_id) {
+            sessionStorage.setItem(this.reviewReturnItemKey(returnMeeting.meeting_id), String(returnMeeting.item_id));
+        }
+        const action = await this.orm.call("community.meeting", "action_open_live_meeting", [[returnMeeting.meeting_id]]);
+        return this.actionService.doAction(action);
     }
     async previewMinutes() {
         if (!await this.flushEditors()) {
@@ -1444,10 +1492,25 @@ export class LiveMeeting extends Component {
         return result;
     }
 
+    async viewApprovedMinutes() {
+        if (!await this.flushEditors()) return;
+        const action = await this.orm.call("community.meeting", "action_view_approved_minutes", [[this.meetingId]]);
+        action.params = {
+            ...action.params,
+            return_to: "live",
+            meeting_id: this.meetingId,
+            item_id: this.state.activeItemId || 0,
+        };
+        return this.actionService.doAction(action);
+    }
+
     setMinutesPreviewRoute(meetingId, reviewReturn = false) {
         this.router.pushState({
             cm_minutes_preview: 1,
             cm_minutes_meeting_id: meetingId,
+            cm_minutes_revision_id: 0,
+            cm_minutes_return_to: "",
+            cm_minutes_item_id: 0,
             cm_minutes_return_meeting_id: reviewReturn?.meeting_id || 0,
             cm_minutes_return_item_id: reviewReturn?.item_id || 0,
         }, { sync: true });

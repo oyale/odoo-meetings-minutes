@@ -3,10 +3,12 @@ import hashlib
 import json
 from typing import ClassVar
 
+import pytz
+
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tools import html_sanitize
-from odoo.tools.misc import format_datetime
+from odoo.tools.misc import format_datetime, format_time
 
 
 class CommunityMeetingRevision(models.Model):
@@ -57,23 +59,74 @@ class CommunityMeetingRevision(models.Model):
     def _build_public_content(self, meeting, timezone=None):
         meeting.ensure_one()
         timezone = timezone or self.env.user.tz or "UTC"
+        carryover_records = (
+            self.env["community.meeting.carryover"]
+            .sudo()
+            .search(
+                [
+                    "|",
+                    ("origin_meeting_id", "=", meeting.id),
+                    ("destination_meeting_id", "=", meeting.id),
+                ],
+                order="id",
+            )
+        )
+        moved_by_item = {}
+        for transfer in carryover_records:
+            origin_item = transfer.origin_agenda_item_id
+            if not origin_item and transfer.origin_resolution_id:
+                origin_item = transfer.origin_resolution_id.agenda_item_id
+            if not origin_item and transfer.origin_action_id:
+                origin_item = transfer.origin_action_id.agenda_item_id
+            if not origin_item:
+                continue
+            if transfer.destination_meeting_id:
+                destination = " — ".join(
+                    part
+                    for part in [
+                        transfer.destination_meeting_id.code,
+                        transfer.destination_meeting_id.name,
+                    ]
+                    if part
+                )
+                moved_by_item[origin_item.id] = {
+                    "kind": "meeting",
+                    "destination": destination,
+                }
+            else:
+                series = transfer.destination_series_id or transfer.series_id
+                if series:
+                    moved_by_item[origin_item.id] = {
+                        "kind": "series",
+                        "destination": series.name or "",
+                    }
         agenda = []
         for sequence, item in enumerate(
             meeting.agenda_item_ids.sorted(lambda row: (row.sequence, row.id)),
             start=1,
         ):
+            moved = moved_by_item.get(item.id, {})
             agenda.append(
                 {
                     # Internal order values reserve slots for structural points;
                     # published minutes use clean, contiguous presentation numbers.
+                    "id": item.id,
                     "sequence": sequence,
                     "topic_id": item.topic_id.id,
                     "priority": item.priority,
                     "deadline": fields.Date.to_string(item.deadline) if item.deadline else "",
                     "estimated_minutes": item.estimated_minutes,
+                    "moved_to": moved.get("destination", ""),
+                    "moved_to_kind": moved.get("kind", ""),
                     "name": item.name,
                     "kind": item.kind,
                     "type": item.agenda_type_id.name,
+                    "presenter": item.presenter_partner_id.name or "",
+                    "related": [
+                        {"name": topic.name, "state": topic.state or ""} for topic in item.topic_id.related_topic_ids
+                    ]
+                    if item.topic_id
+                    else [],
                     "description": self._clean_html(item.description),
                     "discussion": self._clean_html(item.discussion_notes),
                     "disposition": item.disposition,
@@ -95,6 +148,25 @@ class CommunityMeetingRevision(models.Model):
                     "next_meeting_timezone": timezone if item.next_meeting_datetime else "",
                     "deferral_reason": item.deferral_reason or "",
                     "deferral_reason_code": item.deferral_reason_code or "",
+                    "minutes_approvals": [
+                        {
+                            "meeting_code": record.meeting_id.code or "",
+                            "meeting_name": record.meeting_id.name or "",
+                            "revision_number": (record.revision_id.revision_number if record.revision_id else False),
+                            "start_datetime": fields.Datetime.to_string(record.meeting_id.start_datetime)
+                            if record.meeting_id.start_datetime
+                            else "",
+                            "start_datetime_display": format_datetime(
+                                self.env,
+                                record.meeting_id.start_datetime,
+                                tz=timezone,
+                                dt_format="short",
+                            )
+                            if record.meeting_id.start_datetime
+                            else "",
+                        }
+                        for record in item.minutes_approval_ids.sorted("id")
+                    ],
                     "resolutions": [
                         {
                             "title": resolution.title,
@@ -131,25 +203,26 @@ class CommunityMeetingRevision(models.Model):
             }
             for dissent in meeting_dissents
         ]
-        carryover_records = (
-            self.env["community.meeting.carryover"]
-            .sudo()
-            .search(
-                [
-                    "|",
-                    ("origin_meeting_id", "=", meeting.id),
-                    ("destination_meeting_id", "=", meeting.id),
-                ],
-                order="id",
-            )
-        )
         carryovers = [
             {
                 "origin_model": transfer.origin_model,
                 "origin_name": transfer.origin_name,
+                "origin_meeting": " — ".join(
+                    part for part in [transfer.origin_meeting_id.code, transfer.origin_meeting_id.name] if part
+                ),
                 "status": transfer.status,
                 "reason": transfer.reason or "",
                 "destination": transfer.destination_meeting_id.code if transfer.destination_meeting_id else "",
+                "destination_meeting": " — ".join(
+                    part
+                    for part in [
+                        transfer.destination_meeting_id.code,
+                        transfer.destination_meeting_id.name,
+                    ]
+                    if part
+                )
+                if transfer.destination_meeting_id
+                else "",
                 "destination_series": {
                     "id": (transfer.destination_series_id or transfer.series_id).id,
                     "name": (transfer.destination_series_id or transfer.series_id).name or "",
@@ -157,6 +230,15 @@ class CommunityMeetingRevision(models.Model):
             }
             for transfer in carryover_records
         ]
+        actual_start = meeting.actual_start_datetime
+        actual_end = meeting.actual_end_datetime
+        reference_start = actual_start or meeting.start_datetime
+        same_day = bool(
+            actual_end
+            and reference_start
+            and pytz.utc.localize(reference_start).astimezone(pytz.timezone(timezone)).date()
+            == pytz.utc.localize(actual_end).astimezone(pytz.timezone(timezone)).date()
+        )
         snapshot = {
             "schema_version": 3,
             "meeting": {
@@ -177,6 +259,28 @@ class CommunityMeetingRevision(models.Model):
                 if meeting.start_datetime
                 else "",
                 "start_timezone": timezone if meeting.start_datetime else "",
+                "actual_start_datetime_display": format_datetime(
+                    self.env,
+                    actual_start,
+                    tz=timezone,
+                    dt_format="short",
+                )
+                if actual_start
+                else "",
+                "actual_start_timezone": timezone if actual_start else "",
+                "actual_end_same_day": same_day,
+                "actual_end_time_display": format_time(self.env, actual_end, tz=timezone)
+                if actual_end and same_day
+                else "",
+                "actual_end_datetime_display": format_datetime(
+                    self.env,
+                    actual_end,
+                    tz=timezone,
+                    dt_format="short",
+                )
+                if actual_end
+                else "",
+                "actual_end_timezone": timezone if meeting.actual_end_datetime else "",
                 "location": meeting.location or "",
                 "meeting_url": meeting.meeting_url or "",
                 "description": self._clean_html(meeting.description),
@@ -198,6 +302,8 @@ class CommunityMeetingRevision(models.Model):
                     "description": self._clean_html(action.description),
                     "resolution": action.resolution_id.title if action.resolution_id else "",
                     "agenda_item": action.agenda_item_id.name if action.agenda_item_id else "",
+                    "agenda_item_id": action.agenda_item_id.id or 0,
+                    "activity_type": action.followup_activity_type_id.name or "",
                     "responsible": action.responsible_user_id.name or "",
                     "responsibles": sorted(action.responsible_user_ids.mapped("name")),
                     "followup_kind": action.followup_kind,
@@ -212,12 +318,19 @@ class CommunityMeetingRevision(models.Model):
         return snapshot
 
     @api.model
-    def _build_snapshot(self, meeting, approver, approved_at):
+    def _build_snapshot(self, meeting, approver, approved_at, approval_point=None, offline=False, origin="form"):
         timezone = meeting.series_id.timezone or meeting.company_id.partner_id.tz or "UTC"
         snapshot = self._build_public_content(meeting, timezone=timezone)
+        approval_meeting = approval_point.meeting_id if approval_point else meeting.browse()
         snapshot["approval"] = {
             "approver": approver.name,
             "approved_at": fields.Datetime.to_string(approved_at),
+            "meeting_code": approval_meeting.code or "",
+            "meeting_name": approval_meeting.name or "",
+            "point_name": approval_point.name if approval_point else "",
+            "offline": bool(offline),
+            "manual": not bool(approval_point) and origin != "live",
+            "origin": origin,
         }
         snapshot["extensions"] = self._get_snapshot_extensions(meeting, approver, approved_at)
         return snapshot
@@ -228,7 +341,7 @@ class CommunityMeetingRevision(models.Model):
         return {}
 
     @api.model
-    def _create_approved_revision(self, meeting, approval_point=None, offline=False):
+    def _create_approved_revision(self, meeting, approval_point=None, offline=False, origin="form"):
         if approval_point:
             point_meeting = approval_point.meeting_id
             live_editor_approval = (
@@ -271,7 +384,14 @@ class CommunityMeetingRevision(models.Model):
         if not meeting.agenda_item_ids:
             raise ValidationError(_("Add at least one agenda item before approval."))
         approved_at = fields.Datetime.now()
-        snapshot = self._build_snapshot(meeting, self.env.user, approved_at)
+        snapshot = self._build_snapshot(
+            meeting,
+            self.env.user,
+            approved_at,
+            approval_point=approval_point,
+            offline=offline,
+            origin=origin,
+        )
         snapshot_json = json.dumps(snapshot, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         digest = hashlib.sha256(snapshot_json.encode("utf-8")).hexdigest()
         previous = meeting.revision_ids.sorted("revision_number")[-1:] or self.browse()
@@ -347,3 +467,9 @@ class CommunityMeetingRevision(models.Model):
             "url": f"/web/content/{self.pdf_attachment_id.id}?download=true",
             "target": "self",
         }
+
+    def get_approved_minutes_preview_html(self):
+        self.ensure_one()
+        self.check_access("read")
+        self.meeting_id.check_access("read")
+        return self.env["report.community_meetings.report_revision_document"]._render_revision_preview(self)

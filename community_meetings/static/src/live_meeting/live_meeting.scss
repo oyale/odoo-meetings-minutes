@@ -355,3 +355,62 @@
         background-color: inherit;
     }
 }
+.o_meeting_person_mention {
+    padding: 0 0.25rem;
+    border-radius: 0.25rem;
+    background: rgba($o-brand-primary, 0.12);
+    color: $o-brand-primary;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.o_live_collapsed_outcome {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 18px 0 42px;
+    padding-top: 8px;
+}
+.o_live_point_details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin: 10px 18px 0 42px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color, #d9e0e6);
+}
+.o_live_point_details_item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--body-color, #374151);
+    font-size: 0.875rem;
+    > i { color: $o-brand-primary; }
+}
+.o_live_point_details_label { color: #6c757d; }
+
+.o_community_live_meeting .o_live_focus_mode .o_live_richtext {
+    min-height: clamp(320px, 55vh, 900px);
+}
+.o_community_live_meeting .o_live_focus_mode .o_live_richtext [contenteditable="true"],
+.o_community_live_meeting .o_live_focus_mode .o_live_richtext .odoo-editor-editable,
+.o_community_live_meeting .o_live_focus_mode .o_live_richtext .note-editable {
+    min-height: clamp(300px, 53vh, 880px);
+}
+.o_community_live_meeting .o_live_focus_mode .o_live_richtext_expanded {
+    min-height: clamp(420px, 70vh, 1000px);
+}
+.o_community_live_meeting .o_live_focus_mode .o_live_richtext_expanded [contenteditable="true"],
+.o_community_live_meeting .o_live_focus_mode .o_live_richtext_expanded .odoo-editor-editable,
+.o_community_live_meeting .o_live_focus_mode .o_live_richtext_expanded .note-editable {
+    min-height: clamp(400px, 68vh, 980px);
+}
+
+@media (max-width: 800px) {
+    .o_live_collapsed_outcome,
+    .o_live_point_details {
+        margin-right: 16px;
+        margin-left: 32px;
+    }
+}

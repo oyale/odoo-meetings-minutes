@@ -2570,6 +2570,7 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_item__decision_result__approved
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_resolution__decision_outcome__approved
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_revision__status__approved
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_search
 msgid "Approved"
 msgstr ""
 
@@ -2634,6 +2635,7 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__minutes_approval_ids
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Approved previous minutes"
 msgstr ""
 
@@ -5049,6 +5051,7 @@ msgstr ""
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Due date"
 msgstr ""
 
@@ -6102,6 +6105,7 @@ msgstr ""
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_settings_followups
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Follow-ups"
 msgstr ""
 
@@ -6831,6 +6835,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_resolution__meeting_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_revision__meeting_id
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Meeting"
 msgstr ""
 
@@ -8031,6 +8036,7 @@ msgstr ""
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Origin"
 msgstr ""
 
@@ -8915,6 +8921,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover__reason
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover_wizard__reason
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Reason"
 msgstr ""
 
@@ -9066,6 +9073,7 @@ msgstr ""
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__related_topic_ids
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__related_topic_ids
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Related points"
 msgstr ""
 
@@ -9256,6 +9264,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__presenter_partner_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_agenda_template__presenter_partner_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__presenter_partner_id
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Responsible"
 msgstr ""
 
@@ -9557,6 +9566,7 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_create_wizard__step__series
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__step__basics
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_search
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Series"
 msgstr ""
 
@@ -9786,6 +9796,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_revision__status
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_list
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_search
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Status"
 msgstr ""
 
@@ -10973,4 +10984,136 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
 msgid "{date} {series}"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Add an agreement title before saving."
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Meeting end"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Proposed by"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Agreement status"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Scheduled date"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Next meeting in"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Moved to"
+msgstr ""
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "From point"
+msgstr ""
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
+msgid "Approved Minutes"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Approved minutes"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/views/meeting_views.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_list
+msgid "View approved minutes"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
+msgid "Return to meeting"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
+msgid "Back to meetings"
+msgstr ""
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Approved by"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Approved in"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Manual approval"
+msgstr ""
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Approved while preparing"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Approved in the meeting"
+msgstr ""
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Direct approval"
+msgstr ""
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "in"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "on"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "in the meeting"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "while preparing"
 msgstr ""

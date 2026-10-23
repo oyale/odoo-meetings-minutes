@@ -194,7 +194,30 @@ class TestMeetingRevisions(TransactionCase):
             later.with_user(self.editor).action_approve_pending_minutes(point.id, [earlier.id])
         first_revision = earlier.approved_revision_id
         record = point.minutes_approval_ids.filtered(lambda row: row.meeting_id == earlier)
+        snapshot = json.loads(first_revision.snapshot_json)
+        self.assertEqual(snapshot["approval"]["meeting_code"], later.code)
+        self.assertEqual(snapshot["approval"]["point_name"], point.name)
+        self.assertFalse(snapshot["approval"]["manual"])
+        self.assertEqual(snapshot["approval"]["origin"], "meeting")
+        self.assertFalse(snapshot["approval"]["offline"])
+        legacy = json.loads(first_revision.snapshot_json)
+        for key in ("origin", "meeting_code", "meeting_name", "point_name", "offline"):
+            legacy["approval"].pop(key, None)
+        report_model = self.env["report.community_meetings.report_revision_document"]
+        doc = report_model._prepare_document(legacy, revision=first_revision)
+        self.assertEqual(doc["snapshot"]["approval"]["meeting_code"], later.code)
+        self.assertEqual(doc["snapshot"]["approval"]["origin"], "meeting")
         self.assertEqual(record.revision_id, first_revision)
+        later_snapshot = self.env["community.meeting.revision"]._build_public_content(later)
+        approval_item = next(row for row in later_snapshot["agenda"] if row["kind"] == "minutes_approval")
+        self.assertEqual(approval_item["minutes_approvals"][0]["meeting_code"], earlier.code)
+        self.assertEqual(
+            approval_item["minutes_approvals"][0]["revision_number"],
+            first_revision.revision_number,
+        )
+        preview_html = report_model._render_preview(later)
+        self.assertIn("Approved previous minutes", preview_html)
+        self.assertIn(earlier.code, preview_html)
 
         earlier.with_user(self.manager).action_start_amendment()
         earlier.agenda_item_ids[0].with_user(self.manager).write({"discussion_notes": "Amended discussion"})
@@ -298,6 +321,9 @@ class TestMeetingRevisions(TransactionCase):
         self.assertEqual({revision.meeting_id for revision in revisions}, {earlier})
         self.assertEqual((earlier.state, later.state), ("approved", "minutes_draft"))
         self.assertEqual(point.disposition, "closed")
+        snapshot = json.loads(earlier.approved_revision_id.snapshot_json)
+        self.assertEqual(snapshot["approval"]["origin"], "offline")
+        self.assertTrue(snapshot["approval"]["offline"])
         approval = point.minutes_approval_ids.filtered(lambda row: row.meeting_id == earlier)
         self.assertEqual(approval.revision_id, earlier.approved_revision_id)
 
@@ -387,6 +413,77 @@ class TestMeetingRevisions(TransactionCase):
             snapshot["carryovers"][0]["destination_series"],
             {"id": destination.id, "name": destination.name},
         )
+        carry = snapshot["carryovers"][0]
+        self.assertIn(meeting.code, carry["origin_meeting"])
+        self.assertIn(meeting.name, carry["origin_meeting"])
+        self.assertEqual(carry["destination_meeting"], "")
+        self.assertEqual(snapshot["agenda"][0]["moved_to"], destination.name)
+        self.assertEqual(snapshot["agenda"][0]["moved_to_kind"], "series")
+        html, _ = self.env["ir.actions.report"]._render_qweb_html(
+            "community_meetings.report_revision_document", revision.ids
+        )
+        self.assertIn(b"Next meeting in", html)
+        self.assertIn(destination.name.encode(), html)
+
+    def test_report_shows_presenter_actual_end_and_localized_status(self):
+        presenter = self.env["res.partner"].create({"name": "Report Presenter"})
+        meeting = (
+            self.env["community.meeting"]
+            .with_user(self.editor)
+            .create(
+                {
+                    "name": "Report clarity",
+                    "start_datetime": "2026-11-01 10:00:00",
+                    "end_datetime": "2026-11-01 12:00:00",
+                    "location": False,
+                    "reader_user_ids": [(4, self.approver.id)],
+                }
+            )
+        )
+        item = (
+            self.env["community.meeting.agenda.item"]
+            .with_user(self.editor)
+            .create(
+                {
+                    "meeting_id": meeting.id,
+                    "name": "Presented point",
+                    "kind": "information",
+                    "discussion_notes": "<p>Report discussion</p>",
+                    "disposition": "discussed",
+                }
+            )
+        )
+        item.topic_id.with_user(self.editor).write({"presenter_partner_id": presenter.id})
+        meeting.with_user(self.editor).action_schedule()
+        meeting.with_user(self.editor).action_start_meeting()
+        meeting.with_user(self.editor).action_mark_held()
+        meeting.with_user(self.editor).action_draft_minutes()
+        meeting.with_user(self.editor).write({"minutes_notes": "<p><br></p>"})
+        revision = self._approve_without_rendering_pdf(meeting.with_user(self.approver))
+        snapshot = json.loads(revision.snapshot_json)
+        report_model = self.env["report.community_meetings.report_revision_document"]
+        document = report_model._prepare_document(snapshot, revision=revision)
+        self.assertFalse(document["has_minutes_notes"])
+        self.assertFalse(document["has_description"])
+        self.assertEqual(snapshot["meeting"]["end_datetime"], "2026-11-01 12:00:00")
+        self.assertNotIn("end_datetime_display", snapshot["meeting"])
+        self.assertTrue(snapshot["meeting"]["actual_start_datetime_display"])
+        self.assertTrue(snapshot["meeting"]["actual_end_datetime_display"])
+        self.assertTrue(snapshot["meeting"]["actual_end_same_day"])
+        self.assertTrue(snapshot["meeting"]["actual_end_time_display"])
+        self.assertEqual(snapshot["agenda"][0]["presenter"], presenter.name)
+        html, _ = self.env["ir.actions.report"]._render_qweb_html(
+            "community_meetings.report_revision_document", revision.ids
+        )
+        self.assertIn(b"Proposed by", html)
+        self.assertIn(presenter.name.encode(), html)
+        self.assertIn(b"Meeting end", html)
+        self.assertIn(b"Meeting date", html)
+        self.assertIn(b"Scheduled date", html)
+        self.assertNotIn(b"Location", html)
+        self.assertIn(b"Discussed", html)
+        self.assertNotIn(b">discussed<", html)
+        self.assertNotIn(b"<h2>Minutes</h2>", html)
 
     def test_draft_preview_contains_only_public_content_and_has_no_write_effects(self):
         meeting = self._drafted_meeting("Draft preview content")
@@ -668,6 +765,42 @@ class TestMeetingRevisions(TransactionCase):
             ["Second discussion", "Review open actions"],
         )
 
+    def test_approved_minutes_actions_open_the_approved_revision(self):
+        meeting, _action, revision = self._approved_meeting()
+        action = meeting.with_user(self.approver).action_view_approved_minutes()
+        self.assertEqual(action["tag"], "community_meetings.minutes_preview")
+        self.assertEqual(action["params"]["meeting_id"], meeting.id)
+        self.assertEqual(action["params"]["revision_id"], revision.id)
+        self.assertEqual(action["params"]["return_to"], "form")
+        list_action = (
+            meeting.with_user(self.approver).with_context(minutes_return_to="list").action_view_approved_minutes()
+        )
+        self.assertEqual(list_action["params"]["return_to"], "list")
+        html = revision.get_approved_minutes_preview_html()
+        self.assertIn("Revision stability test", html)
+        self.assertIn("Review open actions", html)
+
+    def test_approved_minutes_action_requires_a_revision(self):
+        meeting = self._drafted_meeting("No approved minutes yet")
+        with self.assertRaises(UserError):
+            meeting.with_user(self.approver).action_view_approved_minutes()
+
+    def test_live_direct_approval_records_live_origin(self):
+        meeting = self._drafted_meeting("Live direct approval")
+        with patch.object(
+            type(self.env["ir.actions.report"]),
+            "_render_qweb_pdf",
+            return_value=(b"%PDF-1.4", "pdf"),
+        ):
+            revision = meeting.with_user(self.approver).action_approve_minutes_live()
+        snapshot = json.loads(revision.snapshot_json)
+        self.assertEqual(snapshot["approval"]["origin"], "live")
+        self.assertFalse(snapshot["approval"]["manual"])
+        html, _ = self.env["ir.actions.report"]._render_qweb_html(
+            "community_meetings.report_revision_document", revision.ids
+        )
+        self.assertIn(b"in the meeting", html)
+
     def test_report_html_and_snapshot_are_stable_after_action_changes(self):
         _, action, revision = self._approved_meeting()
         before_json = revision.snapshot_json
@@ -678,6 +811,17 @@ class TestMeetingRevisions(TransactionCase):
         snapshot = json.loads(before_json)
         self.assertEqual(report_type, "html")
         self.assertIn(b"Review open actions", rendered_html)
+        self.assertIn(b"Follow-ups", rendered_html)
+        self.assertIn(b"Manual approval", rendered_html)
+        self.assertTrue(snapshot["approval"]["manual"])
+        legacy = json.loads(before_json)
+        for key in ("origin", "meeting_code", "meeting_name", "point_name", "offline"):
+            legacy["approval"].pop(key, None)
+        report_model = self.env["report.community_meetings.report_revision_document"]
+        doc = report_model._prepare_document(legacy, revision=revision)
+        self.assertEqual(doc["snapshot"]["approval"]["origin"], "direct")
+        self.assertIn(b"From point", rendered_html)
+        self.assertGreaterEqual(rendered_html.count(b"Prepare follow-up"), 2)
         self.assertEqual(snapshot["agenda"][0]["discussion"], "<p>Initial discussion</p>")
         self.assertEqual(snapshot["agenda"][1]["decision_result"], "approved")
         self.assertEqual(snapshot["agenda"][1]["resolutions"][0]["decision_outcome"], "approved")

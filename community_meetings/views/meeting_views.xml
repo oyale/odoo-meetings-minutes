@@ -16,9 +16,11 @@
                 <field name="organizer_id"/>
                 <field name="company_id" groups="base.group_multi_company"/>
                 <field name="state" column_invisible="1"/>
+                <field name="approved_revision_id" column_invisible="1"/>
                 <field name="display_state" widget="badge" string="Status"/>
                 <button name="action_open_live_meeting" type="object" icon="fa-play" title="Open Meeting" invisible="state in ['approved', 'cancelled']" groups="community_meetings.group_meeting_reader"/>
                 <button name="action_open_live_meeting" type="object" icon="fa-eye" title="Open read-only meeting" invisible="state not in ['approved', 'cancelled']" groups="community_meetings.group_meeting_reader"/>
+                <button name="action_view_approved_minutes_from_list" type="object" icon="fa-file-text-o" title="View approved minutes" invisible="not approved_revision_id" groups="community_meetings.group_meeting_reader" context="{'minutes_return_to': 'list'}"/>
             </list>
         </field>
     </record>
@@ -49,6 +51,7 @@
                     <button name="action_mark_held" type="object" string="Record as Already Held" invisible="state != 'scheduled' or actual_start_datetime or not time_tracking_enabled" confirm="Mark this meeting as held even though it was never started?" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_draft_minutes" type="object" string="Prepare Minutes" invisible="state != 'held'" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_preview_minutes" type="object" string="Preview Minutes" invisible="state not in ['held', 'minutes_draft']"/>
+                    <button name="action_view_approved_minutes" type="object" string="Approved Minutes" invisible="not approved_revision_id" groups="community_meetings.group_meeting_reader"/>
                     <field name="requires_later_minutes_approval" invisible="1"/>
                     <button name="action_approve_minutes" type="object" string="Approve Minutes" invisible="state != 'minutes_draft' or requires_later_minutes_approval" groups="community_meetings.group_meeting_approver"/>
                     <button name="action_start_amendment" type="object" string="Start Amendment" invisible="state != 'approved'" groups="community_meetings.group_meeting_manager"/>
@@ -248,6 +251,7 @@
                 <filter name="scheduled_past" string="Scheduled in the Past" domain="[('state', '=', 'scheduled'), ('start_datetime', '&lt;', context_today().strftime('%Y-%m-%d'))]"/>
                 <filter name="in_progress" string="In Progress" domain="[('state', '=', 'scheduled'), ('actual_start_datetime', '!=', False)]"/>
                 <filter name="minutes" string="Minutes to Prepare" domain="[('state', 'in', ['held', 'minutes_draft'])]"/>
+<filter name="approved" string="Approved" domain="[('state', '=', 'approved')]"/>
                 <filter name="archive" string="Archive" domain="[('state', 'in', ['approved', 'cancelled'])]"/>
                 <filter name="without_date" string="Without Date" domain="[('start_datetime', '=', False)]"/>
                 <separator/>

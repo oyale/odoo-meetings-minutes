@@ -313,7 +313,7 @@ class Meeting(models.Model):
                         "sequence": 1000,
                         "estimated_minutes": 5,
                         "next_meeting_datetime": proposed,
-                        "presenter_partner_id": False,
+                        "presenter_partner_id": meeting.organizer_id.partner_id.id or False,
                     }
                 )
 
@@ -335,7 +335,7 @@ class Meeting(models.Model):
                     "kind": "minutes_approval",
                     "sequence": -1,
                     "estimated_minutes": 5 * len(pending),
-                    "presenter_partner_id": False,
+                    "presenter_partner_id": meeting.organizer_id.partner_id.id or False,
                 }
             )
 

@@ -104,6 +104,11 @@ class TestSeriesRecurringPoints(TransactionCase):
             1,
         )
 
+    def test_recurring_occurrence_responsible_defaults_to_organizer(self):
+        meeting = self._prepare_meeting("2026-11-02 10:00:00")
+        item = meeting.agenda_item_ids.filtered(lambda row: row.topic_id.recurring_template_id == self.template)
+        self.assertEqual(item.presenter_partner_id, meeting.organizer_id.partner_id)
+
     def test_occurrences_are_independent_and_link_to_previous_occurrence(self):
         first_meeting = self._prepare_meeting("2026-11-02 10:00:00")
         first_topic = first_meeting.agenda_item_ids.topic_id.filtered("recurring_template_id")

@@ -2,11 +2,11 @@
 <templates xml:space="preserve">
     <t t-name="community_meetings.DiscussionMentionPicker">
         <div class="o_meeting_mention_picker p-3" t-on-keydown.capture="onKeydown">
-            <label for="meeting-mention-search" class="form-label">Attribute an intervention</label>
+            <label for="meeting-mention-search" class="form-label" t-out="props.label"/>
             <AutoComplete id="'meeting-mention-search'" sources="sources" autofocus="true"
-                onSelect="props.onSelect" dropdown="false"/>
-            <small class="d-block text-muted mt-2">Mentions do not notify people or give access to the meeting.</small>
-            <button type="button" class="btn btn-link p-0 mt-2" t-on-click="props.onCancel">Keep a literal @</button>
+                onSelect="selectOption" dropdown="false"/>
+            <small class="d-block text-muted mt-2" t-out="props.hint"/>
+            <button type="button" class="btn btn-link p-0 mt-2" t-on-click="props.onCancel" t-out="props.cancelLabel"/>
         </div>
     </t>
 </templates>
