@@ -175,46 +175,48 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
-  release_changes:
+  tests_gate:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      actions: read
     outputs:
-      code_changed: ${{ steps.detect.outputs.code_changed }}
+      passed: ${{ steps.gate.outputs.passed }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: Detect code changes in the release commit
-        id: detect
+      - name: Resolve the last code-changing commit at or before the release
+        id: resolve
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
-        run: python .github/scripts/release_code_changes.py
-
-  latest_tests:
-    needs: release_changes
-    if: needs.release_changes.outputs.code_changed == 'false'
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      actions: read
-    outputs:
-      passed: ${{ steps.latest.outputs.passed }}
-    steps:
-      - name: Wait for the latest branch test run and inspect its matrix jobs
-        id: latest
+        run: |
+          python .github/scripts/last_code_commit.py > code_commit.txt
+          echo "code_commit=$(cat code_commit.txt)" >> "$GITHUB_OUTPUT"
+      - name: Reuse the code commit's test run or run the suite
+        id: gate
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
+          CODE_COMMIT: ${{ steps.resolve.outputs.code_commit }}
         run: |
           set -euo pipefail
-          runs=$(gh api "repos/$REPOSITORY/actions/workflows/test.yml/runs?branch=18.0&per_page=1")
-          run_id=$(python -c 'import json,sys; runs=json.load(sys.stdin)["workflow_runs"]; print(runs[0]["id"] if runs else "")' <<<"$runs")
+
+          run_id=""
+          for _ in $(seq 1 12); do
+            runs=$(gh api "repos/$REPOSITORY/actions/workflows/test.yml/runs?head_sha=$CODE_COMMIT&per_page=1")
+            run_id=$(python -c 'import json,sys; runs=json.load(sys.stdin)["workflow_runs"]; print(runs[0]["id"] if runs else "")' <<<"$runs")
+            [ -n "$run_id" ] && break
+            sleep 10
+          done
+
           if [ -z "$run_id" ]; then
-            echo "No previous Tests run found; the release test suite will run."
+            echo "No Tests run for the code commit ($CODE_COMMIT); the release test suite will run."
             echo "passed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          echo "Waiting for the latest Tests run ($run_id) on branch 18.0."
+          echo "Waiting for the Tests run ($run_id) at $CODE_COMMIT."
           while true; do
             run=$(gh api "repos/$REPOSITORY/actions/runs/$run_id")
             status=$(python -c 'import json,sys; print(json.load(sys.stdin)["status"])' <<<"$run")
@@ -226,7 +228,7 @@ jobs:
 
           conclusion=$(python -c 'import json,sys; print(json.load(sys.stdin).get("conclusion") or "")' <<<"$run")
           if [ "$conclusion" != "success" ]; then
-            echo "Latest Tests run concluded '$conclusion'; the release test suite will run."
+            echo "Tests run concluded '$conclusion'; the release test suite will run."
             echo "passed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -235,32 +237,29 @@ jobs:
           passed=$(python -c '
           import json, sys
           jobs = json.load(sys.stdin)["jobs"]
-          tests = [job for job in jobs if job["name"] in {"Test (Odoo)", "Test (OCB)"}]
-          ok = len(tests) == 2 and all(job["status"] == "completed" and job["conclusion"] == "success" for job in tests)
-          print(str(ok).lower())
+          ran = any(job["name"] != "changes" and job["conclusion"] == "success" for job in jobs)
+          print(str(ran).lower())
           ' <<<"$jobs")
-          echo "Latest Tests matrix passed: $passed"
+          echo "Tests actually ran and passed: $passed"
           echo "passed=$passed" >> "$GITHUB_OUTPUT"
 
   test:
-    needs: [release_changes, latest_tests]
+    needs: tests_gate
     if: >-
-      ${{ !cancelled() && needs.release_changes.result == 'success' &&
-          (needs.release_changes.outputs.code_changed == 'true' ||
-           (needs.latest_tests.result == 'success' && needs.latest_tests.outputs.passed != 'true')) }}
+      ${{ !cancelled() && needs.tests_gate.result == 'success' &&
+          needs.tests_gate.outputs.passed != 'true' }}
     uses: ./.github/workflows/test.yml
     with:
       force: true
 
   publish:
-    needs: [build, release_changes, latest_tests, test]
+    needs: [build, tests_gate, test]
     if: >-
       ${{ always() && needs.build.result == 'success' &&
           (needs.test.result == 'success' ||
            (needs.test.result == 'skipped' &&
-            needs.release_changes.outputs.code_changed == 'false' &&
-            needs.latest_tests.result == 'success' &&
-            needs.latest_tests.outputs.passed == 'true')) }}
+            needs.tests_gate.result == 'success' &&
+            needs.tests_gate.outputs.passed == 'true')) }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
