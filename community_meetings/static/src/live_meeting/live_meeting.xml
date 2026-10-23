@@ -159,6 +159,7 @@
                                 </div>
                                 <t t-if="canEditDiscussion(item)"><div t-att-class="'o_live_richtext ' + (state.expandedNotes[item.id] ? 'o_live_richtext_expanded' : '')"><t t-component="Wysiwyg" t-props="{ options: richTextOptions(item.discussion_notes, 'discussion_notes:' + item.id, 'community.meeting.agenda.item', item.id, 'discussion_notes'), editingValue: item.discussion_notes || '', startWysiwyg: richTextStarter('discussion_notes:' + item.id, item.id, 'community.meeting.agenda.item', 'discussion_notes') }"/></div></t>
                                 <t t-else=""><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></t>
+                                <small t-if="canEditDiscussion(item)" class="text-muted d-block">Type @ to attribute an intervention without notifying the person.</small>
                             </div>
                             <div t-if="typeBehavior(item) === 'minutes_approval'" class="o_live_subsection o_live_minutes_approval">
                                 <div class="o_live_minutes_approval_intro">
@@ -188,6 +189,7 @@
                                             </div>
                                             <div class="o_live_minutes_approval_actions">
                                                 <button class="btn btn-sm btn-primary" t-on-click="() => this.reviewMinutes(item, pm.id)" aria-label="Open minutes"><i class="fa fa-eye" aria-hidden="true"/> Review</button>
+                                                <button t-if="pm.state === 'held' and state.capabilities?.can_edit" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.preparePreviousMinutes(pm.id)"><i class="fa fa-pencil" aria-hidden="true"/> Prepare Minutes</button>
                                                 <button t-if="canApprovePreviousMinutes and pm.state === 'minutes_draft'" class="btn btn-sm o_live_minutes_approve_button" t-att-class="minutesReviewed(pm.id) ? 'btn-success' : 'btn-outline-secondary'" t-on-click="() => this.approvePreviousMinutes(item, pm.id)"><i class="fa fa-check" aria-hidden="true"/> Approve earlier minutes</button>
                                             </div>
                                         </li>

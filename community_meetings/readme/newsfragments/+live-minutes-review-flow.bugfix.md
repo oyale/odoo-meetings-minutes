@@ -1,0 +1,1 @@
+Earlier minutes that are still held can be prepared from the later meeting's live approval point before review and approval. The minutes preview scrolls, and refreshing it preserves the meeting and return point.

@@ -18,6 +18,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import expect
 
 TESTS_ROOT = Path(__file__).resolve().parents[3] / "tests"
@@ -60,7 +61,11 @@ class LiveWriteTrace:
     def on_response(self, response):
         if "/web/dataset/call_kw/" not in response.url:
             return
-        payload = response.json()
+        try:
+            payload = response.json()
+        except PlaywrightError as error:
+            # A navigation can evict an already completed response body.
+            payload = {"body_unavailable": str(error)}
         self.rpc.append({
             "phase": "response",
             "url": response.url,
@@ -174,7 +179,15 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                     )
                 self.rpc("community.meeting.agenda.item", "write", [[item_id], values])
         else:
-            open_live_meeting(self.session, self.meeting_id)
+            try:
+                open_live_meeting(self.session, self.meeting_id)
+            except Exception:  # noqa: BLE001 - keep rendered evidence from setup failures
+                self.capture_checkpoint("live-open-failure")
+                debug_dir = Path(os.environ.get("MM_PLAYWRIGHT_SCREENSHOT_DIR", tempfile.gettempdir()))
+                debug_dir.mkdir(parents=True, exist_ok=True)
+                (debug_dir / "live-open-dom.html").write_text(self.page.content())
+                (debug_dir / "live-open-console.json").write_text(json.dumps(self.console_errors))
+                raise
 
     def cleanup_meeting(self):
         if not self.meeting_id:
@@ -696,10 +709,11 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         )
         self.rpc("community.meeting", "write", [[self.meeting_id], {
             "series_id": series,
-            "minutes_notes": "<p>Draft text for the previous meeting.</p>",
+            "minutes_notes": "<p>Draft text for the previous meeting.</p>" + (
+                "<p>Long minutes preview content for the browser scrolling regression.</p>" * 45
+            ),
         }])
         self.rpc("community.meeting", "action_mark_held", [[self.meeting_id]])
-        self.rpc("community.meeting", "action_draft_minutes", [[self.meeting_id]])
         self.page.goto(
             f"{BASE_URL}/web#model=community.meeting&id={self.meeting_id}&view_type=form"
         )
@@ -754,8 +768,46 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         if approval_point.locator(".o_live_expand").get_attribute("aria-expanded") == "false":
             approval_point.locator(".o_live_expand").click()
         expect(approval).to_contain_text(approval_notice)
+        expect(approval.get_by_role("button", name=self.ui_text("community_meetings", "Prepare Minutes"), exact=True)).to_be_visible()
+        expect(approval.get_by_role("button", name=self.ui_text("community_meetings", "Approve earlier minutes"), exact=True)).to_have_count(0)
+        approval.get_by_role("button", name=self.ui_text("community_meetings", "Prepare Minutes"), exact=True).click()
+        expect(approval).not_to_contain_text(self.ui_text("community_meetings", "Preparation pending"))
         expect(approval.get_by_role("button", name=self.ui_text("community_meetings", "Approve earlier minutes"), exact=True)).to_be_visible()
         approval.get_by_role("button", name=self.ui_text("community_meetings", "Open minutes")).click()
+        preview = self.page.locator(".o_community_minutes_preview")
+        expect(preview).to_contain_text(self.ui_text("community_meetings", "Draft preview · saved content"))
+        expect(preview).to_contain_text("Draft text for the previous meeting.")
+        preview_box = preview.bounding_box()
+        self.page.mouse.move(preview_box["x"] + preview_box["width"] / 2, preview_box["y"] + preview_box["height"] / 2)
+        self.page.evaluate("""() => {
+            window.__minutesWheelEvents = [];
+            document.querySelector('main.o_community_minutes_preview').addEventListener('wheel', event => {
+                window.__minutesWheelEvents.push({target: event.target.className, defaultPrevented: event.defaultPrevented});
+            }, {capture: true});
+        }""")
+        self.page.mouse.wheel(0, 900)
+        self.page.wait_for_timeout(150)
+        scroll_state = self.page.evaluate("""() => ({
+            windowY: window.scrollY,
+            nodes: [...document.querySelectorAll('body, body *')].map(el => ({
+                tag: el.tagName, className: typeof el.className === 'string' ? el.className : '',
+                overflowY: getComputedStyle(el).overflowY, clientHeight: el.clientHeight,
+                scrollHeight: el.scrollHeight, scrollTop: el.scrollTop,
+            })).filter(el => el.scrollHeight > el.clientHeight + 2).slice(0, 20),
+            wheelEvents: window.__minutesWheelEvents,
+            console: [],
+        })""")
+        if not scroll_state["windowY"] and not any(node["scrollTop"] for node in scroll_state["nodes"]):
+            self.capture_checkpoint("minutes-preview-no-scroll")
+            debug_dir = Path(os.environ.get("MM_PLAYWRIGHT_SCREENSHOT_DIR", tempfile.gettempdir()))
+            debug_dir.mkdir(parents=True, exist_ok=True)
+            (debug_dir / "minutes-preview-no-scroll-dom.html").write_text(self.page.content())
+            scroll_state["console"] = self.console_errors[self.errors_before:]
+            (debug_dir / "minutes-preview-no-scroll.json").write_text(json.dumps({
+                "url": self.page.url, "state": scroll_state,
+            }, ensure_ascii=False, indent=2))
+            self.fail(f"preview wheel did not scroll: {scroll_state!r}")
+        self.page.reload()
         preview = self.page.locator(".o_community_minutes_preview")
         expect(preview).to_contain_text(self.ui_text("community_meetings", "Draft preview · saved content"))
         expect(preview).to_contain_text("Draft text for the previous meeting.")
@@ -1336,6 +1388,212 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                     time.sleep(0.2)
                     saved = self.record("community.meeting.agenda.item", self.item_ids[kind], ["disposition"])
                 self.assertEqual(saved["disposition"], "deferred")
+
+    def test_discussion_undo_while_save_pending_survives_exit(self):
+        trace = LiveWriteTrace(self.page)
+        self.addCleanup(trace.stop)
+        try:
+            self._check_discussion_pending_undo()
+        except Exception:  # noqa: BLE001 - preserve rendered state and RPC evidence
+            self.capture_checkpoint("discussion-pending-undo-failure")
+            debug_dir = Path(os.environ.get("MM_PLAYWRIGHT_SCREENSHOT_DIR", tempfile.gettempdir()))
+            debug_dir.mkdir(parents=True, exist_ok=True)
+            (debug_dir / "discussion-pending-undo-dom.html").write_text(self.page.content())
+            (debug_dir / "discussion-pending-undo-rpc.json").write_text(json.dumps({
+                "rpc": trace.rpc, "console": self.console_errors[self.errors_before:],
+            }, indent=2))
+            raise
+
+    def _check_discussion_pending_undo(self):
+        editor = self.card("discussion").locator('.o_live_discussion_notes [contenteditable="true"]').first
+        original = editor.inner_text()
+        held = []
+        pattern = "**/web/dataset/call_kw/community.meeting.agenda.item/write"
+
+        def delay_first_write(route):
+            if not held:
+                held.append(route)
+            else:
+                route.continue_()
+
+        self.page.route(pattern, delay_first_write)
+        try:
+            editor.click()
+            editor.press("Control+End")
+            self.page.keyboard.insert_text("pendingchange")
+            with self.page.expect_request(pattern):
+                self.page.locator('.o_live_header').click(position={"x": 600, "y": 8})
+            # request events precede route callbacks; pump until the handler has
+            # actually retained the request before interacting with the editor.
+            deadline = time.monotonic() + 5
+            while not held and time.monotonic() < deadline:
+                self.page.wait_for_timeout(20)
+            self.assertEqual(len(held), 1)
+            editor.click()
+            editor.press("Control+Z")
+            expect(editor).to_have_text(original)
+            # The rendered Back button is disabled during a save. Blur queues
+            # the reverted value while the first request is still outstanding.
+            self.page.locator('.o_live_header').click(position={"x": 600, "y": 8})
+            held[0].continue_()
+            self.page.get_by_role("button", name=self.ui_text("community_meetings", "Back to Meetings")).click()
+            expect(self.page.locator('.o_list_view')).to_be_visible()
+            saved = self.record("community.meeting.agenda.item", self.item_ids["discussion"], ["discussion_notes"])["discussion_notes"] or ""
+            self.assertNotIn("pendingchange", saved)
+            open_live_meeting(self.session, self.meeting_id)
+            editor = self.card("discussion").locator('.o_live_discussion_notes [contenteditable="true"]').first
+            expect(editor).to_have_text(original)
+        finally:
+            self.page.unroute(pattern, delay_first_write)
+
+    def test_discussion_mention_pagination_controls(self):
+        # Client pagination contract; real ACL/domain/offset behavior is covered
+        # by TestDiscussionMentions against PostgreSQL, without mocking ORM.
+        offsets = []
+        pattern = "**/web/dataset/call_kw/community.meeting.agenda.item/get_discussion_mention_suggestions"
+
+        def suggestions(route):
+            request = route.request.post_data_json
+            offset = request["params"]["kwargs"].get("offset", 0)
+            offsets.append(offset)
+            people = [{"id": 900000 + i, "name": f"Homonym {i:02d}"} for i in range(23)]
+            route.fulfill(json={"jsonrpc": "2.0", "id": request["id"], "result": people[offset:offset + 20]})
+
+        self.page.route(pattern, suggestions)
+        try:
+            editor = self.card("discussion").locator('.o_live_discussion_notes [contenteditable="true"]').first
+            editor.click()
+            self.page.keyboard.type("@")
+            picker = self.page.locator('.o_meeting_mention_picker')
+            more = picker.get_by_role("option", name=self.ui_text("community_meetings", "More contacts…"), exact=True)
+            expect(more).to_be_visible()
+            more.click()
+            expect(picker.get_by_role("option")).to_have_count(23)
+            expect(more).not_to_be_visible()
+            self.assertEqual(offsets, [0, 20])
+            self.page.locator("#meeting-mention-search").press("Escape")
+            expect(picker).not_to_be_visible()
+        finally:
+            self.page.unroute(pattern, suggestions)
+
+    def test_discussion_mentions_persist_and_allow_literal_at(self):
+        trace = LiveWriteTrace(self.page)
+        self.addCleanup(trace.stop)
+        try:
+            self._check_discussion_mentions(trace)
+        except Exception:  # noqa: BLE001 - save browser and RPC evidence before propagating
+            self.capture_checkpoint("discussion-mention-failure")
+            debug_dir = Path(os.environ.get("MM_PLAYWRIGHT_SCREENSHOT_DIR", tempfile.gettempdir()))
+            debug_dir.mkdir(parents=True, exist_ok=True)
+            (debug_dir / "discussion-mention-dom.html").write_text(self.page.content())
+            (debug_dir / "discussion-mention-rpc.json").write_text(json.dumps({
+                "rpc": trace.rpc, "console": self.console_errors[self.errors_before:],
+            }, ensure_ascii=False, indent=2))
+            raise
+
+    def _check_discussion_mentions(self, trace):
+        user = self.rpc("res.users", "read", [[self.session.session_info()["uid"]], ["partner_id"]])[0]
+        partner_id = user["partner_id"][0]
+        name = self.rpc("res.partner", "read", [[partner_id], ["name"]])[0]["name"]
+        example = self.rpc("res.partner", "search_read", [[("name", "in", ["Administrator", "Administrador"])]], {
+            "fields": ["name"], "limit": 1,
+        })
+        if example:
+            partner_id, name = example[0]["id"], example[0]["name"]
+        for viewport in ({"width": 1440, "height": 1000}, {"width": 390, "height": 844}, {"width": 844, "height": 390}):
+            self.page.set_viewport_size(viewport)
+            card = self.card("discussion")
+            if viewport["width"] == 844:
+                card.get_by_role("button", name=self.ui_text("community_meetings", "Enlarge editor")).click()
+            editor = card.locator('.o_live_discussion_notes [contenteditable="true"]').first
+            editor.click()
+            self.page.keyboard.press("End")
+            self.page.keyboard.type(" @")
+            search = self.page.locator("#meeting-mention-search")
+            expect(search).to_be_visible()
+            search.fill(name)
+            option = self.page.locator(".o_meeting_mention_picker").get_by_text(name + " · #" + str(partner_id), exact=True)
+            expect(option).to_be_visible()
+            expect(self.page.locator('.o_meeting_mention_picker [role="option"]')).to_have_count(1)
+            expect(search).to_have_attribute("role", "combobox")
+            box = self.page.locator('.o_meeting_mention_picker').bounding_box()
+            self.assertGreaterEqual(box["x"], 0)
+            self.assertGreaterEqual(box["y"], 0)
+            self.assertLessEqual(box["x"] + box["width"], viewport["width"] + 2)
+            self.assertLessEqual(box["y"] + box["height"], viewport["height"] + 2)
+            self.capture_checkpoint("discussion-mention-picker")
+            if viewport["width"] == 1440:
+                self.capture_checkpoint("discussion-mention-picker-detail", capture_target=self.page.locator('.o_meeting_mention_picker'))
+            if viewport["width"] == 390:
+                option.tap()
+            else:
+                # Native AutoComplete cycles through the input (no highlighted
+                # result) as well as its options. Select the visible highlight.
+                if option.get_attribute("aria-selected") == "true":
+                    search.press("ArrowDown")
+                    expect(option).to_have_attribute("aria-selected", "false")
+                search.press("ArrowDown")
+                expect(option).to_have_attribute("aria-selected", "true")
+                search.press("Enter")
+            expect(search).not_to_be_visible()
+            expect(editor.locator(f'[data-oe-id="{partner_id}"]').last).to_have_text("@" + name)
+            mentions = editor.locator('.o_meeting_person_mention')
+            count = mentions.count()
+            if viewport["width"] == 1440:
+                editor.press("Control+z")
+                expect(mentions).to_have_count(count - 1)
+                editor.press("Control+y")
+                expect(mentions).to_have_count(count)
+                editor.press("Control+a")
+                editor.press("Control+c")
+                editor.press("Control+End")
+                editor.press("Control+v")
+                expect(mentions).to_have_count(count * 2)
+            self.page.keyboard.type(" proposes postponement.")
+            self.page.keyboard.press("Control+z")
+            self.page.keyboard.press("Control+y")
+            editor.press("End")
+            self.page.keyboard.type(" @")
+            expect(search).to_be_visible()
+            search.press("Escape")
+            expect(search).not_to_be_visible()
+            self.page.keyboard.type("literal")
+            card.locator(".o_live_notes_heading").click()
+            deadline = time.monotonic() + 10
+            while time.monotonic() < deadline:
+                saved = self.record("community.meeting.agenda.item", self.item_ids["discussion"], ["discussion_notes"])["discussion_notes"] or ""
+                if "@literal" in saved and "data-oe-id" in saved:
+                    break
+                time.sleep(0.1)
+            self.assertIn("@literal", saved)
+            self.assertIn("@" + name, saved)
+            self.page.reload()
+            self.card("discussion")
+            expect(self.page.locator('.o_live_discussion_notes .o_meeting_person_mention').last).to_have_text("@" + name)
+            self.capture_checkpoint("discussion-mention-saved")
+        self.page.set_viewport_size({"width": 1440, "height": 1000})
+        card = self.card("discussion")
+        editor = card.locator('.o_live_discussion_notes [contenteditable="true"]').first
+        editor.click()
+        editor.press("Control+End")
+        self.page.keyboard.type(" immediate leave")
+        self.page.get_by_role("button", name=self.ui_text("community_meetings", "Back to Meetings")).click()
+        expect(self.page.locator('.o_list_view')).to_be_visible()
+        saved = self.record("community.meeting.agenda.item", self.item_ids["discussion"], ["discussion_notes"])["discussion_notes"]
+        self.assertIn("immediate leave", saved)
+        self.page.goto(f"{BASE_URL}/web#model=community.meeting.agenda.item&id={self.item_ids['discussion']}&view_type=form")
+        field = self.page.locator('.o_form_view .o_field_widget[name="discussion_notes"]')
+        expect(field).to_contain_text("@" + name)
+        open_live_meeting(self.session, self.meeting_id)
+        self.card("discussion")
+        expect(self.page.locator('.o_live_discussion_notes .o_meeting_person_mention').last).to_have_text("@" + name)
+        exit_writes = [
+            entry for entry in trace.rpc
+            if entry["phase"] == "request" and entry["url"].endswith('/write')
+            and "immediate leave" in entry["payload"]["params"]["args"][1].get("discussion_notes", "")
+        ]
+        self.assertEqual(len(exit_writes), 1, "sanitization must not trigger a duplicate write while leaving")
+        self.assertEqual(self.console_errors[self.errors_before:], [])
 
     def test_private_note_form_stays_collapsed_until_requested(self):
         card = self.card("discussion")

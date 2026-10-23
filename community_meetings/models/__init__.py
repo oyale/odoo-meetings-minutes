@@ -22,3 +22,4 @@ from . import series_wizard
 from . import agenda_preparation
 from . import editorial_policy
 from . import discussion_history
+from . import discussion_mentions

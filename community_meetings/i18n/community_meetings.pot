@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-22 19:44+0000\n"
-"PO-Revision-Date: 2026-10-22 19:44+0000\n"
+"POT-Creation-Date: 2026-10-23 08:49+0000\n"
+"PO-Revision-Date: 2026-10-23 08:49+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -3394,6 +3394,12 @@ msgid "Attendees"
 msgstr ""
 
 #. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/discussion_mention_picker.xml:0
+msgid "Attribute an intervention"
+msgstr ""
+
+#. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__timezone__australia/act
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__timezone__australia/act
 msgid "Australia/ACT"
@@ -3990,6 +3996,12 @@ msgid "Choose a series in the same company."
 msgstr ""
 
 #. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/discussion_mentions.py:0
+msgid "Choose a valid contact for the discussion mention."
+msgstr ""
+
+#. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Choose activity type"
@@ -4226,6 +4238,13 @@ msgstr ""
 #. module: community_meetings
 #: model:ir.ui.menu,name:community_meetings.menu_community_meeting_configuration
 msgid "Configuration"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/discussion_mention_picker.js:0
+msgid ""
+"Contacts could not be loaded. Check that this discussion is still editable."
 msgstr ""
 
 #. module: community_meetings
@@ -6562,6 +6581,12 @@ msgstr ""
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/discussion_mention_picker.xml:0
+msgid "Keep a literal @"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 msgid "Keep meeting"
 msgstr ""
@@ -7051,6 +7076,12 @@ msgid "Meetings must be created as drafts."
 msgstr ""
 
 #. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/discussion_mention_picker.xml:0
+msgid "Mentions do not notify people or give access to the meeting."
+msgstr ""
+
+#. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting__message_has_error
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__message_has_error
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_proposal_grant__message_has_error
@@ -7163,6 +7194,12 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__next_meeting_weekday__0
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__next_meeting_weekday__0
 msgid "Monday"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/discussion_mention_picker.js:0
+msgid "More contacts…"
 msgstr ""
 
 #. module: community_meetings
@@ -7473,6 +7510,12 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "No linked activity is available."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/discussion_mention_picker.js:0
+msgid "No matching contacts"
 msgstr ""
 
 #. module: community_meetings
@@ -7792,6 +7835,12 @@ msgstr ""
 #. odoo-python
 #: code:addons/community_meetings/models/topic.py:0
 msgid "Only meeting editors can review agenda proposals."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/discussion_mentions.py:0
+msgid "Only meeting editors can search discussion mentions."
 msgstr ""
 
 #. module: community_meetings
@@ -9963,6 +10012,12 @@ msgid "The destination meeting must have a later scheduled start."
 msgstr ""
 
 #. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "The earlier minutes could not be prepared. Please refresh and retry."
+msgstr ""
+
+#. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_preparation
 msgid "The estimated agenda exceeds the planned meeting duration."
 msgstr ""
@@ -10220,6 +10275,12 @@ msgstr ""
 
 #. module: community_meetings
 #. odoo-python
+#: code:addons/community_meetings/models/discussion_mentions.py:0
+msgid "This contact is not available for a discussion mention."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-python
 #: code:addons/community_meetings/models/topic.py:0
 msgid "This contact is not eligible to propose topics in the selected scope."
 msgstr ""
@@ -10424,6 +10485,12 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__timezone__turkey
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__timezone__turkey
 msgid "Turkey"
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+msgid "Type @ to attribute an intervention without notifying the person."
 msgstr ""
 
 #. module: community_meetings

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="community_meetings.DiscussionMentionPicker">
+        <div class="o_meeting_mention_picker p-3" t-on-keydown.capture="onKeydown">
+            <label for="meeting-mention-search" class="form-label">Attribute an intervention</label>
+            <AutoComplete id="'meeting-mention-search'" sources="sources" autofocus="true"
+                onSelect="props.onSelect" dropdown="false"/>
+            <small class="d-block text-muted mt-2">Mentions do not notify people or give access to the meeting.</small>
+            <button type="button" class="btn btn-link p-0 mt-2" t-on-click="props.onCancel">Keep a literal @</button>
+        </div>
+    </t>
+</templates>

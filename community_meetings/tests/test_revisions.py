@@ -301,6 +301,64 @@ class TestMeetingRevisions(TransactionCase):
         approval = point.minutes_approval_ids.filtered(lambda row: row.meeting_id == earlier)
         self.assertEqual(approval.revision_id, earlier.approved_revision_id)
 
+    def test_minutes_approval_queue_is_readable_and_empty_without_prior_minutes(self):
+        series = (
+            self.env["community.meeting.series"]
+            .with_user(self.editor)
+            .create({"name": "Read-only approval queue", "has_minutes_approval_point": True})
+        )
+        current = (
+            self.env["community.meeting"]
+            .with_user(self.editor)
+            .create(
+                {
+                    "name": "Current meeting without prior minutes",
+                    "series_id": series.id,
+                    "start_datetime": "2026-11-20 10:00:00",
+                }
+            )
+        )
+        point = current.agenda_item_ids.filtered(lambda item: item.kind == "minutes_approval")
+        self.assertEqual(current.get_pending_minutes_for_approval(), [])
+
+        held = (
+            self.env["community.meeting"]
+            .with_user(self.editor)
+            .create(
+                {
+                    "name": "Held minutes for reader",
+                    "series_id": series.id,
+                    "start_datetime": "2026-11-10 10:00:00",
+                }
+            )
+        )
+        held.action_schedule()
+        held.action_mark_held()
+        reader = self.env["res.users"].create(
+            {
+                "name": "Read-only minutes reviewer",
+                "login": "read-only-minutes-reviewer",
+                "groups_id": [
+                    (
+                        6,
+                        0,
+                        [
+                            self.env.ref("base.group_user").id,
+                            self.env.ref("community_meetings.group_meeting_reader").id,
+                        ],
+                    )
+                ],
+            }
+        )
+        held.with_user(self.editor).write({"reader_user_ids": [(4, reader.id)]})
+        current.with_user(self.editor).write({"reader_user_ids": [(4, reader.id)]})
+
+        pending = current.with_user(reader).get_pending_minutes_for_approval()
+        self.assertEqual([(row["id"], row["state"]) for row in pending], [(held.id, "held")])
+        self.assertFalse(current.with_user(reader).get_live_capabilities()["can_approve_previous_minutes"])
+        with self.assertRaises(UserError), self.cr.savepoint():
+            current.with_user(reader).action_approve_pending_minutes(point.id, [held.id])
+
     def test_snapshot_records_pending_destination_series(self):
         meeting = self._drafted_meeting("Pending follow-up destination")
         destination = self.env["community.meeting.series"].with_user(self.editor).create({"name": "Future assembly"})
@@ -494,6 +552,44 @@ class TestMeetingRevisions(TransactionCase):
         self.assertEqual(report_type, "html")
         self.assertIn(item["next_meeting_datetime_display"].encode(), report_html)
         self.assertIn(b"Europe/Madrid", report_html)
+        # Later changes to the live agenda and series must not rewrite the
+        # approved record or its already generated PDF.
+        approved_json = revision.snapshot_json
+        approved_pdf = revision.pdf_attachment_id.raw
+        manager_meeting = meeting.with_user(self.manager)
+        manager_meeting.action_start_amendment()
+        next_point.with_user(self.manager).write({"next_meeting_datetime": "2026-12-15 09:30:00"})
+        amended_revision = self._approve_without_rendering_pdf(manager_meeting)
+        series.timezone = "UTC"
+        self.assertEqual(revision.snapshot_json, approved_json)
+        self.assertEqual(revision.pdf_attachment_id.raw, approved_pdf)
+        self.assertEqual(
+            json.loads(amended_revision.snapshot_json)["agenda"][-1]["next_meeting_datetime"],
+            "2026-12-15 09:30:00",
+        )
+        updated_html, _ = self.env["ir.actions.report"]._render_qweb_html(
+            "community_meetings.report_revision_document", revision.ids
+        )
+        self.assertEqual(updated_html, report_html)
+
+    def test_minutes_snapshot_keeps_an_empty_next_meeting_date_empty(self):
+        series = (
+            self.env["community.meeting.series"]
+            .with_user(self.editor)
+            .create({"name": "No agreed next meeting", "has_next_meeting_point": True})
+        )
+        meeting = self._drafted_meeting("No next date", series=series)
+        next_point = meeting.agenda_item_ids.filtered(lambda item: item.kind == "next_meeting")
+        self.assertFalse(next_point.next_meeting_datetime)
+
+        item = next(
+            row
+            for row in self.env["community.meeting.revision"]._build_public_content(meeting)["agenda"]
+            if row["kind"] == "next_meeting"
+        )
+        self.assertEqual(item["next_meeting_datetime"], "")
+        self.assertEqual(item["next_meeting_datetime_display"], "")
+        self.assertEqual(item["next_meeting_timezone"], "")
 
     def test_approved_minutes_follow_reordered_agenda(self):
         series = (

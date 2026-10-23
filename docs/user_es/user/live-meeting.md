@@ -75,6 +75,30 @@ reunión como **Celebrada**.
    *Mover a otra reunión* (asistente de arrastre). Los puntos pospuestos quedan
    marcados **Revisar en la próxima reunión** automáticamente.
 
+### Atribuir una intervención con @
+
+En las **Notas de discusión** editables, escribe `@` tras un espacio o al
+principio de una línea. Se abre un buscador de contactos. Escribe un nombre y
+elige con el ratón o con las flechas y **Intro**; **Escape** o **Conservar una @
+literal** vuelve a las notas sin sustituir el carácter.
+
+Primero aparecen los contactos invitados y después otras personas activas que
+puedes leer, de la compañía de la reunión o compartidas. Los usuarios aparecen
+una sola vez mediante su contacto. El número de contacto permite distinguir
+homónimos; el selector no muestra correos ni teléfonos.
+Usa **Más contactos…** para cargar la siguiente página si hay más de 20 resultados.
+
+![Buscar un contacto para atribuir una intervención](../img/discussion-mentions.png)
+
+El nombre atribuye la intervención según lo registrado por quien toma notas;
+no autentica quién habló. No envía notificaciones, suscripciones ni invitaciones
+y no concede acceso a la reunión. La etiqueta no abre la ficha del contacto.
+Los nombres se conservan tal como se registraron aunque se renombre, archive o
+elimine el contacto. El debate anterior, la vista previa y las revisiones
+aprobadas conservan el nombre visible. El formulario clásico conserva la
+etiqueta como HTML legible; su editor no ofrece el selector @. Se mantienen las
+restricciones de pausa, punto activo y aprobación.
+
 ### Registros dentro de un punto
 
 - **Acuerdos** — las decisiones (título, cuerpo, resultado). Retirar un acuerdo

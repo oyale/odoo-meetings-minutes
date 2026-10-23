@@ -35,6 +35,8 @@
     ],
     "assets": {
         "web.assets_backend": [
+            "community_meetings/static/src/live_meeting/discussion_mention_picker.js",
+            "community_meetings/static/src/live_meeting/discussion_mention_picker.xml",
             "community_meetings/static/src/live_meeting/live_meeting.js",
             "community_meetings/static/src/live_meeting/minutes_preview.js",
             "community_meetings/static/src/live_meeting/meeting_list.js",

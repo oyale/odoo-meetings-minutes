@@ -12,8 +12,10 @@
     --minutes-display: Georgia, "Times New Roman", serif;
     --minutes-body: var(--body-font-family, "Segoe UI", sans-serif);
 
-    min-height: 100dvh;
+    height: 100%;
+    min-height: 0;
     overflow-x: clip;
+    overflow-y: auto;
     color: var(--minutes-ink);
     background: var(--minutes-paper);
     font-family: var(--minutes-body);

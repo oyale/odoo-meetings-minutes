@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from odoo.exceptions import AccessError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import TransactionCase, tagged
 
 from odoo.addons.mail.tests.common import MailCase
@@ -371,6 +371,19 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
         ]
         self.assertTrue(cancellations)
         self.assertIn(f"UID:{uid}", cancellations[-1])
+
+    def test_started_meeting_cannot_cancel_or_remove_its_calendar_event(self):
+        meeting = self._meeting()
+        meeting.action_schedule()
+        event = meeting.calendar_event_ids
+        meeting.action_start_meeting()
+
+        with self.assertRaises(UserError), self.cr.savepoint():
+            meeting.action_cancel()
+
+        self.assertEqual(meeting.state, "scheduled")
+        self.assertTrue(meeting.actual_start_datetime)
+        self.assertTrue(event.exists())
 
     def test_blocked_mail_and_missing_or_invalid_email_do_not_send(self):
         self.env["ir.config_parameter"].sudo().set_param("calendar.block_mail", "1")
