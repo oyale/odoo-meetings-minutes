@@ -358,8 +358,8 @@
 .o_meeting_person_mention {
     padding: 0 0.25rem;
     border-radius: 0.25rem;
-    background: color-mix(in srgb, var(--o-brand-primary) 12%, transparent);
-    color: var(--o-brand-primary);
+    background: rgba($o-brand-primary, 0.12);
+    color: $o-brand-primary;
     font-weight: 600;
     white-space: nowrap;
 }
