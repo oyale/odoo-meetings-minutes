@@ -7,6 +7,82 @@ Each addon changelog starts with its first release prepared after this change;
 the combined history below retains the existing suite release notes.
 
 <!-- towncrier release notes start -->
+## Odoo Meetings Minutes 18.0.20261023.1 (2026-10-23)
+
+### Addon versions
+
+| Addon | Odoo module version |
+|---|---:|
+| [Community Meetings](community_meetings/CHANGELOG.md) | `18.0.6.2.9` |
+| [Calendar Integration](community_meetings_calendar/CHANGELOG.md) | `18.0.1.0.6` |
+| [Project Integration](community_meetings_project/CHANGELOG.md) | `18.0.3.1.8` |
+| [Extension Demo](community_meetings_extension_demo/CHANGELOG.md) | `18.0.1.0.1` |
+
+=====================================================
+
+## Community Meetings
+
+### Features
+
+- Agreements and dissents in meeting minutes render as cards, like follow-up
+  actions, including their decision and agreement status.
+- An expanded agenda point shows its responsible person, point type, estimate and
+  priority aligned with the point title. In focus mode the discussion editor uses
+  more of the available height and keeps the enlarge/reduce control.
+- Approved minutes show a single revision sentence with the meeting code, the
+  approval source (later agenda point, offline preparation, live meeting or
+  manual approval), the localized approval date and the timezone. The point name
+  is not repeated in the sentence.
+- Automatically added recurring and structural agenda points use the meeting
+  organizer as responsible when no explicit responsible is configured.
+- Meeting minutes show the actual start and end, each point's proposer, status,
+  related points and decision details, the destination of moved points, and
+  follow-up actions with their origin, kind, activity type, responsible, due date
+  and status. Same-day meetings show only the end time, a compact header omits
+  empty fields and repeated time zones, and empty description or minutes sections
+  are omitted.
+- Meetings with approved minutes expose an "Approved Minutes" action from the
+  meeting form, the meeting list and the live meeting. It opens the approved
+  revision in the minutes preview and returns to the screen where it was opened.
+- Mentions in discussion notes render as a themed chip in the active brand
+  colour. The recorded text and the minutes PDF are unchanged.
+- Minutes show each point's proposer, status and transfer destination in a
+  consistent summary row with status chips. The follow-up origin label is
+  translated.
+- The meeting list can filter meetings by approved status.
+- The minutes report lists the actas approved from a minutes-approval point,
+  including each approved meeting's code, name, revision and date.
+
+### Bugfixes
+
+- Dissents and reservations in meeting minutes now appear inside the agenda point and agreement they belong to, rather than in a separate report section.
+- Long presenter, status and transfer labels in the minutes preview now wrap inside the report instead of overflowing the page.
+- Older approved revisions keep their recorded dissents inside the agenda point after the minutes report layout change.
+- Postponed points use an hourglass icon, collapse after being marked done or
+  postponed in the full agenda, and no longer count as unresolved when finishing
+  the meeting. A collapsed point keeps its next-meeting review badge and an undo
+  control visible.
+- The back button in a live meeting returns to the meeting that opened it when
+  you arrive from a related point or from reviewing approved minutes, instead of
+  going to the meetings list.
+- The minutes-approval point shows its approved previous minutes in held and
+  read-only meetings, not only while the point is editable.
+- Trying to save an agreement without a title now shows a warning explaining that
+  a title is required.
+
+### Improved Documentation
+
+- The English and Spanish minutes preview documentation screenshots now show a realistic meeting with presenters, decisions, follow-ups and a dissent.
+- The English and Spanish minutes preview documentation screenshots show a dissent inside its agenda point.
+## Calendar Integration
+
+No significant changes.
+## Project Integration
+
+No significant changes.
+## Extension Demo
+
+No significant changes.
 ## Odoo Meetings Minutes 18.0.20261023.0 (2026-10-23)
 
 ### Addon versions
