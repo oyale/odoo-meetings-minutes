@@ -3,10 +3,12 @@ import hashlib
 import json
 from typing import ClassVar
 
+import pytz
+
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tools import html_sanitize
-from odoo.tools.misc import format_datetime
+from odoo.tools.misc import format_datetime, format_time
 
 
 class CommunityMeetingRevision(models.Model):
@@ -57,11 +59,53 @@ class CommunityMeetingRevision(models.Model):
     def _build_public_content(self, meeting, timezone=None):
         meeting.ensure_one()
         timezone = timezone or self.env.user.tz or "UTC"
+        carryover_records = (
+            self.env["community.meeting.carryover"]
+            .sudo()
+            .search(
+                [
+                    "|",
+                    ("origin_meeting_id", "=", meeting.id),
+                    ("destination_meeting_id", "=", meeting.id),
+                ],
+                order="id",
+            )
+        )
+        moved_by_item = {}
+        for transfer in carryover_records:
+            origin_item = transfer.origin_agenda_item_id
+            if not origin_item and transfer.origin_resolution_id:
+                origin_item = transfer.origin_resolution_id.agenda_item_id
+            if not origin_item and transfer.origin_action_id:
+                origin_item = transfer.origin_action_id.agenda_item_id
+            if not origin_item:
+                continue
+            if transfer.destination_meeting_id:
+                destination = " — ".join(
+                    part
+                    for part in [
+                        transfer.destination_meeting_id.code,
+                        transfer.destination_meeting_id.name,
+                    ]
+                    if part
+                )
+                moved_by_item[origin_item.id] = {
+                    "kind": "meeting",
+                    "destination": destination,
+                }
+            else:
+                series = transfer.destination_series_id or transfer.series_id
+                if series:
+                    moved_by_item[origin_item.id] = {
+                        "kind": "series",
+                        "destination": series.name or "",
+                    }
         agenda = []
         for sequence, item in enumerate(
             meeting.agenda_item_ids.sorted(lambda row: (row.sequence, row.id)),
             start=1,
         ):
+            moved = moved_by_item.get(item.id, {})
             agenda.append(
                 {
                     # Internal order values reserve slots for structural points;
@@ -71,6 +115,8 @@ class CommunityMeetingRevision(models.Model):
                     "priority": item.priority,
                     "deadline": fields.Date.to_string(item.deadline) if item.deadline else "",
                     "estimated_minutes": item.estimated_minutes,
+                    "moved_to": moved.get("destination", ""),
+                    "moved_to_kind": moved.get("kind", ""),
                     "name": item.name,
                     "kind": item.kind,
                     "type": item.agenda_type_id.name,
@@ -137,18 +183,6 @@ class CommunityMeetingRevision(models.Model):
             }
             for dissent in meeting_dissents
         ]
-        carryover_records = (
-            self.env["community.meeting.carryover"]
-            .sudo()
-            .search(
-                [
-                    "|",
-                    ("origin_meeting_id", "=", meeting.id),
-                    ("destination_meeting_id", "=", meeting.id),
-                ],
-                order="id",
-            )
-        )
         carryovers = [
             {
                 "origin_model": transfer.origin_model,
@@ -176,6 +210,15 @@ class CommunityMeetingRevision(models.Model):
             }
             for transfer in carryover_records
         ]
+        actual_start = meeting.actual_start_datetime
+        actual_end = meeting.actual_end_datetime
+        reference_start = actual_start or meeting.start_datetime
+        same_day = bool(
+            actual_end
+            and reference_start
+            and pytz.utc.localize(reference_start).astimezone(pytz.timezone(timezone)).date()
+            == pytz.utc.localize(actual_end).astimezone(pytz.timezone(timezone)).date()
+        )
         snapshot = {
             "schema_version": 3,
             "meeting": {
@@ -196,13 +239,26 @@ class CommunityMeetingRevision(models.Model):
                 if meeting.start_datetime
                 else "",
                 "start_timezone": timezone if meeting.start_datetime else "",
-                "actual_end_datetime_display": format_datetime(
+                "actual_start_datetime_display": format_datetime(
                     self.env,
-                    meeting.actual_end_datetime,
+                    actual_start,
                     tz=timezone,
                     dt_format="short",
                 )
-                if meeting.actual_end_datetime
+                if actual_start
+                else "",
+                "actual_start_timezone": timezone if actual_start else "",
+                "actual_end_same_day": same_day,
+                "actual_end_time_display": format_time(self.env, actual_end, tz=timezone)
+                if actual_end and same_day
+                else "",
+                "actual_end_datetime_display": format_datetime(
+                    self.env,
+                    actual_end,
+                    tz=timezone,
+                    dt_format="short",
+                )
+                if actual_end
                 else "",
                 "actual_end_timezone": timezone if meeting.actual_end_datetime else "",
                 "location": meeting.location or "",

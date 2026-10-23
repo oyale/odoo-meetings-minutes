@@ -11356,14 +11356,20 @@ msgstr "Estado del acuerdo"
 #. module: community_meetings
 #: code:addons/community_meetings/report/meeting_report.xml:0
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Points moved to another meeting"
-msgstr "Puntos trasladados a otra reunión"
+msgid "Scheduled date"
+msgstr "Fecha programada"
 
 #. module: community_meetings
 #: code:addons/community_meetings/report/meeting_report.xml:0
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Destination"
-msgstr "Destino"
+msgid "Next meeting in"
+msgstr "Siguiente reunión en"
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Moved to"
+msgstr "Trasladado a"
 
 #~ msgid "Time Tracking Session Mode"
 #~ msgstr "Seguimiento de tiempo"

@@ -307,37 +307,24 @@
                 text-transform: capitalize;
             }
 
-            .o_minutes_carryovers {
-                margin: 0;
-                padding: 0;
-                list-style: none;
+            .o_minutes_followup_title {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: baseline;
+                gap: .35rem;
             }
 
-            .o_minutes_carryover {
-                padding: .85rem 0;
-                border-top: 1px solid var(--minutes-rule);
-                font-size: .9rem;
-                line-height: 1.45;
+            .o_minutes_followup_kind {
+                color: var(--minutes-muted);
+                font-size: .72rem;
+                letter-spacing: .05em;
+                text-transform: uppercase;
             }
 
-            .o_minutes_carryover_title {
-                margin-bottom: .3rem;
-                font-family: var(--minutes-body);
-                font-size: .96rem;
-                font-weight: 700;
-            }
-
-            .o_minutes_carryover_detail {
-                color: var(--minutes-ink);
-                font-size: .86rem;
-
-                > span:first-child {
-                    margin-inline-end: .25rem;
+            .o_minutes_metadata_scheduled {
+                dd {
                     color: var(--minutes-muted);
-                    font-size: .66rem;
-                    font-weight: 650;
-                    letter-spacing: .06em;
-                    text-transform: uppercase;
+                    font-size: .88rem;
                 }
             }
 

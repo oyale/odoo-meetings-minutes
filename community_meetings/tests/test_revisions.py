@@ -391,14 +391,13 @@ class TestMeetingRevisions(TransactionCase):
         self.assertIn(meeting.code, carry["origin_meeting"])
         self.assertIn(meeting.name, carry["origin_meeting"])
         self.assertEqual(carry["destination_meeting"], "")
+        self.assertEqual(snapshot["agenda"][0]["moved_to"], destination.name)
+        self.assertEqual(snapshot["agenda"][0]["moved_to_kind"], "series")
         html, _ = self.env["ir.actions.report"]._render_qweb_html(
             "community_meetings.report_revision_document", revision.ids
         )
-        self.assertIn(b"Points moved to another meeting", html)
-        self.assertIn(b"Origin", html)
-        self.assertIn(b"Destination", html)
-        self.assertIn(b"Series", html)
-        self.assertIn(b"Status", html)
+        self.assertIn(b"Next meeting in", html)
+        self.assertIn(destination.name.encode(), html)
 
     def test_report_shows_presenter_actual_end_and_localized_status(self):
         presenter = self.env["res.partner"].create({"name": "Report Presenter"})
@@ -437,7 +436,10 @@ class TestMeetingRevisions(TransactionCase):
         snapshot = json.loads(revision.snapshot_json)
         self.assertEqual(snapshot["meeting"]["end_datetime"], "2026-11-01 12:00:00")
         self.assertNotIn("end_datetime_display", snapshot["meeting"])
+        self.assertTrue(snapshot["meeting"]["actual_start_datetime_display"])
         self.assertTrue(snapshot["meeting"]["actual_end_datetime_display"])
+        self.assertTrue(snapshot["meeting"]["actual_end_same_day"])
+        self.assertTrue(snapshot["meeting"]["actual_end_time_display"])
         self.assertEqual(snapshot["agenda"][0]["presenter"], presenter.name)
         html, _ = self.env["ir.actions.report"]._render_qweb_html(
             "community_meetings.report_revision_document", revision.ids
@@ -445,6 +447,8 @@ class TestMeetingRevisions(TransactionCase):
         self.assertIn(b"Proposed by", html)
         self.assertIn(presenter.name.encode(), html)
         self.assertIn(b"Meeting end", html)
+        self.assertIn(b"Meeting date", html)
+        self.assertIn(b"Scheduled date", html)
         self.assertNotIn(b"Location", html)
         self.assertIn(b"Discussed", html)
         self.assertNotIn(b">discussed<", html)

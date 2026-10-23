@@ -653,7 +653,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
             expect(preview).to_contain_text(
                 self.ui_text("community_meetings", "Agenda and discussion")
             )
-            expect(preview).to_contain_text(self.ui_text("community_meetings", "Meeting date"))
+            expect(preview).to_contain_text(self.ui_text("community_meetings", "Scheduled date"))
         expect(
             preview.get_by_role(
                 "button",

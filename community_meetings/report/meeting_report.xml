@@ -43,17 +43,29 @@
                     <time t-out="doc['snapshot']['approval']['approved_at']"/>
                 </p>
                 <dl class="o_minutes_document_metadata">
-                    <div t-if="doc['meeting'].get('start_datetime_display')" class="o_minutes_metadata_item">
+                    <div t-if="doc['meeting'].get('actual_start_datetime_display')" class="o_minutes_metadata_item">
                         <dt>Meeting date</dt>
+                        <dd>
+                            <span t-out="doc['meeting']['actual_start_datetime_display']"/>
+                            <span t-if="doc['meeting'].get('actual_start_timezone')" t-out="' (' + doc['meeting']['actual_start_timezone'] + ')'"/>
+                        </dd>
+                    </div>
+                    <div t-elif="doc['meeting'].get('start_datetime_display')" class="o_minutes_metadata_item">
+                        <dt>Scheduled date</dt>
                         <dd>
                             <span t-out="doc['meeting']['start_datetime_display']"/>
                             <span t-if="doc['meeting'].get('start_timezone')" t-out="' (' + doc['meeting']['start_timezone'] + ')'"/>
                         </dd>
                     </div>
+                    <div t-if="doc['meeting'].get('actual_start_datetime_display') and doc['meeting'].get('start_datetime_display') and doc['meeting'].get('start_datetime') != doc['meeting'].get('actual_start_datetime')" class="o_minutes_metadata_item o_minutes_metadata_scheduled">
+                        <dt>Scheduled date</dt>
+                        <dd t-out="doc['meeting']['start_datetime_display']"/>
+                    </div>
                     <div t-if="doc['meeting'].get('actual_end_datetime_display')" class="o_minutes_metadata_item">
                         <dt>Meeting end</dt>
                         <dd>
-                            <span t-out="doc['meeting']['actual_end_datetime_display']"/>
+                            <t t-if="doc['meeting'].get('actual_end_same_day')" t-out="doc['meeting']['actual_end_time_display']"/>
+                            <t t-else="" t-out="doc['meeting']['actual_end_datetime_display']"/>
                         </dd>
                     </div>
                     <div t-if="doc['meeting'].get('organizer')" class="o_minutes_metadata_item"><dt>Organizer</dt><dd t-out="doc['meeting']['organizer']"/></div>
@@ -84,6 +96,10 @@
                                 <span t-if="item['deferral_reason']" t-out="item['deferral_reason']"/>
                             </p>
                             <p t-if="item['decision_result_label']" class="o_minutes_point_outcome">Decision: <strong t-out="item['decision_result_label']"/></p>
+                            <p t-if="item.get('moved_to')" class="o_minutes_point_outcome">
+                                <t t-if="item.get('moved_to_kind') == 'series'"><span t-translation="on">Next meeting in</span> <strong t-out="item['moved_to']"/></t>
+                                <t t-else=""><span t-translation="on">Moved to</span> <strong t-out="item['moved_to']"/></t>
+                            </p>
                             <p t-if="item.get('next_meeting_datetime_display')" class="o_minutes_point_outcome">
                                 Next meeting: <strong t-out="item['next_meeting_datetime_display']"/>
                                 <span t-if="item.get('next_meeting_timezone')" t-out="' (' + item['next_meeting_timezone'] + ')'"/>
@@ -119,10 +135,13 @@
                 <h2>Follow-up actions</h2>
                 <ul class="o_minutes_followups">
                     <li t-foreach="doc['actions']" t-as="action" class="o_minutes_followup">
-                        <strong t-out="action['name']"/>
+                        <div class="o_minutes_followup_title">
+                            <strong t-out="action['name']"/>
+                            <span t-if="action.get('kind_label')" class="o_minutes_followup_kind" t-out="action['kind_label']"/>
+                        </div>
                         <span t-out="', '.join(action.get('responsibles', [])) or action['responsible']"/>
                         <span t-if="action['deadline']" t-out="action['deadline']"/>
-                        <span class="o_minutes_followup_state" t-out="action['state']"/>
+                        <span class="o_minutes_followup_state" t-out="action.get('state_label') or action['state']"/>
                     </li>
                 </ul>
             </section>
@@ -132,19 +151,6 @@
                     <p class="o_minutes_dissent_meta"><strong t-out="dissent['kind']"/><span t-out="dissent['author']"/><span t-out="dissent['scope']"/></p>
                     <div class="o_minutes_rich_content" t-out="dissent['body_html']"/>
                 </div>
-            </section>
-            <section t-if="doc.get('carryovers')" class="o_minutes_document_section">
-                <h2>Points moved to another meeting</h2>
-                <ul class="o_minutes_carryovers">
-                    <li t-foreach="doc['carryovers']" t-as="carry" t-key="carry_index" class="o_minutes_carryover">
-                        <div class="o_minutes_carryover_title" t-out="carry['origin_name']"/>
-                        <div t-if="carry.get('origin_meeting')" class="o_minutes_carryover_detail"><span t-translation="on">Origin</span>: <t t-out="carry['origin_meeting']"/></div>
-                        <div t-if="carry.get('destination_meeting') or carry.get('destination')" class="o_minutes_carryover_detail"><span t-translation="on">Destination</span>: <t t-out="carry.get('destination_meeting') or carry.get('destination')"/></div>
-                        <div t-if="carry.get('destination_series', {}).get('name')" class="o_minutes_carryover_detail"><span t-translation="on">Series</span>: <t t-out="carry['destination_series']['name']"/></div>
-                        <div t-if="carry.get('status_label')" class="o_minutes_carryover_detail"><span t-translation="on">Status</span>: <t t-out="carry['status_label']"/></div>
-                        <div t-if="carry.get('reason')" class="o_minutes_carryover_detail"><span t-translation="on">Reason</span>: <t t-out="carry['reason']"/></div>
-                    </li>
-                </ul>
             </section>
             <footer t-if="not doc.get('draft')" class="o_minutes_document_footer">
                 <span>Snapshot SHA-256</span><code t-out="doc['revision'].snapshot_sha256"/>

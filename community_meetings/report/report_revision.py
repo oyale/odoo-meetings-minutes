@@ -24,6 +24,8 @@ class MeetingRevisionReport(models.AbstractModel):
         resolution_statuses = self._selection_labels("community.meeting.resolution", "status", lang)
         topic_states = self._selection_labels("community.meeting.topic", "state", lang)
         carryover_statuses = self._selection_labels("community.meeting.carryover", "status", lang)
+        action_states = self._selection_labels("community.meeting.action", "state", lang)
+        action_kinds = self._selection_labels("community.meeting.action", "followup_kind", lang)
 
         def resolution_doc(resolution):
             return {
@@ -63,7 +65,14 @@ class MeetingRevisionReport(models.AbstractModel):
             "minutes_notes": Markup(meeting["minutes_notes"]),
             "agenda": agenda,
             "general_resolutions": [resolution_doc(resolution) for resolution in snapshot["general_resolutions"]],
-            "actions": snapshot["actions"],
+            "actions": [
+                {
+                    **action,
+                    "state_label": action_states.get(action.get("state"), action.get("state", "")),
+                    "kind_label": action_kinds.get(action.get("followup_kind"), action.get("followup_kind", "")),
+                }
+                for action in snapshot["actions"]
+            ],
             "dissents": [{**dissent, "body_html": Markup(dissent["body"])} for dissent in snapshot["dissents"]],
             "carryovers": [
                 {
