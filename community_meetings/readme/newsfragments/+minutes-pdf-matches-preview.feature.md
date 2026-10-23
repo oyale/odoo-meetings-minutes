@@ -1,0 +1,1 @@
+Approved meeting minutes PDFs now use the same layout and visual hierarchy as the HTML preview. Agreements retain green cards, follow-ups use pale yellow cards, and dissents use neutral white cards; follow-up details are grouped by responsibility, status, and due date.

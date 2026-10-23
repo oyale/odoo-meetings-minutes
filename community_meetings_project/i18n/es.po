@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Community Meetings Project 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-22 11:34+0000\n"
+"POT-Creation-Date: 2026-10-23 18:32+0000\n"
 "PO-Revision-Date: 2026-10-17 14:46+0000\n"
 "Last-Translator: Community Meetings contributors\n"
 "Language-Team: Spanish\n"
@@ -238,6 +238,11 @@ msgstr "Crear y vincular"
 #: model:ir.model,name:community_meetings_project.model_community_meeting_project_task_wizard
 msgid "Create and Link a Project Task"
 msgstr "Crear y vincular una tarea de proyecto"
+
+#. module: community_meetings_project
+#: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_series_wizard__created_project_id
+msgid "Created Project"
+msgstr "Proyecto creado"
 
 #. module: community_meetings_project
 #: model:ir.model.fields,field_description:community_meetings_project.field_community_meeting_project_task_links__create_uid

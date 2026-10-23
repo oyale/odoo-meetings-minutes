@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
+    <record id="paperformat_meeting_minutes" model="report.paperformat">
+        <field name="name">Meeting minutes A4</field>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">10</field>
+        <field name="margin_bottom">0</field>
+        <field name="margin_left">10</field>
+        <field name="margin_right">10</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+    </record>
     <record id="action_report_meeting_revision" model="ir.actions.report">
         <field name="name">Approved Meeting Minutes</field>
         <field name="model">community.meeting.revision</field>
@@ -8,19 +19,108 @@
         <field name="report_file">community_meetings.report_revision_document</field>
         <field name="binding_model_id" ref="model_community_meeting_revision"/>
         <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="paperformat_meeting_minutes"/>
         <field name="groups_id" eval="[(6, 0, [ref('group_meeting_reader'), ref('group_meeting_editor'), ref('group_meeting_manager'), ref('group_meeting_approver')])]"/>
     </record>
     <template id="report_revision_document">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="doc">
-                <t t-set="o" t-value="doc['revision']"/>
-                <t t-call="web.external_layout">
-                    <div class="page">
-                        <t t-call="community_meetings.report_revision_content"/>
-                    </div>
-                </t>
+                <div class="o_community_minutes_preview">
+                    <meta charset="utf-8"/>
+                    <t t-call="community_meetings.report_revision_styles"/>
+                    <t t-call="community_meetings.report_revision_sheet" t-lang="doc['revision'].env.context.get('lang')"/>
+                </div>
             </t>
         </t>
+    </template>
+    <template id="report_revision_sheet">
+        <div class="o_community_minutes_preview_body">
+            <t t-call="community_meetings.report_revision_content"/>
+        </div>
+    </template>
+    <template id="report_revision_styles">
+        <style type="text/css">
+            html, body { height: auto !important; min-height: 0 !important; overflow: visible !important; }
+            .o_community_minutes_preview + .o_community_minutes_preview { page-break-before: always; break-before: page; }
+            .o_community_minutes_preview { color: #242b28; font-family: Arial, sans-serif; }
+            .o_community_minutes_preview_body { box-sizing: border-box; width: 100%; margin: 0; padding: 1rem; color: #242b28; background: transparent; border: 0; }
+            .o_meeting_minutes_document { line-height: 1.65; }
+            .o_minutes_document_kicker { display: table; width: 100%; margin-bottom: .85rem; color: #49665a; font-size: .72rem; font-weight: bold; letter-spacing: .13em; text-transform: uppercase; }
+            .o_minutes_document_kicker > span { display: table-cell; }
+            .o_minutes_document_kicker > span:last-child { text-align: right; }
+            .o_minutes_document_code { color: #69736d; font-family: monospace; font-size: .72rem; }
+            .o_minutes_document_title { max-width: 24em; margin: 0 0 1.25rem; color: #242b28; font-family: Georgia, 'Times New Roman', serif; font-size: 2.45rem; font-weight: normal; letter-spacing: -.035em; line-height: 1.08; overflow-wrap: anywhere; }
+            .o_meeting_minutes_document .o_minutes_document_title { font-family: Georgia, 'Times New Roman', serif; font-weight: normal; }
+            .o_minutes_document_revision, .o_minutes_document_draft_status { margin: 0 0 1.65rem; padding: .72rem .9rem; border: 1px solid #d8ded7; color: #49665a; background: #e7ede7; font-size: .86rem; }
+            .o_minutes_document_meeting_reference { margin: -1rem 0 1rem; color: #69736d; font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; }
+            .o_minutes_document_metadata { display: block; margin: 0; padding: 1rem 0; border-top: 1px solid #d8ded7; border-bottom: 1px solid #d8ded7; }
+            .o_minutes_metadata_item { display: inline-block; width: 31%; margin: 0 1% .7rem 0; vertical-align: top; }
+            .o_minutes_metadata_item dt { margin: 0; color: #69736d; font-size: .64rem; font-weight: bold; letter-spacing: .075em; text-transform: uppercase; }
+            .o_minutes_metadata_item dd { margin: .18rem 0 0; font-family: Georgia, 'Times New Roman', serif; font-size: .98rem; line-height: 1.35; }
+            .o_minutes_metadata_attendees { width: 100%; }
+            .o_minutes_document_section { margin-top: 1.75rem; }
+            .o_minutes_document_section > h2 { margin: 0 0 1.1rem; padding-bottom: .55rem; border-bottom: 1px solid #d8ded7; color: #242b28; font-family: Georgia, 'Times New Roman', serif; font-size: 1.55rem; font-weight: normal; line-height: 1.2; }
+            .o_meeting_minutes_document .o_minutes_document_section > h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: normal; }
+            .o_minutes_agenda_item { display: table; width: 100%; padding: .7rem 0 .85rem; border-top: 1px solid #d8ded7; }
+            .o_minutes_agenda_number, .o_minutes_agenda_content { display: table-cell; vertical-align: top; }
+            .o_minutes_agenda_number { width: 2.75rem; padding-top: .05rem; color: #49665a; font-family: Georgia, 'Times New Roman', serif; font-size: 1.45rem; }
+            .o_minutes_agenda_heading { margin-bottom: .65rem; }
+            .o_minutes_agenda_heading h3 { display: inline; margin: 0; color: #242b28; font-family: Georgia, 'Times New Roman', serif; font-size: 1.28rem; font-weight: bold; line-height: 1.3; }
+            .o_meeting_minutes_document .o_minutes_agenda_heading h3 { font-family: Georgia, 'Times New Roman', serif; font-weight: bold; }
+            .o_meeting_minutes_document .o_minutes_document_title,
+            .o_meeting_minutes_document .o_minutes_document_section > h2,
+            .o_meeting_minutes_document .o_minutes_agenda_heading h3,
+            .o_meeting_minutes_document .o_minutes_metadata_item dd { font-family: 'DejaVu Serif', serif !important; }
+            .o_minutes_agenda_type { margin-left: .75rem; color: #69736d; font-size: .68rem; font-weight: bold; letter-spacing: .065em; text-transform: uppercase; }
+            .o_minutes_point_description, .o_minutes_point_outcome, .o_minutes_point_summary_reason { color: #69736d; }
+            .o_minutes_point_summary { display: block; margin: .35rem 0 .75rem; font-size: .82rem; line-height: 1.8; }
+            .o_minutes_point_summary_item { display: inline; margin-right: .7rem; }
+            .o_minutes_point_summary_label { color: #69736d; font-size: .66rem; font-weight: bold; letter-spacing: .06em; text-transform: uppercase; }
+            .o_minutes_point_summary_item.o_minutes_point_status { display: inline; padding: 0; border: 0; background: transparent; color: inherit; }
+            .o_minutes_point_status .o_minutes_point_summary_label { margin-right: .25rem; }
+            .o_minutes_point_status strong { display: inline-block; max-width: 100%; padding: .12rem .45rem; border: 1px solid #d8ded7; border-radius: 999px; background: #e7ede7; color: #49665a; font-size: .78rem; font-weight: normal; line-height: 1.35; vertical-align: baseline; }
+            .o_minutes_point_moved { display: inline; max-width: 100%; padding: .12rem .45rem; border: 1px solid #d8ded7; border-radius: 999px; background: #e7ede7; color: #49665a; font-size: .78rem; line-height: 1.35; }
+            .o_minutes_separator { margin: 0 .25rem; color: #69736d; }
+            .o_minutes_separator:before { content: "·"; }
+            .o_minutes_point_status_open, .o_minutes_point_status_pending { background: transparent; color: #69736d; }
+            .o_minutes_resolution, .o_minutes_action, .o_minutes_point_minutes_approvals, .o_minutes_point_followups, .o_minutes_dissent { padding: .72rem .82rem; border: 1px solid #d8ded7; background: #e7ede7; }
+            .o_minutes_action, .o_minutes_point_followups, .o_minutes_dissent { border-color: #e6d8ad; background: #fbf5e6; }
+            .o_minutes_dissent { border-color: #d8ded7; background: #fff; }
+            .o_minutes_resolution, .o_minutes_action, .o_minutes_point_followups { position: relative; }
+            .o_minutes_resolution:before, .o_minutes_point_followups:before, .o_minutes_action:before { position: absolute; top: .55rem; right: .6rem; display: block; width: 1.65rem; height: 1.65rem; border: 0; border-radius: 50%; color: #fff; background: #49665a; font-size: 1.05rem; font-weight: bold; line-height: 1.65rem; text-align: center; }
+            .o_minutes_resolution:before { content: "✓"; }
+            .o_minutes_point_followups:before, .o_minutes_action:before { content: "↗"; }
+            .o_minutes_point_followups:before, .o_minutes_action:before { background: #80631f; }
+            .o_minutes_resolution h3, .o_minutes_resolution h4, .o_minutes_point_followups h4, .o_minutes_action_title { padding-right: 2rem; }
+            .o_minutes_agenda_content > .o_minutes_resolution + .o_minutes_resolution { margin-top: .7rem; }
+            .o_minutes_agenda_content > .o_minutes_resolution + .o_minutes_point_dissents,
+            .o_minutes_agenda_content > .o_minutes_point_dissents + .o_minutes_point_followups,
+            .o_minutes_agenda_content > .o_minutes_point_followups + .o_minutes_resolution { margin-top: .8rem; }
+            .o_minutes_agenda_content > .o_minutes_resolution + .o_minutes_point_followups { margin-top: .2rem; }
+            .o_minutes_actions { margin: 0; padding: 0; list-style: none; }
+            .o_minutes_actions > .o_minutes_action { margin: .55rem 0; padding: .72rem .82rem; }
+            .o_minutes_action_title { margin-bottom: .15rem; }
+            .o_minutes_action_kind { color: #69736d; font-size: .68rem; letter-spacing: .05em; text-transform: uppercase; }
+            .o_minutes_action_activity { display: inline-block; padding: .12rem .42rem; border: 1px solid #cdd8ce; border-radius: 999px; color: #49665a; background: #f7faf7; font-size: .72rem; }
+            .o_minutes_action_context { margin: .1rem 0 .3rem; color: #69736d; font-size: .78rem; }
+            .o_minutes_action_meta { display: block; margin: .2rem 0; }
+            .o_minutes_action_meta_item { display: inline-block; width: 31%; margin: 0 1% .25rem 0; vertical-align: top; }
+            .o_minutes_action_meta_item dt { color: #69736d; font-size: .62rem; font-weight: bold; letter-spacing: .06em; text-transform: uppercase; }
+            .o_minutes_action_meta_item dd { margin: 0; font-size: .8rem; }
+            .o_minutes_point_action { padding: .4rem 0; border-top: 1px solid #e6d8ad; }
+            .o_minutes_point_action_title { margin-bottom: .25rem; }
+            .o_minutes_point_action_meta { display: block; margin: .1rem 0 0; }
+            .o_minutes_point_action_meta_item { display: inline-block; margin: 0 1rem .15rem 0; vertical-align: top; }
+            .o_minutes_point_action_meta_item dt { color: #69736d; font-size: .6rem; font-weight: bold; letter-spacing: .05em; text-transform: uppercase; }
+            .o_minutes_point_action_meta_item dd { margin: 0; font-size: .76rem; }
+            .o_minutes_point_action_meta_item dt { white-space: nowrap; }
+            .o_minutes_point_followups ul { margin: 0; padding: 0; list-style: none; }
+            .o_minutes_action_description { margin-top: .15rem; font-size: .8rem; }
+            .o_minutes_point_status_discussed, .o_minutes_point_status_closed, .o_minutes_point_status_approved { border-color: #bcd8c8; color: #2f6f4e; background: #eaf4ee; }
+            .o_minutes_point_status_deferred { border-color: #e5d8b9; color: #8a5a12; background: #f9f2e2; }
+            .o_minutes_point_status_denied { border-color: #e6c3c3; color: #9b2c2c; background: #fbeeee; }
+            .o_minutes_document_fingerprint { margin: -.9rem 0 1rem; color: #69736d; font-size: .58rem; overflow-wrap: anywhere; }
+        </style>
     </template>
     <template id="report_revision_content">
         <div class="o_meeting_minutes_document">
@@ -41,6 +141,7 @@
                     <span class="o_minutes_revision_separator" aria-hidden="true"/>
                     <span t-translation="on">Approved by</span> <strong t-out="doc['snapshot']['approval']['approver']"/>
                     <t t-if="doc['snapshot']['approval'].get('meeting_code')">
+                        &#160;
                         <t t-if="doc['snapshot']['approval'].get('offline')">
                             <span t-translation="on">while preparing</span> <strong t-out="doc['snapshot']['approval']['meeting_code']"/>
                         </t>
@@ -49,16 +150,19 @@
                         </t>
                     </t>
                     <t t-elif="doc['snapshot']['approval'].get('origin') == 'live'">
-                        <span t-translation="on">in the meeting</span>
+                        &#160;<span t-translation="on">in the meeting</span>
                     </t>
                     <t t-elif="doc['snapshot']['approval'].get('origin') == 'direct'">
-                        (<span t-translation="on">Direct approval</span>)
+                        &#160;(<span t-translation="on">Direct approval</span>)
                     </t>
-                    <t t-else="">(<span t-translation="on">Manual approval</span>)</t>
+                    <t t-else="">&#160;(<span t-translation="on">Manual approval</span>)</t>
                     <t t-if="doc['snapshot']['approval'].get('approved_at_display')">
                         <span t-translation="on">on</span> <time t-out="doc['snapshot']['approval']['approved_at_display']"/>
                         <span t-if="doc['snapshot']['approval'].get('approved_timezone')"> (<t t-out="doc['snapshot']['approval']['approved_timezone']"/>)</span>
                     </t>
+                </p>
+                <p t-if="not doc.get('draft')" class="o_minutes_document_fingerprint">
+                    <span t-translation="on">Snapshot SHA-256</span> <code t-out="doc['revision'].snapshot_sha256"/>
                 </p>
                 <dl class="o_minutes_document_metadata">
                     <div t-if="doc['meeting'].get('actual_start_datetime_display')" class="o_minutes_metadata_item">
@@ -147,7 +251,7 @@
                             <div t-if="item.get('dissents')" class="o_minutes_point_dissents">
                                 <h4><span t-translation="on">Dissents and reservations</span></h4>
                                 <div t-foreach="item['dissents']" t-as="dissent" class="o_minutes_dissent">
-                                    <p class="o_minutes_dissent_meta"><strong t-out="dissent['kind']"/><span t-out="dissent['author']"/><span t-if="dissent.get('resolution')" t-out="dissent['resolution']"/></p>
+                                    <p class="o_minutes_dissent_meta"><strong t-out="dissent['kind']"/><span class="o_minutes_separator" aria-hidden="true"/><span t-out="dissent['author']"/><span t-if="dissent.get('resolution')"><span class="o_minutes_separator" aria-hidden="true"/><t t-out="dissent['resolution']"/></span></p>
                                     <div class="o_minutes_rich_content" t-out="dissent['body_html']"/>
                                 </div>
                             </div>
@@ -163,13 +267,26 @@
                             <div t-if="item.get('actions')" class="o_minutes_point_followups">
                                 <h4>Follow-ups</h4>
                                 <ul>
-                                    <li t-foreach="item['actions']" t-as="action">
-                                        <strong t-out="action['name']"/>
-                                        <span t-if="action.get('kind_label')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="action['kind_label']"/></span>
-                                        <span t-if="action.get('activity_type')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="action['activity_type']"/></span>
-                                        <span t-if="action.get('responsibles') or action.get('responsible')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="', '.join(action.get('responsibles', [])) or action['responsible']"/></span>
-                                        <span t-if="action.get('state_label')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="action['state_label']"/></span>
-                                        <span t-if="action.get('deadline')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="action['deadline']"/></span>
+                                    <li t-foreach="item['actions']" t-as="action" class="o_minutes_point_action">
+                                        <div class="o_minutes_point_action_title">
+                                            <strong t-out="action['name']"/>
+                                            <span t-if="action.get('kind_label')" class="o_minutes_action_kind" t-out="action['kind_label']"/>
+                                            <span t-if="action.get('activity_type')" class="o_minutes_action_activity" t-out="action['activity_type']"/>
+                                        </div>
+                                        <dl class="o_minutes_point_action_meta">
+                                            <div t-if="action.get('responsibles') or action.get('responsible')" class="o_minutes_point_action_meta_item">
+                                                <dt><span t-translation="on">Responsible</span></dt>
+                                                <dd t-out="', '.join(action.get('responsibles', [])) or action['responsible']"/>
+                                            </div>
+                                            <div t-if="action.get('state_label')" class="o_minutes_point_action_meta_item">
+                                                <dt><span t-translation="on">Status</span></dt>
+                                                <dd t-out="action['state_label']"/>
+                                            </div>
+                                            <div t-if="action.get('deadline')" class="o_minutes_point_action_meta_item">
+                                                <dt><span t-translation="on">Due date</span></dt>
+                                                <dd t-out="action['deadline']"/>
+                                            </div>
+                                        </dl>
                                     </li>
                                 </ul>
                             </div>
@@ -195,24 +312,32 @@
                         <div class="o_minutes_action_title">
                             <strong t-out="action['name']"/>
                             <span t-if="action.get('kind_label')" class="o_minutes_action_kind" t-out="action['kind_label']"/>
-                            <span t-if="action.get('activity_type')" class="o_minutes_action_kind" t-out="action['activity_type']"/>
+                            <span t-if="action.get('activity_type')" class="o_minutes_action_activity" t-out="action['activity_type']"/>
                         </div>
-                        <div class="o_minutes_action_meta">
-                            <span t-if="action.get('agenda_item')"><span t-translation="on">From point</span>: <strong t-out="action['agenda_item']"/></span>
-                            <span t-if="action.get('responsibles') or action.get('responsible')"><span t-translation="on">Responsible</span>: <strong t-out="', '.join(action.get('responsibles', [])) or action['responsible']"/></span>
-                            <span t-if="action.get('deadline')"><span t-translation="on">Due date</span>: <strong t-out="action['deadline']"/></span>
-                            <span t-if="action.get('state_label')"><span t-translation="on">Status</span>: <strong t-out="action['state_label']"/></span>
-                        </div>
+                        <p t-if="action.get('agenda_item')" class="o_minutes_action_context">
+                            <span t-translation="on">From point</span>: <strong t-out="action['agenda_item']"/>
+                        </p>
+                        <dl class="o_minutes_action_meta">
+                            <div t-if="action.get('responsibles') or action.get('responsible')" class="o_minutes_action_meta_item">
+                                <dt><span t-translation="on">Responsible</span></dt>
+                                <dd t-out="', '.join(action.get('responsibles', [])) or action['responsible']"/>
+                            </div>
+                            <div t-if="action.get('deadline')" class="o_minutes_action_meta_item">
+                                <dt><span t-translation="on">Due date</span></dt>
+                                <dd t-out="action['deadline']"/>
+                            </div>
+                            <div t-if="action.get('state_label')" class="o_minutes_action_meta_item">
+                                <dt><span t-translation="on">Status</span></dt>
+                                <dd t-out="action['state_label']"/>
+                            </div>
+                        </dl>
                         <div t-if="action.get('description_html')" class="o_minutes_action_description" t-out="action['description_html']"/>
                     </li>
                 </ul>
             </section>
-            <footer t-if="not doc.get('draft')" class="o_minutes_document_footer">
-                <span>Snapshot SHA-256</span><code t-out="doc['revision'].snapshot_sha256"/>
-            </footer>
         </div>
     </template>
     <template id="report_revision_preview">
-        <div class="o_meeting_minutes_preview"><t t-call="community_meetings.report_revision_content" t-lang="lang"/></div>
+        <t t-call="community_meetings.report_revision_sheet" t-lang="lang"/>
     </template>
 </odoo>

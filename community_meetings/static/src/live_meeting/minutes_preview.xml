@@ -13,7 +13,7 @@
                 <strong>Could not open the minutes preview.</strong>
                 <p class="mb-0" t-out="state.error"/>
             </div>
-            <article t-elif="state.html" class="o_community_minutes_preview_body" t-out="state.html"/>
+            <div t-elif="state.html" class="o_community_minutes_preview_output" t-out="state.html"/>
         </main>
     </t>
 </templates>

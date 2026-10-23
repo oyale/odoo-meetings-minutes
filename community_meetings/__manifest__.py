@@ -51,6 +51,9 @@
             "community_meetings/static/src/live_meeting/live_meeting.scss",
             "community_meetings/static/src/live_meeting/minutes_preview.scss",
         ],
+        "web.report_assets_common": [
+            "community_meetings/static/src/live_meeting/minutes_preview.scss",
+        ],
     },
     "installable": True,
     "application": True,

@@ -2382,12 +2382,22 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
 
     def test_approve_and_download_minutes(self):
         card = self.card("decision")
+        agreement_title = (
+            "Aprobar el calendario revisado del proyecto"
+            if os.environ.get("MM_CAPTURE_LANGUAGE") == "es_ES"
+            else "Approve the revised project timeline"
+        )
+        agreement_body = (
+            "Se aprueba el calendario revisado, dejando constancia de los riesgos de entrega y del disenso expuesto."
+            if os.environ.get("MM_CAPTURE_LANGUAGE") == "es_ES"
+            else "The revised timeline is approved, with the delivery risks and dissent recorded above."
+        )
         card.get_by_role("button", name=self.ui_text("community_meetings", "Add agreement"), exact=True).click()
         card.get_by_placeholder(self.ui_text("community_meetings", "Agreement title")).fill(
-            "Approval for published minutes"
+            agreement_title
         )
         card.get_by_placeholder(self.ui_text("community_meetings", "What was agreed?")).fill(
-            "Approve this proposal with its recorded context."
+            agreement_body
         )
         card.get_by_role("button", name=self.ui_text("community_meetings", "Add agreement"), exact=True).click()
         expect(self.outcome("decision")).to_have_text(self.ui_text("community_meetings", "Approved"))
@@ -2420,7 +2430,42 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             "community.meeting.revision", revision_id, ["snapshot_json", "pdf_sha256"]
         )
         self.assertNotIn("PRIVATE_NOT_FOR_PUBLICATION", snapshot["snapshot_json"])
-        self.assertIn("Approval for published minutes", snapshot["snapshot_json"])
+        self.assertIn(agreement_title, snapshot["snapshot_json"])
+        if os.environ.get("MM_CAPTURE_MINUTES_PREVIEW"):
+            public_snapshot = json.loads(snapshot["snapshot_json"])
+            self.assertGreaterEqual(len(public_snapshot["dissents"]), 2)
+            self.assertGreaterEqual(len(public_snapshot["actions"]), 2)
+            resolutions = [
+                resolution
+                for item in public_snapshot["agenda"]
+                for resolution in item["resolutions"]
+            ]
+            self.assertGreaterEqual(len(resolutions), 4)
+            discussion_label = (
+                "Calendario:"
+                if os.environ.get("MM_CAPTURE_FIXTURE_LANGUAGE", self.effective_locale())
+                .lower()
+                .startswith("es")
+                else "Schedule:"
+            )
+            self.assertTrue(
+                any(
+                    discussion_label in item["discussion"]
+                    for item in public_snapshot["agenda"]
+                )
+            )
+            self.assertTrue(
+                any(
+                    "contingency" in resolution["body"].lower()
+                    or "contingencia" in resolution["body"].lower()
+                    for resolution in resolutions
+                )
+            )
+        self.page.locator('button[name="action_view_approved_minutes"]').click()
+        expect(self.page.locator(".o_community_minutes_preview_body .o_meeting_minutes_document")).to_be_visible()
+        self.capture_visual_screenshot("approved-minutes-html-report")
+        self.page.locator(".o_minutes_preview_back").click()
+        expect(self.page.locator('button[name="action_view_approved_minutes"]')).to_be_visible()
         self.page.get_by_role("tab", name=self.ui_text("community_meetings", "Approved Revisions")).click()
         with self.page.expect_download(timeout=30000) as downloaded:
             self.page.locator('.o_field_widget[name="revision_ids"] button').filter(
@@ -2429,6 +2474,11 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
         download = downloaded.value
         pdf = Path(download.path()).read_bytes()
         self.assertTrue(pdf.startswith(b"%PDF"))
+        artifact_dir = Path(os.environ.get("PLAYWRIGHT_ARTIFACTS", "/tmp/meeting-playwright"))
+        artifact_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+        pdf_artifact = artifact_dir / f"approved-minutes-report-{self.meeting_id}.pdf"
+        download.save_as(str(pdf_artifact))
+        pdf_artifact.chmod(0o600)
         self.assertEqual(
             __import__("hashlib").sha256(pdf).hexdigest(), snapshot["pdf_sha256"]
         )

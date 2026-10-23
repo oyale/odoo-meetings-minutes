@@ -1,11 +1,13 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-23 18:32+0000\n"
 "PO-Revision-Date: 2026-10-18 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
-"MIME-Version: 1.0\n"
 "Language: es\n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -30,7 +32,9 @@ msgstr "Evento de calendario"
 #. odoo-python
 #: code:addons/community_meetings_calendar/models/meeting.py:0
 msgid "Calendar invitees must be active internal users in the meeting company."
-msgstr "Los asistentes del calendario deben ser usuarios internos activos de la compañía de la reunión."
+msgstr ""
+"Los asistentes del calendario deben ser usuarios internos activos de la "
+"compañía de la reunión."
 
 #. module: community_meetings_calendar
 #. odoo-python
@@ -81,7 +85,9 @@ msgstr "Se ha cancelado la reunión %(meeting)s."
 #. odoo-python
 #: code:addons/community_meetings_calendar/models/meeting.py:0
 msgid "The meeting end must be after its start before scheduling."
-msgstr "La fecha y hora de finalización debe ser posterior al inicio para programar la reunión."
+msgstr ""
+"La fecha y hora de finalización debe ser posterior al inicio para programar "
+"la reunión."
 
 #. module: community_meetings_calendar
 #. odoo-python
@@ -91,8 +97,12 @@ msgstr "Este evento de calendario no está vinculado a una reunión comunitaria.
 
 #. module: community_meetings_calendar
 #: model_terms:ir.ui.view,arch_db:community_meetings_calendar.view_calendar_event_form_community_meeting
-msgid "This event is managed by its community meeting. Open the meeting to view or edit meeting details."
-msgstr "Este evento lo gestiona su reunión comunitaria. Abre la reunión para consultar o editar sus detalles."
+msgid ""
+"This event is managed by its community meeting. Open the meeting to view or "
+"edit meeting details."
+msgstr ""
+"Este evento lo gestiona su reunión comunitaria. Abre la reunión para "
+"consultar o editar sus detalles."
 
 #. module: community_meetings_calendar
 #. odoo-python
@@ -100,8 +110,5 @@ msgstr "Este evento lo gestiona su reunión comunitaria. Abre la reunión para c
 msgid "This meeting has no Calendar event."
 msgstr "Esta reunión no tiene ningún evento de calendario."
 
-#. module: community_meetings_calendar
-#. odoo-python
-#: code:addons/community_meetings_calendar/models/meeting.py:0
-msgid "You are not allowed to schedule meetings."
-msgstr "No tienes permiso para programar reuniones."
+#~ msgid "You are not allowed to schedule meetings."
+#~ msgstr "No tienes permiso para programar reuniones."

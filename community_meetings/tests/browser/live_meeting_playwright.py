@@ -141,24 +141,24 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         )
         descriptions = {
             "information": (
-                "<p>Revisión del estado del proyecto y acuerdos pendientes.</p>"
+                "<p>Se revisó el acta anterior y el estado de los compromisos abiertos.</p><ul><li>Dos entregas se completaron en plazo.</li><li>La documentación de riesgos necesita una actualización.</li></ul>"
                 if spanish
-                else "<p>Review of project status and pending decisions.</p>"
+                else "<p>The previous minutes and open commitments were reviewed.</p><ul><li>Two deliverables were completed on schedule.</li><li>The risk register needs an update.</li></ul>"
             ),
             "discussion": (
-                "<p>Calendario, prioridades y riesgos del trimestre.</p>"
+                "<p>El equipo comparó tres opciones de calendario y revisó su impacto en la carga de trabajo.</p><p>Laura propuso priorizar las actividades con dependencias externas. Carlos pidió reservar capacidad para incidencias urgentes.</p><p>Se identificaron como riesgos principales la disponibilidad de voluntariado y el retraso de materiales. El grupo acordó volver a evaluar ambos riesgos en la siguiente sesión.</p>"
                 if spanish
-                else "<p>Calendar, priorities and risks for the quarter.</p>"
+                else "<p>The team compared three schedule options and reviewed their impact on workload.</p><p>Laura proposed prioritizing activities with external dependencies. Carlos asked the group to reserve capacity for urgent issues.</p><p>The main risks identified were volunteer availability and delayed materials. The group agreed to review both risks at the next session.</p>"
             ),
             "decision": (
-                "<p>Decisión sobre el presupuesto y el alcance del próximo trimestre.</p>"
+                "<p>Se debatieron el coste, el alcance y las consecuencias de aplazar la compra.</p><p>La propuesta mantiene una reserva de contingencia del diez por ciento y limita los gastos no esenciales hasta la revisión de mitad de trimestre.</p>"
                 if spanish
-                else "<p>Decision on the next quarter budget and scope.</p>"
+                else "<p>The group discussed cost, scope, and the consequences of delaying the purchase.</p><p>The proposal keeps a ten percent contingency and limits non-essential spending until the mid-quarter review.</p>"
             ),
             "todo": (
-                "<p>Preparar y compartir la propuesta con el equipo.</p>"
+                "<p>La secretaría preparará un calendario compartido con responsables, dependencias y fechas de revisión.</p><p>El borrador se distribuirá antes del viernes para recoger comentarios de las personas asistentes.</p>"
                 if spanish
-                else "<p>Prepare and share the proposal with the team.</p>"
+                else "<p>The secretary will prepare a shared calendar with owners, dependencies, and review dates.</p><p>The draft will be circulated before Friday so attendees can comment.</p>"
             ),
         }
         presenters = {
@@ -176,10 +176,32 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                 "write",
                 [[topic], {"presenter_partner_id": presenters[kind]}],
             )
+            discussion_notes = {
+                "information": (
+                    "<p>Se confirmó el orden del día y se aprobaron las actas anteriores sin cambios.</p><p>La secretaría actualizará el registro de compromisos que siguen abiertos.</p>"
+                    if spanish
+                    else "<p>The agenda was confirmed and the previous minutes were approved without changes.</p><p>The secretary will update the register of open commitments.</p>"
+                ),
+                "discussion": (
+                    "<p><strong>Calendario:</strong> Laura defendió concentrar las actividades en mayo para coordinar mejor a los equipos.</p><p><strong>Capacidad:</strong> Carlos señaló que esa concentración dejaría poco margen para incidencias y propuso repartir las entregas durante seis semanas.</p><p><strong>Riesgos:</strong> el grupo revisó la disponibilidad de materiales, las dependencias externas y la cobertura de vacaciones. Se acordó publicar un calendario base y revisarlo quincenalmente.</p>"
+                    if spanish
+                    else "<p><strong>Schedule:</strong> Laura argued for concentrating activities in May to coordinate teams more easily.</p><p><strong>Capacity:</strong> Carlos noted that this would leave little room for incidents and proposed spreading deliveries over six weeks.</p><p><strong>Risks:</strong> the group reviewed material availability, external dependencies, and holiday coverage. It agreed to publish a baseline calendar and review it every two weeks.</p>"
+                ),
+                "decision": (
+                    "<p>La propuesta recibió apoyo mayoritario después de incorporar un límite de gasto y una revisión intermedia.</p><p>Dos asistentes solicitaron que constaran sus reservas sobre el alcance y el calendario de compra.</p>"
+                    if spanish
+                    else "<p>The proposal received majority support after adding a spending cap and an interim review.</p><p>Two attendees asked that their reservations about scope and purchasing timing be recorded.</p>"
+                ),
+                "todo": (
+                    "<p>Se compararon dos formatos de calendario. Se eligió una tabla compartida porque permite filtrar por responsable y detectar dependencias.</p><p>El equipo revisará el primer borrador antes de la próxima reunión.</p>"
+                    if spanish
+                    else "<p>Two calendar formats were compared. The group chose a shared table because it can be filtered by owner and makes dependencies visible.</p><p>The team will review the first draft before the next meeting.</p>"
+                ),
+            }[kind]
             self.rpc(
                 "community.meeting.agenda.item",
                 "write",
-                [[item_id], {"description": descriptions[kind]}],
+                [[item_id], {"description": descriptions[kind], "discussion_notes": discussion_notes}],
             )
 
         self.rpc(
@@ -189,16 +211,15 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                 "meeting_id": self.meeting_id,
                 "agenda_item_id": self.item_ids["decision"],
                 "title": (
-                    "Aprobar el presupuesto del trimestre"
+                    "Aprobar el presupuesto con revisión intermedia"
                     if spanish
-                    else "Approve the quarter budget"
+                    else "Approve the budget with an interim review"
                 ),
                 "body": (
-                    "<p>Se aprueba el presupuesto propuesto con seguimiento mensual.</p>"
+                    "<p>Se aprueba el presupuesto con una reserva de contingencia del diez por ciento.</p><ul><li>Los gastos extraordinarios requieren aprobación de coordinación.</li><li>La ejecución se revisará a mitad de trimestre.</li><li>Si los ingresos previstos caen más de un quince por ciento, se convocará una revisión.</li></ul>"
                     if spanish
-                    else "<p>The proposed budget is approved with monthly follow-up.</p>"
+                    else "<p>The budget is approved with a ten percent contingency.</p><ul><li>Exceptional spending requires coordinator approval.</li><li>Execution will be reviewed halfway through the quarter.</li><li>If projected income falls by more than fifteen percent, a review will be called.</li></ul>"
                 ),
-                "decision_outcome": "approved",
             }],
         )
         self.rpc(
@@ -208,14 +229,28 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                 "meeting_id": self.meeting_id,
                 "agenda_item_id": self.item_ids["discussion"],
                 "title": (
-                    "Crear un grupo de seguimiento"
+                    "Revisión quincenal de hitos y riesgos"
                     if spanish
-                    else "Create a follow-up group"
+                    else "Fortnightly milestone and risk review"
                 ),
                 "body": (
-                    "<p>El grupo revisará hitos y riesgos cada dos semanas.</p>"
+                    "<p>Laura y Carlos revisarán los hitos, las dependencias externas y las incidencias pendientes cada dos semanas.</p><p>La secretaría publicará una nota breve con cambios de fecha, persona responsable y mitigación acordada.</p>"
                     if spanish
-                    else "<p>The group will review milestones and risks every two weeks.</p>"
+                    else "<p>Laura and Carlos will review milestones, external dependencies, and open issues every two weeks.</p><p>The secretary will publish a short note with date changes, the owner, and the agreed mitigation.</p>"
+                ),
+            }],
+        )
+        self.rpc(
+            "community.meeting.resolution",
+            "create",
+            [{
+                "meeting_id": self.meeting_id,
+                "agenda_item_id": self.item_ids["todo"],
+                "title": "Publicar calendario y dependencias" if spanish else "Publish calendar and dependencies",
+                "body": (
+                    "<p>El calendario compartido incluirá responsable, fecha objetivo, dependencias y estado.</p>"
+                    if spanish
+                    else "<p>The shared calendar will include an owner, target date, dependencies, and status.</p>"
                 ),
             }],
         )
@@ -239,9 +274,24 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                 "reason_id": reason_id,
                 "author_display_name": "Carlos Ruiz",
                 "body": (
-                    "<p>Solicito revisar el alcance antes de publicar el presupuesto.</p>"
+                    "<p>Solicito revisar el alcance antes de publicar el presupuesto.</p><p>La propuesta actual no distingue gastos imprescindibles de mejoras opcionales y podría comprometer recursos de otras actividades.</p>"
                     if spanish
-                    else "<p>I request a scope review before publishing the budget.</p>"
+                    else "<p>I request a scope review before publishing the budget.</p><p>The current proposal does not distinguish essential spending from optional improvements and could draw resources away from other activities.</p>"
+                ),
+            }],
+        )
+        self.rpc(
+            "community.meeting.dissent",
+            "create",
+            [{
+                "meeting_id": self.meeting_id,
+                "agenda_item_id": self.item_ids["discussion"],
+                "reason_id": reason_id,
+                "author_display_name": "Laura Méndez" if spanish else "Laura Mendez",
+                "body": (
+                    "<p>Dejo constancia de mi reserva sobre concentrar todas las actividades en mayo.</p><p>Prefiero mantener una alternativa distribuida para reducir el riesgo de cancelaciones por falta de materiales o disponibilidad.</p>"
+                    if spanish
+                    else "<p>I record my reservation about concentrating all activities in May.</p><p>I prefer to retain a distributed alternative to reduce cancellations caused by material shortages or availability.</p>"
                 ),
             }],
         )
@@ -280,18 +330,41 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
             }],
         )
         self.rpc(
-            "community.meeting.agenda.item",
-            "write",
-            [[
-                self.item_ids["information"],
-                self.item_ids["discussion"],
-            ], {"disposition": "discussed"}],
+            "community.meeting.action",
+            "create",
+            [{
+                "meeting_id": self.meeting_id,
+                "agenda_item_id": self.item_ids["discussion"],
+                "name": "Revisar riesgos y dependencias" if spanish else "Review risks and dependencies",
+                "description": (
+                    "<p>Actualizar el registro de riesgos con probabilidad, impacto, mitigación y persona responsable.</p>"
+                    if spanish
+                    else "<p>Update the risk register with probability, impact, mitigation, and owner.</p>"
+                ),
+                "responsible_user_id": editor_uid,
+                "deadline": "2026-11-06",
+                "followup_kind": "activity",
+                "followup_activity_type_id": activity_type_id,
+                "state": "open",
+            }],
         )
         self.rpc(
             "community.meeting.agenda.item",
             "write",
-            [[self.item_ids["decision"]], {"disposition": "closed"}],
+            [[
+                self.item_ids["information"],
+            ], {"disposition": "discussed"}],
         )
+        self.page.goto(
+            "%s/web?debug=1#model=community.meeting&id=%s&view_type=form"
+            % (BASE_URL, self.meeting_id)
+        )
+        self.page.locator('button[name="action_open_live_meeting"]').click()
+        expect(self.page.locator(".o_community_live_meeting")).to_be_visible()
+        self.page.get_by_role(
+            "button", name=self.ui_text("community_meetings", "Expand / Collapse all")
+        ).click()
+        expect(self.card("information", begin=False)).to_be_visible()
 
     def setUp(self):
         self.errors_before = len(self.console_errors)
@@ -318,30 +391,30 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                 ),
                 "location": "Sala de reuniones" if spanish_fixture else "Meeting room",
                 "description": (
-                    "<p>Revisar prioridades, calendario y recursos.</p>"
+                    "<p>Revisar prioridades, calendario y recursos.</p><p>La sesión reúne a coordinación, secretaría y responsables de actividad para cerrar decisiones con dependencias cruzadas.</p>"
                     if spanish_fixture
-                    else "<p>Review priorities, schedule, and resources.</p>"
+                    else "<p>Review priorities, schedule, and resources.</p><p>The session brings together coordinators, the secretary, and activity owners to settle decisions with shared dependencies.</p>"
                 ),
                 "minutes_notes": (
-                    "<p>Se acuerda preparar una propuesta para la siguiente sesión.</p>"
+                    "<p>La sesión revisó los compromisos del trimestre y las incidencias comunicadas por los equipos.</p><p>Se acordó publicar una síntesis de avances, riesgos y decisiones, manteniendo visibles las reservas expresadas durante el debate.</p>"
                     if spanish_fixture
-                    else "<p>Prepare a proposal for the next session.</p>"
+                    else "<p>The session reviewed the quarter's commitments and issues reported by each team.</p><p>The group agreed to publish a summary of progress, risks, and decisions while preserving the reservations raised during discussion.</p>"
                 ),
                 "attendee_partner_ids": [(6, 0, [reviewer["partner_id"][0]])],
             }])
             agenda_names = (
                 {
-                    "information": "Apertura y acuerdos anteriores",
-                    "discussion": "Seguimiento del proyecto comunitario",
-                    "decision": "Presupuesto del próximo trimestre",
-                    "todo": "Preparar calendario de actividades",
+                    "information": "Browser Information case — Apertura y acuerdos anteriores",
+                    "discussion": "Browser Discussion case — Seguimiento del proyecto comunitario",
+                    "decision": "Browser Decision case — Presupuesto del próximo trimestre",
+                    "todo": "Browser Todo case — Preparar calendario de actividades",
                 }
                 if spanish_fixture
                 else {
-                    "information": "Opening and previous decisions",
-                    "discussion": "Community project update",
-                    "decision": "Next quarter budget",
-                    "todo": "Prepare the activity calendar",
+                    "information": "Browser Information case — Opening and previous decisions",
+                    "discussion": "Browser Discussion case — Community project update",
+                    "decision": "Browser Decision case — Next quarter budget",
+                    "todo": "Browser Todo case — Prepare the activity calendar",
                 }
             )
             for kind, item_id in self.item_ids.items():
@@ -371,7 +444,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         self.fixture.cleanup()
 
     def card(self, kind, begin=True):
-        card = self.page.locator(".o_live_agenda_card").filter(has_text="Browser %s case" % kind.title())
+        card = self.page.locator("#agenda-card-%s" % self.item_ids[kind])
         if begin:
             expand = card.locator(".o_live_expand")
             if expand.get_attribute("aria-expanded") == "false":

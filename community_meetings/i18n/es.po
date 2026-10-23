@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 08:49+0000\n"
+"POT-Creation-Date: 2026-10-23 18:32+0000\n"
 "PO-Revision-Date: 2026-10-18 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
@@ -125,19 +125,6 @@ msgid ""
 "<span class=\"o_meeting_when_icon\"><i class=\"fa fa-pencil\" "
 "title=\"Meeting title\" aria-hidden=\"true\"/></span><span><strong>Meeting "
 "name</strong><small>Give this meeting a clear name</small></span>"
-msgstr ""
-
-#. module: community_meetings
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-#, fuzzy
-msgid "<span class=\"o_minutes_revision_separator\">·</span>"
-msgstr "<span class=\"o_stat_text\">Proponer un punto</span>"
-
-#. module: community_meetings
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid ""
-"<span class=\"o_minutes_revision_separator\">·</span>\n"
-"                    Approved by"
 msgstr ""
 
 #. module: community_meetings
@@ -798,6 +785,13 @@ msgstr ""
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+#, fuzzy
+msgid "Add an agreement title before saving."
+msgstr "Añade un título al acuerdo antes de guardar."
+
+#. module: community_meetings
+#. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Add an assigned follow-up before completing this point."
 msgstr "Añade un seguimiento asignado antes de completar este punto."
@@ -1420,6 +1414,11 @@ msgstr "Acordar cuándo volverá a reunirse el grupo."
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Agreement"
 msgstr "Acuerdo"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Agreement status"
+msgstr "Estado del acuerdo"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -2683,6 +2682,13 @@ msgid "Approved Meeting Minutes Revision"
 msgstr "Revisión del acta aprobada de la reunión"
 
 #. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
+msgid "Approved Minutes"
+msgstr "Acta aprobada"
+
+#. module: community_meetings
 #: model:ir.model,name:community_meetings.model_community_meeting_minutes_approval
 msgid "Approved Previous Minutes"
 msgstr "Actas anteriores aprobadas"
@@ -2698,6 +2704,11 @@ msgid "Approved Revisions"
 msgstr "Revisiones aprobadas"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Approved by"
+msgstr "Aprobado por"
+
+#. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Approved decision"
@@ -2707,6 +2718,14 @@ msgstr "Decisión aprobada"
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_minutes_approval__meeting_id
 msgid "Approved meeting"
 msgstr "Reunión aprobada"
+
+#. module: community_meetings
+#. odoo-javascript
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
+msgid "Approved minutes"
+msgstr "Acta aprobada"
 
 #. module: community_meetings
 #. odoo-python
@@ -3482,7 +3501,7 @@ msgstr "Asistentes"
 
 #. module: community_meetings
 #. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/discussion_mention_picker.xml:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 msgid "Attribute an intervention"
 msgstr "Atribuir una intervención"
 
@@ -3675,15 +3694,22 @@ msgstr "Atrás"
 
 #. module: community_meetings
 #. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 msgid "Back to Meetings"
 msgstr "Volver a reuniones"
 
 #. module: community_meetings
 #. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 #: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
 msgid "Back to live meeting"
 msgstr "Volver a la reunión en vivo"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
+msgid "Back to meetings"
+msgstr "Volver a reuniones"
 
 #. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting__add_point_policy__scheduled
@@ -3962,7 +3988,6 @@ msgstr "Línea de traspaso"
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_action__carryover_ids
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__carryover_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_resolution__carryover_ids
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Carryover"
 msgstr "Traspaso"
 
@@ -4264,7 +4289,6 @@ msgstr "Compañías"
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_wizard__company_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__company_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic_copy_wizard__company_id
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Company"
 msgstr "Compañía"
 
@@ -4344,7 +4368,7 @@ msgstr "Configuración"
 
 #. module: community_meetings
 #. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/discussion_mention_picker.js:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 msgid ""
 "Contacts could not be loaded. Check that this discussion is still editable."
 msgstr ""
@@ -4892,6 +4916,11 @@ msgid "Develop the point"
 msgstr "Desarrollo del punto"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Direct approval"
+msgstr "Aprobación directa"
+
+#. module: community_meetings
 #. odoo-javascript
 #. odoo-python
 #: code:addons/community_meetings/models/creation_wizard.py:0
@@ -4991,11 +5020,6 @@ msgstr "Nombre mostrado"
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__disposition
 msgid "Disposition"
 msgstr "Estado"
-
-#. module: community_meetings
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Disposition:"
-msgstr "Estado:"
 
 #. module: community_meetings
 #: model:community.meeting.dissent.reason,name:community_meetings.dissent_reason_dissent
@@ -5152,7 +5176,7 @@ msgstr ""
 
 #. module: community_meetings
 #. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.xml:0
+#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
 msgid "Draft preview · saved content"
 msgstr "Vista previa del borrador · contenido guardado"
 
@@ -6250,9 +6274,9 @@ msgid "Follow-up types new points of this series may use."
 msgstr "Tipos de seguimiento que pueden usar los puntos nuevos de esta serie."
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_settings_followups
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Follow-ups"
 msgstr "Seguimientos"
 
@@ -6333,6 +6357,11 @@ msgstr "Desde un seguimiento"
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "From meeting"
 msgstr "Desde la reunión"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "From point"
+msgstr "Del punto"
 
 #. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__timezone__gb
@@ -6742,7 +6771,7 @@ msgstr "Unirse a la reunión"
 
 #. module: community_meetings
 #. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/discussion_mention_picker.xml:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 msgid "Keep a literal @"
 msgstr "Conservar una @ literal"
 
@@ -6985,6 +7014,11 @@ msgid "Manual"
 msgstr "Manual"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Manual approval"
+msgstr "Aprobación manual"
+
+#. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
 msgid "Mark this meeting as held even though it was never started?"
 msgstr "¿Marcar esta reunión como celebrada aunque nunca se haya iniciado?"
@@ -7000,8 +7034,8 @@ msgstr "¿Marcar esta reunión como celebrada aunque nunca se haya iniciado?"
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__meeting_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_resolution__meeting_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_revision__meeting_id
-#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
 msgid "Meeting"
 msgstr "Reunión"
 
@@ -7123,6 +7157,11 @@ msgstr "Fecha de la reunión"
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
 msgid "Meeting defaults"
 msgstr "Valores de la reunión"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Meeting end"
+msgstr "Fin de la reunión"
 
 #. module: community_meetings
 #: model:ir.model.constraint,message:community_meetings.constraint_community_meeting_kind_code_unique
@@ -7252,7 +7291,7 @@ msgstr "Las reuniones deben crearse como borrador."
 
 #. module: community_meetings
 #. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/discussion_mention_picker.xml:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 msgid "Mentions do not notify people or give access to the meeting."
 msgstr "Las menciones no notifican a las personas ni dan acceso a la reunión."
 
@@ -7448,6 +7487,11 @@ msgid "Move up"
 msgstr "Subir"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Moved to"
+msgstr "Trasladado a"
+
+#. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Multiple people"
@@ -7640,6 +7684,11 @@ msgstr "Fecha de la próxima reunión"
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__next_meeting_rule
 msgid "Next meeting default"
 msgstr "Regla predeterminada para la próxima reunión"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Next meeting in"
+msgstr "Siguiente reunión en"
 
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series__has_next_meeting_point
@@ -8261,7 +8310,6 @@ msgstr "Organizador"
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Origin"
 msgstr "Origen"
 
@@ -8791,6 +8839,8 @@ msgid "Point description"
 msgstr "Descripción del punto"
 
 #. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_topic_form
 msgid "Point details"
 msgstr "Detalles del punto"
@@ -9022,6 +9072,7 @@ msgstr "Actividad de seguimiento principal"
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__priority
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carry_review_line__priority
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__priority
@@ -9100,6 +9151,11 @@ msgid "Proposed"
 msgstr "Propuesto"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Proposed by"
+msgstr "Propuesto por"
+
+#. module: community_meetings
 #. odoo-python
 #: code:addons/community_meetings/models/agenda_preparation.py:0
 #: code:addons/community_meetings/models/creation_wizard.py:0
@@ -9167,7 +9223,6 @@ msgstr "Lectores"
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover__reason
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover_wizard__reason
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Reason"
 msgstr "Motivo"
 
@@ -9513,6 +9568,8 @@ msgid "Responded By"
 msgstr "Respondido por"
 
 #. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_agenda_item__presenter_partner_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__presenter_partner_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_series_agenda_template__presenter_partner_id
@@ -9570,6 +9627,12 @@ msgstr "Reanuda la reunión antes de editar los registros en vivo."
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "Retry by editing the affected field."
 msgstr "Vuelve a editar el campo afectado para reintentarlo."
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
+msgid "Return to meeting"
+msgstr "Volver a la reunión"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -9751,6 +9814,11 @@ msgid "Scheduled"
 msgstr "Programada"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Scheduled date"
+msgstr "Fecha programada"
+
+#. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_search
 msgid "Scheduled in the Past"
 msgstr "Programadas en el pasado"
@@ -9831,7 +9899,6 @@ msgstr "Secuencia"
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_create_wizard__step__series
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__step__basics
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_search
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Series"
 msgstr "Serie"
 
@@ -10067,9 +10134,9 @@ msgstr "Tipo de declaración"
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover__status
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_resolution__status
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_revision__status
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_list
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_search
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Status"
 msgstr "Estado"
 
@@ -10312,7 +10379,9 @@ msgstr "La reunión de destino debe tener un inicio programado posterior."
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 msgid "The earlier minutes could not be prepared. Please refresh and retry."
-msgstr "No se pudo preparar el acta anterior. Actualiza la página e inténtalo de nuevo."
+msgstr ""
+"No se pudo preparar el acta anterior. Actualiza la página e inténtalo de "
+"nuevo."
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_preparation
@@ -10647,6 +10716,12 @@ msgstr ""
 #: model:ir.model.constraint,message:community_meetings.constraint_community_meeting_creation_token_unique
 msgid "This meeting has already been created."
 msgstr "Esta reunión ya ha sido creada."
+
+#. module: community_meetings
+#. odoo-python
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "This meeting has no approved minutes."
+msgstr "Esta reunión no tiene acta aprobada."
 
 #. module: community_meetings
 #. odoo-python
@@ -11038,6 +11113,11 @@ msgid "Usual attendees"
 msgstr "Asistentes habituales"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_list
+msgid "View approved minutes"
+msgstr "Ver acta aprobada"
+
+#. module: community_meetings
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series__timezone__w-su
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__timezone__w-su
 msgid "W-SU"
@@ -11303,6 +11383,16 @@ msgid "fa-comments-o"
 msgstr "fa-comments-o"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "in"
+msgstr "en"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "in the meeting"
+msgstr "en la reunión"
+
+#. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/fields/point_options/point_options.xml:0
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
@@ -11322,10 +11412,20 @@ msgid "of"
 msgstr "de"
 
 #. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "on"
+msgstr "el"
+
+#. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
 msgid "points completed"
 msgstr "puntos completados"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "while preparing"
+msgstr "al preparar"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_series_form
@@ -11334,144 +11434,20 @@ msgid "{date} {series}"
 msgstr "{date} {series}"
 
 #, fuzzy
+#~ msgid "<span class=\"o_minutes_revision_separator\">·</span>"
+#~ msgstr "<span class=\"o_stat_text\">Proponer un punto</span>"
 
-#. module: community_meetings
-#. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
-msgid "Add an agreement title before saving."
-msgstr "Añade un título al acuerdo antes de guardar."
+#~ msgid "Disposition:"
+#~ msgstr "Estado:"
 
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Meeting end"
-msgstr "Fin de la reunión"
+#~ msgid "Approved in"
+#~ msgstr "Aprobado en"
 
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Proposed by"
-msgstr "Propuesto por"
+#~ msgid "Approved while preparing"
+#~ msgstr "Aprobado al preparar"
 
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Agreement status"
-msgstr "Estado del acuerdo"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Scheduled date"
-msgstr "Fecha programada"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Next meeting in"
-msgstr "Siguiente reunión en"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Moved to"
-msgstr "Trasladado a"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "From point"
-msgstr "Del punto"
-
-#. module: community_meetings
-#. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
-msgid "Approved Minutes"
-msgstr "Acta aprobada"
-
-#. module: community_meetings
-#: code:addons/community_meetings/models/meeting.py:0
-msgid "Approved minutes"
-msgstr "Acta aprobada"
-
-#. module: community_meetings
-#: code:addons/community_meetings/views/meeting_views.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_list
-msgid "View approved minutes"
-msgstr "Ver acta aprobada"
-
-#. module: community_meetings
-#. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
-msgid "Return to meeting"
-msgstr "Volver a la reunión"
-
-#. module: community_meetings
-#. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
-msgid "Back to meetings"
-msgstr "Volver a reuniones"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Approved by"
-msgstr "Aprobado por"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Approved in"
-msgstr "Aprobado en"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Manual approval"
-msgstr "Aprobación manual"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Approved while preparing"
-msgstr "Aprobado al preparar"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Approved in the meeting"
-msgstr "Aprobado en la reunión"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "Direct approval"
-msgstr "Aprobación directa"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "in"
-msgstr "en"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "on"
-msgstr "el"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "in the meeting"
-msgstr "en la reunión"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
-msgid "while preparing"
-msgstr "al preparar"
+#~ msgid "Approved in the meeting"
+#~ msgstr "Aprobado en la reunión"
 
 #~ msgid "Time Tracking Session Mode"
 #~ msgstr "Seguimiento de tiempo"

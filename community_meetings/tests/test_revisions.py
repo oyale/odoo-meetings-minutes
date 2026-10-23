@@ -487,6 +487,25 @@ class TestMeetingRevisions(TransactionCase):
         self.assertNotIn(b">discussed<", html)
         self.assertNotIn(b"<h2>Minutes</h2>", html)
 
+    def test_pdf_report_uses_the_html_preview_sheet_wrapper(self):
+        meeting = self._drafted_meeting("HTML and PDF presentation parity")
+        revision = self._approve_without_rendering_pdf(meeting.with_user(self.approver))
+        html, _report_type = self.env["ir.actions.report"]._render_qweb_html(
+            "community_meetings.report_revision_document", revision.ids
+        )
+        preview_html = revision.get_approved_minutes_preview_html()
+
+        self.assertIn(b"o_community_minutes_preview_body", preview_html.encode())
+        self.assertIn(b"o_community_minutes_preview_body", html)
+        self.assertIn(b".o_minutes_document_title", html)
+        if self.env["res.lang"].search_count([("code", "=", "es_ES"), ("active", "=", True)]):
+            spanish_html, _report_type = (
+                self.env["ir.actions.report"]
+                .with_context(lang="es_ES")
+                ._render_qweb_html("community_meetings.report_revision_document", revision.ids)
+            )
+            self.assertIn("Acta de la reunión".encode(), spanish_html)
+
     def test_draft_preview_contains_only_public_content_and_has_no_write_effects(self):
         meeting = self._drafted_meeting("Draft preview content")
         item = meeting.agenda_item_ids[0]

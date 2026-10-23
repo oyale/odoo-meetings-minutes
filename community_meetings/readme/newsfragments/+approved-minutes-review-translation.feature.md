@@ -1,0 +1,1 @@
+The Spanish interface now labels the Approved Minutes entry point, identifies whether approval was direct or came from a later meeting, shows the source agenda point, and translates the return and unavailable-minutes messages.
