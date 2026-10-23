@@ -9,7 +9,7 @@ pulsar **Nueva reunión** allí (el mismo asistente, con la serie preseleccionad
 
 El asistente recorre seis pasos; puedes avanzar y retroceder libremente, y tus
 cambios se conservan al cambiar de serie. Al elegir una serie, sus valores se
-aplican automáticamente; no hay que confirmarlos con otro botón.
+aplican automáticamente.
 
 ![Asistente de reunión: fecha, hora, título y duración](../img/new-meeting-when.png)
 
