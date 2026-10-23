@@ -34,6 +34,7 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 - Regression coverage includes empty agreed meeting dates, amendment snapshots, and read-only access to the previous-minutes approval queue.
 - Browser diagnostics handle RPC responses evicted during navigation and capture rendered evidence when live-screen setup fails.
 - Concurrency tests can synchronize independent database transactions.
+- The invitee-priority regression test isolates candidate ranking from database collation differences.
 
 ## Community Meetings 18.0.6.2.7 (2026-10-22)
 =============================================
