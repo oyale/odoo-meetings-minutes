@@ -2570,6 +2570,7 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_agenda_item__decision_result__approved
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_resolution__decision_outcome__approved
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_revision__status__approved
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_search
 msgid "Approved"
 msgstr ""
 

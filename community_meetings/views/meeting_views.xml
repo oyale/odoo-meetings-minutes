@@ -251,6 +251,7 @@
                 <filter name="scheduled_past" string="Scheduled in the Past" domain="[('state', '=', 'scheduled'), ('start_datetime', '&lt;', context_today().strftime('%Y-%m-%d'))]"/>
                 <filter name="in_progress" string="In Progress" domain="[('state', '=', 'scheduled'), ('actual_start_datetime', '!=', False)]"/>
                 <filter name="minutes" string="Minutes to Prepare" domain="[('state', 'in', ['held', 'minutes_draft'])]"/>
+<filter name="approved" string="Approved" domain="[('state', '=', 'approved')]"/>
                 <filter name="archive" string="Archive" domain="[('state', 'in', ['approved', 'cancelled'])]"/>
                 <filter name="without_date" string="Without Date" domain="[('start_datetime', '=', False)]"/>
                 <separator/>
