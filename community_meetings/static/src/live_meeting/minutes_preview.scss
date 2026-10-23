@@ -157,6 +157,9 @@
             }
 
             .o_minutes_revision_separator { color: var(--minutes-muted); }
+            .o_minutes_revision_separator::before,
+            .o_minutes_separator::before { content: "·"; }
+            .o_minutes_separator { color: var(--minutes-muted); }
 
             .o_minutes_document_metadata {
                 display: grid;

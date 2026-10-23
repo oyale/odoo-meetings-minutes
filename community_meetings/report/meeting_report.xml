@@ -38,15 +38,23 @@
                 </p>
                 <p t-else="" class="o_minutes_document_revision">
                     Revision <span t-out="doc['revision'].revision_number"/>
-                    <span class="o_minutes_revision_separator">·</span>
+                    <span class="o_minutes_revision_separator" aria-hidden="true"/>
                     <span t-translation="on">Approved by</span> <strong t-out="doc['snapshot']['approval']['approver']"/>
-                    <span class="o_minutes_revision_separator">·</span>
+                    <span class="o_minutes_revision_separator" aria-hidden="true"/>
                     <time t-out="doc['snapshot']['approval']['approved_at']"/>
                 </p>
                 <p t-if="not doc.get('draft')" class="o_minutes_document_approval_source">
                     <t t-if="doc['snapshot']['approval'].get('meeting_code')">
-                        <span t-translation="on">Approved in</span> <strong t-out="doc['snapshot']['approval']['meeting_code']"/>
-                        <span t-if="doc['snapshot']['approval'].get('point_name')"> · <t t-out="doc['snapshot']['approval']['point_name']"/></span>
+                        <t t-if="doc['snapshot']['approval'].get('offline')">
+                            <span t-translation="on">Approved while preparing</span> <strong t-out="doc['snapshot']['approval']['meeting_code']"/>
+                        </t>
+                        <t t-else="">
+                            <span t-translation="on">Approved in</span> <strong t-out="doc['snapshot']['approval']['meeting_code']"/>
+                        </t>
+                        <span t-if="doc['snapshot']['approval'].get('point_name')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="doc['snapshot']['approval']['point_name']"/></span>
+                    </t>
+                    <t t-elif="doc['snapshot']['approval'].get('origin') == 'live'">
+                        <span t-translation="on">Approved in the meeting</span>
                     </t>
                     <t t-else=""><span t-translation="on">Manual approval</span></t>
                 </p>
@@ -131,11 +139,11 @@
                                 <ul>
                                     <li t-foreach="item['actions']" t-as="action" t-key="action_index">
                                         <strong t-out="action['name']"/>
-                                        <span t-if="action.get('kind_label')"> · <t t-out="action['kind_label']"/></span>
-                                        <span t-if="action.get('activity_type')"> · <t t-out="action['activity_type']"/></span>
-                                        <span t-if="action.get('responsibles') or action.get('responsible')"> · <t t-out="', '.join(action.get('responsibles', [])) or action['responsible']"/></span>
-                                        <span t-if="action.get('state_label')"> · <t t-out="action['state_label']"/></span>
-                                        <span t-if="action.get('deadline')"> · <t t-out="action['deadline']"/></span>
+                                        <span t-if="action.get('kind_label')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="action['kind_label']"/></span>
+                                        <span t-if="action.get('activity_type')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="action['activity_type']"/></span>
+                                        <span t-if="action.get('responsibles') or action.get('responsible')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="', '.join(action.get('responsibles', [])) or action['responsible']"/></span>
+                                        <span t-if="action.get('state_label')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="action['state_label']"/></span>
+                                        <span t-if="action.get('deadline')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="action['deadline']"/></span>
                                     </li>
                                 </ul>
                             </div>

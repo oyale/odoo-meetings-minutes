@@ -11430,6 +11430,18 @@ msgstr "Aprobado en"
 msgid "Manual approval"
 msgstr "Aprobación manual"
 
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Approved while preparing"
+msgstr "Aprobado al preparar"
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Approved in the meeting"
+msgstr "Aprobado en la reunión"
+
 #~ msgid "Time Tracking Session Mode"
 #~ msgstr "Seguimiento de tiempo"
 

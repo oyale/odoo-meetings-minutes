@@ -888,7 +888,10 @@ class CommunityMeeting(models.Model):
             raise AccessError(_("Only an authorized meeting approver can approve minutes."))
         if any(meeting.series_id.has_minutes_approval_point for meeting in self):
             raise UserError(_("Approve these minutes from a later meeting's minutes approval point."))
-        return self._approve_minutes()
+        return self._approve_minutes(origin=self.env.context.get("approval_origin", "form"))
+
+    def action_approve_minutes_live(self):
+        return self.with_context(approval_origin="live").action_approve_minutes()
 
     def _check_previous_minutes_approval_route(self, live, offline):
         if live:
@@ -969,7 +972,9 @@ class CommunityMeeting(models.Model):
         if not self.series_id.has_minutes_approval_point:
             raise UserError(_("This series does not require approval from a later meeting."))
 
-    def _approve_minutes(self, approval_point=None, offline=False):
+    def _approve_minutes(self, approval_point=None, offline=False, origin=None):
+        if origin is None:
+            origin = "offline" if (approval_point and offline) else ("meeting" if approval_point else "form")
         revisions = self.env["community.meeting.revision"]
         for meeting in self:
             meeting._check_minutes_approval_authorization(approval_point, offline)
@@ -989,7 +994,10 @@ class CommunityMeeting(models.Model):
                 raise ValidationError(_("Add at least one agenda item before approving the minutes."))
             meeting._validate_before_approval()
             revision = self.env["community.meeting.revision"]._create_approved_revision(
-                meeting, approval_point=approval_point, offline=offline
+                meeting,
+                approval_point=approval_point,
+                offline=offline,
+                origin=origin,
             )
             meeting._set_approved_revision(revision)
             if approval_point:

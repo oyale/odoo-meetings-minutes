@@ -1018,7 +1018,7 @@ export class LiveMeeting extends Component {
     }
     async approveMinutes() {
         if (!await this.flushEditors()) return;
-        await this.transition("action_approve_minutes", "approved");
+        await this.transition("action_approve_minutes_live", "approved");
     }
     async approvePreviousMinutes(item, meetingId) {
         if (!await this.flushEditors()) return;

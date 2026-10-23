@@ -198,6 +198,8 @@ class TestMeetingRevisions(TransactionCase):
         self.assertEqual(snapshot["approval"]["meeting_code"], later.code)
         self.assertEqual(snapshot["approval"]["point_name"], point.name)
         self.assertFalse(snapshot["approval"]["manual"])
+        self.assertEqual(snapshot["approval"]["origin"], "meeting")
+        self.assertFalse(snapshot["approval"]["offline"])
         self.assertEqual(record.revision_id, first_revision)
 
         earlier.with_user(self.manager).action_start_amendment()
@@ -302,6 +304,9 @@ class TestMeetingRevisions(TransactionCase):
         self.assertEqual({revision.meeting_id for revision in revisions}, {earlier})
         self.assertEqual((earlier.state, later.state), ("approved", "minutes_draft"))
         self.assertEqual(point.disposition, "closed")
+        snapshot = json.loads(earlier.approved_revision_id.snapshot_json)
+        self.assertEqual(snapshot["approval"]["origin"], "offline")
+        self.assertTrue(snapshot["approval"]["offline"])
         approval = point.minutes_approval_ids.filtered(lambda row: row.meeting_id == earlier)
         self.assertEqual(approval.revision_id, earlier.approved_revision_id)
 
@@ -762,6 +767,22 @@ class TestMeetingRevisions(TransactionCase):
         meeting = self._drafted_meeting("No approved minutes yet")
         with self.assertRaises(UserError):
             meeting.with_user(self.approver).action_view_approved_minutes()
+
+    def test_live_direct_approval_records_live_origin(self):
+        meeting = self._drafted_meeting("Live direct approval")
+        with patch.object(
+            type(self.env["ir.actions.report"]),
+            "_render_qweb_pdf",
+            return_value=(b"%PDF-1.4", "pdf"),
+        ):
+            revision = meeting.with_user(self.approver).action_approve_minutes_live()
+        snapshot = json.loads(revision.snapshot_json)
+        self.assertEqual(snapshot["approval"]["origin"], "live")
+        self.assertFalse(snapshot["approval"]["manual"])
+        html, _ = self.env["ir.actions.report"]._render_qweb_html(
+            "community_meetings.report_revision_document", revision.ids
+        )
+        self.assertIn(b"Approved in the meeting", html)
 
     def test_report_html_and_snapshot_are_stable_after_action_changes(self):
         _, action, revision = self._approved_meeting()

@@ -299,7 +299,7 @@ class CommunityMeetingRevision(models.Model):
         return snapshot
 
     @api.model
-    def _build_snapshot(self, meeting, approver, approved_at, approval_point=None, offline=False):
+    def _build_snapshot(self, meeting, approver, approved_at, approval_point=None, offline=False, origin="form"):
         timezone = meeting.series_id.timezone or meeting.company_id.partner_id.tz or "UTC"
         snapshot = self._build_public_content(meeting, timezone=timezone)
         approval_meeting = approval_point.meeting_id if approval_point else meeting.browse()
@@ -310,7 +310,8 @@ class CommunityMeetingRevision(models.Model):
             "meeting_name": approval_meeting.name or "",
             "point_name": approval_point.name if approval_point else "",
             "offline": bool(offline),
-            "manual": not bool(approval_point),
+            "manual": not bool(approval_point) and origin != "live",
+            "origin": origin,
         }
         snapshot["extensions"] = self._get_snapshot_extensions(meeting, approver, approved_at)
         return snapshot
@@ -321,7 +322,7 @@ class CommunityMeetingRevision(models.Model):
         return {}
 
     @api.model
-    def _create_approved_revision(self, meeting, approval_point=None, offline=False):
+    def _create_approved_revision(self, meeting, approval_point=None, offline=False, origin="form"):
         if approval_point:
             point_meeting = approval_point.meeting_id
             live_editor_approval = (
@@ -370,6 +371,7 @@ class CommunityMeetingRevision(models.Model):
             approved_at,
             approval_point=approval_point,
             offline=offline,
+            origin=origin,
         )
         snapshot_json = json.dumps(snapshot, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         digest = hashlib.sha256(snapshot_json.encode("utf-8")).hexdigest()

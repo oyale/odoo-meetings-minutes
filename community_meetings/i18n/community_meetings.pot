@@ -11077,3 +11077,14 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Manual approval"
 msgstr ""
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Approved while preparing"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Approved in the meeting"
+msgstr ""
