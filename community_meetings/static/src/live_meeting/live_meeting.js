@@ -64,7 +64,7 @@ export class LiveMeeting extends Component {
                 if (mention) void this.saveRichText(mention.key, mention.recordId, mention.model, mention.field);
             },
         });
-        this.state = useState({ loading: true, saving: 0, saveError: false, saveErrorDetail: "", unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, headerDraft: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissentReasons: [], dissents: [], actions: [], relatedActionsById: {}, resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "activity", activity_type_id: false }, expanded: {}, expandedNotes: {}, relatedTopicOpenId: false, relatedActionOpenId: false, focusMode: false, reorderMode: false, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], pendingMinutes: [], minutesApprovals: [], defaultOwner: false });
+        this.state = useState({ loading: true, saving: 0, saveError: false, saveErrorDetail: "", unsavedEditors: {}, submitting: {}, editingRecords: {}, editingTypes: {}, headerDraft: {}, attendeeEditorOpen: false, attendeeIds: [], attendeeSearch: "", partnerResults: [], deferrals: {}, reopening: {}, meeting: {}, items: [], types: [], dissentReasons: [], dissents: [], actions: [], relatedActionsById: {}, resolutions: [], privateNotes: [], users: [], activityTypes: [], followupDefaults: { kind: "activity", activity_type_id: false }, expanded: {}, expandedNotes: {}, relatedTopicOpenId: false, relatedActionOpenId: false, focusMode: false, reorderMode: false, returnMeeting: false, activeItemId: false, showPendingOnly: false, newDissent: {}, newAction: {}, newResolution: {}, newPrivateNote: {}, panels: {}, attendees: [], incoming: [], pendingMinutes: [], minutesApprovals: [], defaultOwner: false });
         this.pendingWrites = new Map();
         this.editors = new Map();
         this.editorTimers = new Map();
@@ -117,6 +117,7 @@ export class LiveMeeting extends Component {
         );
     }
     get draftingMinutes() { return ["held", "minutes_draft"].includes(this.state.meeting.state); }
+    get backLabel() { return this.state.returnMeeting ? _t("Back to live meeting") : _t("Back to Meetings"); }
     get canPreviewMinutes() {
         return this.draftingMinutes && Boolean(this.state.capabilities?.can_preview_minutes);
     }
@@ -128,6 +129,10 @@ export class LiveMeeting extends Component {
             this.notification.add(_t("Could not identify the meeting to open. Return to the Meetings list and open it again."), { type: "danger" });
             return;
         }
+        const liveReturn = this.props.action?.params?.live_return;
+        this.state.returnMeeting = liveReturn?.meeting_id
+            ? { meeting_id: liveReturn.meeting_id, item_id: liveReturn.item_id || false }
+            : false;
         await this.refreshCapabilities();
         const editorial = this.state.capabilities.can_view_editorial;
         const [meetings, items, types, dissents, actions, resolutions, privateNotes] = await Promise.all([
@@ -641,7 +646,7 @@ export class LiveMeeting extends Component {
         const value = this.pointOutcome(item);
         return value === "approved" || value === "closed" || value === "discussed" ? "fa-check-circle"
             : value === "denied" ? "fa-times-circle"
-                : value === "deferred" ? "fa-pause-circle"
+                : value === "deferred" ? "fa-hourglass-half"
                     : value === "in_progress" ? "fa-play-circle" : "fa-clock-o";
     }
     typeIcon(item) {
@@ -677,6 +682,7 @@ export class LiveMeeting extends Component {
         const [saved] = await this.orm.read("community.meeting.agenda.item", [itemId], ["disposition", "decision_result", "topic_state", "topic_outcome", "is_followup", "actual_started_at", "actual_minutes", "actual_seconds"]);
         Object.assign(item, saved);
         if (!item.actual_started_at) this.setPointEditorsEditable(item, false);
+        this.collapseResolvedPoint(item);
         const resolutions = await this.orm.searchRead("community.meeting.resolution", [["agenda_item_id", "=", itemId]], ["agenda_item_id", "title", "body", "status", "decision_outcome"], { order: "id" });
         const refreshed = new Map(resolutions.map((row) => [row.id, row]));
         this.state.resolutions = this.state.resolutions
@@ -755,14 +761,29 @@ export class LiveMeeting extends Component {
     }
     get completedCount() { return this.state.items.filter((item) => ["discussed", "closed"].includes(item.disposition)).length; }
     get unresolvedItems() {
-        return this.state.items.filter((item) =>
-            !["discussed", "closed"].includes(item.disposition)
-            || (this.typeBehavior(item) === "decision" && !this.decisionAgreement(item))
-        );
+        return this.state.items.filter((item) => {
+            if (item.disposition === "deferred") return false;
+            if (["discussed", "closed"].includes(item.disposition)) {
+                return this.typeBehavior(item) === "decision" && !this.decisionAgreement(item);
+            }
+            return true;
+        });
     }
     canStartPoint(item) {
         return item.disposition !== "closed"
             && !(this.typeBehavior(item) === "information" && item.disposition === "discussed");
+    }
+    isResolvedPoint(item) {
+        return ["approved", "denied", "closed"].includes(item.disposition)
+            || (item.disposition === "discussed" && this.typeBehavior(item) !== "decision");
+    }
+    collapseResolvedPoint(item) {
+        if (!this.state.focusMode && this.isResolvedPoint(item)) this.state.expanded[item.id] = false;
+    }
+    beginReopen(item) {
+        this.state.expanded[item.id] = true;
+        this.state.activeItemId = item.id;
+        this.state.reopening[item.id] = "";
     }
     canCompletePoint(item) {
         if (item.is_followup) return true;
@@ -979,6 +1000,10 @@ export class LiveMeeting extends Component {
     async openMeeting(id) {
         if (!await this.flushEditors()) return;
         const action = await this.orm.call("community.meeting", "action_open_live_meeting", [[id]]);
+        action.params = {
+            ...action.params,
+            live_return: { meeting_id: this.meetingId, item_id: this.state.activeItemId || 0 },
+        };
         return this.actionService.doAction(action);
     }
     async openFollowupActivity(id) {
@@ -1040,6 +1065,7 @@ export class LiveMeeting extends Component {
             const [saved] = await this.orm.read("community.meeting.agenda.item", [item.id], ["agenda_type_id", "kind", "disposition", "decision_result", "actual_started_at", "actual_minutes", "actual_seconds"]);
             Object.assign(item, saved);
             if (!item.actual_started_at) this.setPointEditorsEditable(item, false);
+            this.collapseResolvedPoint(item);
         });
     }
 
@@ -1116,6 +1142,7 @@ export class LiveMeeting extends Component {
             Object.assign(item, saved);
             if (!item.actual_started_at) this.setPointEditorsEditable(item, false);
             delete this.state.deferrals[item.id];
+            if (!this.state.focusMode) this.state.expanded[item.id] = false;
         });
     }
 
@@ -1243,7 +1270,11 @@ export class LiveMeeting extends Component {
     }
     async addResolution(item) {
         const form = this.state.newResolution[item.id] || {};
-        if (!form.title?.trim() || !await this.flushEditors()) return;
+        if (!form.title?.trim()) {
+            this.notification.add(_t("Add an agreement title before saving."), { type: "warning" });
+            return;
+        }
+        if (!await this.flushEditors()) return;
         await this.createRecord(`resolution:${item.id}`, "community.meeting.resolution", {
             meeting_id: this.meetingId, agenda_item_id: item.id, title: form.title.trim(), body: form.body || false,
             decision_outcome: this.typeBehavior(item) === "decision" ? (this.newDecisionOutcome(item) || false) : false,
@@ -1427,8 +1458,18 @@ export class LiveMeeting extends Component {
             this.notification.add(_t("Save the pending edits before leaving this meeting."), { type: "warning" });
             return;
         }
+        if (this.state.returnMeeting?.meeting_id) return this.returnToSourceMeeting();
         if (this.props.close) return this.props.close();
         return this.actionService.doAction({ type: "ir.actions.act_window", res_model: "community.meeting", views: [[false, "list"], [false, "form"]], target: "current" });
+    }
+    async returnToSourceMeeting() {
+        const returnMeeting = this.state.returnMeeting;
+        this.state.returnMeeting = false;
+        if (returnMeeting.item_id) {
+            sessionStorage.setItem(this.reviewReturnItemKey(returnMeeting.meeting_id), String(returnMeeting.item_id));
+        }
+        const action = await this.orm.call("community.meeting", "action_open_live_meeting", [[returnMeeting.meeting_id]]);
+        return this.actionService.doAction(action);
     }
     async previewMinutes() {
         if (!await this.flushEditors()) {

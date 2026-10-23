@@ -4,7 +4,7 @@
         <main class="o_community_live_meeting">
             <div class="o_live_topbar">
                 <div class="o_live_topbar_navigation">
-                    <button class="btn btn-secondary" t-att-disabled="state.saving > 0" t-on-click="close"><i class="fa fa-arrow-left me-1" aria-hidden="true"/> Back to Meetings</button>
+                    <button class="btn btn-secondary" t-att-disabled="state.saving > 0" t-on-click="close"><i class="fa fa-arrow-left me-1" aria-hidden="true"/> <t t-out="backLabel"/></button>
                 </div>
                 <div class="o_live_workflow_buttons">
                   <t t-if="state.capabilities?.can_edit">
@@ -130,6 +130,32 @@
                             </div>
                             <button t-if="state.expanded[item.id] and canEditDiscussion(item)" class="btn btn-sm btn-outline-secondary o_live_point_edit" title="Edit point options" aria-label="Edit point options" t-on-click="() => this.editPoint(item)"><i class="fa fa-pencil" aria-hidden="true"/></button>
                         </div>
+                        <div t-if="!state.expanded[item.id] and !readOnly and item.disposition !== 'open'" class="o_live_collapsed_outcome">
+                            <span t-if="item.review_next_meeting" class="badge text-bg-info">Will be reviewed at the next meeting</span>
+                            <button t-if="!item.is_followup" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.beginReopen(item)" aria-label="Undo point result"><i class="fa fa-undo" aria-hidden="true"/> Undo result</button>
+                        </div>
+                        <section t-if="state.expanded[item.id]" class="o_live_point_details" aria-label="Point details">
+                            <div t-if="item.presenter_partner_id" class="o_live_point_details_item">
+                                <i class="fa fa-user-o" aria-hidden="true"/>
+                                <span class="o_live_point_details_label">Responsible</span>
+                                <strong t-out="label(item.presenter_partner_id)"/>
+                            </div>
+                            <div t-if="item.agenda_type_id" class="o_live_point_details_item">
+                                <i t-attf-class="fa #{typeIcon(item)}" aria-hidden="true"/>
+                                <span class="o_live_point_details_label">Debate type</span>
+                                <strong t-out="label(item.agenda_type_id)"/>
+                            </div>
+                            <div t-if="item.estimated_minutes" class="o_live_point_details_item">
+                                <i class="fa fa-clock-o" aria-hidden="true"/>
+                                <span class="o_live_point_details_label">Estimate</span>
+                                <strong><t t-out="item.estimated_minutes"/> min</strong>
+                            </div>
+                            <div t-if="item.priority !== '1'" class="o_live_point_details_item">
+                                <i class="fa fa-flag" aria-hidden="true"/>
+                                <span class="o_live_point_details_label">Priority</span>
+                                <strong t-out="priorityLabel(item)"/>
+                            </div>
+                        </section>
                         <section t-if="typeBehavior(item) === 'next_meeting'" class="o_live_next_meeting_feature">
                             <div class="o_live_next_meeting_heading"><i class="fa fa-calendar" aria-hidden="true"/><div><strong>Next meeting</strong><span t-out="state.capabilities.timezone"/></div></div>
                             <label class="visually-hidden" t-att-for="'next-date-' + item.id">Next meeting date</label><input t-att-id="'next-date-' + item.id" class="form-control" type="datetime-local" aria-label="Next meeting date" t-att-value="nextMeetingLocalValue(item)" t-att-disabled="!canEditNextMeetingDate(item)" t-on-change="(ev) => this.setNextMeetingDate(item, ev.target.value)"/>
@@ -155,7 +181,7 @@
                             <div t-if="item.has_started or draftingMinutes or timingEnabled" class="o_live_subsection o_live_discussion_notes">
                                 <div class="o_live_notes_heading">
                                     <label class="form-label" t-att-for="'discussion-' + item.id"><i class="fa fa-pencil-square-o" aria-hidden="true"/> Discussion notes</label>
-                                    <button t-if="canEditDiscussion(item) and !state.focusMode" class="btn btn-sm btn-link" t-att-aria-expanded="state.expandedNotes[item.id] ? 'true' : 'false'" t-on-click="() => this.toggleNotesExpanded(item)"><i t-att-class="state.expandedNotes[item.id] ? 'fa fa-compress' : 'fa fa-expand'" aria-hidden="true"/> <t t-if="state.expandedNotes[item.id]">Reduce editor</t><t t-else="">Enlarge editor</t></button>
+                                    <button t-if="canEditDiscussion(item)" class="btn btn-sm btn-link" t-att-aria-expanded="state.expandedNotes[item.id] ? 'true' : 'false'" t-on-click="() => this.toggleNotesExpanded(item)"><i t-att-class="state.expandedNotes[item.id] ? 'fa fa-compress' : 'fa fa-expand'" aria-hidden="true"/> <t t-if="state.expandedNotes[item.id]">Reduce editor</t><t t-else="">Enlarge editor</t></button>
                                 </div>
                                 <t t-if="canEditDiscussion(item)"><div t-att-class="'o_live_richtext ' + (state.expandedNotes[item.id] ? 'o_live_richtext_expanded' : '')"><t t-component="Wysiwyg" t-props="{ options: richTextOptions(item.discussion_notes, 'discussion_notes:' + item.id, 'community.meeting.agenda.item', item.id, 'discussion_notes'), editingValue: item.discussion_notes || '', startWysiwyg: richTextStarter('discussion_notes:' + item.id, item.id, 'community.meeting.agenda.item', 'discussion_notes') }"/></div></t>
                                 <t t-else=""><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></t>
@@ -420,7 +446,7 @@
                             </div>
                               </t>
                               <div t-if="(timingEnabled and !item.actual_started_at) or locked" class="o_live_paused_readonly" aria-label="Point details read only">
-                                <span t-if="item.review_next_meeting" class="badge text-bg-info">Will be reviewed at the next meeting</span>
+                                <span t-if="state.expanded[item.id] and item.review_next_meeting" class="badge text-bg-info">Will be reviewed at the next meeting</span>
                                 <p t-if="item.discussion_notes or pointDissents(item).length or pointResolutions(item).length or pointActions(item).length" class="text-muted">Live notes are saved. Resume this point to continue editing.</p>
                                 <button t-if="!readOnly and state.meeting.actual_start_datetime and !state.meeting.actual_end_datetime and item.disposition !== 'open'" class="btn btn-outline-secondary" t-on-click="() => { state.reopening[item.id] = ''; }" aria-label="Undo point result"><i class="fa fa-undo" aria-hidden="true"/> Undo result</button>
                                 <div t-if="!readOnly and state.reopening[item.id] !== undefined" class="o_live_reopen_form"><label class="form-label" t-att-for="'reopen-reason-paused-' + item.id">Why reopen this point? (optional)</label><input t-att-id="'reopen-reason-paused-' + item.id" class="form-control" t-att-value="state.reopening[item.id]" t-on-input="(ev) => this.setReopenReason(item, ev.target.value)"/><button class="btn btn-primary" t-att-disabled="state.submitting['reopen:' + item.id]" t-on-click="() => this.reopenPoint(item)">Reopen point</button></div>
