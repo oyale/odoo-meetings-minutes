@@ -111,6 +111,19 @@ class MeetingRevisionReport(models.AbstractModel):
             )
         )
 
+    @api.model
+    def _render_revision_preview(self, revision):
+        snapshot = json.loads(revision.snapshot_json)
+        doc = self._prepare_document(snapshot, revision=revision, lang=self.env.user.lang)
+        return (
+            self.env["ir.qweb"]
+            .with_context(lang=self.env.user.lang)
+            ._render(
+                "community_meetings.report_revision_preview",
+                {"doc": doc, "lang": self.env.user.lang},
+            )
+        )
+
     def _get_report_values(self, docids, data=None):
         revisions = self.env["community.meeting.revision"].browse(docids)
         revisions.check_access("read")

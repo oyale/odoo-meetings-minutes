@@ -694,6 +694,29 @@ class CommunityMeeting(models.Model):
             "params": {"meeting_id": self.id},
         }
 
+    def action_view_approved_minutes_from_list(self):
+        self.ensure_one()
+        return self.with_context(minutes_return_to="list").action_view_approved_minutes()
+
+    def action_view_approved_minutes(self):
+        self.ensure_one()
+        self.check_access("read")
+        revision = self.approved_revision_id
+        if not revision:
+            raise UserError(_("This meeting has no approved minutes."))
+        revision.check_access("read")
+        return {
+            "type": "ir.actions.client",
+            "tag": "community_meetings.minutes_preview",
+            "name": _("Approved minutes"),
+            "target": "current",
+            "params": {
+                "meeting_id": self.id,
+                "revision_id": revision.id,
+                "return_to": self.env.context.get("minutes_return_to", "form"),
+            },
+        }
+
     def _check_minutes_preview_access(self):
         self.ensure_one()
         self.check_access("read")

@@ -136,7 +136,7 @@ export class LiveMeeting extends Component {
         await this.refreshCapabilities();
         const editorial = this.state.capabilities.can_view_editorial;
         const [meetings, items, types, dissents, actions, resolutions, privateNotes] = await Promise.all([
-            this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "company_id", "start_datetime", "end_datetime", "actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_end_datetime", "actual_duration_minutes", "organizer_id", "secretary_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id", "duration_minutes", "coordinator_role_label", "secretary_role_label"]),
+            this.orm.read("community.meeting", [this.meetingId], ["name", "code", "state", "approved_revision_id", "company_id", "start_datetime", "end_datetime", "actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_end_datetime", "actual_duration_minutes", "organizer_id", "secretary_id", "location", "meeting_url", "attendee_partner_ids", "minutes_notes", "series_id", "duration_minutes", "coordinator_role_label", "secretary_role_label"]),
             this.orm.searchRead("community.meeting.agenda.item", [["meeting_id", "=", this.meetingId]], ["name", "topic_id", "sequence", "reorderable", "agenda_type_id", "kind", "disposition", "decision_result", "description", "discussion_notes", "discussion_history", "discard_previous_discussion", "deferral_reason", "deferral_reason_code", "deferral_blocked_by", "presenter_partner_id", "priority", "deadline", "estimated_minutes", "actual_minutes", "actual_seconds", "actual_started_at", "has_started", "review_next_meeting", "is_followup", "topic_state", "topic_outcome", "next_meeting_datetime"], { order: "sequence, id" }),
             this.orm.searchRead("community.meeting.agenda.type", [], ["name", "behavior", "active"], { order: "sequence, name", context: { active_test: false } }),
             editorial ? this.orm.searchRead("community.meeting.dissent", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "body", "reason_id", "author_display_name", "author_partner_id"], { order: "sequence, id" }) : this.orm.call("community.meeting", "get_live_dissents", [[this.meetingId]]),
@@ -1335,7 +1335,7 @@ export class LiveMeeting extends Component {
         try {
             await this.orm.call("community.meeting", method, [[this.meetingId]]);
             this.state.meeting.state = state;
-            const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_end_datetime", "actual_duration_minutes"]);
+            const [saved] = await this.orm.read("community.meeting", [this.meetingId], ["actual_start_datetime", "actual_paused_at", "actual_paused_seconds", "actual_end_datetime", "actual_duration_minutes", "approved_revision_id"]);
             Object.assign(this.state.meeting, saved);
             await this.refreshCapabilities();
             if (state === "held") {
@@ -1492,10 +1492,25 @@ export class LiveMeeting extends Component {
         return result;
     }
 
+    async viewApprovedMinutes() {
+        if (!await this.flushEditors()) return;
+        const action = await this.orm.call("community.meeting", "action_view_approved_minutes", [[this.meetingId]]);
+        action.params = {
+            ...action.params,
+            return_to: "live",
+            meeting_id: this.meetingId,
+            item_id: this.state.activeItemId || 0,
+        };
+        return this.actionService.doAction(action);
+    }
+
     setMinutesPreviewRoute(meetingId, reviewReturn = false) {
         this.router.pushState({
             cm_minutes_preview: 1,
             cm_minutes_meeting_id: meetingId,
+            cm_minutes_revision_id: 0,
+            cm_minutes_return_to: "",
+            cm_minutes_item_id: 0,
             cm_minutes_return_meeting_id: reviewReturn?.meeting_id || 0,
             cm_minutes_return_item_id: reviewReturn?.item_id || 0,
         }, { sync: true });

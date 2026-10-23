@@ -11380,6 +11380,36 @@ msgstr "Trasladado a"
 msgid "From point"
 msgstr ""
 
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
+msgid "Approved Minutes"
+msgstr "Acta aprobada"
+
+#. module: community_meetings
+#: code:addons/community_meetings/models/meeting.py:0
+msgid "Approved minutes"
+msgstr "Acta aprobada"
+
+#. module: community_meetings
+#: code:addons/community_meetings/views/meeting_views.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_list
+msgid "View approved minutes"
+msgstr "Ver acta aprobada"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
+msgid "Return to meeting"
+msgstr "Volver a la reunión"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
+msgid "Back to meetings"
+msgstr "Volver a reuniones"
+
 #~ msgid "Time Tracking Session Mode"
 #~ msgstr "Seguimiento de tiempo"
 

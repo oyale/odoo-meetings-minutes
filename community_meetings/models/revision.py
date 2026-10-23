@@ -434,3 +434,9 @@ class CommunityMeetingRevision(models.Model):
             "url": f"/web/content/{self.pdf_attachment_id.id}?download=true",
             "target": "self",
         }
+
+    def get_approved_minutes_preview_html(self):
+        self.ensure_one()
+        self.check_access("read")
+        self.meeting_id.check_access("read")
+        return self.env["report.community_meetings.report_revision_document"]._render_revision_preview(self)

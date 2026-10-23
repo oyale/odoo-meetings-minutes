@@ -6,7 +6,7 @@
                 <button type="button" class="btn btn-secondary o_minutes_preview_back" t-on-click="backToMeeting">
                     <i class="fa fa-arrow-left me-1" aria-hidden="true"/><t t-out="backToMeetingLabel"/>
                 </button>
-                <span class="o_minutes_preview_toolbar_label">Draft preview · saved content</span>
+                <span class="o_minutes_preview_toolbar_label" t-out="previewLabel"/>
             </header>
             <div t-if="state.loading" class="alert alert-info m-4" role="status">Loading minutes preview…</div>
             <div t-elif="state.error" class="alert alert-danger m-4" role="alert">

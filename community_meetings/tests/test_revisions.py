@@ -739,6 +739,26 @@ class TestMeetingRevisions(TransactionCase):
             ["Second discussion", "Review open actions"],
         )
 
+    def test_approved_minutes_actions_open_the_approved_revision(self):
+        meeting, _action, revision = self._approved_meeting()
+        action = meeting.with_user(self.approver).action_view_approved_minutes()
+        self.assertEqual(action["tag"], "community_meetings.minutes_preview")
+        self.assertEqual(action["params"]["meeting_id"], meeting.id)
+        self.assertEqual(action["params"]["revision_id"], revision.id)
+        self.assertEqual(action["params"]["return_to"], "form")
+        list_action = (
+            meeting.with_user(self.approver).with_context(minutes_return_to="list").action_view_approved_minutes()
+        )
+        self.assertEqual(list_action["params"]["return_to"], "list")
+        html = revision.get_approved_minutes_preview_html()
+        self.assertIn("Revision stability test", html)
+        self.assertIn("Review open actions", html)
+
+    def test_approved_minutes_action_requires_a_revision(self):
+        meeting = self._drafted_meeting("No approved minutes yet")
+        with self.assertRaises(UserError):
+            meeting.with_user(self.approver).action_view_approved_minutes()
+
     def test_report_html_and_snapshot_are_stable_after_action_changes(self):
         _, action, revision = self._approved_meeting()
         before_json = revision.snapshot_json

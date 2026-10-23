@@ -1160,6 +1160,32 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                 self.record("community.meeting", self.meeting_id, ["state"], page=page)["state"],
                 "approved",
             )
+            expect(page.get_by_role("button", name=self.ui_text("community_meetings", "Approved Minutes"), exact=True)).to_be_visible()
+            page.get_by_role("button", name=self.ui_text("community_meetings", "Approved Minutes"), exact=True).click()
+            preview = page.locator(".o_community_minutes_preview")
+            expect(preview).to_be_visible()
+            expect(preview).to_contain_text(self.ui_text("community_meetings", "Approved minutes"))
+            page.get_by_role("button", name=self.ui_text("community_meetings", "Back to live meeting")).click()
+            expect(page.locator(".o_live_topbar")).to_be_visible()
+            page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
+            expect(page.get_by_role("button", name=self.ui_text("community_meetings", "Approved Minutes"), exact=True)).to_be_visible()
+            page.get_by_role("button", name=self.ui_text("community_meetings", "Approved Minutes"), exact=True).click()
+            expect(page.locator(".o_community_minutes_preview")).to_be_visible()
+            page.get_by_role("button", name=self.ui_text("community_meetings", "Return to meeting")).click()
+            expect(page.locator(".o_form_view")).to_be_visible()
+            page.goto(BASE_URL + "/web#action=community_meetings.action_community_meetings")
+            expect(page.locator(".o_list_view")).to_be_visible()
+            upcoming = page.locator(".o_searchview_facet").filter(
+                has_text=self.ui_text("community_meetings", "Upcoming")
+            )
+            if upcoming.count():
+                upcoming.locator(".o_facet_remove").click()
+            list_button = page.locator('button[name="action_view_approved_minutes_from_list"]').first
+            expect(list_button).to_be_visible()
+            list_button.click()
+            expect(page.locator(".o_community_minutes_preview")).to_be_visible()
+            page.get_by_role("button", name=self.ui_text("community_meetings", "Back to meetings")).click()
+            expect(page.locator(".o_list_view")).to_be_visible()
         finally:
             context.close()
 
