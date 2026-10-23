@@ -10980,3 +10980,28 @@ msgstr ""
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 msgid "Add an agreement title before saving."
 msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+msgid "Meeting end"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+msgid "Proposed by"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+msgid "Agreement status"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+msgid "Points moved to another meeting"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+msgid "Destination"
+msgstr ""

@@ -74,6 +74,12 @@ class CommunityMeetingRevision(models.Model):
                     "name": item.name,
                     "kind": item.kind,
                     "type": item.agenda_type_id.name,
+                    "presenter": item.presenter_partner_id.name or "",
+                    "related": [
+                        {"name": topic.name, "state": topic.state or ""} for topic in item.topic_id.related_topic_ids
+                    ]
+                    if item.topic_id
+                    else [],
                     "description": self._clean_html(item.description),
                     "discussion": self._clean_html(item.discussion_notes),
                     "disposition": item.disposition,
@@ -147,9 +153,22 @@ class CommunityMeetingRevision(models.Model):
             {
                 "origin_model": transfer.origin_model,
                 "origin_name": transfer.origin_name,
+                "origin_meeting": " — ".join(
+                    part for part in [transfer.origin_meeting_id.code, transfer.origin_meeting_id.name] if part
+                ),
                 "status": transfer.status,
                 "reason": transfer.reason or "",
                 "destination": transfer.destination_meeting_id.code if transfer.destination_meeting_id else "",
+                "destination_meeting": " — ".join(
+                    part
+                    for part in [
+                        transfer.destination_meeting_id.code,
+                        transfer.destination_meeting_id.name,
+                    ]
+                    if part
+                )
+                if transfer.destination_meeting_id
+                else "",
                 "destination_series": {
                     "id": (transfer.destination_series_id or transfer.series_id).id,
                     "name": (transfer.destination_series_id or transfer.series_id).name or "",
@@ -177,6 +196,15 @@ class CommunityMeetingRevision(models.Model):
                 if meeting.start_datetime
                 else "",
                 "start_timezone": timezone if meeting.start_datetime else "",
+                "actual_end_datetime_display": format_datetime(
+                    self.env,
+                    meeting.actual_end_datetime,
+                    tz=timezone,
+                    dt_format="short",
+                )
+                if meeting.actual_end_datetime
+                else "",
+                "actual_end_timezone": timezone if meeting.actual_end_datetime else "",
                 "location": meeting.location or "",
                 "meeting_url": meeting.meeting_url or "",
                 "description": self._clean_html(meeting.description),

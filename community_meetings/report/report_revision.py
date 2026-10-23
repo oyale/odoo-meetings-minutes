@@ -10,8 +10,50 @@ class MeetingRevisionReport(models.AbstractModel):
     _description = "Approved Meeting Minutes PDF"
 
     @api.model
-    def _prepare_document(self, snapshot, revision=None, draft=False):
+    def _selection_labels(self, model_name, field_name, lang):
+        env = self.with_context(lang=lang).env
+        return dict(env[model_name]._fields[field_name]._description_selection(env))
+
+    @api.model
+    def _prepare_document(self, snapshot, revision=None, draft=False, lang=None):
+        lang = lang or self.env.lang or self.env.user.lang
         meeting = snapshot["meeting"]
+        dispositions = self._selection_labels("community.meeting.agenda.item", "disposition", lang)
+        decisions = self._selection_labels("community.meeting.agenda.item", "decision_result", lang)
+        resolution_outcomes = self._selection_labels("community.meeting.resolution", "decision_outcome", lang)
+        resolution_statuses = self._selection_labels("community.meeting.resolution", "status", lang)
+        topic_states = self._selection_labels("community.meeting.topic", "state", lang)
+        carryover_statuses = self._selection_labels("community.meeting.carryover", "status", lang)
+
+        def resolution_doc(resolution):
+            return {
+                **resolution,
+                "body_html": Markup(resolution["body"]),
+                "decision_outcome_label": resolution_outcomes.get(resolution.get("decision_outcome"), ""),
+                "status_label": resolution_statuses.get(resolution.get("status"), resolution.get("status", "")),
+            }
+
+        agenda = []
+        for item in snapshot["agenda"]:
+            disposition = item.get("disposition") or ""
+            decision = item.get("decision_result") or ""
+            agenda.append(
+                {
+                    **item,
+                    "description_html": Markup(item["description"]),
+                    "discussion_html": Markup(item["discussion"]),
+                    "disposition_label": dispositions.get(disposition, item.get("disposition_label") or disposition),
+                    "decision_result_label": decisions.get(decision, item.get("decision_result_label") or ""),
+                    "related": [
+                        {
+                            **related,
+                            "state_label": topic_states.get(related.get("state"), related.get("state", "")),
+                        }
+                        for related in item.get("related", [])
+                    ],
+                    "resolutions": [resolution_doc(resolution) for resolution in item.get("resolutions", [])],
+                }
+            )
         return {
             "revision": revision,
             "snapshot": snapshot,
@@ -19,29 +61,23 @@ class MeetingRevisionReport(models.AbstractModel):
             "meeting": meeting,
             "description": Markup(meeting["description"]),
             "minutes_notes": Markup(meeting["minutes_notes"]),
-            "agenda": [
-                {
-                    **item,
-                    "description_html": Markup(item["description"]),
-                    "discussion_html": Markup(item["discussion"]),
-                    "resolutions": [
-                        {**resolution, "body_html": Markup(resolution["body"])} for resolution in item["resolutions"]
-                    ],
-                }
-                for item in snapshot["agenda"]
-            ],
-            "general_resolutions": [
-                {**resolution, "body_html": Markup(resolution["body"])}
-                for resolution in snapshot["general_resolutions"]
-            ],
+            "agenda": agenda,
+            "general_resolutions": [resolution_doc(resolution) for resolution in snapshot["general_resolutions"]],
             "actions": snapshot["actions"],
             "dissents": [{**dissent, "body_html": Markup(dissent["body"])} for dissent in snapshot["dissents"]],
+            "carryovers": [
+                {
+                    **carry,
+                    "status_label": carryover_statuses.get(carry.get("status"), carry.get("status", "")),
+                }
+                for carry in snapshot.get("carryovers", [])
+            ],
         }
 
     @api.model
     def _render_preview(self, meeting):
         snapshot = self.env["community.meeting.revision"]._build_public_content(meeting)
-        doc = self._prepare_document(snapshot, draft=True)
+        doc = self._prepare_document(snapshot, draft=True, lang=self.env.user.lang)
         return (
             self.env["ir.qweb"]
             .with_context(lang=self.env.user.lang)
@@ -56,10 +92,11 @@ class MeetingRevisionReport(models.AbstractModel):
         revisions.check_access("read")
         for revision in revisions:
             revision.meeting_id.check_access("read")
+        lang = self.env.context.get("lang") or self.env.user.lang
         docs = []
         for revision in revisions:
             snapshot = json.loads(revision.snapshot_json)
-            docs.append(self._prepare_document(snapshot, revision=revision))
+            docs.append(self._prepare_document(snapshot, revision=revision, lang=lang))
         return {
             "doc_ids": revisions.ids,
             "doc_model": "community.meeting.revision",

@@ -387,6 +387,59 @@ class TestMeetingRevisions(TransactionCase):
             snapshot["carryovers"][0]["destination_series"],
             {"id": destination.id, "name": destination.name},
         )
+        carry = snapshot["carryovers"][0]
+        self.assertIn(meeting.code, carry["origin_meeting"])
+        self.assertIn(meeting.name, carry["origin_meeting"])
+        self.assertEqual(carry["destination_meeting"], "")
+
+    def test_report_shows_presenter_actual_end_and_localized_status(self):
+        presenter = self.env["res.partner"].create({"name": "Report Presenter"})
+        meeting = (
+            self.env["community.meeting"]
+            .with_user(self.editor)
+            .create(
+                {
+                    "name": "Report clarity",
+                    "start_datetime": "2026-11-01 10:00:00",
+                    "end_datetime": "2026-11-01 12:00:00",
+                    "location": False,
+                    "reader_user_ids": [(4, self.approver.id)],
+                }
+            )
+        )
+        item = (
+            self.env["community.meeting.agenda.item"]
+            .with_user(self.editor)
+            .create(
+                {
+                    "meeting_id": meeting.id,
+                    "name": "Presented point",
+                    "kind": "information",
+                    "discussion_notes": "<p>Report discussion</p>",
+                    "disposition": "discussed",
+                }
+            )
+        )
+        item.topic_id.with_user(self.editor).write({"presenter_partner_id": presenter.id})
+        meeting.with_user(self.editor).action_schedule()
+        meeting.with_user(self.editor).action_start_meeting()
+        meeting.with_user(self.editor).action_mark_held()
+        meeting.with_user(self.editor).action_draft_minutes()
+        revision = self._approve_without_rendering_pdf(meeting.with_user(self.approver))
+        snapshot = json.loads(revision.snapshot_json)
+        self.assertEqual(snapshot["meeting"]["end_datetime"], "2026-11-01 12:00:00")
+        self.assertNotIn("end_datetime_display", snapshot["meeting"])
+        self.assertTrue(snapshot["meeting"]["actual_end_datetime_display"])
+        self.assertEqual(snapshot["agenda"][0]["presenter"], presenter.name)
+        html, _ = self.env["ir.actions.report"]._render_qweb_html(
+            "community_meetings.report_revision_document", revision.ids
+        )
+        self.assertIn(b"Proposed by", html)
+        self.assertIn(presenter.name.encode(), html)
+        self.assertIn(b"Meeting end", html)
+        self.assertNotIn(b"Location", html)
+        self.assertIn(b"Discussed", html)
+        self.assertNotIn(b">discussed<", html)
 
     def test_draft_preview_contains_only_public_content_and_has_no_write_effects(self):
         meeting = self._drafted_meeting("Draft preview content")
