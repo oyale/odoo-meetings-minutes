@@ -1,6 +1,8 @@
 import json
 from unittest.mock import patch
 
+from lxml import html as lxml_html
+
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import TransactionCase, tagged
 
@@ -525,6 +527,19 @@ class TestMeetingRevisions(TransactionCase):
         self.assertIn("Preview dissent", preview)
         self.assertIn("SECOND_PREVIEW_DISSENT", preview)
         self.assertNotIn("PRIVATE_PREVIEW_NOTE", preview)
+        preview_tree = lxml_html.fromstring(preview)
+        item_nodes = preview_tree.xpath(
+            '//article[contains(concat(" ", normalize-space(@class), " "), " o_minutes_agenda_item ")]'
+            '[.//h3[normalize-space()="Review open actions"]]'
+        )
+        self.assertEqual(len(item_nodes), 1)
+        self.assertTrue(
+            item_nodes[0].xpath(
+                './/div[contains(concat(" ", normalize-space(@class), " "), " o_minutes_dissent ")]'
+                '//*[contains(., "Preview dissent")]'
+            )
+        )
+        self.assertFalse(preview_tree.xpath('//section[.//h2[normalize-space()="Dissents and reservations"]]'))
         self.assertEqual(meeting.state, before_state)
         self.assertEqual(meeting.revision_ids.ids, before_revisions)
 

@@ -491,6 +491,17 @@
                 }
             }
 
+            .o_minutes_point_dissents {
+                margin-top: .9rem;
+
+                h4 {
+                    margin: 0 0 .35rem;
+                    font-family: var(--minutes-body);
+                    font-size: .88rem;
+                    font-weight: 700;
+                }
+            }
+
             .o_minutes_dissent {
                 margin-top: .6rem;
                 padding: .9rem 1rem;

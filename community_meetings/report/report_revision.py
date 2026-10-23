@@ -126,6 +126,9 @@ class MeetingRevisionReport(models.AbstractModel):
                 "status_label": resolution_statuses.get(resolution.get("status"), resolution.get("status", "")),
             }
 
+        def dissent_doc(dissent):
+            return {**dissent, "body_html": Markup(dissent["body"])}
+
         actions = []
         actions_by_item = {}
         actions_by_name = {}
@@ -163,6 +166,7 @@ class MeetingRevisionReport(models.AbstractModel):
                         for related in item.get("related", [])
                     ],
                     "resolutions": [resolution_doc(resolution) for resolution in item.get("resolutions", [])],
+                    "dissents": [dissent_doc(dissent) for dissent in item.get("dissents", [])],
                     "actions": item_actions,
                     "minutes_approvals": self._prepare_minutes_approvals(item, meeting, revision, lang),
                 }
@@ -179,7 +183,7 @@ class MeetingRevisionReport(models.AbstractModel):
             "agenda": agenda,
             "general_resolutions": [resolution_doc(resolution) for resolution in snapshot["general_resolutions"]],
             "actions": actions,
-            "dissents": [{**dissent, "body_html": Markup(dissent["body"])} for dissent in snapshot["dissents"]],
+            "dissents": [dissent_doc(dissent) for dissent in snapshot["dissents"]],
             "carryovers": [
                 {
                     **carry,

@@ -144,6 +144,13 @@
                                 <p t-if="resolution.get('decision_outcome_label')" class="o_minutes_point_outcome">Decision: <strong t-out="resolution['decision_outcome_label']"/></p>
                                 <p t-if="resolution.get('status') != 'active' and resolution.get('status_label')" class="o_minutes_point_outcome"><span t-translation="on">Agreement status</span>: <strong t-out="resolution['status_label']"/></p>
                             </div>
+                            <div t-if="item.get('dissents')" class="o_minutes_point_dissents">
+                                <h4><span t-translation="on">Dissents and reservations</span></h4>
+                                <div t-foreach="item['dissents']" t-as="dissent" class="o_minutes_dissent">
+                                    <p class="o_minutes_dissent_meta"><strong t-out="dissent['kind']"/><span t-out="dissent['author']"/><span t-if="dissent.get('resolution')" t-out="dissent['resolution']"/></p>
+                                    <div class="o_minutes_rich_content" t-out="dissent['body_html']"/>
+                                </div>
+                            </div>
                             <div t-if="item.get('related')" class="o_minutes_related_points">
                                 <h4>Related points</h4>
                                 <ul>
@@ -199,13 +206,6 @@
                         <div t-if="action.get('description_html')" class="o_minutes_action_description" t-out="action['description_html']"/>
                     </li>
                 </ul>
-            </section>
-            <section t-if="doc['dissents']" class="o_minutes_document_section">
-                <h2>Dissents and reservations</h2>
-                <div t-foreach="doc['dissents']" t-as="dissent" class="o_minutes_dissent">
-                    <p class="o_minutes_dissent_meta"><strong t-out="dissent['kind']"/><span t-out="dissent['author']"/><span t-out="dissent['scope']"/></p>
-                    <div class="o_minutes_rich_content" t-out="dissent['body_html']"/>
-                </div>
             </section>
             <footer t-if="not doc.get('draft')" class="o_minutes_document_footer">
                 <span>Snapshot SHA-256</span><code t-out="doc['revision'].snapshot_sha256"/>

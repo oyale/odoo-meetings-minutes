@@ -56,6 +56,29 @@ class CommunityMeetingRevision(models.Model):
         return str(html_sanitize(value or ""))
 
     @api.model
+    def _build_dissents(self, meeting, meeting_dissents):
+        dissents = []
+        dissents_by_item = {}
+        for dissent in meeting_dissents:
+            agenda_item = dissent.agenda_item_id or dissent.resolution_id.agenda_item_id
+            row = {
+                "agenda_item_id": agenda_item.id if agenda_item else 0,
+                "resolution_id": dissent.resolution_id.id if dissent.resolution_id else 0,
+                "kind": dissent.reason_id.name or "",
+                "body": self._clean_html(dissent.body),
+                "author": dissent.author_display_name
+                or (dissent.author_partner_id.name if dissent.author_partner_id else ""),
+                "scope": dissent.resolution_id.title
+                if dissent.resolution_id
+                else (dissent.agenda_item_id.name if dissent.agenda_item_id else meeting.name),
+                "resolution": dissent.resolution_id.title if dissent.resolution_id else "",
+            }
+            dissents.append(row)
+            if row["agenda_item_id"]:
+                dissents_by_item.setdefault(row["agenda_item_id"], []).append(row)
+        return dissents, dissents_by_item
+
+    @api.model
     def _build_public_content(self, meeting, timezone=None):
         meeting.ensure_one()
         timezone = timezone or self.env.user.tz or "UTC"
@@ -191,18 +214,9 @@ class CommunityMeetingRevision(models.Model):
                 order="sequence, id",
             )
         )
-        dissents = [
-            {
-                "kind": dissent.reason_id.name or "",
-                "body": self._clean_html(dissent.body),
-                "author": dissent.author_display_name
-                or (dissent.author_partner_id.name if dissent.author_partner_id else ""),
-                "scope": dissent.resolution_id.title
-                if dissent.resolution_id
-                else (dissent.agenda_item_id.name if dissent.agenda_item_id else meeting.name),
-            }
-            for dissent in meeting_dissents
-        ]
+        dissents, dissents_by_item = self._build_dissents(meeting, meeting_dissents)
+        for item in agenda:
+            item["dissents"] = dissents_by_item.get(item["id"], [])
         carryovers = [
             {
                 "origin_model": transfer.origin_model,
