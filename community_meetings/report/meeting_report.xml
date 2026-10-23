@@ -131,7 +131,7 @@
                             <div t-if="item.get('minutes_approvals')" class="o_minutes_point_minutes_approvals">
                                 <h4><span t-translation="on">Approved previous minutes</span></h4>
                                 <ul>
-                                    <li t-foreach="item['minutes_approvals']" t-as="approved" t-key="approved_index">
+                                    <li t-foreach="item['minutes_approvals']" t-as="approved">
                                         <strong t-out="approved.get('meeting_code')"/>
                                         <span t-if="approved.get('meeting_name')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="approved.get('meeting_name')"/></span>
                                         <span t-if="approved.get('revision_number')"><span class="o_minutes_separator" aria-hidden="true"/> <span t-translation="on">Revision</span> <t t-out="approved['revision_number']"/></span>
@@ -154,7 +154,7 @@
                             <div t-if="item.get('related')" class="o_minutes_related_points">
                                 <h4>Related points</h4>
                                 <ul>
-                                    <li t-foreach="item['related']" t-as="related" t-key="related_index">
+                                    <li t-foreach="item['related']" t-as="related">
                                         <span t-out="related.get('name')"/>
                                         <span t-if="related.get('state_label')"> — <t t-out="related['state_label']"/></span>
                                     </li>
@@ -163,7 +163,7 @@
                             <div t-if="item.get('actions')" class="o_minutes_point_followups">
                                 <h4>Follow-ups</h4>
                                 <ul>
-                                    <li t-foreach="item['actions']" t-as="action" t-key="action_index">
+                                    <li t-foreach="item['actions']" t-as="action">
                                         <strong t-out="action['name']"/>
                                         <span t-if="action.get('kind_label')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="action['kind_label']"/></span>
                                         <span t-if="action.get('activity_type')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="action['activity_type']"/></span>
@@ -179,7 +179,7 @@
             </section>
             <section t-if="doc['general_resolutions']" class="o_minutes_document_section">
                 <h2>Meeting-wide resolutions</h2>
-                <div t-foreach="doc['general_resolutions']" t-as="resolution" t-key="resolution_index" class="o_minutes_resolution">
+                <div t-foreach="doc['general_resolutions']" t-as="resolution" class="o_minutes_resolution">
                     <h3 t-out="resolution['title']"/><div class="o_minutes_rich_content" t-out="resolution['body_html']"/>
                     <p t-if="resolution.get('decision_outcome_label')" class="o_minutes_point_outcome">Decision: <strong t-out="resolution['decision_outcome_label']"/></p>
                     <p t-if="resolution.get('status') != 'active' and resolution.get('status_label')" class="o_minutes_point_outcome"><span t-translation="on">Agreement status</span>: <strong t-out="resolution['status_label']"/></p>
@@ -191,7 +191,7 @@
             <section t-if="doc['actions']" class="o_minutes_document_section">
                 <h2>Follow-up actions</h2>
                 <ul class="o_minutes_actions">
-                    <li t-foreach="doc['actions']" t-as="action" t-key="action_index" class="o_minutes_action">
+                    <li t-foreach="doc['actions']" t-as="action" class="o_minutes_action">
                         <div class="o_minutes_action_title">
                             <strong t-out="action['name']"/>
                             <span t-if="action.get('kind_label')" class="o_minutes_action_kind" t-out="action['kind_label']"/>
