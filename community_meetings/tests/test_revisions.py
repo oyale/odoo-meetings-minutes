@@ -194,6 +194,10 @@ class TestMeetingRevisions(TransactionCase):
             later.with_user(self.editor).action_approve_pending_minutes(point.id, [earlier.id])
         first_revision = earlier.approved_revision_id
         record = point.minutes_approval_ids.filtered(lambda row: row.meeting_id == earlier)
+        snapshot = json.loads(first_revision.snapshot_json)
+        self.assertEqual(snapshot["approval"]["meeting_code"], later.code)
+        self.assertEqual(snapshot["approval"]["point_name"], point.name)
+        self.assertFalse(snapshot["approval"]["manual"])
         self.assertEqual(record.revision_id, first_revision)
 
         earlier.with_user(self.manager).action_start_amendment()
@@ -770,6 +774,8 @@ class TestMeetingRevisions(TransactionCase):
         self.assertEqual(report_type, "html")
         self.assertIn(b"Review open actions", rendered_html)
         self.assertIn(b"Follow-ups", rendered_html)
+        self.assertIn(b"Manual approval", rendered_html)
+        self.assertTrue(snapshot["approval"]["manual"])
         self.assertIn(b"From point", rendered_html)
         self.assertGreaterEqual(rendered_html.count(b"Prepare follow-up"), 2)
         self.assertEqual(snapshot["agenda"][0]["discussion"], "<p>Initial discussion</p>")

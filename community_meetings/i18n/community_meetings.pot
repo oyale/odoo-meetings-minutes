@@ -6834,6 +6834,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_resolution__meeting_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_revision__meeting_id
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Meeting"
 msgstr ""
 
@@ -11058,4 +11059,21 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
 msgid "Back to meetings"
+msgstr ""
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Approved by"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Approved in"
+msgstr ""
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Manual approval"
 msgstr ""

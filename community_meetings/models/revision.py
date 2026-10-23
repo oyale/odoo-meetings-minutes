@@ -299,12 +299,18 @@ class CommunityMeetingRevision(models.Model):
         return snapshot
 
     @api.model
-    def _build_snapshot(self, meeting, approver, approved_at):
+    def _build_snapshot(self, meeting, approver, approved_at, approval_point=None, offline=False):
         timezone = meeting.series_id.timezone or meeting.company_id.partner_id.tz or "UTC"
         snapshot = self._build_public_content(meeting, timezone=timezone)
+        approval_meeting = approval_point.meeting_id if approval_point else meeting.browse()
         snapshot["approval"] = {
             "approver": approver.name,
             "approved_at": fields.Datetime.to_string(approved_at),
+            "meeting_code": approval_meeting.code or "",
+            "meeting_name": approval_meeting.name or "",
+            "point_name": approval_point.name if approval_point else "",
+            "offline": bool(offline),
+            "manual": not bool(approval_point),
         }
         snapshot["extensions"] = self._get_snapshot_extensions(meeting, approver, approved_at)
         return snapshot
@@ -358,7 +364,13 @@ class CommunityMeetingRevision(models.Model):
         if not meeting.agenda_item_ids:
             raise ValidationError(_("Add at least one agenda item before approval."))
         approved_at = fields.Datetime.now()
-        snapshot = self._build_snapshot(meeting, self.env.user, approved_at)
+        snapshot = self._build_snapshot(
+            meeting,
+            self.env.user,
+            approved_at,
+            approval_point=approval_point,
+            offline=offline,
+        )
         snapshot_json = json.dumps(snapshot, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         digest = hashlib.sha256(snapshot_json.encode("utf-8")).hexdigest()
         previous = meeting.revision_ids.sorted("revision_number")[-1:] or self.browse()

@@ -7000,6 +7000,7 @@ msgstr "¿Marcar esta reunión como celebrada aunque nunca se haya iniciado?"
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_resolution__meeting_id
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_revision__meeting_id
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Meeting"
 msgstr "Reunión"
 
@@ -11411,6 +11412,24 @@ msgstr "Volver a la reunión"
 msgid "Back to meetings"
 msgstr "Volver a reuniones"
 
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Approved by"
+msgstr "Aprobado por"
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Approved in"
+msgstr "Aprobado en"
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Manual approval"
+msgstr "Aprobación manual"
+
 #~ msgid "Time Tracking Session Mode"
 #~ msgstr "Seguimiento de tiempo"
 
@@ -11737,6 +11756,3 @@ msgstr "Volver a reuniones"
 #~ "Aquí se pueden aprobar actas anteriores durante una reunión en directo "
 #~ "(Editor con permiso de edición) o al preparar el acta de una reunión "
 #~ "celebrada sin usar la pantalla de reunión en directo (Aprobador)."
-
-#~ msgid "Approved by"
-#~ msgstr "Aprobado por"

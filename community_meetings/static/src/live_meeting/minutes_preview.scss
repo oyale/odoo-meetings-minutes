@@ -122,6 +122,30 @@
                 border-color: var(--minutes-rule);
             }
 
+            .o_minutes_document_meeting_reference {
+                margin: -1rem 0 1rem;
+                color: var(--minutes-muted);
+                font-size: .8rem;
+                letter-spacing: .04em;
+                text-transform: uppercase;
+
+                strong {
+                    color: var(--minutes-ink);
+                    font-weight: 650;
+                }
+            }
+
+            .o_minutes_document_approval_source {
+                margin: -.9rem 0 1.65rem;
+                color: var(--minutes-muted);
+                font-size: .82rem;
+
+                strong {
+                    color: var(--minutes-ink);
+                    font-weight: 650;
+                }
+            }
+
             .o_minutes_status_dot {
                 width: .48rem;
                 height: .48rem;

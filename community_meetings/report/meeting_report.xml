@@ -30,6 +30,7 @@
                     <span class="o_minutes_document_code" t-out="doc['meeting']['code']"/>
                 </div>
                 <h1 class="o_minutes_document_title" t-out="doc['meeting']['name']"/>
+                <p class="o_minutes_document_meeting_reference"><span t-translation="on">Meeting</span> <strong t-out="doc['meeting']['code']"/></p>
                 <p t-if="doc.get('draft')" class="o_minutes_document_draft_status">
                     <span class="o_minutes_status_dot" aria-hidden="true"/>
                     <strong t-translation="on">Draft — not approved.</strong>
@@ -38,9 +39,16 @@
                 <p t-else="" class="o_minutes_document_revision">
                     Revision <span t-out="doc['revision'].revision_number"/>
                     <span class="o_minutes_revision_separator">·</span>
-                    Approved by <strong t-out="doc['snapshot']['approval']['approver']"/>
+                    <span t-translation="on">Approved by</span> <strong t-out="doc['snapshot']['approval']['approver']"/>
                     <span class="o_minutes_revision_separator">·</span>
                     <time t-out="doc['snapshot']['approval']['approved_at']"/>
+                </p>
+                <p t-if="not doc.get('draft')" class="o_minutes_document_approval_source">
+                    <t t-if="doc['snapshot']['approval'].get('meeting_code')">
+                        <span t-translation="on">Approved in</span> <strong t-out="doc['snapshot']['approval']['meeting_code']"/>
+                        <span t-if="doc['snapshot']['approval'].get('point_name')"> · <t t-out="doc['snapshot']['approval']['point_name']"/></span>
+                    </t>
+                    <t t-else=""><span t-translation="on">Manual approval</span></t>
                 </p>
                 <dl class="o_minutes_document_metadata">
                     <div t-if="doc['meeting'].get('actual_start_datetime_display')" class="o_minutes_metadata_item">
