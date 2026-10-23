@@ -4,6 +4,20 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings 18.0.6.2.10 (2026-10-23)
+==============================================
+
+## Release notes
+
+### Bugfixes
+
+- Focus mode fits the active point card in the available height by shrinking the discussion editor, and the Enlarge editor control still expands it when needed.
+- Focus mode keeps the point card compact before the point starts, expands it to the available height when the editor appears, and keeps the card in view when the point starts.
+
+## Internal changes
+
+- Remove unsupported QWeb t-key attributes from the minutes report so the Odoo log checker sees a clean render.
+
 ## Community Meetings 18.0.6.2.9 (2026-10-23)
 =============================================
 

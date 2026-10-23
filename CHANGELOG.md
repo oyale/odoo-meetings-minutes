@@ -7,6 +7,34 @@ Each addon changelog starts with its first release prepared after this change;
 the combined history below retains the existing suite release notes.
 
 <!-- towncrier release notes start -->
+## Odoo Meetings Minutes 18.0.20261023.2 (2026-10-23)
+
+### Addon versions
+
+| Addon | Odoo module version |
+|---|---:|
+| [Community Meetings](community_meetings/CHANGELOG.md) | `18.0.6.2.10` |
+| [Calendar Integration](community_meetings_calendar/CHANGELOG.md) | `18.0.1.0.6` |
+| [Project Integration](community_meetings_project/CHANGELOG.md) | `18.0.3.1.8` |
+| [Extension Demo](community_meetings_extension_demo/CHANGELOG.md) | `18.0.1.0.1` |
+
+=====================================================
+
+## Community Meetings
+
+### Bugfixes
+
+- Focus mode fits the active point card in the available height by shrinking the discussion editor, and the Enlarge editor control still expands it when needed.
+- Focus mode keeps the point card compact before the point starts, expands it to the available height when the editor appears, and keeps the card in view when the point starts.
+## Calendar Integration
+
+No significant changes.
+## Project Integration
+
+No significant changes.
+## Extension Demo
+
+No significant changes.
 ## Odoo Meetings Minutes 18.0.20261023.1 (2026-10-23)
 
 ### Addon versions
