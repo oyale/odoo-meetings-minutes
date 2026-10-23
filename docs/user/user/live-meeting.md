@@ -79,6 +79,29 @@ positions. The order locks when the meeting is marked **Held**.
    postponed* or *Move to another meeting* (carryover wizard). Postponed points
    are flagged **Review at next meeting** automatically.
 
+### Attribute an intervention with @
+
+In editable **Discussion notes**, type `@` after a space or at the start of a
+line. A contact search opens. Type a name, choose a result with the mouse or
+the arrow keys and **Enter**; **Escape** or **Keep a literal @** returns to the
+notes without replacing the character.
+
+Invited contacts appear first, followed by other active people you can read in
+the meeting company or shared contacts. Users appear through their contact,
+once. The contact number distinguishes people with the same name. No email or
+phone number is shown in the selector.
+Use **More contacts…** to load the next page when there are more than 20 results.
+
+![Contact search for attributing an intervention](../img/discussion-mentions.png)
+
+The inserted name attributes the intervention as recorded by the note taker;
+it does not authenticate who spoke. It sends no notification, subscription or
+invitation, and grants no meeting access. The tag does not open a contact form.
+Names remain as recorded when contacts are renamed, archived or deleted.
+Earlier discussions, minutes previews and approved revisions retain the visible
+name. The regular form preserves the tag as readable HTML; its editor does not
+offer the @ selector. Normal pause, point and approval restrictions still apply.
+
 ### Records inside a point
 
 - **Agreements** — the decisions (title, body, result). Withdraw an agreement

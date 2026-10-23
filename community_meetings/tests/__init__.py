@@ -10,6 +10,7 @@ from . import test_postpone
 from . import test_carryover_discovery
 from . import test_configuration
 from . import test_concurrency_support
+from . import test_discussion_mentions
 from . import test_meeting_kinds
 from . import test_point_wizard
 from . import test_proposals_convergence

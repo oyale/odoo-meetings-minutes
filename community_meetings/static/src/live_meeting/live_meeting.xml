@@ -159,6 +159,7 @@
                                 </div>
                                 <t t-if="canEditDiscussion(item)"><div t-att-class="'o_live_richtext ' + (state.expandedNotes[item.id] ? 'o_live_richtext_expanded' : '')"><t t-component="Wysiwyg" t-props="{ options: richTextOptions(item.discussion_notes, 'discussion_notes:' + item.id, 'community.meeting.agenda.item', item.id, 'discussion_notes'), editingValue: item.discussion_notes || '', startWysiwyg: richTextStarter('discussion_notes:' + item.id, item.id, 'community.meeting.agenda.item', 'discussion_notes') }"/></div></t>
                                 <t t-else=""><div class="o_live_rich_readonly" t-out="safeHtml(item.discussion_notes)"/></t>
+                                <small t-if="canEditDiscussion(item)" class="text-muted d-block">Type @ to attribute an intervention without notifying the person.</small>
                             </div>
                             <div t-if="typeBehavior(item) === 'minutes_approval'" class="o_live_subsection o_live_minutes_approval">
                                 <div class="o_live_minutes_approval_intro">
