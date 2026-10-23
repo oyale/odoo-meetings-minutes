@@ -156,8 +156,10 @@
             </section>
             <section t-if="doc['general_resolutions']" class="o_minutes_document_section">
                 <h2>Meeting-wide resolutions</h2>
-                <div t-foreach="doc['general_resolutions']" t-as="resolution" class="o_minutes_resolution">
+                <div t-foreach="doc['general_resolutions']" t-as="resolution" t-key="resolution_index" class="o_minutes_resolution">
                     <h3 t-out="resolution['title']"/><div class="o_minutes_rich_content" t-out="resolution['body_html']"/>
+                    <p t-if="resolution.get('decision_outcome_label')" class="o_minutes_point_outcome">Decision: <strong t-out="resolution['decision_outcome_label']"/></p>
+                    <p t-if="resolution.get('status') != 'active' and resolution.get('status_label')" class="o_minutes_point_outcome"><span t-translation="on">Agreement status</span>: <strong t-out="resolution['status_label']"/></p>
                 </div>
             </section>
             <section t-if="doc.get('has_minutes_notes')" class="o_minutes_document_section o_minutes_final_notes">

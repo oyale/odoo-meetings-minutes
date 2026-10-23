@@ -289,9 +289,11 @@
             }
 
             .o_minutes_resolution {
-                margin-top: .9rem;
-                padding: .8rem 0 0;
-                border-top: 1px solid var(--minutes-rule);
+                margin-top: .6rem;
+                padding: .9rem 1rem;
+                border: 1px solid var(--minutes-rule);
+                border-radius: .55rem;
+                background: color-mix(in srgb, var(--minutes-accent-soft) 45%, transparent);
 
                 h3, h4 {
                     margin: 0 0 .35rem;
@@ -391,8 +393,11 @@
             }
 
             .o_minutes_dissent {
-                padding: .9rem 0;
-                border-top: 1px solid var(--minutes-rule);
+                margin-top: .6rem;
+                padding: .9rem 1rem;
+                border: 1px solid var(--minutes-rule);
+                border-radius: .55rem;
+                background: color-mix(in srgb, var(--minutes-accent-soft) 45%, transparent);
             }
 
             .o_minutes_dissent_meta {

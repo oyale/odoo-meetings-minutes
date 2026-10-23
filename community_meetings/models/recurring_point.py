@@ -108,7 +108,7 @@ class MeetingSeriesAgendaTemplate(models.Model):
                 "agenda_type_id": self.agenda_type_id.id,
                 "priority": self.priority,
                 "estimated_minutes": self.estimated_minutes or self.series_id._point_estimated_minutes_default(),
-                "presenter_partner_id": self.presenter_partner_id.id or False,
+                "presenter_partner_id": (self.presenter_partner_id.id or meeting.organizer_id.partner_id.id or False),
                 "followup_allowed_kinds": [(6, 0, self.followup_allowed_kinds.ids)],
                 "followup_default_kind": self.followup_default_kind,
                 "company_id": self.series_id.company_id.id,
