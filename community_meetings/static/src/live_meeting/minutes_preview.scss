@@ -289,6 +289,12 @@
                 flex-wrap: wrap;
                 align-items: baseline;
                 gap: .3rem;
+                min-width: 0;
+                max-width: 100%;
+
+                strong {
+                    overflow-wrap: anywhere;
+                }
             }
 
             .o_minutes_point_summary_label {
@@ -306,11 +312,14 @@
 
             .o_minutes_point_status,
             .o_minutes_point_moved {
+                max-width: 100%;
                 padding: .16rem .5rem;
                 border: 1px solid var(--minutes-rule);
                 border-radius: 999px;
                 background: var(--minutes-accent-soft);
                 color: var(--minutes-accent);
+                white-space: normal;
+                overflow-wrap: anywhere;
             }
 
             .o_minutes_point_status_open,

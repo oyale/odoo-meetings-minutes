@@ -118,6 +118,181 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
     def rpc(self, model, method, args, kwargs=None, page=None):
         return self.session.rpc(model, method, args, kwargs, page=page)
 
+    def _prepare_documentation_fixture(self, spanish):
+        editor_uid = self.session.session_info()["uid"]
+        editor = self.rpc("res.users", "read", [[editor_uid], ["partner_id"]])[0]
+        self.rpc(
+            "res.partner",
+            "write",
+            [[editor["partner_id"][0]], {"name": "Elena Navarro"}],
+        )
+        partner_a = self.rpc(
+            "res.partner",
+            "create",
+            [{"name": "Laura Méndez" if spanish else "Laura Mendez"}],
+        )
+        partner_b = self.rpc("res.partner", "create", [{"name": "Carlos Ruiz"}])
+        self.rpc(
+            "community.meeting",
+            "write",
+            [[
+                self.meeting_id,
+            ], {"attendee_partner_ids": [(6, 0, [partner_a, partner_b])]}],
+        )
+        descriptions = {
+            "information": (
+                "<p>Revisión del estado del proyecto y acuerdos pendientes.</p>"
+                if spanish
+                else "<p>Review of project status and pending decisions.</p>"
+            ),
+            "discussion": (
+                "<p>Calendario, prioridades y riesgos del trimestre.</p>"
+                if spanish
+                else "<p>Calendar, priorities and risks for the quarter.</p>"
+            ),
+            "decision": (
+                "<p>Decisión sobre el presupuesto y el alcance del próximo trimestre.</p>"
+                if spanish
+                else "<p>Decision on the next quarter budget and scope.</p>"
+            ),
+            "todo": (
+                "<p>Preparar y compartir la propuesta con el equipo.</p>"
+                if spanish
+                else "<p>Prepare and share the proposal with the team.</p>"
+            ),
+        }
+        presenters = {
+            "information": partner_a,
+            "discussion": partner_a,
+            "decision": partner_b,
+            "todo": partner_b,
+        }
+        for kind, item_id in self.item_ids.items():
+            topic = self.record(
+                "community.meeting.agenda.item", item_id, ["topic_id"]
+            )["topic_id"][0]
+            self.rpc(
+                "community.meeting.topic",
+                "write",
+                [[topic], {"presenter_partner_id": presenters[kind]}],
+            )
+            self.rpc(
+                "community.meeting.agenda.item",
+                "write",
+                [[item_id], {"description": descriptions[kind]}],
+            )
+
+        self.rpc(
+            "community.meeting.resolution",
+            "create",
+            [{
+                "meeting_id": self.meeting_id,
+                "agenda_item_id": self.item_ids["decision"],
+                "title": (
+                    "Aprobar el presupuesto del trimestre"
+                    if spanish
+                    else "Approve the quarter budget"
+                ),
+                "body": (
+                    "<p>Se aprueba el presupuesto propuesto con seguimiento mensual.</p>"
+                    if spanish
+                    else "<p>The proposed budget is approved with monthly follow-up.</p>"
+                ),
+                "decision_outcome": "approved",
+            }],
+        )
+        self.rpc(
+            "community.meeting.resolution",
+            "create",
+            [{
+                "meeting_id": self.meeting_id,
+                "agenda_item_id": self.item_ids["discussion"],
+                "title": (
+                    "Crear un grupo de seguimiento"
+                    if spanish
+                    else "Create a follow-up group"
+                ),
+                "body": (
+                    "<p>El grupo revisará hitos y riesgos cada dos semanas.</p>"
+                    if spanish
+                    else "<p>The group will review milestones and risks every two weeks.</p>"
+                ),
+            }],
+        )
+        reasons = self.rpc(
+            "community.meeting.dissent.reason",
+            "search_read",
+            [[]],
+            {"fields": ["name"], "limit": 1},
+        )
+        reason_id = reasons[0]["id"] if reasons else self.rpc(
+            "community.meeting.dissent.reason",
+            "create",
+            [{"name": "Abstención" if spanish else "Abstention"}],
+        )
+        self.rpc(
+            "community.meeting.dissent",
+            "create",
+            [{
+                "meeting_id": self.meeting_id,
+                "agenda_item_id": self.item_ids["decision"],
+                "reason_id": reason_id,
+                "author_display_name": "Carlos Ruiz",
+                "body": (
+                    "<p>Solicito revisar el alcance antes de publicar el presupuesto.</p>"
+                    if spanish
+                    else "<p>I request a scope review before publishing the budget.</p>"
+                ),
+            }],
+        )
+        activity_types = self.rpc(
+            "mail.activity.type",
+            "search_read",
+            [[]],
+            {"fields": ["name"], "limit": 1},
+        )
+        activity_type_id = activity_types[0]["id"] if activity_types else self.rpc(
+            "mail.activity.type",
+            "create",
+            [{"name": "Llamada" if spanish else "Call"}],
+        )
+        self.rpc(
+            "community.meeting.action",
+            "create",
+            [{
+                "meeting_id": self.meeting_id,
+                "agenda_item_id": self.item_ids["todo"],
+                "name": (
+                    "Enviar la propuesta al equipo"
+                    if spanish
+                    else "Send the proposal to the team"
+                ),
+                "description": (
+                    "<p>Compartir el borrador y recoger comentarios antes del viernes.</p>"
+                    if spanish
+                    else "<p>Share the draft and collect feedback before Friday.</p>"
+                ),
+                "responsible_user_id": editor_uid,
+                "deadline": "2026-10-30",
+                "followup_kind": "activity",
+                "followup_activity_type_id": activity_type_id,
+                "state": "open",
+            }],
+        )
+        self.rpc(
+            "community.meeting.agenda.item",
+            "write",
+            [[
+                self.item_ids["information"],
+                self.item_ids["discussion"],
+            ], {"disposition": "discussed"}],
+        )
+        self.rpc(
+            "community.meeting.agenda.item",
+            "write",
+            [[self.item_ids["decision"]], {"disposition": "closed"}],
+        )
+
     def setUp(self):
         self.errors_before = len(self.console_errors)
         self.fixture = LiveMeetingFixture.create_scheduled_live_meeting(
@@ -178,6 +353,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                         else "<p>The team reviews progress and risks.</p>"
                     )
                 self.rpc("community.meeting.agenda.item", "write", [[item_id], values])
+            self._prepare_documentation_fixture(spanish_fixture)
         else:
             try:
                 open_live_meeting(self.session, self.meeting_id)
@@ -598,8 +774,19 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
             f'.o_live_discussion_notes [contenteditable="true"][aria-label="{notes_label}"]'
         )
         expect(notes).to_have_count(4)
-        notes.nth(0).fill("Se confirma el orden del día y el acta de la sesión anterior.")
-        notes.nth(1).fill("Se revisan los avances del proyecto y se acuerda preparar el calendario.")
+        spanish_notes = not capture_language or capture_language.lower().startswith("es")
+        notes_a = (
+            "Se confirma el orden del día y el acta de la sesión anterior."
+            if spanish_notes
+            else "The agenda and the previous minutes are confirmed."
+        )
+        notes_b = (
+            "Se revisan los avances del proyecto y se acuerda preparar el calendario."
+            if spanish_notes
+            else "Progress is reviewed and the activity calendar is agreed."
+        )
+        notes.nth(0).fill(notes_a)
+        notes.nth(1).fill(notes_b)
         self.page.wait_for_timeout(850)
         self.page.get_by_role(
             "button", name=self.ui_text("community_meetings", "Preview Minutes")
@@ -627,7 +814,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         expect(preview).to_contain_text(
             self.ui_text("community_meetings", "Draft preview · saved content")
         )
-        expected_discussion = "Se revisan los avances del proyecto y se acuerda preparar el calendario."
+        expected_discussion = notes_b
         expect(preview).to_contain_text(expected_discussion)
         self.assertFalse(write_trace.empty_note_writes, "opening the preview must not write untouched empty editors")
         self.assertEqual(write_trace.max_active_note_writes, 1, "writes for a single meeting must be serialized")
@@ -636,13 +823,20 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         preview.evaluate("""element => {
             element.style.minHeight = "0";
             element.style.height = "auto";
+            element.style.maxHeight = "none";
+            element.style.height = element.scrollHeight + "px";
             element.style.overflow = "visible";
-            for (let node = element; node; node = node.parentElement) node.scrollTop = 0;
+            for (let node = element; node; node = node.parentElement) {
+                node.scrollTop = 0;
+                if (node !== document.body && node !== document.documentElement) {
+                    node.style.maxHeight = "none";
+                }
+            }
             window.scrollTo(0, 0);
         }""")
         captured = self.capture_checkpoint(
             "minutes-preview",
-            {"width": 1440, "height": 2000},
+            {"width": 1440, "height": 3000},
             preview,
         )
         if capture_path and captured:
