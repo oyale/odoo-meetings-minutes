@@ -65,7 +65,10 @@ class TestDiscussionMentions(TransactionCase):
                 "groups_id": [Command.set([self.env.ref("base.group_user").id])],
             }
         )
-        self.meeting.attendee_partner_ids += self.person
+        # Keep only the target in the invited group. The editor is also an
+        # attendee in the shared fixture, and collation-dependent name order
+        # must not decide which of two invited contacts comes first here.
+        self.meeting.attendee_partner_ids = [Command.set([self.person.id])]
         candidates = self.point.get_discussion_mention_suggestions("Mention Person 82")
         self.assertEqual(candidates, [{"id": self.person.id, "name": self.person.name}])
         self.assertEqual(self.point.get_discussion_mention_suggestions(limit=1)[0]["id"], self.person.id)
