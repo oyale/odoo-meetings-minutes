@@ -136,8 +136,11 @@
             }
 
             .o_minutes_document_approval_source {
-                margin: -.9rem 0 1.65rem;
-                color: var(--minutes-muted);
+                display: inline-flex;
+                align-items: baseline;
+                flex-wrap: wrap;
+                gap: .25rem;
+                color: var(--minutes-accent);
                 font-size: .82rem;
 
                 strong {

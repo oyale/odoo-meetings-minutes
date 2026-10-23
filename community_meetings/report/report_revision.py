@@ -19,6 +19,43 @@ class MeetingRevisionReport(models.AbstractModel):
     def _prepare_document(self, snapshot, revision=None, draft=False, lang=None):
         lang = lang or self.env.lang or self.env.user.lang
         meeting = snapshot["meeting"]
+        approval = dict(snapshot.get("approval") or {})
+        if revision and not approval.get("origin"):
+            approved_at = revision.approved_at
+            record = (
+                self.env["community.meeting.minutes.approval"]
+                .sudo()
+                .search([("revision_id", "=", revision.id)], limit=1)
+            )
+            if record and record.agenda_item_id:
+                later = record.agenda_item_id.meeting_id
+                live = bool(
+                    later.actual_start_datetime
+                    and approved_at
+                    and later.actual_start_datetime <= approved_at
+                    and (not later.actual_end_datetime or approved_at <= later.actual_end_datetime)
+                )
+                approval.update(
+                    {
+                        "meeting_code": later.code or "",
+                        "meeting_name": later.name or "",
+                        "point_name": record.agenda_item_id.name or "",
+                        "offline": not live,
+                        "origin": "meeting" if live else "offline",
+                        "manual": False,
+                    }
+                )
+            else:
+                meeting_now = revision.meeting_id
+                live = bool(
+                    meeting_now.actual_start_datetime
+                    and approved_at
+                    and meeting_now.actual_start_datetime <= approved_at
+                    and (not meeting_now.actual_end_datetime or approved_at <= meeting_now.actual_end_datetime)
+                )
+                approval.update({"origin": "live" if live else "direct", "manual": False})
+        if approval:
+            snapshot = {**snapshot, "approval": approval}
         dispositions = self._selection_labels("community.meeting.agenda.item", "disposition", lang)
         decisions = self._selection_labels("community.meeting.agenda.item", "decision_result", lang)
         resolution_outcomes = self._selection_labels("community.meeting.resolution", "decision_outcome", lang)

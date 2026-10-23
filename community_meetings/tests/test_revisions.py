@@ -200,6 +200,13 @@ class TestMeetingRevisions(TransactionCase):
         self.assertFalse(snapshot["approval"]["manual"])
         self.assertEqual(snapshot["approval"]["origin"], "meeting")
         self.assertFalse(snapshot["approval"]["offline"])
+        legacy = json.loads(first_revision.snapshot_json)
+        for key in ("origin", "meeting_code", "meeting_name", "point_name", "offline"):
+            legacy["approval"].pop(key, None)
+        report_model = self.env["report.community_meetings.report_revision_document"]
+        doc = report_model._prepare_document(legacy, revision=first_revision)
+        self.assertEqual(doc["snapshot"]["approval"]["meeting_code"], later.code)
+        self.assertEqual(doc["snapshot"]["approval"]["origin"], "meeting")
         self.assertEqual(record.revision_id, first_revision)
 
         earlier.with_user(self.manager).action_start_amendment()
@@ -797,6 +804,12 @@ class TestMeetingRevisions(TransactionCase):
         self.assertIn(b"Follow-ups", rendered_html)
         self.assertIn(b"Manual approval", rendered_html)
         self.assertTrue(snapshot["approval"]["manual"])
+        legacy = json.loads(before_json)
+        for key in ("origin", "meeting_code", "meeting_name", "point_name", "offline"):
+            legacy["approval"].pop(key, None)
+        report_model = self.env["report.community_meetings.report_revision_document"]
+        doc = report_model._prepare_document(legacy, revision=revision)
+        self.assertEqual(doc["snapshot"]["approval"]["origin"], "direct")
         self.assertIn(b"From point", rendered_html)
         self.assertGreaterEqual(rendered_html.count(b"Prepare follow-up"), 2)
         self.assertEqual(snapshot["agenda"][0]["discussion"], "<p>Initial discussion</p>")
