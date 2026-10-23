@@ -357,7 +357,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         else:
             try:
                 open_live_meeting(self.session, self.meeting_id)
-            except Exception:  # noqa: BLE001 - keep rendered evidence from setup failures
+            except Exception:
                 self.capture_checkpoint("live-open-failure")
                 debug_dir = Path(os.environ.get("MM_PLAYWRIGHT_SCREENSHOT_DIR", tempfile.gettempdir()))
                 debug_dir.mkdir(parents=True, exist_ok=True)
@@ -425,6 +425,74 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         main.evaluate("el => { el.scrollTop = el.scrollHeight; }")
         self.assertGreater(main.evaluate("el => el.scrollTop"), 0)
         self.assertFalse(self.page.get_by_text("Meeting level records", exact=True).count())
+
+    def test_focus_mode_fits_the_point_card_and_editor_expands(self):
+        self.page.set_viewport_size({"width": 1440, "height": 1000})
+        self.card("discussion")
+        self.page.wait_for_timeout(600)
+        self.page.get_by_role(
+            "button", name=self.ui_text("community_meetings", "Focus on one point")
+        ).click()
+        card = self.page.locator(".o_live_focus_mode .o_live_agenda_card").first
+        expect(card).to_be_visible()
+        self.page.wait_for_timeout(100)
+        metrics = self.page.evaluate("""() => {
+            const main = document.querySelector('main.o_community_live_meeting');
+            const card = document.querySelector('.o_live_focus_mode .o_live_agenda_card');
+            const editor = card?.querySelector('.o_live_richtext');
+            const box = (node) => node ? {
+                top: node.getBoundingClientRect().top,
+                bottom: node.getBoundingClientRect().bottom,
+                height: node.getBoundingClientRect().height,
+            } : null;
+            return {main: box(main), card: box(card), editor: box(editor)};
+        }""")
+        self.assertLessEqual(metrics["card"]["bottom"], metrics["main"]["bottom"] + 1, metrics)
+        self.assertGreaterEqual(metrics["card"]["top"], metrics["main"]["top"], metrics)
+
+        card.get_by_role(
+            "button", name=self.ui_text("community_meetings", "Enlarge editor")
+        ).click()
+        self.page.wait_for_timeout(100)
+        expanded = self.page.evaluate("""() => {
+            const card = document.querySelector('.o_live_focus_mode .o_live_agenda_card');
+            const editor = card?.querySelector('.o_live_richtext');
+            const box = (node) => node ? {
+                top: node.getBoundingClientRect().top,
+                bottom: node.getBoundingClientRect().bottom,
+                height: node.getBoundingClientRect().height,
+            } : null;
+            return {
+                card: box(card),
+                editor: box(editor),
+                expanded: card?.classList.contains('o_live_focus_expanded'),
+            };
+        }""")
+        self.assertTrue(expanded["expanded"])
+        self.assertGreater(expanded["card"]["height"], metrics["card"]["height"])
+        self.assertGreater(expanded["editor"]["height"], metrics["editor"]["height"])
+
+        card.get_by_role(
+            "button", name=self.ui_text("community_meetings", "Reduce editor")
+        ).click()
+        self.page.wait_for_timeout(100)
+        reduced = self.page.evaluate("""() => {
+            const main = document.querySelector('main.o_community_live_meeting');
+            const card = document.querySelector('.o_live_focus_mode .o_live_agenda_card');
+            const box = (node) => node ? {
+                top: node.getBoundingClientRect().top,
+                bottom: node.getBoundingClientRect().bottom,
+                height: node.getBoundingClientRect().height,
+            } : null;
+            return {
+                main: box(main),
+                card: box(card),
+                expanded: card?.classList.contains('o_live_focus_expanded'),
+            };
+        }""")
+        self.assertFalse(reduced["expanded"])
+        self.assertAlmostEqual(reduced["card"]["height"], metrics["card"]["height"], delta=1)
+        self.assertLessEqual(reduced["card"]["bottom"], reduced["main"]["bottom"] + 1, reduced)
 
     def test_previous_discussion_is_read_only_and_can_be_cleared_or_restored(self):
         destination = self.record("community.meeting", self.meeting_id, ["start_datetime"])
@@ -1623,7 +1691,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         self.addCleanup(trace.stop)
         try:
             self._check_discussion_pending_undo()
-        except Exception:  # noqa: BLE001 - preserve rendered state and RPC evidence
+        except Exception:
             self.capture_checkpoint("discussion-pending-undo-failure")
             debug_dir = Path(os.environ.get("MM_PLAYWRIGHT_SCREENSHOT_DIR", tempfile.gettempdir()))
             debug_dir.mkdir(parents=True, exist_ok=True)
@@ -1710,7 +1778,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         self.addCleanup(trace.stop)
         try:
             self._check_discussion_mentions(trace)
-        except Exception:  # noqa: BLE001 - save browser and RPC evidence before propagating
+        except Exception:
             self.capture_checkpoint("discussion-mention-failure")
             debug_dir = Path(os.environ.get("MM_PLAYWRIGHT_SCREENSHOT_DIR", tempfile.gettempdir()))
             debug_dir.mkdir(parents=True, exist_ok=True)

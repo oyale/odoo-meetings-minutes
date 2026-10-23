@@ -843,7 +843,17 @@ export class LiveMeeting extends Component {
             const active = this.visibleItems.find((item) => item.id === this.state.activeItemId) || this.visibleItems[0];
             this.state.activeItemId = active?.id || false;
             for (const item of this.state.items) this.state.expanded[item.id] = item.id === this.state.activeItemId;
-            if (active) this.state.expandedNotes[active.id] = false;
+            if (active) {
+                this.state.expandedNotes[active.id] = false;
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    const main = document.querySelector("main.o_community_live_meeting");
+                    const card = document.getElementById(`agenda-card-${active.id}`);
+                    if (main && card) {
+                        const offset = card.getBoundingClientRect().top - main.getBoundingClientRect().top - 24;
+                        main.scrollTop += offset;
+                    }
+                }));
+            }
         }
     }
     toggleNotesExpanded(item) {

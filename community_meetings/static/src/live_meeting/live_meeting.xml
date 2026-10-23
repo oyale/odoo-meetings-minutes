@@ -107,7 +107,7 @@
                             <button class="btn btn-sm btn-outline-secondary" type="button" t-att-disabled="!canMoveAgendaItem(item, -1) or state.saving > 0 or state.submitting.reorder" t-on-click="(ev) => { ev.stopPropagation(); this.moveAgendaItem(item, -1); }" title="Move point up" t-att-aria-label="reorderButtonLabel(item, -1)"><i class="fa fa-arrow-up" aria-hidden="true"/></button>
                             <button class="btn btn-sm btn-outline-secondary" type="button" t-att-disabled="!canMoveAgendaItem(item, 1) or state.saving > 0 or state.submitting.reorder" t-on-click="(ev) => { ev.stopPropagation(); this.moveAgendaItem(item, 1); }" title="Move point down" t-att-aria-label="reorderButtonLabel(item, 1)"><i class="fa fa-arrow-down" aria-hidden="true"/></button>
                         </div>
-                        <article t-att-id="'agenda-card-' + item.id" t-att-class="'o_live_agenda_card ' + (state.activeItemId === item.id ? 'o_live_current' : '')">
+                        <article t-att-id="'agenda-card-' + item.id" t-att-class="'o_live_agenda_card ' + (state.activeItemId === item.id ? 'o_live_current ' : '') + (state.focusMode and state.expandedNotes[item.id] ? 'o_live_focus_expanded' : '')">
                         <div class="o_live_card_header">
                             <button class="o_live_expand" t-on-click="() => this.toggle(item)" t-att-aria-expanded="state.expanded[item.id] ? 'true' : 'false'" t-att-aria-controls="'agenda-panel-' + item.id">
                                 <i t-att-class="state.expanded[item.id] ? 'fa fa-chevron-down' : 'fa fa-chevron-right'" aria-hidden="true"/>
