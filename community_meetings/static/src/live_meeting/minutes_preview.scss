@@ -275,6 +275,70 @@
                 p, ul, ol { margin-bottom: .7rem; }
             }
 
+            .o_minutes_point_summary {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: .4rem .8rem;
+                margin: .35rem 0 .75rem;
+                font-size: .82rem;
+            }
+
+            .o_minutes_point_summary_item {
+                display: inline-flex;
+                flex-wrap: wrap;
+                align-items: baseline;
+                gap: .3rem;
+            }
+
+            .o_minutes_point_summary_label {
+                color: var(--minutes-muted);
+                font-size: .66rem;
+                font-weight: 650;
+                letter-spacing: .06em;
+                text-transform: uppercase;
+            }
+
+            .o_minutes_point_summary_reason {
+                color: var(--minutes-muted);
+                font-size: .78rem;
+            }
+
+            .o_minutes_point_status,
+            .o_minutes_point_moved {
+                padding: .16rem .5rem;
+                border: 1px solid var(--minutes-rule);
+                border-radius: 999px;
+                background: var(--minutes-accent-soft);
+                color: var(--minutes-accent);
+            }
+
+            .o_minutes_point_status_open,
+            .o_minutes_point_status_pending {
+                background: transparent;
+                color: var(--minutes-muted);
+            }
+
+            .o_minutes_point_status_discussed,
+            .o_minutes_point_status_closed,
+            .o_minutes_point_status_approved {
+                border-color: #bcd8c8;
+                background: #eaf4ee;
+                color: #2f6f4e;
+            }
+
+            .o_minutes_point_status_deferred {
+                border-color: #e5d8b9;
+                background: #f9f2e2;
+                color: #8a5a12;
+            }
+
+            .o_minutes_point_status_denied {
+                border-color: #e6c3c3;
+                background: #fbeeee;
+                color: #9b2c2c;
+            }
+
             .o_minutes_point_description {
                 color: var(--minutes-muted);
                 font-size: .91rem;

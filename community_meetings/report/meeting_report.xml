@@ -106,18 +106,24 @@
                             <div class="o_minutes_agenda_heading">
                                 <h3 t-out="item['name']"/><span class="o_minutes_agenda_type" t-out="item['type']"/>
                             </div>
-                            <p t-if="item.get('presenter')" class="o_minutes_point_presenter">Proposed by <strong t-out="item['presenter']"/></p>
+                            <div class="o_minutes_point_summary">
+                                <span t-if="item.get('presenter')" class="o_minutes_point_summary_item">
+                                    <span class="o_minutes_point_summary_label" t-translation="on">Proposed by</span>
+                                    <strong t-out="item['presenter']"/>
+                                </span>
+                                <span t-if="item['disposition']" t-att-class="'o_minutes_point_summary_item o_minutes_point_status o_minutes_point_status_' + item['disposition']">
+                                    <span class="o_minutes_point_summary_label" t-translation="on">Status</span>
+                                    <strong t-out="item.get('disposition_label') or item['disposition']"/>
+                                    <span t-if="item.get('deferral_reason')" class="o_minutes_point_summary_reason" t-out="item['deferral_reason']"/>
+                                </span>
+                                <span t-if="item.get('moved_to')" class="o_minutes_point_summary_item o_minutes_point_moved">
+                                    <t t-if="item.get('moved_to_kind') == 'series'"><span t-translation="on">Next meeting in</span> <strong t-out="item['moved_to']"/></t>
+                                    <t t-else=""><span t-translation="on">Moved to</span> <strong t-out="item['moved_to']"/></t>
+                                </span>
+                            </div>
                             <div t-if="item['description_html']" class="o_minutes_rich_content o_minutes_point_description" t-out="item['description_html']"/>
                             <div t-if="item['discussion_html']" class="o_minutes_rich_content o_minutes_point_discussion" t-out="item['discussion_html']"/>
-                            <p t-if="item['disposition']" class="o_minutes_point_outcome">
-                                Disposition: <strong t-out="item.get('disposition_label') or item['disposition']"/>
-                                <span t-if="item['deferral_reason']" t-out="item['deferral_reason']"/>
-                            </p>
                             <p t-if="item['decision_result_label']" class="o_minutes_point_outcome">Decision: <strong t-out="item['decision_result_label']"/></p>
-                            <p t-if="item.get('moved_to')" class="o_minutes_point_outcome">
-                                <t t-if="item.get('moved_to_kind') == 'series'"><span t-translation="on">Next meeting in</span> <strong t-out="item['moved_to']"/></t>
-                                <t t-else=""><span t-translation="on">Moved to</span> <strong t-out="item['moved_to']"/></t>
-                            </p>
                             <p t-if="item.get('next_meeting_datetime_display')" class="o_minutes_point_outcome">
                                 Next meeting: <strong t-out="item['next_meeting_datetime_display']"/>
                                 <span t-if="item.get('next_meeting_timezone')" t-out="' (' + item['next_meeting_timezone'] + ')'"/>

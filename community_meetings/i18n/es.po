@@ -11381,7 +11381,7 @@ msgstr "Trasladado a"
 #: code:addons/community_meetings/report/meeting_report.xml:0
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "From point"
-msgstr ""
+msgstr "Del punto"
 
 #. module: community_meetings
 #. odoo-javascript
