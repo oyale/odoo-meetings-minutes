@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 08:17+0000\n"
-"PO-Revision-Date: 2026-10-23 08:17+0000\n"
+"POT-Creation-Date: 2026-10-23 08:49+0000\n"
+"PO-Revision-Date: 2026-10-23 08:49+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -10009,6 +10009,12 @@ msgstr ""
 #. odoo-python
 #: code:addons/community_meetings/models/carryover.py:0
 msgid "The destination meeting must have a later scheduled start."
+msgstr ""
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "The earlier minutes could not be prepared. Please refresh and retry."
 msgstr ""
 
 #. module: community_meetings

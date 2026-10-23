@@ -709,10 +709,11 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         )
         self.rpc("community.meeting", "write", [[self.meeting_id], {
             "series_id": series,
-            "minutes_notes": "<p>Draft text for the previous meeting.</p>",
+            "minutes_notes": "<p>Draft text for the previous meeting.</p>" + (
+                "<p>Long minutes preview content for the browser scrolling regression.</p>" * 45
+            ),
         }])
         self.rpc("community.meeting", "action_mark_held", [[self.meeting_id]])
-        self.rpc("community.meeting", "action_draft_minutes", [[self.meeting_id]])
         self.page.goto(
             f"{BASE_URL}/web#model=community.meeting&id={self.meeting_id}&view_type=form"
         )
@@ -767,8 +768,46 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         if approval_point.locator(".o_live_expand").get_attribute("aria-expanded") == "false":
             approval_point.locator(".o_live_expand").click()
         expect(approval).to_contain_text(approval_notice)
+        expect(approval.get_by_role("button", name=self.ui_text("community_meetings", "Prepare Minutes"), exact=True)).to_be_visible()
+        expect(approval.get_by_role("button", name=self.ui_text("community_meetings", "Approve earlier minutes"), exact=True)).to_have_count(0)
+        approval.get_by_role("button", name=self.ui_text("community_meetings", "Prepare Minutes"), exact=True).click()
+        expect(approval).not_to_contain_text(self.ui_text("community_meetings", "Preparation pending"))
         expect(approval.get_by_role("button", name=self.ui_text("community_meetings", "Approve earlier minutes"), exact=True)).to_be_visible()
         approval.get_by_role("button", name=self.ui_text("community_meetings", "Open minutes")).click()
+        preview = self.page.locator(".o_community_minutes_preview")
+        expect(preview).to_contain_text(self.ui_text("community_meetings", "Draft preview · saved content"))
+        expect(preview).to_contain_text("Draft text for the previous meeting.")
+        preview_box = preview.bounding_box()
+        self.page.mouse.move(preview_box["x"] + preview_box["width"] / 2, preview_box["y"] + preview_box["height"] / 2)
+        self.page.evaluate("""() => {
+            window.__minutesWheelEvents = [];
+            document.querySelector('main.o_community_minutes_preview').addEventListener('wheel', event => {
+                window.__minutesWheelEvents.push({target: event.target.className, defaultPrevented: event.defaultPrevented});
+            }, {capture: true});
+        }""")
+        self.page.mouse.wheel(0, 900)
+        self.page.wait_for_timeout(150)
+        scroll_state = self.page.evaluate("""() => ({
+            windowY: window.scrollY,
+            nodes: [...document.querySelectorAll('body, body *')].map(el => ({
+                tag: el.tagName, className: typeof el.className === 'string' ? el.className : '',
+                overflowY: getComputedStyle(el).overflowY, clientHeight: el.clientHeight,
+                scrollHeight: el.scrollHeight, scrollTop: el.scrollTop,
+            })).filter(el => el.scrollHeight > el.clientHeight + 2).slice(0, 20),
+            wheelEvents: window.__minutesWheelEvents,
+            console: [],
+        })""")
+        if not scroll_state["windowY"] and not any(node["scrollTop"] for node in scroll_state["nodes"]):
+            self.capture_checkpoint("minutes-preview-no-scroll")
+            debug_dir = Path(os.environ.get("MM_PLAYWRIGHT_SCREENSHOT_DIR", tempfile.gettempdir()))
+            debug_dir.mkdir(parents=True, exist_ok=True)
+            (debug_dir / "minutes-preview-no-scroll-dom.html").write_text(self.page.content())
+            scroll_state["console"] = self.console_errors[self.errors_before:]
+            (debug_dir / "minutes-preview-no-scroll.json").write_text(json.dumps({
+                "url": self.page.url, "state": scroll_state,
+            }, ensure_ascii=False, indent=2))
+            self.fail(f"preview wheel did not scroll: {scroll_state!r}")
+        self.page.reload()
         preview = self.page.locator(".o_community_minutes_preview")
         expect(preview).to_contain_text(self.ui_text("community_meetings", "Draft preview · saved content"))
         expect(preview).to_contain_text("Draft text for the previous meeting.")

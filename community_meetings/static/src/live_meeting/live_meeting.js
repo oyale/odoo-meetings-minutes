@@ -4,6 +4,7 @@ import { Component, markup, onMounted, onPatched, onWillStart, onWillUnmount, us
 import { _t } from "@web/core/l10n/translation";
 import { deserializeDateTime, formatDateTime, serializeDateTime } from "@web/core/l10n/dates";
 import { registry } from "@web/core/registry";
+import { router } from "@web/core/browser/router";
 import { loadBundle } from "@web/core/assets";
 import { ensureJQuery } from "@web/core/ensure_jquery";
 import { useService } from "@web/core/utils/hooks";
@@ -49,6 +50,7 @@ export class LiveMeeting extends Component {
         this.canApproveMinutes = false;
         this.orm = useService("orm");
         this.actionService = useService("action");
+        this.router = router;
         this.notification = useService("notification");
         this.dialog = useService("dialog");
         this.mentionListeners = new Map();
@@ -962,7 +964,9 @@ export class LiveMeeting extends Component {
             ...action.params,
             review_return: { meeting_id: this.meetingId, item_id: item.id },
         };
-        return this.actionService.doAction(action);
+        const result = await this.actionService.doAction(action);
+        this.setMinutesPreviewRoute(id, action.params.review_return);
+        return result;
     }
 
     async openMeeting(id) {
@@ -991,6 +995,16 @@ export class LiveMeeting extends Component {
             await this.load();
         } catch (error) {
             this.notification.add(_t("The previous minutes could not be approved. Please refresh and retry."), { type: "danger" });
+        }
+    }
+
+    async preparePreviousMinutes(meetingId) {
+        if (!this.state.capabilities?.can_edit || !await this.flushEditors()) return;
+        try {
+            await this.orm.call("community.meeting", "action_draft_minutes", [[meetingId]]);
+            await this.load();
+        } catch (error) {
+            this.notification.add(_t("The earlier minutes could not be prepared. Please refresh and retry."), { type: "danger" });
         }
     }
 
@@ -1419,12 +1433,24 @@ export class LiveMeeting extends Component {
             this.notification.add(_t("Wait for all meeting changes to save before opening the minutes preview."), { type: "warning" });
             return;
         }
-        return this.actionService.doAction({
+        const action = {
             type: "ir.actions.client",
             tag: "community_meetings.minutes_preview",
             target: "current",
             params: { meeting_id: this.meetingId },
-        });
+        };
+        const result = await this.actionService.doAction(action);
+        this.setMinutesPreviewRoute(this.meetingId);
+        return result;
+    }
+
+    setMinutesPreviewRoute(meetingId, reviewReturn = false) {
+        this.router.pushState({
+            cm_minutes_preview: 1,
+            cm_minutes_meeting_id: meetingId,
+            cm_minutes_return_meeting_id: reviewReturn?.meeting_id || 0,
+            cm_minutes_return_item_id: reviewReturn?.item_id || 0,
+        }, { sync: true });
     }
 }
 

@@ -69,8 +69,11 @@ posterior; la acción directa queda bloqueada. Consulta [Roles y permisos](../ro
 para saber quién puede seguir cada ruta de aprobación.
 
 Una reunión anterior que siga **Celebrada** aparece como **Preparación
-pendiente**: prepara primero su acta. Solo se puede aprobar desde el punto de la
-reunión posterior cuando su estado sea **Acta en borrador**.
+pendiente**: prepara primero su acta. En el punto de aprobación en vivo, **Preparar
+acta** cambia esa reunión anterior a **Acta en borrador** y actualiza la cola.
+Después puedes revisarla y aprobarla desde el mismo punto. Solo se aprueba allí
+una reunión en **Acta en borrador**; quien aprueba en vivo debe ser la secretaría
+asignada y tener el rol Editor y permiso de escritura.
 
 La aprobación:
 

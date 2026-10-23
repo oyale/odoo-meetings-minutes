@@ -57,8 +57,11 @@ is blocked for this series. Approval history links to the exact approved
 revision, so a later amendment is recorded separately.
 
 An earlier meeting still in **Held** state is marked **Preparation pending**;
-prepare its minutes first. Only a meeting in **Minutes draft** can be approved
-from the later meeting's point.
+prepare its minutes first. In the live approval point, **Prepare Minutes** moves
+that earlier meeting into **Minutes draft** and refreshes the queue. You can then
+review and approve it from the same point. Only a meeting in **Minutes draft**
+can be approved there; the live approver must be the assigned secretary and have
+the Editor role and write access.
 
 When a series does not use a later-meeting approval point, approve the minutes
 with **Approve Minutes** (live screen or form header). When the point policy is
