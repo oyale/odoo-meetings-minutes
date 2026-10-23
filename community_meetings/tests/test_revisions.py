@@ -391,6 +391,14 @@ class TestMeetingRevisions(TransactionCase):
         self.assertIn(meeting.code, carry["origin_meeting"])
         self.assertIn(meeting.name, carry["origin_meeting"])
         self.assertEqual(carry["destination_meeting"], "")
+        html, _ = self.env["ir.actions.report"]._render_qweb_html(
+            "community_meetings.report_revision_document", revision.ids
+        )
+        self.assertIn(b"Points moved to another meeting", html)
+        self.assertIn(b"Origin", html)
+        self.assertIn(b"Destination", html)
+        self.assertIn(b"Series", html)
+        self.assertIn(b"Status", html)
 
     def test_report_shows_presenter_actual_end_and_localized_status(self):
         presenter = self.env["res.partner"].create({"name": "Report Presenter"})

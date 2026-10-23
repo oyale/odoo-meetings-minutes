@@ -43,7 +43,6 @@
                     <time t-out="doc['snapshot']['approval']['approved_at']"/>
                 </p>
                 <dl class="o_minutes_document_metadata">
-                    <div t-if="doc['meeting'].get('company')" class="o_minutes_metadata_item"><dt>Company</dt><dd t-out="doc['meeting']['company']"/></div>
                     <div t-if="doc['meeting'].get('start_datetime_display')" class="o_minutes_metadata_item">
                         <dt>Meeting date</dt>
                         <dd>
@@ -55,7 +54,6 @@
                         <dt>Meeting end</dt>
                         <dd>
                             <span t-out="doc['meeting']['actual_end_datetime_display']"/>
-                            <span t-if="doc['meeting'].get('actual_end_timezone')" t-out="' (' + doc['meeting']['actual_end_timezone'] + ')'"/>
                         </dd>
                     </div>
                     <div t-if="doc['meeting'].get('organizer')" class="o_minutes_metadata_item"><dt>Organizer</dt><dd t-out="doc['meeting']['organizer']"/></div>
@@ -137,15 +135,14 @@
             </section>
             <section t-if="doc.get('carryovers')" class="o_minutes_document_section">
                 <h2>Points moved to another meeting</h2>
-                <ul class="o_minutes_followups">
-                    <li t-foreach="doc['carryovers']" t-as="carry" t-key="carry_index" class="o_minutes_followup">
-                        <strong t-out="carry['origin_name']"/>
-                        <span t-if="carry.get('origin_meeting')"><span class="o_minutes_revision_separator">·</span> <span t-translation="on">Origin</span>: <t t-out="carry['origin_meeting']"/></span>
-                        <span t-if="carry.get('destination_meeting')"><span class="o_minutes_revision_separator">·</span> <span t-translation="on">Destination</span>: <t t-out="carry['destination_meeting']"/></span>
-                        <span t-elif="carry.get('destination')"><span class="o_minutes_revision_separator">·</span> <span t-translation="on">Destination</span>: <t t-out="carry['destination']"/></span>
-                        <span t-if="carry.get('destination_series', {}).get('name')"><span class="o_minutes_revision_separator">·</span> <span t-translation="on">Series</span>: <t t-out="carry['destination_series']['name']"/></span>
-                        <span t-if="carry.get('status_label')"><span class="o_minutes_revision_separator">·</span> <span t-translation="on">Status</span>: <t t-out="carry['status_label']"/></span>
-                        <span t-if="carry.get('reason')"><span class="o_minutes_revision_separator">·</span> <span t-translation="on">Reason</span>: <t t-out="carry['reason']"/></span>
+                <ul class="o_minutes_carryovers">
+                    <li t-foreach="doc['carryovers']" t-as="carry" t-key="carry_index" class="o_minutes_carryover">
+                        <div class="o_minutes_carryover_title" t-out="carry['origin_name']"/>
+                        <div t-if="carry.get('origin_meeting')" class="o_minutes_carryover_detail"><span t-translation="on">Origin</span>: <t t-out="carry['origin_meeting']"/></div>
+                        <div t-if="carry.get('destination_meeting') or carry.get('destination')" class="o_minutes_carryover_detail"><span t-translation="on">Destination</span>: <t t-out="carry.get('destination_meeting') or carry.get('destination')"/></div>
+                        <div t-if="carry.get('destination_series', {}).get('name')" class="o_minutes_carryover_detail"><span t-translation="on">Series</span>: <t t-out="carry['destination_series']['name']"/></div>
+                        <div t-if="carry.get('status_label')" class="o_minutes_carryover_detail"><span t-translation="on">Status</span>: <t t-out="carry['status_label']"/></div>
+                        <div t-if="carry.get('reason')" class="o_minutes_carryover_detail"><span t-translation="on">Reason</span>: <t t-out="carry['reason']"/></div>
                     </li>
                 </ul>
             </section>

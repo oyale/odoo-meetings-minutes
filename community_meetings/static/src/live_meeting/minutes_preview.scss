@@ -135,22 +135,20 @@
             .o_minutes_revision_separator { color: var(--minutes-muted); }
 
             .o_minutes_document_metadata {
-                display: flex;
-                align-items: baseline;
-                flex-wrap: wrap;
-                gap: .7rem 1.5rem;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+                gap: .8rem 2rem;
                 margin: 0;
-                padding: .9rem 0;
+                padding: 1rem 0;
                 border-top: 1px solid var(--minutes-rule);
                 border-bottom: 1px solid var(--minutes-rule);
             }
 
             .o_minutes_metadata_item {
                 min-width: 0;
-                display: inline-flex;
-                align-items: baseline;
-                flex-wrap: wrap;
-                gap: 0 .4rem;
+                display: flex;
+                flex-direction: column;
+                gap: .18rem;
 
                 dt {
                     margin: 0;
@@ -172,6 +170,8 @@
             }
 
             .o_minutes_metadata_attendees {
+                grid-column: 1 / -1;
+
                 dd {
                     font-family: var(--minutes-display);
                     font-size: .98rem;
@@ -307,6 +307,40 @@
                 text-transform: capitalize;
             }
 
+            .o_minutes_carryovers {
+                margin: 0;
+                padding: 0;
+                list-style: none;
+            }
+
+            .o_minutes_carryover {
+                padding: .85rem 0;
+                border-top: 1px solid var(--minutes-rule);
+                font-size: .9rem;
+                line-height: 1.45;
+            }
+
+            .o_minutes_carryover_title {
+                margin-bottom: .3rem;
+                font-family: var(--minutes-body);
+                font-size: .96rem;
+                font-weight: 700;
+            }
+
+            .o_minutes_carryover_detail {
+                color: var(--minutes-ink);
+                font-size: .86rem;
+
+                > span:first-child {
+                    margin-inline-end: .25rem;
+                    color: var(--minutes-muted);
+                    font-size: .66rem;
+                    font-weight: 650;
+                    letter-spacing: .06em;
+                    text-transform: uppercase;
+                }
+            }
+
             .o_minutes_dissent {
                 padding: .9rem 0;
                 border-top: 1px solid var(--minutes-rule);
@@ -365,7 +399,7 @@
                 .o_minutes_document_header { padding-bottom: 1rem; }
                 .o_minutes_document_kicker { align-items: flex-start; }
                 .o_minutes_document_title { max-width: none; }
-                .o_minutes_document_metadata { gap: .65rem 1.1rem; }
+                .o_minutes_document_metadata { grid-template-columns: minmax(0, 1fr); gap: .7rem; }
                 .o_minutes_document_section { margin-top: 2rem; }
                 .o_minutes_agenda_item { grid-template-columns: 2rem minmax(0, 1fr); gap: .65rem; }
                 .o_minutes_followup { grid-template-columns: minmax(0, 1fr) auto; }

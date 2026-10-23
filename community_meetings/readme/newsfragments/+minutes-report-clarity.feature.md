@@ -1,4 +1,4 @@
-Meeting minutes show the actual meeting end, each point's proposer and a
-localized status, list related points and agreement decisions and statuses,
-omit empty header fields, and describe moved points with origin, destination,
-status and reason. Report labels follow the document language.
+Meeting minutes show the actual meeting end and each point's proposer, use a
+compact header that omits empty fields and repeated time zones, localize point
+and agreement statuses, list related points and decision details, and describe
+points moved to another meeting with origin, destination, status and reason.
