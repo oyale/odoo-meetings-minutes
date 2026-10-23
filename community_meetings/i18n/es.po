@@ -8256,6 +8256,7 @@ msgstr "Organizador"
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Origin"
 msgstr "Origen"
 
@@ -9161,6 +9162,7 @@ msgstr "Lectores"
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover__reason
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover_wizard__reason
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Reason"
 msgstr "Motivo"
 
@@ -9317,6 +9319,7 @@ msgstr "Elementos relacionados"
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__related_topic_ids
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__related_topic_ids
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Related points"
 msgstr "Puntos relacionados"
 
@@ -9822,6 +9825,7 @@ msgstr "Secuencia"
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_create_wizard__step__series
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__step__basics
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_search
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Series"
 msgstr "Serie"
 
@@ -10059,6 +10063,7 @@ msgstr "Tipo de declaración"
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_revision__status
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_list
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_search
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Status"
 msgstr "Estado"
 
@@ -11323,6 +11328,43 @@ msgid "{date} {series}"
 msgstr "{date} {series}"
 
 #, fuzzy
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Add an agreement title before saving."
+msgstr "Añade un título al acuerdo antes de guardar."
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Meeting end"
+msgstr "Fin de la reunión"
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Proposed by"
+msgstr "Propuesto por"
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Agreement status"
+msgstr "Estado del acuerdo"
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Points moved to another meeting"
+msgstr "Puntos trasladados a otra reunión"
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Destination"
+msgstr "Destino"
+
 #~ msgid "Time Tracking Session Mode"
 #~ msgstr "Seguimiento de tiempo"
 
@@ -11652,34 +11694,3 @@ msgstr "{date} {series}"
 
 #~ msgid "Approved by"
 #~ msgstr "Aprobado por"
-
-#. module: community_meetings
-#. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
-msgid "Add an agreement title before saving."
-msgstr "Añade un título al acuerdo antes de guardar."
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-msgid "Meeting end"
-msgstr "Fin de la reunión"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-msgid "Proposed by"
-msgstr "Propuesto por"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-msgid "Agreement status"
-msgstr "Estado del acuerdo"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-msgid "Points moved to another meeting"
-msgstr "Puntos trasladados a otra reunión"
-
-#. module: community_meetings
-#: code:addons/community_meetings/report/meeting_report.xml:0
-msgid "Destination"
-msgstr "Destino"

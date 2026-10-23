@@ -8031,6 +8031,7 @@ msgstr ""
 #. module: community_meetings
 #. odoo-javascript
 #: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Origin"
 msgstr ""
 
@@ -8915,6 +8916,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover__reason
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_carryover_wizard__reason
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Reason"
 msgstr ""
 
@@ -9066,6 +9068,7 @@ msgstr ""
 #. module: community_meetings
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_point_wizard__related_topic_ids
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_topic__related_topic_ids
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Related points"
 msgstr ""
 
@@ -9557,6 +9560,7 @@ msgstr ""
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_create_wizard__step__series
 #: model:ir.model.fields.selection,name:community_meetings.selection__community_meeting_series_wizard__step__basics
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_search
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Series"
 msgstr ""
 
@@ -9786,6 +9790,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:community_meetings.field_community_meeting_revision__status
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_list
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_search
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Status"
 msgstr ""
 
@@ -10983,25 +10988,30 @@ msgstr ""
 
 #. module: community_meetings
 #: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Meeting end"
 msgstr ""
 
 #. module: community_meetings
 #: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Proposed by"
 msgstr ""
 
 #. module: community_meetings
 #: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Agreement status"
 msgstr ""
 
 #. module: community_meetings
 #: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Points moved to another meeting"
 msgstr ""
 
 #. module: community_meetings
 #: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Destination"
 msgstr ""
