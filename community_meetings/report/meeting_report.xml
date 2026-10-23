@@ -125,6 +125,7 @@
                                         <strong t-out="action['name']"/>
                                         <span t-if="action.get('kind_label')"> · <t t-out="action['kind_label']"/></span>
                                         <span t-if="action.get('activity_type')"> · <t t-out="action['activity_type']"/></span>
+                                        <span t-if="action.get('responsibles') or action.get('responsible')"> · <t t-out="', '.join(action.get('responsibles', [])) or action['responsible']"/></span>
                                         <span t-if="action.get('state_label')"> · <t t-out="action['state_label']"/></span>
                                         <span t-if="action.get('deadline')"> · <t t-out="action['deadline']"/></span>
                                     </li>

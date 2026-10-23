@@ -286,14 +286,19 @@
             }
 
             .o_minutes_actions {
+                display: flex;
+                flex-direction: column;
+                gap: .6rem;
                 margin: 0;
                 padding: 0;
                 list-style: none;
             }
 
             .o_minutes_action {
-                padding: .95rem 0;
-                border-top: 1px solid var(--minutes-rule);
+                padding: .9rem 1rem;
+                border: 1px solid var(--minutes-rule);
+                border-radius: .55rem;
+                background: color-mix(in srgb, var(--minutes-accent-soft) 55%, transparent);
             }
 
             .o_minutes_action_title {
@@ -337,8 +342,10 @@
 
             .o_minutes_point_followups {
                 margin-top: .9rem;
-                padding-top: .75rem;
-                border-top: 1px solid var(--minutes-rule);
+                padding: .75rem .85rem;
+                border: 1px solid var(--minutes-rule);
+                border-radius: .5rem;
+                background: var(--minutes-accent-soft);
 
                 h4 {
                     margin: 0 0 .35rem;
