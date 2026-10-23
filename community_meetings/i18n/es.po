@@ -11448,6 +11448,30 @@ msgstr "Aprobado en la reunión"
 msgid "Direct approval"
 msgstr "Aprobación directa"
 
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "in"
+msgstr "en"
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "on"
+msgstr "el"
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "in the meeting"
+msgstr "en la reunión"
+
+#. module: community_meetings
+#: code:addons/community_meetings/report/meeting_report.xml:0
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "while preparing"
+msgstr "al preparar"
+
 #~ msgid "Time Tracking Session Mode"
 #~ msgstr "Seguimiento de tiempo"
 
@@ -11527,9 +11551,6 @@ msgstr "Aprobación directa"
 
 #~ msgid "When: %s (%sh)"
 #~ msgstr "Cuándo: %s (%sh)"
-
-#~ msgid "on"
-#~ msgstr "el"
 
 #~ msgid "· <strong>Attendees:</strong>"
 #~ msgstr "· <strong>Asistentes:</strong>"

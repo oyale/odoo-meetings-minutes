@@ -40,27 +40,26 @@
                     Revision <span t-out="doc['revision'].revision_number"/>
                     <span class="o_minutes_revision_separator" aria-hidden="true"/>
                     <span t-translation="on">Approved by</span> <strong t-out="doc['snapshot']['approval']['approver']"/>
-                    <span class="o_minutes_revision_separator" aria-hidden="true"/>
-                    <time t-out="doc['snapshot']['approval']['approved_at']"/>
-                    <span class="o_minutes_revision_separator" aria-hidden="true"/>
-                    <span class="o_minutes_document_approval_source">
-                        <t t-if="doc['snapshot']['approval'].get('meeting_code')">
-                            <t t-if="doc['snapshot']['approval'].get('offline')">
-                                <span t-translation="on">Approved while preparing</span> <strong t-out="doc['snapshot']['approval']['meeting_code']"/>
-                            </t>
-                            <t t-else="">
-                                <span t-translation="on">Approved in</span> <strong t-out="doc['snapshot']['approval']['meeting_code']"/>
-                            </t>
-                            <span t-if="doc['snapshot']['approval'].get('point_name')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="doc['snapshot']['approval']['point_name']"/></span>
+                    <t t-if="doc['snapshot']['approval'].get('meeting_code')">
+                        <t t-if="doc['snapshot']['approval'].get('offline')">
+                            <span t-translation="on">while preparing</span> <strong t-out="doc['snapshot']['approval']['meeting_code']"/>
                         </t>
-                        <t t-elif="doc['snapshot']['approval'].get('origin') == 'live'">
-                            <span t-translation="on">Approved in the meeting</span>
+                        <t t-else="">
+                            <span t-translation="on">in</span> <strong t-out="doc['snapshot']['approval']['meeting_code']"/>
                         </t>
-                        <t t-elif="doc['snapshot']['approval'].get('origin') == 'direct'">
-                            <span t-translation="on">Direct approval</span>
-                        </t>
-                        <t t-else=""><span t-translation="on">Manual approval</span></t>
-                    </span>
+                        <span t-if="doc['snapshot']['approval'].get('point_name')"> (<t t-out="doc['snapshot']['approval']['point_name']"/>)</span>
+                    </t>
+                    <t t-elif="doc['snapshot']['approval'].get('origin') == 'live'">
+                        <span t-translation="on">in the meeting</span>
+                    </t>
+                    <t t-elif="doc['snapshot']['approval'].get('origin') == 'direct'">
+                        (<span t-translation="on">Direct approval</span>)
+                    </t>
+                    <t t-else="">(<span t-translation="on">Manual approval</span>)</t>
+                    <t t-if="doc['snapshot']['approval'].get('approved_at_display')">
+                        <span t-translation="on">on</span> <time t-out="doc['snapshot']['approval']['approved_at_display']"/>
+                        <span t-if="doc['snapshot']['approval'].get('approved_timezone')"> (<t t-out="doc['snapshot']['approval']['approved_timezone']"/>)</span>
+                    </t>
                 </p>
                 <dl class="o_minutes_document_metadata">
                     <div t-if="doc['meeting'].get('actual_start_datetime_display')" class="o_minutes_metadata_item">

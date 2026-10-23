@@ -4,6 +4,7 @@ from markupsafe import Markup
 
 from odoo import api, models
 from odoo.tools import is_html_empty
+from odoo.tools.misc import format_datetime
 
 
 class MeetingRevisionReport(models.AbstractModel):
@@ -16,10 +17,7 @@ class MeetingRevisionReport(models.AbstractModel):
         return dict(env[model_name]._fields[field_name]._description_selection(env))
 
     @api.model
-    def _prepare_document(self, snapshot, revision=None, draft=False, lang=None):
-        lang = lang or self.env.lang or self.env.user.lang
-        meeting = snapshot["meeting"]
-        approval = dict(snapshot.get("approval") or {})
+    def _prepare_approval(self, meeting, approval, revision, lang):
         if revision and not approval.get("origin"):
             approved_at = revision.approved_at
             record = (
@@ -54,6 +52,24 @@ class MeetingRevisionReport(models.AbstractModel):
                     and (not meeting_now.actual_end_datetime or approved_at <= meeting_now.actual_end_datetime)
                 )
                 approval.update({"origin": "live" if live else "direct", "manual": False})
+        approved_at_value = approval.get("approved_at")
+        if approved_at_value:
+            approval_timezone = meeting.get("actual_start_timezone") or meeting.get("start_timezone") or ""
+            approval["approved_at_display"] = format_datetime(
+                self.env,
+                approved_at_value,
+                tz=approval_timezone or False,
+                dt_format="medium",
+                lang_code=lang,
+            )
+            approval["approved_timezone"] = approval_timezone
+        return approval
+
+    @api.model
+    def _prepare_document(self, snapshot, revision=None, draft=False, lang=None):
+        lang = lang or self.env.lang or self.env.user.lang
+        meeting = snapshot["meeting"]
+        approval = self._prepare_approval(meeting, dict(snapshot.get("approval") or {}), revision, lang)
         if approval:
             snapshot = {**snapshot, "approval": approval}
         dispositions = self._selection_labels("community.meeting.agenda.item", "disposition", lang)

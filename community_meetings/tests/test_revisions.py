@@ -789,7 +789,7 @@ class TestMeetingRevisions(TransactionCase):
         html, _ = self.env["ir.actions.report"]._render_qweb_html(
             "community_meetings.report_revision_document", revision.ids
         )
-        self.assertIn(b"Approved in the meeting", html)
+        self.assertIn(b"in the meeting", html)
 
     def test_report_html_and_snapshot_are_stable_after_action_changes(self):
         _, action, revision = self._approved_meeting()

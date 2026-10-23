@@ -135,20 +135,6 @@
                 }
             }
 
-            .o_minutes_document_approval_source {
-                display: inline-flex;
-                align-items: baseline;
-                flex-wrap: wrap;
-                gap: .25rem;
-                color: var(--minutes-accent);
-                font-size: .82rem;
-
-                strong {
-                    color: var(--minutes-ink);
-                    font-weight: 650;
-                }
-            }
-
             .o_minutes_status_dot {
                 width: .48rem;
                 height: .48rem;
