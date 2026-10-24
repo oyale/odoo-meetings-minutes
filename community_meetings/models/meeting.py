@@ -51,6 +51,15 @@ class CommunityMeeting(models.Model):
         check_company=True,
     )
     attendee_partner_ids = fields.Many2many("res.partner", string="Attendees")
+    rotation_unavailable_user_ids = fields.Many2many(
+        "res.users",
+        "community_meeting_rotation_unavailable_rel",
+        "meeting_id",
+        "user_id",
+        string="Unavailable for this meeting",
+        check_company=True,
+        help="Explicit per-meeting signal used when rotating coordinator and minutes secretary.",
+    )
     start_datetime = fields.Datetime(string="Estimated Start Datetime", tracking=True)
     end_datetime = fields.Datetime(string="Estimated End Datetime", tracking=True)
     actual_start_datetime = fields.Datetime(readonly=True, copy=False, tracking=True)
@@ -359,6 +368,13 @@ class CommunityMeeting(models.Model):
         return (
             self.state in ("draft", "scheduled") and not self.actual_start_datetime and not self.approved_revision_id
         )
+
+    def action_rotate_roles(self):
+        self.ensure_one()
+        self.check_access("write")
+        if self.state in ("approved", "cancelled"):
+            raise UserError(_("Roles cannot be rotated on an approved or cancelled meeting."))
+        return self.env["community.meeting.role.rotation.wizard"]._open(self)
 
     # Preserve the ordering of series, workflow, timing, and permission guards.
     def write(self, vals):  # noqa: C901

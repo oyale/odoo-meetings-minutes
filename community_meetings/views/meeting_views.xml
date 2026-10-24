@@ -43,6 +43,7 @@
             <form string="Meeting" class="o_meeting_persistent_form">
                 <header>
                     <button name="action_open_live_meeting" type="object" string="Open Meeting" class="oe_highlight" groups="community_meetings.group_meeting_reader"/>
+                    <button name="action_rotate_roles" type="object" string="Rotate roles" invisible="state in ['approved', 'cancelled']" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_schedule" type="object" string="Schedule" invisible="state != 'draft'" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_start_meeting" type="object" string="Start Meeting" invisible="state != 'scheduled' or actual_start_datetime or not time_tracking_enabled" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_pause_meeting" type="object" string="Pause Meeting" invisible="state != 'scheduled' or not actual_start_datetime or actual_paused_at or not time_tracking_enabled" groups="community_meetings.group_meeting_editor"/>
@@ -83,6 +84,7 @@
                             <field name="secretary_role_label" readonly="1" nolabel="1" class="text-muted"/>
                             <field name="secretary_id"/>
                             <field name="attendee_partner_ids" widget="many2many_tags"/>
+                            <field name="rotation_unavailable_user_ids" widget="many2many_tags" string="Unavailable for this meeting"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="approved_revision_id" invisible="1"/>
                             <field name="meeting_kind_id" invisible="1"/>

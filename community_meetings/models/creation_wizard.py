@@ -18,6 +18,7 @@ class MeetingCreateWizard(models.TransientModel):
             ("series", "Series"),
             ("when", "When"),
             ("people", "Attendees"),
+            ("roles", "Roles"),
             ("carryover", "Continue points"),
             ("agenda", "Agenda"),
             ("review", "Review"),
@@ -32,6 +33,15 @@ class MeetingCreateWizard(models.TransientModel):
     start_datetime = fields.Datetime(string="Estimated Start Datetime", default=fields.Datetime.now)
     duration_hours = fields.Float(string="Approximate duration", default=1.0)
     attendee_partner_ids = fields.Many2many("res.partner", string="Attendees")
+    organizer_id = fields.Many2one("res.users", string="Coordinator")
+    secretary_id = fields.Many2one("res.users", string="Minutes secretary")
+    rotation_unavailable_user_ids = fields.Many2many(
+        "res.users",
+        "community_meeting_create_unavailable_rel",
+        "wizard_id",
+        "user_id",
+        string="Unavailable for this meeting",
+    )
     defaults_applied = fields.Boolean()
     last_default_duration = fields.Float(default=1.0)
     last_default_start = fields.Datetime()
@@ -77,6 +87,7 @@ class MeetingCreateWizard(models.TransientModel):
             if set(self.attendee_partner_ids.ids) == set(self.last_default_attendee_ids.ids):
                 self.attendee_partner_ids = self.series_id.attendee_partner_ids
             self.company_id = self.series_id.company_id
+            self._refresh_role_suggestions()
             proposed = self.series_id._proposed_next_meeting_datetime()
             if proposed and (not self.start_datetime or self.start_datetime == self.last_default_start):
                 self.start_datetime = proposed
@@ -85,6 +96,35 @@ class MeetingCreateWizard(models.TransientModel):
             self.last_default_duration = self.series_id.duration_hours
             self.last_default_attendee_ids = self.series_id.attendee_partner_ids
             self.defaults_applied = True
+
+    def _refresh_role_suggestions(self):
+        for wizard in self:
+            if not wizard.series_id:
+                continue
+            organizer = wizard.series_id._next_role_assignee(
+                "organizer_id",
+                wizard.attendee_partner_ids,
+                wizard.rotation_unavailable_user_ids,
+                before=wizard.start_datetime,
+            )
+            secretary = wizard.series_id._next_role_assignee(
+                "secretary_id",
+                wizard.attendee_partner_ids,
+                wizard.rotation_unavailable_user_ids,
+                exclude=organizer
+                if len(wizard.series_id._role_rotation_pool("secretary_id", wizard.attendee_partner_ids)) > 1
+                else None,
+                before=wizard.start_datetime,
+            )
+            if organizer:
+                wizard.organizer_id = organizer
+            if secretary:
+                wizard.secretary_id = secretary
+
+    def action_refresh_roles(self):
+        self.ensure_one()
+        self._refresh_role_suggestions()
+        return self._reload()
 
     def _suggest_series_name(self):
         for wizard in self:
@@ -310,10 +350,12 @@ class MeetingCreateWizard(models.TransientModel):
         self.ensure_one()
         if self.step == "when":
             self._suggest_series_name()
-        steps = ["series", "when", "people", "carryover", "agenda", "review"]
+        steps = ["series", "when", "people", "roles", "carryover", "agenda", "review"]
         if self.step == "when" and (not self.name or not self.start_datetime or self.duration_hours <= 0):
             raise ValidationError(_("Enter a title, start time and positive duration."))
         if self.step == "people":
+            self._refresh_role_suggestions()
+        if self.step in ("people", "roles"):
             choices = {line.candidate_key: line.decision for line in self.carry_line_ids}
             self.carry_line_ids.unlink()
             candidates = self.env["community.meeting"]._agenda_candidates(self.series_id, self.start_datetime)
@@ -336,7 +378,7 @@ class MeetingCreateWizard(models.TransientModel):
 
     def action_back(self):
         self.ensure_one()
-        steps = ["series", "when", "people", "carryover", "agenda", "review"]
+        steps = ["series", "when", "people", "roles", "carryover", "agenda", "review"]
         self.step = steps[max(0, steps.index(self.step) - 1)]
         return self._reload()
 
@@ -365,6 +407,11 @@ class MeetingCreateWizard(models.TransientModel):
                 "start_datetime": self.start_datetime,
                 "duration_hours": self.duration_hours,
                 "attendee_partner_ids": [(6, 0, self.attendee_partner_ids.ids)],
+                # Create under the current authorized editor, then apply the
+                # reviewed rotation through the existing organizer write gate.
+                "organizer_id": self.env.uid,
+                "secretary_id": self.secretary_id.id or self.env.uid,
+                "rotation_unavailable_user_ids": [(6, 0, self.rotation_unavailable_user_ids.ids)],
                 "creation_token": self.token,
             }
             if self.series_id:
@@ -374,6 +421,8 @@ class MeetingCreateWizard(models.TransientModel):
                 .with_context(review_carryovers_in_wizard=True, defer_carryover_processing=True)
                 .create(values)
             )
+            if self.series_id and self.organizer_id and self.organizer_id != meeting.organizer_id:
+                meeting.write({"organizer_id": self.organizer_id.id})
             for line in self.line_ids.filtered("included"):
                 item = self.env["community.meeting.agenda.item"].create(line._item_values(meeting))
                 line._write_related_points(item.topic_id)
@@ -390,6 +439,116 @@ class MeetingCreateWizard(models.TransientModel):
             "res_model": "community.meeting",
             "res_id": meeting.id,
             "views": [(False, "form")],
+            "target": "current",
+        }
+
+
+class MeetingRoleRotationWizard(models.TransientModel):
+    _name = "community.meeting.role.rotation.wizard"
+    _description = "Rotate Meeting Roles"
+
+    meeting_id = fields.Many2one("community.meeting", required=True, readonly=True)
+    organizer_id = fields.Many2one("res.users", string="Proposed coordinator", required=True)
+    secretary_id = fields.Many2one("res.users", string="Proposed minutes secretary", required=True)
+    rotation_unavailable_user_ids = fields.Many2many(
+        "res.users",
+        "community_meeting_role_wizard_unavailable_rel",
+        "wizard_id",
+        "user_id",
+        string="Unavailable for this meeting",
+    )
+    update_organizer = fields.Boolean(default=True, string="Apply coordinator")
+    update_secretary = fields.Boolean(default=True, string="Apply minutes secretary")
+
+    @api.model
+    def _open(self, meeting):
+        vals = {
+            "meeting_id": meeting.id,
+            "organizer_id": meeting.organizer_id.id,
+            "secretary_id": meeting.secretary_id.id,
+            "rotation_unavailable_user_ids": [(6, 0, meeting.rotation_unavailable_user_ids.ids)],
+        }
+        if meeting.series_id:
+            organizer = meeting.series_id._next_role_assignee(
+                "organizer_id",
+                meeting.attendee_partner_ids,
+                meeting.rotation_unavailable_user_ids,
+                before=meeting.start_datetime,
+                after=meeting.organizer_id,
+            )
+            secretary = meeting.series_id._next_role_assignee(
+                "secretary_id",
+                meeting.attendee_partner_ids,
+                meeting.rotation_unavailable_user_ids,
+                exclude=organizer
+                if len(meeting.series_id._role_rotation_pool("secretary_id", meeting.attendee_partner_ids)) > 1
+                else None,
+                before=meeting.start_datetime,
+                after=meeting.secretary_id,
+            )
+            vals.update(
+                organizer_id=organizer.id or meeting.organizer_id.id,
+                secretary_id=secretary.id or meeting.secretary_id.id,
+            )
+        wizard = self.create(vals)
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Rotate meeting roles"),
+            "res_model": self._name,
+            "res_id": wizard.id,
+            "view_mode": "form",
+            "target": "new",
+        }
+
+    def action_refresh(self):
+        self.ensure_one()
+        meeting = self.meeting_id
+        if meeting.series_id:
+            organizer = meeting.series_id._next_role_assignee(
+                "organizer_id",
+                meeting.attendee_partner_ids,
+                self.rotation_unavailable_user_ids,
+                before=meeting.start_datetime,
+                after=self.organizer_id,
+            )
+            secretary = meeting.series_id._next_role_assignee(
+                "secretary_id",
+                meeting.attendee_partner_ids,
+                self.rotation_unavailable_user_ids,
+                exclude=organizer
+                if len(meeting.series_id._role_rotation_pool("secretary_id", meeting.attendee_partner_ids)) > 1
+                else None,
+                before=meeting.start_datetime,
+                after=self.secretary_id,
+            )
+            if organizer:
+                self.organizer_id = organizer
+            if secretary:
+                self.secretary_id = secretary
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Rotate meeting roles"),
+            "res_model": self._name,
+            "res_id": self.id,
+            "view_mode": "form",
+            "target": "new",
+        }
+
+    def action_apply(self):
+        self.ensure_one()
+        meeting = self.meeting_id
+        meeting.check_access("write")
+        values = {"rotation_unavailable_user_ids": [(6, 0, self.rotation_unavailable_user_ids.ids)]}
+        if self.update_organizer:
+            values["organizer_id"] = self.organizer_id.id
+        if self.update_secretary:
+            values["secretary_id"] = self.secretary_id.id
+        meeting.write(values)
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "community.meeting",
+            "res_id": meeting.id,
+            "view_mode": "form",
             "target": "current",
         }
 

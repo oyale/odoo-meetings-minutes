@@ -45,7 +45,7 @@
 <record id="view_meeting_create_wizard" model="ir.ui.view">
 <field name="name">community.meeting.create.wizard</field><field name="model">community.meeting.create.wizard</field>
 <field name="arch" type="xml"><form string="Prepare a Meeting" class="o_meeting_create_wizard">
-<header><field name="step" widget="statusbar" statusbar_visible="series,when,people,carryover,agenda,review"/></header>
+<header><field name="step" widget="statusbar" statusbar_visible="series,when,people,roles,carryover,agenda,review"/></header>
 <field name="company_id" invisible="1"/><field name="defaults_applied" invisible="1"/><field name="last_default_duration" invisible="1"/><field name="last_default_start" invisible="1"/><field name="last_default_attendee_ids" invisible="1"/><field name="suggested_name" invisible="1"/>
 <div class="o_meeting_create_step" invisible="step != 'series'">
     <div class="o_meeting_wizard_intro"><h2>Choose a series</h2><p>Use a series for its defaults, or leave it empty for a standalone meeting. Your edits stay when you change series.</p></div>
@@ -75,6 +75,10 @@
     <div class="o_meeting_wizard_intro"><h2>Invite attendees</h2><p>Choose the people expected to take part in this meeting.</p></div>
     <div class="o_meeting_create_panel"><h3>People invited</h3><group><field name="attendee_partner_ids" widget="many2many_tags"/></group><p class="o_meeting_create_hint">A series may suggest attendees. Changes here apply to this meeting only.</p></div>
 </div>
+<div class="o_meeting_create_step" invisible="step != 'roles'">
+    <div class="o_meeting_wizard_intro"><h2>Assign meeting roles</h2><p>Rotation proposes a coordinator and minutes secretary from the regular attendees and the series role pools. You can change either proposal.</p></div>
+    <div class="o_meeting_create_panel"><h3>Coordinator and minutes secretary</h3><group><field name="organizer_id"/><field name="secretary_id"/><field name="rotation_unavailable_user_ids" widget="many2many_tags"/></group><p class="o_meeting_create_hint">Unavailable people are skipped for this meeting and remain eligible for later meetings. Use “Next in rotation” to refresh proposals.</p><button name="action_refresh_roles" type="object" string="Next in rotation" icon="fa-refresh"/></div>
+</div>
 <div class="o_meeting_create_step" invisible="step != 'carryover'">
     <div class="o_meeting_wizard_intro"><h2>Review points carried forward</h2><p>Choose which points to include in this meeting.</p></div>
     <div class="o_meeting_create_panel"><h3>Points from earlier meetings</h3><p invisible="carry_line_ids" class="o_meeting_create_hint">There are no points to carry forward into this meeting.</p><field name="carry_line_ids" class="o_meeting_carryover_cards" nolabel="1" invisible="not carry_line_ids"><list editable="bottom" create="0" delete="0"><field name="decision" string="Decision" widget="meeting_carryover_decision" width="150px"/><field name="name" string="Name" width="220px"/><field name="agenda_type_id" string="Point type" width="150px"/><field name="priority" optional="hide"/><field name="estimated_minutes" string="Min." width="85px"/><field name="origin_meeting_id" optional="hide"/><field name="presentation_reason" string="Reason" optional="hide"/></list></field></div>
@@ -90,6 +94,7 @@
 </div>
 <footer><button name="action_back" type="object" string="Back" invisible="step == 'series'"/><button name="action_next" type="object" string="Next" class="btn-primary" invisible="step == 'review'"/><button name="action_finish" type="object" string="Create Meeting" class="btn-primary" invisible="step != 'review'"/><button string="Cancel" special="cancel"/></footer>
 </form></field></record>
+<record id="view_meeting_role_rotation_wizard" model="ir.ui.view"><field name="name">community.meeting.role.rotation.wizard</field><field name="model">community.meeting.role.rotation.wizard</field><field name="arch" type="xml"><form string="Rotate meeting roles"><group><field name="meeting_id"/><field name="rotation_unavailable_user_ids" widget="many2many_tags"/><field name="organizer_id"/><field name="update_organizer"/><field name="secretary_id"/><field name="update_secretary"/></group><p class="text-muted">Review and edit the proposals before applying them. Current role assignments change only when you confirm.</p><footer><button name="action_refresh" type="object" string="Next in rotation"/><button name="action_apply" type="object" string="Apply selected roles" class="btn-primary"/><button string="Cancel" special="cancel"/></footer></form></field></record>
 <record id="view_point_wizard" model="ir.ui.view"><field name="name">community.meeting.point.wizard</field><field name="model">community.meeting.point.wizard</field>
 <field name="arch" type="xml"><form string="Add a point" class="o_meeting_point_wizard">
 <field name="meeting_id" invisible="1"/><field name="creation_wizard_id" invisible="1"/><field name="series_id" invisible="1"/><field name="company_id" invisible="1"/><field name="propose" invisible="1"/><field name="proposal_series_id" invisible="not propose" domain="[('company_id', '=', company_id), ('active', '=', True)]"/>

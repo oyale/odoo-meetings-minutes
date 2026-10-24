@@ -8203,3 +8203,78 @@ msgstr "{date} {series}"
 #~ "Aquí se pueden aprobar actas anteriores durante una reunión en directo "
 #~ "(Editor con permiso de edición) o al preparar el acta de una reunión "
 #~ "celebrada sin usar la pantalla de reunión en directo (Aprobador)."
+
+#. module: community_meetings
+#: community_meetings/models/creation_wizard.py
+msgid "Roles"
+msgstr "Cargos"
+
+#. module: community_meetings
+#: community_meetings/models/creation_wizard.py
+msgid "Minutes secretaries"
+msgstr "Secretarios de actas"
+
+#. module: community_meetings
+#: community_meetings/models/series.py
+msgid "People included in the minutes secretary rotation. Regular attendees are also eligible."
+msgstr "Personas incluidas en la rotación de secretaría. También pueden participar las personas asistentes habituales."
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "Assign meeting roles"
+msgstr "Asignar los cargos de la reunión"
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "Rotation proposes a coordinator and minutes secretary from the regular attendees and the series role pools. You can change either proposal."
+msgstr "La rotación propone una persona coordinadora y una secretaria de actas entre los asistentes habituales y las personas configuradas en la serie. Puedes cambiar cualquiera de las propuestas."
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "Coordinator and minutes secretary"
+msgstr "Coordinación y secretaría de actas"
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "Unavailable for this meeting"
+msgstr "No disponibles para esta reunión"
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "Unavailable people are skipped for this meeting and remain eligible for later meetings. Use “Next in rotation” to refresh proposals."
+msgstr "Se omite a las personas no disponibles en esta reunión, pero siguen siendo elegibles en las siguientes. Usa «Siguiente en la rotación» para actualizar las propuestas."
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "Next in rotation"
+msgstr "Siguiente en la rotación"
+
+#. module: community_meetings
+#: community_meetings/models/creation_wizard.py
+msgid "Proposed coordinator"
+msgstr "Coordinación propuesta"
+
+#. module: community_meetings
+#: community_meetings/models/creation_wizard.py
+msgid "Apply coordinator"
+msgstr "Aplicar coordinación"
+
+#. module: community_meetings
+#: community_meetings/models/creation_wizard.py
+msgid "Apply minutes secretary"
+msgstr "Aplicar secretaría de actas"
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "Review and edit the proposals before applying them. Current role assignments change only when you confirm."
+msgstr "Revisa y modifica las propuestas antes de aplicarlas. Los cargos actuales solo cambiarán cuando confirmes."
+
+#. module: community_meetings
+#: community_meetings/models/creation_wizard.py
+msgid "Rotate meeting roles"
+msgstr "Rotar los cargos de la reunión"
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "Apply selected roles"
+msgstr "Aplicar los cargos seleccionados"

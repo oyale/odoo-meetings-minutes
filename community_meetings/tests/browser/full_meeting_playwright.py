@@ -179,6 +179,10 @@ ACTIONS = {
     ],
     "test_followup_points_are_offered_in_new_meeting_wizard": [
         "carry completed follow-up point into next meeting",
+        "review coordinator and minutes secretary proposals",
+        "mark attendees unavailable for this meeting",
+        "refresh the role rotation",
+        "continue to carried-over agenda points",
     ],
     "test_selected_carryover_is_materialized_in_new_meeting": [
         "select carried point",
@@ -1923,6 +1927,12 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
             self.localized_datetime("10/08/2026 10:00")
         )
         wizard.locator('button[name="action_next"]').click()
+        wizard.locator('button[name="action_next"]').click()
+        self.capture_visual_screenshot("new-meeting-role-rotation")
+        expect(wizard.locator('.o_field_widget[name="organizer_id"]')).to_be_visible()
+        expect(wizard.locator('.o_field_widget[name="secretary_id"]')).to_be_visible()
+        expect(wizard.locator('.o_field_widget[name="rotation_unavailable_user_ids"]')).to_be_visible()
+        expect(wizard.locator('button[name="action_refresh_roles"]')).to_be_visible()
         wizard.locator('button[name="action_next"]').click()
         self.capture_visual_screenshot("new-meeting-carryovers")
         expect(wizard.locator('.o_field_widget[name="carry_line_ids"]')).to_contain_text(

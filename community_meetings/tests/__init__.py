@@ -23,3 +23,4 @@ from . import test_audit_batching
 from . import test_discussion_history
 from . import test_discussion_history_benchmark
 from . import test_proposal_admission
+from . import test_role_rotation

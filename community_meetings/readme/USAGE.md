@@ -9,6 +9,14 @@ reviewed without sharing the point itself. During the live meeting, record discu
 notes, agreements, dissents and follow-up work on each point. Prepare the
 minutes and submit them for approval when the meeting is complete.
 
+For meetings in a series, the **Roles** step proposes a coordinator and minutes
+secretary from the internal regular attendees and the role pools configured on
+the series. Change either proposal as needed. Mark an attendee unavailable for
+this meeting to skip them without removing them from future rotations. During a
+meeting, **Rotate roles** opens a review dialog; refresh or edit the proposals,
+then select which roles to apply and confirm. The unavailable list is specific
+to that meeting.
+
 After approval, open the read-only approved minutes from **Approved Minutes**
 in the meeting form or live meeting. In the meeting list, use the **Approved**
 filter and the **View approved minutes** row action. The action opens the latest

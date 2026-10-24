@@ -50,6 +50,15 @@ class CommunityMeetingSeries(models.Model):
         check_company=True,
         help="People responsible for preparing the meetings of this series.",
     )
+    secretary_user_ids = fields.Many2many(
+        "res.users",
+        "community_meeting_series_secretary_rel",
+        "series_id",
+        "user_id",
+        string="Minutes secretaries",
+        check_company=True,
+        help="People included in the minutes secretary rotation. Regular attendees are also eligible.",
+    )
     meeting_ids = fields.One2many("community.meeting", "series_id", string="Meetings")
     recurring_point_ids = fields.One2many(
         "community.meeting.series.agenda.template",
@@ -183,6 +192,14 @@ class CommunityMeetingSeries(models.Model):
     def action_new_meeting(self):
         self.ensure_one()
         self.check_access("read")
+        organizer = self._next_role_assignee("organizer_id", self.attendee_partner_ids)
+        secretary = self._next_role_assignee(
+            "secretary_id",
+            self.attendee_partner_ids,
+            exclude=organizer
+            if len(self._role_rotation_pool("secretary_id", self.attendee_partner_ids)) > 1
+            else None,
+        )
         return {
             "type": "ir.actions.act_window",
             "name": _("New Meeting in %(series)s", series=self.name),
@@ -200,8 +217,45 @@ class CommunityMeetingSeries(models.Model):
                 "default_series_id": self.id,
                 "default_company_id": self.company_id.id,
                 "default_meeting_kind_id": self.meeting_kind_id.id,
+                "default_organizer_id": organizer.id or self.env.uid,
+                "default_secretary_id": secretary.id or self.env.uid,
+                "default_attendee_partner_ids": [(6, 0, self.attendee_partner_ids.ids)],
             },
         }
+
+    def _role_rotation_pool(self, role, attendees=None):
+        """Return the stable, eligible internal-user pool for a role."""
+        self.ensure_one()
+        users = self.env["res.users"]
+        if attendees:
+            users |= attendees.mapped("user_ids").filtered(lambda user: user.share is False)
+        seeds = self.coordinator_user_ids if role == "organizer_id" else self.secretary_user_ids
+        return (users | seeds).filtered(lambda user: user.active and user.company_ids & self.company_id).sorted("id")
+
+    def _next_role_assignee(self, role, attendees=None, unavailable=None, exclude=None, before=None, after=None):
+        """Choose the next available user after the latest stored assignee."""
+        self.ensure_one()
+        pool = self._role_rotation_pool(role, attendees)
+        if len(pool) <= 1:
+            return pool[:1]
+        meetings = self.env["community.meeting"].search(
+            [("series_id", "=", self.id), ("state", "!=", "cancelled")]
+            + ([("start_datetime", "<=", before)] if before else []),
+            order="start_datetime desc, id desc",
+        )
+        previous = (
+            after
+            if after and after in pool
+            else next((getattr(meeting, role) for meeting in meetings if getattr(meeting, role) in pool), pool[-1:])
+        )
+        start = (pool.ids.index(previous.id) + 1) % len(pool) if previous else 0
+        unavailable_ids = set((unavailable or self.env["res.users"]).ids)
+        exclude_id = exclude.id if exclude else False
+        for offset in range(len(pool)):
+            candidate = pool[(start + offset) % len(pool)]
+            if candidate.id not in unavailable_ids and candidate.id != exclude_id:
+                return candidate
+        return pool.browse()
 
     _sql_constraints: ClassVar[list[tuple[str, str, str]]] = [
         (

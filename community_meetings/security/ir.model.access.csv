@@ -47,6 +47,7 @@ access_revision_manager,community.meeting.revision manager,model_community_meeti
 access_topic_reader,Point reader,model_community_meeting_topic,group_meeting_reader,1,0,0,0
 access_topic_editor,Point editor,model_community_meeting_topic,group_meeting_editor,1,1,1,0
 access_create_wizard,Create meeting wizard,model_community_meeting_create_wizard,group_meeting_editor,1,1,1,1
+access_role_rotation_wizard,Meeting role rotation wizard,model_community_meeting_role_rotation_wizard,group_meeting_editor,1,1,1,1
 access_point_wizard,Point wizard,model_community_meeting_point_wizard,group_meeting_editor,1,1,1,1
 access_series_wizard,Series wizard,model_community_meeting_series_wizard,group_meeting_editor,1,1,1,1
 access_carry_review_line,Carry review line,model_community_meeting_carry_review_line,group_meeting_editor,1,1,1,1

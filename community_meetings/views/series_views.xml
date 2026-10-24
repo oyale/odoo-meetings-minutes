@@ -39,6 +39,7 @@
                         </group>
                         <group name="people" string="People">
                             <field name="coordinator_user_ids" widget="many2many_tags" help="People responsible for preparing the meetings of this series."/>
+                            <field name="secretary_user_ids" widget="many2many_tags" help="People included in the minutes secretary rotation. Internal attendees are also eligible."/>
                             <field name="attendee_partner_ids" widget="many2many_tags" help="People invited to every new meeting of this series; you can still change attendees per meeting."/>
                         </group>
                     </group>
