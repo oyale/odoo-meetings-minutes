@@ -1,0 +1,1 @@
+The meeting creation and role-rotation wizards present coordinator, minutes secretary, and per-meeting availability as distinct, illustrated sections, with responsive cards that match the agenda-point wizard.

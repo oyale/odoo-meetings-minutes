@@ -8278,3 +8278,48 @@ msgstr "Rotar los cargos de la reunión"
 #: community_meetings/views/preparation_views.xml
 msgid "Apply selected roles"
 msgstr "Aplicar los cargos seleccionados"
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "Rotation proposal"
+msgstr "Propuesta de rotación"
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "Review and adjust each assignment before creating the meeting."
+msgstr "Revisa y ajusta cada cargo antes de crear la reunión."
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "Guides preparation and coordination"
+msgstr "Guía la preparación y coordinación"
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "Records the meeting and its minutes"
+msgstr "Registra la reunión y redacta el acta"
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "Choose unavailable people"
+msgstr "Selecciona a las personas no disponibles"
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "You can choose anyone as a manual override. Refresh to see the next available suggestions."
+msgstr "Puedes elegir a cualquier persona manualmente. Actualiza para ver las siguientes propuestas disponibles."
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "Review role proposals"
+msgstr "Revisar las propuestas de cargos"
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "Choose who is unavailable, review the next suggestions and confirm which roles to update."
+msgstr "Indica quién no está disponible, revisa las propuestas y confirma qué cargos quieres actualizar."
+
+#. module: community_meetings
+#: community_meetings/views/preparation_views.xml
+msgid "Role rotation"
+msgstr "Rotación de cargos"
