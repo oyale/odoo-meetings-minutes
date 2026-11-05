@@ -29,6 +29,77 @@ class CalendarMeetingBrowserChecks(FullMeetingBrowserChecks):
         expect(self.page.locator(".o_form_view")).to_be_visible(timeout=30000)
         return event_id
 
+    def test_managed_event_popover_is_read_only_and_opens_meeting(self):
+        reviewer = self.rpc("res.users", "search_read", [
+            [("login", "=", os.environ["ODOO_REVIEWER_LOGIN"])],
+        ], {"fields": ["partner_id"]})[0]
+        current = self.session.session_info()["partner_id"]
+        self.rpc("community.meeting", "write", [[self.meeting_id], {
+            "attendee_partner_ids": [[6, 0, [current, reviewer["partner_id"][0]]]],
+        }])
+        event_id = self.calendar_event_id()
+        event = self.record("calendar.event", event_id, ["start", "name", "user_can_edit"])
+        self.assertFalse(event["user_can_edit"])
+        self.page.goto("%s/web#action=calendar.action_calendar_event&date=%s" % (BASE_URL, event["start"][:10]))
+        self.page.locator(".fc-event").filter(has_text=event["name"]).first.click(timeout=30000)
+        view = self.page.locator(".o_cw_popover_edit")
+        expect(view).to_be_visible(timeout=10000)
+        expect(self.page.locator(".o_popover .btn-group button, .o_dialog .modal-footer .btn-group button")).to_have_count(0)
+        view.evaluate("""async el => {
+            const container = el.closest('.o_popover, .modal-content');
+            if (container) {
+                await Promise.all(container.getAnimations({subtree: true}).map(
+                    animation => animation.finished.catch(() => {})
+                ));
+            }
+        }""")
+        self.capture_visual_screenshot("managed-calendar-popover")
+        view.click()
+        banner = self.page.get_by_text(self.ui_text(
+            "community_meetings_calendar",
+            "This event is managed by its community meeting. Open the meeting to view or edit meeting details.",
+        ))
+        expect(banner).to_be_visible(timeout=10000)
+        self.page.locator('button[name="action_open_community_meeting"]').click()
+        expect(self.page.locator('.o_form_view .o_field_widget[name="name"]').last).to_contain_text(event["name"])
+        self.assertFalse(self.console_errors[self.errors_before:])
+
+    def test_managed_event_popover_on_mobile(self):
+        original_viewport = self.page.viewport_size
+        try:
+            self.page.set_viewport_size({"width": 375, "height": 812})
+            self.test_managed_event_popover_is_read_only_and_opens_meeting()
+        finally:
+            self.page.set_viewport_size(original_viewport)
+
+    def test_ordinary_event_keeps_attendee_response_buttons(self):
+        reviewer = self.rpc("res.users", "search_read", [
+            [("login", "=", os.environ["ODOO_REVIEWER_LOGIN"])],
+        ], {"fields": ["partner_id"]})[0]
+        current = self.session.session_info()["partner_id"]
+        managed = self.record("calendar.event", self.calendar_event_id(), ["start", "stop", "name"])
+        name = managed["name"] + " ordinary"
+        event_id = self.rpc("calendar.event", "create", [{
+            "name": name, "start": managed["start"], "stop": managed["stop"],
+            "partner_ids": [[6, 0, [current, reviewer["partner_id"][0]]]],
+        }])
+        self.addCleanup(self.rpc, "calendar.event", "unlink", [[event_id]])
+        self.rpc("calendar.event", "change_attendee_status", [[event_id], "tentative", False])
+        self.page.goto("%s/web#action=calendar.action_calendar_event&date=%s" % (BASE_URL, managed["start"][:10]))
+        self.page.locator(".fc-event").filter(has_text=name).first.click(timeout=30000)
+        answers = self.page.locator(".o_popover .btn-group button")
+        expect(answers).to_have_count(3)
+        with self.page.expect_response(
+            lambda response: response.url.endswith("/calendar.event/change_attendee_status")
+        ) as answer_response:
+            answers.first.click()
+        self.assertNotIn("error", answer_response.value.json())
+        attendee = self.rpc("calendar.attendee", "search_read", [
+            [("event_id", "=", event_id), ("partner_id", "=", current)],
+        ], {"fields": ["state"]})
+        self.assertEqual(attendee[0]["state"], "accepted")
+        self.assertFalse(self.console_errors[self.errors_before:])
+
     def test_calendar_event_is_read_only_and_links_back_to_meeting(self):
         event_id = self.calendar_event_id()
         self.open_calendar_event(event_id)

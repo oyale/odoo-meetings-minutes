@@ -10,6 +10,11 @@
     "development_status": "Beta",
     "depends": ["community_meetings", "calendar"],
     "data": ["views/calendar_event_views.xml", "views/meeting_views.xml"],
+    "assets": {
+        "web.assets_backend": [
+            "community_meetings_calendar/static/src/calendar_popover.js",
+        ],
+    },
     "uninstall_hook": "uninstall_hook",
     "installable": True,
     "application": False,

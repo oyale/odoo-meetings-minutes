@@ -19,6 +19,13 @@ so everyone sees them next to their other events.
   *"This event is managed by its community meeting"* — and every meeting field
   becomes read-only there.
 
+Click a meeting event in the calendar grid to open its read-only details, then
+choose **View** to open the event form and **Open Meeting** to return to the
+meeting. Attendance-response buttons are hidden for these managed events;
+ordinary Calendar events keep their usual response controls.
+
+![Read-only meeting event in the Calendar grid](../img/calendar-popover.png)
+
 ## What users cannot do
 
 All meeting-managed fields are **read-only on the event**: name, dates,

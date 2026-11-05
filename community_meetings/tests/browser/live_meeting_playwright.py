@@ -851,6 +851,37 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
             "contenteditable", "true",
         )
 
+    def test_minutes_preview_scrolls_with_wheel_and_keyboard(self):
+        self.addCleanup(self.page.set_viewport_size, self.page.viewport_size)
+        self.fixture.prepare_minutes_draft()
+        self.rpc("community.meeting", "write", [[self.meeting_id], {
+            "minutes_notes": "<p>Long minutes paragraph</p>" * 100,
+        }])
+        self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
+        self.page.get_by_role(
+            "button", name=self.ui_text("community_meetings", "Preview Minutes"), exact=True
+        ).click(timeout=30000)
+        preview = self.page.locator(".o_community_minutes_preview")
+        expect(preview.locator(".o_community_minutes_preview_body")).to_be_visible(timeout=30000)
+        for width, height in ((1440, 1000), (375, 812)):
+            with self.subTest(width=width):
+                self.page.set_viewport_size({"width": width, "height": height})
+                preview.evaluate("el => { el.scrollTop = 0; }")
+                preview.hover(position={"x": 100, "y": 200})
+                self.page.mouse.wheel(0, 900)
+                self.page.wait_for_function(
+                    "document.querySelector('.o_community_minutes_preview').scrollTop > 0"
+                )
+                preview.evaluate("el => { el.scrollTop = 0; }")
+                preview.focus()
+                self.page.keyboard.press("End")
+                self.page.wait_for_function("""() => {
+                    const el = document.querySelector('.o_community_minutes_preview');
+                    return el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+                }""")
+                self.capture_checkpoint("minutes-preview-scroll-%s" % width)
+        self.assertFalse(self.console_errors[self.errors_before:])
+
     def test_minutes_preview_returns_to_draft_meeting(self):
         capture_path = os.environ.get("MM_CAPTURE_MINUTES_PREVIEW")
         capture_language = os.environ.get("MM_CAPTURE_LANGUAGE")

@@ -19,6 +19,14 @@ de Odoo para que todo el mundo las vea junto al resto de sus eventos.
   event is managed by its community meeting"* — y todos los campos gestionados por
   la reunión quedan en solo lectura.
 
+Pulsa un evento de reunión en la cuadrícula para consultar sus detalles en solo
+lectura. Elige **Ver** para abrir el formulario del evento y **Abrir reunión**
+para volver a la reunión. Estos eventos gestionados no muestran botones de
+respuesta a la invitación; los eventos normales del Calendario conservan sus
+controles habituales.
+
+![Evento de reunión en solo lectura desde la cuadrícula](../img/calendar-popover.png)
+
 ## Qué no puede hacer
 
 Todos los campos gestionados por la reunión son **de solo lectura en el evento**:

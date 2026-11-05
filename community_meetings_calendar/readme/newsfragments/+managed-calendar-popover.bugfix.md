@@ -1,0 +1,1 @@
+Meeting events with multiple attendees open from the Calendar grid without an error. Attendees can view the read-only event and follow its link to the meeting; invitation-response controls remain available only on ordinary Calendar events.
