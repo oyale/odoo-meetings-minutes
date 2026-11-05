@@ -284,10 +284,11 @@
     @media (max-width: 480px) {
         padding: 12px;
         .o_live_topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 8px; margin: -12px -12px 0; padding: 8px 12px; }
-        .o_live_topbar_navigation { grid-column: 1; grid-row: 1; justify-self: start; }
-        .o_live_workflow_buttons { grid-column: 2; grid-row: 1; justify-content: flex-end; }
-        .o_live_topbar_feedback { grid-column: 1; grid-row: 2; justify-content: flex-start; text-align: left; font-size: .78rem; }
-        .o_live_meeting_state { grid-column: 2; grid-row: 2; justify-self: end; }
+        .o_live_topbar_navigation { grid-column: 1 / -1; grid-row: 1; justify-self: start; width: 100%; }
+        .o_live_topbar_navigation .o_breadcrumb { min-width: 0; flex-wrap: wrap; }
+        .o_live_workflow_buttons { grid-column: 1 / -1; grid-row: 2; justify-content: flex-start; }
+        .o_live_topbar_feedback { grid-column: 1; grid-row: 3; justify-content: flex-start; text-align: left; font-size: .78rem; }
+        .o_live_meeting_state { grid-column: 2; grid-row: 3; justify-self: end; }
         .o_live_header { padding: 18px 0 16px; }
         .o_live_header h1 { margin-bottom: 14px; }
         .o_live_header h1 .form-control { font-size: 1.5rem; }

@@ -964,7 +964,10 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                 "live-meeting-breadcrumb-%s" % width,
                 viewport={"width": width, "height": height},
             )
-        self.page.locator(".o_live_agenda_card").filter(has_text="Browser Discussion case").locator(".o_live_expand").click()
+        discussion_card = self.page.locator(
+            "#agenda-card-%s" % self.item_ids["discussion"]
+        )
+        discussion_card.locator(".o_live_expand").click()
         self.assertIn(
             "active_agenda_item_id=%s" % self.item_ids["discussion"],
             self.page.url,
@@ -1063,7 +1066,9 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
 
         preview.locator(".o_breadcrumb .o_back_button").click()
         expect(self.page.locator(".o_community_live_meeting")).to_be_visible(timeout=30000)
-        discussion_expand = self.page.locator(".o_live_agenda_card").filter(has_text="Browser Discussion case").locator(".o_live_expand")
+        discussion_expand = self.page.locator(
+            "#agenda-card-%s" % self.item_ids["discussion"]
+        ).locator(".o_live_expand")
         expect(discussion_expand).to_have_attribute("aria-expanded", "true")
         self.assertFalse(self.console_errors[self.errors_before :])
         self.assertEqual(

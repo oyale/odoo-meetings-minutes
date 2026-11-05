@@ -11811,3 +11811,21 @@ msgstr "Fecha límite de la tarea"
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Task assignees"
 msgstr "Personas asignadas a la tarea"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Live meeting"
+msgstr "Reunión en vivo"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
+msgid "Live meeting: %s"
+msgstr "Reunión en vivo: %s"
+
+#. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
+msgid "Minutes preview"
+msgstr "Vista previa del acta"

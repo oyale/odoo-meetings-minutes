@@ -7,6 +7,14 @@ Meeting** en el formulario.
 
 ![Reunión en vivo](../img/live-meeting.png)
 
+La miga de pan contextual aparece sobre los botones de flujo:
+
+![Miga de pan de la reunión en vivo en escritorio](../img/live-meeting-navigation.png)
+
+En pantallas estrechas, las migas de pan mantienen una fila propia sobre los botones de flujo:
+
+![Navegación de la reunión en vivo en móvil](../img/live-meeting-mobile.png)
+
 ## Barra superior
 
 - **Navegación** — las migas de pan de Odoo permiten volver a la pantalla desde la que se abrió la reunión en vivo cuando ese origen está disponible. Si entraste directamente, aparece el botón **Volver a reuniones**. Los cambios pendientes se guardan antes de salir.

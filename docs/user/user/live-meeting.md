@@ -7,6 +7,14 @@ the form.
 
 ![Live meeting overview](../img/live-meeting.png)
 
+The contextual breadcrumb appears above the workflow buttons:
+
+![Live meeting breadcrumb on desktop](../img/live-meeting-navigation.png)
+
+On narrow screens, the breadcrumb keeps its own row above the workflow buttons:
+
+![Live meeting navigation on a mobile screen](../img/live-meeting-mobile.png)
+
 ## Topbar
 
 - **Navigation** — Odoo breadcrumbs return to the screen that opened Live Meeting when that origin is available. A **Back to Meetings** button remains for direct entries without a prior screen. Pending edits are saved before leaving.
