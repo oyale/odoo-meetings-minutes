@@ -1,1 +1,0 @@
-Minutes previews and newly approved minutes now show the name, optional due date, and task assignees for each readable linked Project task, separately from the follow-up's responsible people. Approved minutes retain the task details captured when they were approved.

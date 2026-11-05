@@ -4,6 +4,25 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings 18.0.6.2.12 (2026-11-05)
+==============================================
+
+## Release notes
+
+### Bugfixes
+
+- Live Meeting and minutes preview display contextual Odoo breadcrumbs when opened from another screen, so users can return to that screen. Their navigation titles are translated in Spanish. Draft preview returns to the live screen and its active agenda point; direct entries keep a fallback return button. Pending live edits are saved before leaving.
+- The meeting creation wizard now labels its final action “Create Meeting” as “Crear reunión” in Spanish, distinct from the cancellation action.
+- With the Project integration installed, minutes distinguish follow-up responsible people from users assigned to each linked task; task names and optional due dates appear under their follow-up.
+
+### Improved Documentation
+
+- The Live Meeting guide now shows the contextual breadcrumb on desktop and mobile in English and Spanish.
+
+## Internal changes
+
+- The minutes preview browser capture test locates its discussion point by record id so localized documentation fixtures can rename it.
+
 ## Community Meetings 18.0.6.2.11 (2026-11-05)
 ==============================================
 

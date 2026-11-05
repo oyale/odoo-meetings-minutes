@@ -7,6 +7,43 @@ Each addon changelog starts with its first release prepared after this change;
 the combined history below retains the existing suite release notes.
 
 <!-- towncrier release notes start -->
+## Odoo Meetings Minutes 18.0.20261105.1 (2026-11-05)
+
+### Addon versions
+
+| Addon | Odoo module version |
+|---|---:|
+| [Community Meetings](community_meetings/CHANGELOG.md) | `18.0.6.2.12` |
+| [Calendar Integration](community_meetings_calendar/CHANGELOG.md) | `18.0.1.0.8` |
+| [Project Integration](community_meetings_project/CHANGELOG.md) | `18.0.3.1.9` |
+| [Extension Demo](community_meetings_extension_demo/CHANGELOG.md) | `18.0.1.0.1` |
+
+=====================================================
+
+## Community Meetings
+
+### Bugfixes
+
+- Live Meeting and minutes preview display contextual Odoo breadcrumbs when opened from another screen, so users can return to that screen. Their navigation titles are translated in Spanish. Draft preview returns to the live screen and its active agenda point; direct entries keep a fallback return button. Pending live edits are saved before leaving.
+- The meeting creation wizard now labels its final action “Create Meeting” as “Crear reunión” in Spanish, distinct from the cancellation action.
+- With the Project integration installed, minutes distinguish follow-up responsible people from users assigned to each linked task; task names and optional due dates appear under their follow-up.
+
+### Improved Documentation
+
+- The Live Meeting guide now shows the contextual breadcrumb on desktop and mobile in English and Spanish.
+## Calendar Integration
+
+### Bugfixes
+
+- Opening a linked meeting or Calendar event returns to an already open matching record when it is in the navigation history, avoiding duplicate entries in that round trip.
+## Project Integration
+
+### Bugfixes
+
+- Minutes previews and newly approved minutes now show the name, optional due date, and task assignees for each readable linked Project task, separately from the follow-up's responsible people. Approved minutes retain the task details captured when they were approved.
+## Extension Demo
+
+No significant changes.
 ## Odoo Meetings Minutes 18.0.20261105.0 (2026-11-05)
 
 ### Addon versions

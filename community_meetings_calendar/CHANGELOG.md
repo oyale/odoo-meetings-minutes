@@ -4,6 +4,15 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings Calendar 18.0.1.0.8 (2026-11-05)
+======================================================
+
+## Release notes
+
+### Bugfixes
+
+- Opening a linked meeting or Calendar event returns to an already open matching record when it is in the navigation history, avoiding duplicate entries in that round trip.
+
 ## Community Meetings Calendar 18.0.1.0.7 (2026-11-05)
 ======================================================
 

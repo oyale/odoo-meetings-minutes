@@ -1,7 +1,7 @@
 {
     "name": "Community Meetings",
     "summary": "Operational meetings, agendas, resolutions and minutes",
-    "version": "18.0.6.2.11",
+    "version": "18.0.6.2.12",
     "category": "Services/Meetings",
     "license": "AGPL-3",
     "author": "Pelayo García",

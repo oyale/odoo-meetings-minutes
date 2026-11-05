@@ -4,6 +4,15 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings Project 18.0.3.1.9 (2026-11-05)
+=====================================================
+
+## Release notes
+
+### Bugfixes
+
+- Minutes previews and newly approved minutes now show the name, optional due date, and task assignees for each readable linked Project task, separately from the follow-up's responsible people. Approved minutes retain the task details captured when they were approved.
+
 ## Community Meetings Project 18.0.3.1.8 (2026-10-23)
 =====================================================
 
