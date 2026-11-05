@@ -193,55 +193,14 @@ jobs:
         run: |
           python .github/scripts/last_code_commit.py > code_commit.txt
           echo "code_commit=$(cat code_commit.txt)" >> "$GITHUB_OUTPUT"
-      - name: Reuse the code commit's test run or run the suite
+      - name: Reuse validated release or code commit tests
         id: gate
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
+          RELEASE_SHA: ${{ github.sha }}
           CODE_COMMIT: ${{ steps.resolve.outputs.code_commit }}
-        run: |
-          set -euo pipefail
-
-          run_id=""
-          for _ in $(seq 1 12); do
-            runs=$(gh api "repos/$REPOSITORY/actions/workflows/test.yml/runs?head_sha=$CODE_COMMIT&per_page=1")
-            run_id=$(python -c 'import json,sys; runs=json.load(sys.stdin)["workflow_runs"]; print(runs[0]["id"] if runs else "")' <<<"$runs")
-            [ -n "$run_id" ] && break
-            sleep 10
-          done
-
-          if [ -z "$run_id" ]; then
-            echo "No Tests run for the code commit ($CODE_COMMIT); the release test suite will run."
-            echo "passed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "Waiting for the Tests run ($run_id) at $CODE_COMMIT."
-          while true; do
-            run=$(gh api "repos/$REPOSITORY/actions/runs/$run_id")
-            status=$(python -c 'import json,sys; print(json.load(sys.stdin)["status"])' <<<"$run")
-            if [ "$status" = "completed" ]; then
-              break
-            fi
-            sleep 15
-          done
-
-          conclusion=$(python -c 'import json,sys; print(json.load(sys.stdin).get("conclusion") or "")' <<<"$run")
-          if [ "$conclusion" != "success" ]; then
-            echo "Tests run concluded '$conclusion'; the release test suite will run."
-            echo "passed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          jobs=$(gh api "repos/$REPOSITORY/actions/runs/$run_id/jobs?per_page=100")
-          passed=$(python -c '
-          import json, sys
-          jobs = json.load(sys.stdin)["jobs"]
-          ran = any(job["name"] != "changes" and job["conclusion"] == "success" for job in jobs)
-          print(str(ran).lower())
-          ' <<<"$jobs")
-          echo "Tests actually ran and passed: $passed"
-          echo "passed=$passed" >> "$GITHUB_OUTPUT"
+        run: python .github/scripts/reuse_release_tests.py
 
   test:
     needs: tests_gate
