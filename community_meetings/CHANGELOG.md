@@ -4,6 +4,14 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings 18.0.6.2.11 (2026-11-05)
+==============================================
+
+## Internal changes
+
+- Full browser focus coverage now matches the available point editor and enlarge control in focus mode.
+- Browser checks verify wheel and keyboard scrolling through long draft minutes at desktop and mobile widths without overriding the preview layout.
+
 ## Community Meetings 18.0.6.2.10 (2026-10-23)
 ==============================================
 

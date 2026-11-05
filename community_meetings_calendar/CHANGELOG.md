@@ -4,6 +4,15 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings Calendar 18.0.1.0.7 (2026-11-05)
+======================================================
+
+## Release notes
+
+### Bugfixes
+
+- Meeting events with multiple attendees open from the Calendar grid without an error. Attendees can view the read-only event and follow its link to the meeting; invitation-response controls remain available only on ordinary Calendar events.
+
 ## Community Meetings Calendar 18.0.1.0.6 (2026-10-23)
 ======================================================
 

@@ -7,6 +7,30 @@ Each addon changelog starts with its first release prepared after this change;
 the combined history below retains the existing suite release notes.
 
 <!-- towncrier release notes start -->
+## Odoo Meetings Minutes 18.0.20261105.0 (2026-11-05)
+
+### Addon versions
+
+| Addon | Odoo module version |
+|---|---:|
+| [Community Meetings](community_meetings/CHANGELOG.md) | `18.0.6.2.11` |
+| [Calendar Integration](community_meetings_calendar/CHANGELOG.md) | `18.0.1.0.7` |
+| [Project Integration](community_meetings_project/CHANGELOG.md) | `18.0.3.1.8` |
+| [Extension Demo](community_meetings_extension_demo/CHANGELOG.md) | `18.0.1.0.1` |
+
+=====================================================
+
+## Calendar Integration
+
+### Bugfixes
+
+- Meeting events with multiple attendees open from the Calendar grid without an error. Attendees can view the read-only event and follow its link to the meeting; invitation-response controls remain available only on ordinary Calendar events.
+## Project Integration
+
+No significant changes.
+## Extension Demo
+
+No significant changes.
 ## Odoo Meetings Minutes 18.0.20261023.2 (2026-10-23)
 
 ### Addon versions
