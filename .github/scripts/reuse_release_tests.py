@@ -73,7 +73,16 @@ def reusable_tests(repository: str, candidates: list[str]) -> bool:
 
 
 def main() -> None:
-    candidates = list(dict.fromkeys([os.environ["RELEASE_SHA"], os.environ["CODE_COMMIT"]]))
+    release_sha = os.environ["RELEASE_SHA"]
+    code_commit = os.environ["CODE_COMMIT"]
+    equivalents = json.loads(os.environ.get("EQUIVALENT_COMMITS", "[]"))
+    if not isinstance(equivalents, list) or any(
+        not isinstance(sha, str) or len(sha) != 40 or set(sha) - set("0123456789abcdef") for sha in equivalents
+    ):
+        raise ValueError("Invalid equivalent commit list")
+    if equivalents and (equivalents[0] != release_sha or equivalents[-1] != code_commit):
+        raise ValueError("Equivalent commit list must match the resolved release/code boundaries")
+    candidates = list(dict.fromkeys([release_sha, *equivalents, code_commit]))
     passed = reusable_tests(os.environ["REPOSITORY"], candidates)
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
         output.write(f"passed={str(passed).lower()}\n")

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Skip the Odoo test matrix for changes that only affect documentation or version.
+"""Skip the Odoo matrix for documentation, versions and known non-Odoo tooling.
 
 Used by the Tests workflow on push and pull_request to decide whether the Odoo
-test matrix must run. Documentation- and version-only changes are skipped; any
-other change runs the tests. When the comparison is unavailable (force, unknown
+test matrix must run. Lint and publication changes use their own checks; addon,
+test-environment and unknown paths run the matrix. When comparison is unavailable (force, unknown
 event, missing base), run tests conservatively.
 """
 
@@ -50,7 +50,7 @@ def changed_refs() -> tuple[str, str] | None:
 def main() -> None:
     refs = changed_refs()
     run_tests = refs is None or has_code_changes(*refs)
-    message = "Running Odoo test matrix." if run_tests else "Skipping Odoo tests: documentation/version-only changes."
+    message = "Running Odoo test matrix." if run_tests else "Skipping Odoo tests: no Odoo or test-environment changes."
     print(message)
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
         output.write(f"run_tests={str(run_tests).lower()}\n")

@@ -57,7 +57,9 @@ def successful_jobs():
 
 
 class ReleaseTestGateTests(unittest.TestCase):
-    def run_gate(self, runs, jobs, *, details=None, job_pages=None, errors=None, succeeds=True):
+    def run_gate(
+        self, runs, jobs, *, details=None, job_pages=None, errors=None, succeeds=True, equivalent_commits=None
+    ):
         workflow = yaml.safe_load((ROOT / ".github/workflows/publish-pypi.yml").read_text())
         command = next(step["run"] for step in workflow["jobs"]["tests_gate"]["steps"] if step.get("id") == "gate")
         with tempfile.TemporaryDirectory() as directory:
@@ -90,6 +92,7 @@ class ReleaseTestGateTests(unittest.TestCase):
                 "REPOSITORY": "owner/repo",
                 "RELEASE_SHA": RELEASE_SHA,
                 "CODE_COMMIT": CODE_SHA,
+                "EQUIVALENT_COMMITS": json.dumps(equivalent_commits if equivalent_commits is not None else []),
             }
             result = subprocess.run(
                 ["bash", "-c", command],
@@ -104,7 +107,8 @@ class ReleaseTestGateTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             else:
                 self.assertNotEqual(result.returncode, 0)
-            requests = [json.loads(row) for row in (root / "requests.jsonl").read_text().splitlines()]
+            log_path = root / "requests.jsonl"
+            requests = [json.loads(row) for row in log_path.read_text().splitlines()] if log_path.exists() else []
             return output.read_text() if output.exists() else "", requests, result.stdout
 
     def test_reuses_the_release_sha_when_the_code_commit_has_no_run(self):
@@ -184,11 +188,39 @@ class ReleaseTestGateTests(unittest.TestCase):
         )
         self.assertNotIn("passed=true", output)
 
+    def test_reuses_validation_on_an_intermediate_code_equivalent_commit(self):
+        intermediate = "c" * 40
+        output, requests, _log = self.run_gate(
+            {RELEASE_SHA: [successful_run(RELEASE_SHA)], intermediate: [successful_run(intermediate, 102)]},
+            {"101": [{"name": "changes", "conclusion": "success"}], "102": successful_jobs()},
+            equivalent_commits=[RELEASE_SHA, intermediate, CODE_SHA],
+        )
+        self.assertEqual(output, "passed=true\n")
+        self.assertFalse(any("head_sha=" + CODE_SHA in request for request in requests))
+
+    def test_equivalent_candidates_must_match_the_resolved_boundaries(self):
+        for candidates in (
+            [RELEASE_SHA, "c" * 40],
+            ["c" * 40, CODE_SHA],
+            "not-a-list",
+            [RELEASE_SHA, "g" * 40, CODE_SHA],
+        ):
+            with self.subTest(candidates=candidates):
+                output, requests, _log = self.run_gate(
+                    {},
+                    {},
+                    equivalent_commits=candidates,
+                    succeeds=False,
+                )
+                self.assertNotIn("passed=true", output)
+                self.assertEqual(requests, [])
+
     def test_workflow_supplies_the_release_and_code_commit_to_the_gate(self):
         workflow = yaml.safe_load((ROOT / ".github/workflows/publish-pypi.yml").read_text())
         gate = next(step for step in workflow["jobs"]["tests_gate"]["steps"] if step.get("id") == "gate")
         self.assertEqual(gate["env"]["RELEASE_SHA"], "${{ github.sha }}")
         self.assertEqual(gate["env"]["CODE_COMMIT"], "${{ steps.resolve.outputs.code_commit }}")
+        self.assertEqual(gate["env"]["EQUIVALENT_COMMITS"], "${{ steps.resolve.outputs.equivalent_commits }}")
 
 
 if __name__ == "__main__":
