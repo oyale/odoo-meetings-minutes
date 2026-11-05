@@ -1,6 +1,7 @@
 """Calendar extension browser checks on top of the core meeting workflow suite."""
 
 import os
+import re
 import sys
 import unittest
 from datetime import datetime, timedelta
@@ -23,9 +24,7 @@ class CalendarMeetingBrowserChecks(FullMeetingBrowserChecks):
 
     def open_calendar_event(self, event_id=None):
         event_id = event_id or self.calendar_event_id()
-        self.page.goto(
-            "%s/web#model=calendar.event&id=%s&view_type=form" % (BASE_URL, event_id)
-        )
+        self.page.goto("%s/odoo/calendar/calendar.event/%s" % (BASE_URL, event_id))
         expect(self.page.locator(".o_form_view")).to_be_visible(timeout=30000)
         return event_id
 
@@ -119,7 +118,9 @@ class CalendarMeetingBrowserChecks(FullMeetingBrowserChecks):
         self.assertEqual(subject.locator("input, textarea, [contenteditable=true]").count(), 0)
         self.assertFalse(self.page.locator('div[name="send_buttons"]').is_visible())
 
-        self.page.locator('button[name="action_open_community_meeting"]').click()
+        with self.page.expect_response(lambda response: "/web/dataset/call_button" in response.url) as action_response:
+            self.page.locator('button[name="action_open_community_meeting"]').click()
+        self.assertNotIn("error", action_response.value.json())
         meeting_name = self.record("community.meeting", self.meeting_id, ["name"])["name"]
         meeting_dialog = self.page.locator(".o_dialog .o_form_view")
         for _ in range(40):
@@ -146,6 +147,49 @@ class CalendarMeetingBrowserChecks(FullMeetingBrowserChecks):
             event_form.count() and event_name in event_form.inner_text()
         )
         self.assertTrue(opened_event, "Meeting link did not open its Calendar event")
+
+    def test_calendar_event_meeting_navigation_keeps_and_restores_breadcrumb(self):
+        event_id = self.calendar_event_id()
+        event_name = self.record("calendar.event", event_id, ["name"])["name"]
+        self.open_calendar_event(event_id)
+
+        with self.page.expect_response(lambda response: "/web/dataset/call_button" in response.url) as meeting_action:
+            self.page.locator('button[name="action_open_community_meeting"]').click()
+        self.assertNotIn("error", meeting_action.value.json())
+        expect(self.page).to_have_url(re.compile(r"/community\.meeting/%s$" % self.meeting_id))
+        expect(self.page.locator(".o_form_view")).to_contain_text(
+            self.record("community.meeting", self.meeting_id, ["name"])["name"]
+        )
+
+        with self.page.expect_response(lambda response: "/web/dataset/call_button" in response.url) as event_action:
+            self.page.locator('button[name="action_open_calendar_event"]').click()
+        self.assertNotIn("error", event_action.value.json())
+        expect(self.page).to_have_url(re.compile(r"/calendar\.event/%s$" % event_id))
+        self.assertEqual(
+            self.page.locator('.o_form_view .o_field_widget[name="name"]').last.inner_text(),
+            event_name,
+        )
+        self.assertFalse(self.console_errors[self.errors_before:])
+
+    def test_calendar_bridge_restores_open_event_ancestor(self):
+        event_id = self.calendar_event_id()
+        event_name = self.record("calendar.event", event_id, ["name"])["name"]
+        self.open_form()
+        self.page.locator('button[name="action_open_calendar_event"]').click()
+        expect(self.page).to_have_url(re.compile(r"/calendar\.event/%s$" % event_id))
+        expect(self.page.locator(".o_form_view")).to_contain_text(event_name)
+
+        self.page.locator('button[name="action_open_community_meeting"]').click()
+        expect(self.page).to_have_url(re.compile(r"/community\.meeting/%s$" % self.meeting_id))
+        self.page.locator('button[name="action_open_calendar_event"]').click()
+        expect(self.page).to_have_url(
+            re.compile(r"/calendar\.event/%s$" % event_id)
+        )
+        self.page.locator('button[name="action_open_community_meeting"]').click()
+        expect(self.page).to_have_url(re.compile(r"/community\.meeting/%s$" % self.meeting_id))
+        self.page.locator('button[name="action_open_calendar_event"]').click()
+        expect(self.page).to_have_url(re.compile(r"/calendar\.event/%s$" % event_id))
+        self.assertFalse(self.console_errors[self.errors_before:])
 
     def test_reschedule_and_attendee_change_are_mirrored_in_calendar(self):
         reviewer_login = os.environ["ODOO_REVIEWER_LOGIN"]

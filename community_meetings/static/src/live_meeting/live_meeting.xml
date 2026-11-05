@@ -4,7 +4,8 @@
         <main class="o_community_live_meeting">
             <div class="o_live_topbar">
                 <div class="o_live_topbar_navigation">
-                    <button class="btn btn-secondary" t-att-disabled="state.saving > 0" t-on-click="close"><i class="fa fa-arrow-left me-1" aria-hidden="true"/> <t t-out="backLabel"/></button>
+                    <Breadcrumbs breadcrumbs="breadcrumbs"/>
+                    <button t-if="breadcrumbs.length &lt;= 1" class="btn btn-secondary" t-att-disabled="state.saving > 0" t-on-click="close"><i class="fa fa-arrow-left me-1" aria-hidden="true"/> <t t-out="backLabel"/></button>
                 </div>
                 <div class="o_live_workflow_buttons">
                   <t t-if="state.capabilities?.can_edit">

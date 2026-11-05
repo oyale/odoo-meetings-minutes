@@ -1,0 +1,1 @@
+Live Meeting and minutes preview display Odoo breadcrumbs when opened from another screen, so users can return to that screen. Draft preview returns to the live screen and its active agenda point; direct entries keep a fallback return button. Pending live edits are saved before leaving.

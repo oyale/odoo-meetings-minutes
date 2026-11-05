@@ -815,6 +815,43 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
             "Refreshing the live meeting lost its meeting id: %r" % self.console_errors[self.errors_before:],
         )
 
+    def test_live_meeting_renders_native_breadcrumbs(self):
+        expect(self.page.locator(".o_community_live_meeting .o_breadcrumb")).to_be_visible()
+        expect(self.page.locator(".o_community_live_meeting .o_breadcrumb")).to_contain_text(
+            self.record("community.meeting", self.meeting_id, ["name"])["name"]
+        )
+        expect(self.page.locator(".o_community_live_meeting .o_breadcrumb")).to_contain_text(
+            self.ui_text("community_meetings", "Live meeting: %s")
+            % self.record("community.meeting", self.meeting_id, ["name"])["name"]
+        )
+        self.assertEqual(self.page.locator(".o_live_topbar_navigation .btn").count(), 0)
+        self.assertFalse(self.console_errors[self.errors_before:])
+
+    def test_live_meeting_breadcrumb_restores_form_origin(self):
+        self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
+        self.page.locator('button[name="action_open_live_meeting"]').click()
+        live = self.page.locator(".o_community_live_meeting")
+        expect(live.locator(".o_breadcrumb")).to_be_visible(timeout=30000)
+        live.locator(".o_breadcrumb .o_back_button").click()
+        expect(self.page.locator(".o_form_view")).to_be_visible(timeout=30000)
+        expect(self.page.locator(".o_form_view")).to_contain_text(
+            self.record("community.meeting", self.meeting_id, ["name"])["name"]
+        )
+        self.assertFalse(self.console_errors[self.errors_before:])
+
+    def test_live_meeting_breadcrumb_repeated_returns_do_not_grow(self):
+        self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
+        form_route = re.search(r"/community\.meeting/\d+", self.page.url)
+        self.assertIsNotNone(form_route)
+        for _ in range(10):
+            self.page.locator('button[name="action_open_live_meeting"]').click()
+            live = self.page.locator(".o_community_live_meeting")
+            expect(live.locator(".o_breadcrumb")).to_be_visible(timeout=30000)
+            live.locator(".o_breadcrumb .o_back_button").click()
+            expect(self.page.locator(".o_form_view")).to_be_visible(timeout=30000)
+            self.assertIn(form_route.group(0), self.page.url)
+            self.assertFalse(self.console_errors[self.errors_before:])
+
     def test_meeting_pause_and_resume_locks_points_without_finishing(self):
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Start Meeting")).click()
         card = self.card("discussion", begin=False)
@@ -845,6 +882,15 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
             "button", name=self.ui_text("community_meetings", "Open Meeting")
         ).click(timeout=30000)
         self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
+        active_item = self.item_ids["information"]
+        self.page.evaluate(
+            """itemId => window.history.replaceState(
+                window.history.state,
+                "",
+                window.location.pathname + window.location.search
+            )""",
+            active_item,
+        )
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Expand / Collapse all")).click()
         card = self.card("discussion", begin=False)
         expect(card.locator(self.ui_selector("community_meetings", '[aria-label="Discussion notes"]', "Discussion notes"))).to_have_attribute(
@@ -913,6 +959,17 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
             "button", name=self.ui_text("community_meetings", "Open Meeting")
         ).click(timeout=30000)
         self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
+        for width, height in ((1440, 1000), (375, 812)):
+            self.capture_checkpoint(
+                "live-meeting-breadcrumb-%s" % width,
+                viewport={"width": width, "height": height},
+            )
+        self.page.locator(".o_live_agenda_card").filter(has_text="Browser Discussion case").locator(".o_live_expand").click()
+        self.assertIn(
+            "active_agenda_item_id=%s" % self.item_ids["discussion"],
+            self.page.url,
+            "selecting an agenda point should update the live action URL",
+        )
 
         write_trace = LiveWriteTrace(self.page)
         self.addCleanup(write_trace.stop)
@@ -998,21 +1055,17 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                 self.ui_text("community_meetings", "Agenda and discussion")
             )
             expect(preview).to_contain_text(self.ui_text("community_meetings", "Scheduled date"))
-        expect(
-            preview.get_by_role(
-                "button",
-                name=self.ui_text("community_meetings", "Return to meeting to edit"),
-            )
-        ).to_be_visible()
+        self.assertEqual(preview.locator(".o_minutes_preview_back").count(), 0)
         self.assertEqual(
             self.record("community.meeting", self.meeting_id, ["state"])["state"],
             "minutes_draft",
         )
 
-        preview.get_by_role(
-            "button", name=self.ui_text("community_meetings", "Return to meeting to edit")
-        ).click()
-        expect(self.page.locator(".o_form_view")).to_be_visible(timeout=30000)
+        preview.locator(".o_breadcrumb .o_back_button").click()
+        expect(self.page.locator(".o_community_live_meeting")).to_be_visible(timeout=30000)
+        discussion_expand = self.page.locator(".o_live_agenda_card").filter(has_text="Browser Discussion case").locator(".o_live_expand")
+        expect(discussion_expand).to_have_attribute("aria-expanded", "true")
+        self.assertFalse(self.console_errors[self.errors_before :])
         self.assertEqual(
             self.record("community.meeting", self.meeting_id, ["state"])["state"],
             "minutes_draft",

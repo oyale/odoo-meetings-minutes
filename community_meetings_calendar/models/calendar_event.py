@@ -62,7 +62,17 @@ class CalendarEvent(models.Model):
         if not meeting:
             raise AccessError(_("This Calendar event is not linked to a community meeting."))
         meeting.check_access("read")
-        return meeting.get_formview_action()
+        return {
+            "type": "ir.actions.client",
+            "tag": "community_meetings_calendar.navigate_record",
+            "name": meeting.display_name,
+            "target": "current",
+            "params": {
+                "model": meeting._name,
+                "res_id": meeting.id,
+                "fallback": meeting.get_formview_action(),
+            },
+        }
 
     @api.model_create_multi
     def _community_meetings_calendar_create(self, vals_list):

@@ -21,8 +21,9 @@ de Odoo para que todo el mundo las vea junto al resto de sus eventos.
 
 Pulsa un evento de reunión en la cuadrícula para consultar sus detalles en solo
 lectura. Elige **Ver** para abrir el formulario del evento y **Abrir reunión**
-para volver a la reunión. Estos eventos gestionados no muestran botones de
-respuesta a la invitación; los eventos normales del Calendario conservan sus
+para volver a la reunión. Las migas de pan de Odoo permiten regresar por el evento
+y la reunión cuando ya están en el historial de navegación. Estos eventos gestionados
+no muestran botones de respuesta a la invitación; los eventos normales del Calendario conservan sus
 controles habituales.
 
 ![Evento de reunión en solo lectura desde la cuadrícula](../img/calendar-popover.png)

@@ -178,7 +178,17 @@ class CommunityMeeting(models.Model):
         if not event:
             raise UserError(_("This meeting has no Calendar event."))
         event.check_access("read")
-        return event.get_formview_action()
+        return {
+            "type": "ir.actions.client",
+            "tag": "community_meetings_calendar.navigate_record",
+            "name": event.display_name,
+            "target": "current",
+            "params": {
+                "model": event._name,
+                "res_id": event.id,
+                "fallback": event.get_formview_action(),
+            },
+        }
 
     def write(self, values):
         changed = self._calendar_managed_fields().intersection(values)

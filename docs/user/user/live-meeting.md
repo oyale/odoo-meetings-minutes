@@ -9,7 +9,8 @@ the form.
 
 ## Topbar
 
-- **Back to Meetings** — safe exit (warns about unsaved edits).
+- **Navigation** — Odoo breadcrumbs return to the screen that opened Live Meeting when that origin is available. A **Back to Meetings** button remains for direct entries without a prior screen. Pending edits are saved before leaving.
+- **Previewing a draft** — choose **Preview Minutes** to read the saved draft. The preview breadcrumb returns here and restores the selected agenda point; leaving Live Meeting first saves pending edits.
 - **Workflow buttons** — depend on state and policy:
   - *Start Meeting* / *Pause Meeting* / *Resume Meeting* — only with time
     tracking **on**. The setting is captured when the meeting starts, so

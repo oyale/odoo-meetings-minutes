@@ -134,11 +134,14 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
         self.assertEqual(action["res_model"], "community.meeting")
         self.assertEqual(action["res_id"], meeting.id)
         meeting_action = meeting.action_open_calendar_event()
-        self.assertEqual(meeting_action["res_model"], "calendar.event")
-        self.assertEqual(meeting_action["res_id"], event.id)
+        self.assertEqual(meeting_action["tag"], "community_meetings_calendar.navigate_record")
+        self.assertEqual(meeting_action["params"]["model"], "calendar.event")
+        self.assertEqual(meeting_action["params"]["res_id"], event.id)
         event_meeting_action = event.action_open_community_meeting()
-        self.assertEqual(event_meeting_action["res_model"], "community.meeting")
-        self.assertEqual(event_meeting_action["res_id"], meeting.id)
+        self.assertEqual(event_meeting_action["type"], "ir.actions.client")
+        self.assertEqual(event_meeting_action["tag"], "community_meetings_calendar.navigate_record")
+        self.assertEqual(event_meeting_action["params"]["model"], "community.meeting")
+        self.assertEqual(event_meeting_action["params"]["res_id"], meeting.id)
         self.assertEqual(
             set(event.partner_ids.ids),
             {
@@ -172,7 +175,7 @@ class TestCommunityMeetingCalendar(TransactionCase, MailCase):
             readable.id,
         )
         self.assertEqual(
-            readable_event.action_open_community_meeting()["res_id"],
+            readable_event.action_open_community_meeting()["params"]["res_id"],
             readable.id,
         )
         readable.with_user(self.reader).check_access("read")

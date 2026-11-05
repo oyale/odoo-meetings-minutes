@@ -5,65 +5,72 @@ import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { router } from "@web/core/browser/router";
 import { useService } from "@web/core/utils/hooks";
+import { Breadcrumbs } from "@web/search/breadcrumbs/breadcrumbs";
 
 export class MinutesPreview extends Component {
     static template = "community_meetings.MinutesPreview";
+    static displayName = _t("Minutes preview");
+    static components = { Breadcrumbs };
     static props = ["action", "*", "close?"];
 
     setup() {
         this.orm = useService("orm");
         this.actionService = useService("action");
-        this.router = router;
         this.state = useState({ loading: true, html: "", error: "" });
         onWillStart(async () => {
-            const route = this.router.current;
-            const restore = Number(route.cm_minutes_preview) === 1;
             const params = this.props.action?.params || {};
+            const legacyRoute = router.current;
+            const legacyPreview = Number(legacyRoute.cm_minutes_preview) === 1;
             const revisionId =
                 Number(params.revision_id)
-                || (restore && Number(route.cm_minutes_revision_id))
+                || (legacyPreview && Number(legacyRoute.cm_minutes_revision_id))
                 || false;
             const meetingId =
                 Number(params.meeting_id)
+                || Number(params.resId)
+                || Number(params.active_id)
                 || this.props.action?.context?.active_id
-                || (restore && Number(route.cm_minutes_meeting_id))
+                || this.props.action?.context?.params?.id
+                || (legacyPreview && Number(legacyRoute.cm_minutes_meeting_id))
                 || false;
             this.state.meetingId = meetingId || false;
             this.state.revisionId = revisionId || false;
             this.state.returnTo =
-                params.return_to || (restore && route.cm_minutes_return_to) || "form";
+                params.return_to || (legacyPreview && legacyRoute.cm_minutes_return_to) || "form";
             this.state.itemId =
                 Number(params.item_id)
-                || (restore && Number(route.cm_minutes_item_id))
+                || (legacyPreview && Number(legacyRoute.cm_minutes_item_id))
                 || 0;
             this.state.reviewReturn =
                 params.review_return
-                || (restore
-                    && (Number(route.cm_minutes_return_meeting_id)
-                        ? {
-                              meeting_id: Number(route.cm_minutes_return_meeting_id),
-                              item_id: Number(route.cm_minutes_return_item_id) || false,
-                          }
-                        : false));
+                || (Number(params.review_return_meeting_id)
+                    ? {
+                          meeting_id: Number(params.review_return_meeting_id),
+                          item_id: Number(params.review_return_item_id) || false,
+                      }
+                    : false)
+                || (legacyPreview && Number(legacyRoute.cm_minutes_return_meeting_id)
+                    ? { meeting_id: Number(legacyRoute.cm_minutes_return_meeting_id), item_id: Number(legacyRoute.cm_minutes_return_item_id) || false }
+                    : false);
             if (!meetingId) {
                 this.state.error = _t("The meeting could not be identified.");
                 this.state.loading = false;
                 return;
             }
-            if (revisionId) {
-                this.router.pushState(
-                    {
-                        cm_minutes_preview: 1,
-                        cm_minutes_meeting_id: meetingId || 0,
-                        cm_minutes_revision_id: revisionId,
-                        cm_minutes_return_to: this.state.returnTo,
-                        cm_minutes_item_id: this.state.itemId || 0,
-                        cm_minutes_return_meeting_id: 0,
-                        cm_minutes_return_item_id: 0,
-                    },
-                    { sync: true },
-                );
-            }
+            this.env.config.setDisplayName?.(this.state.revisionId ? _t("Approved minutes") : _t("Minutes preview"));
+            const originJsId = Number(params.origin_js_id);
+            if (originJsId) this._originJsId = originJsId;
+            this.props.updateActionState?.({
+                meeting_id: meetingId,
+                resId: meetingId,
+                active_id: meetingId,
+                revision_id: revisionId || 0,
+                return_to: this.state.returnTo,
+                item_id: this.state.itemId || 0,
+                review_return_meeting_id: this.state.reviewReturn?.meeting_id || 0,
+                review_return_item_id: this.state.reviewReturn?.item_id || 0,
+                origin_js_id: originJsId || 0,
+            });
             try {
                 if (revisionId) {
                     this.state.html = markup(
@@ -99,6 +106,10 @@ export class MinutesPreview extends Component {
             : _t("Draft preview · saved content");
     }
 
+    get breadcrumbs() {
+        return this.env.config?.breadcrumbs || [];
+    }
+
     get backToMeetingLabel() {
         if (this.state.revisionId) {
             if (this.state.returnTo === "list") {
@@ -115,12 +126,34 @@ export class MinutesPreview extends Component {
     }
 
     async backToMeeting() {
-        if (this.state.revisionId) {
-            return this.backToOrigin();
-        }
+        return this.backToOrigin();
+    }
+
+    async backToOrigin() {
         const meetingId = this.state.meetingId;
-        const reviewReturn = this.state.reviewReturn;
-        if (reviewReturn?.meeting_id) {
+        const returnTo = this.state.returnTo;
+        const originJsId = this._originJsId || Number(this.props.action?.params?.origin_js_id);
+        if (originJsId) {
+            try {
+                await this.actionService.restore(originJsId);
+                return;
+            } catch (error) {
+                if (error?.name !== "ControllerNotFoundError") throw error;
+            }
+        }
+        if (this.state.revisionId && this.state.returnTo === "live") {
+            if (this.state.itemId) {
+                sessionStorage.setItem(
+                    `community_meetings.review_return_item.${meetingId}`,
+                    String(this.state.itemId),
+                );
+            }
+            const action = await this.orm.call("community.meeting", "action_open_live_meeting", [[meetingId]]);
+            action.params = { ...action.params, active_agenda_item_id: this.state.itemId || 0 };
+            return this.actionService.doAction(action, { stackPosition: "replaceCurrentAction" });
+        }
+        if (this.state.reviewReturn?.meeting_id) {
+            const reviewReturn = this.state.reviewReturn;
             if (reviewReturn.item_id) {
                 sessionStorage.setItem(
                     `community_meetings.review_return_item.${reviewReturn.meeting_id}`,
@@ -132,32 +165,28 @@ export class MinutesPreview extends Component {
                 "action_open_live_meeting",
                 [[reviewReturn.meeting_id]],
             );
-            const result = await this.actionService.doAction(action);
-            this.clearMinutesPreviewRoute();
-            return result;
+            action.params = {
+                ...action.params,
+                active_agenda_item_id: reviewReturn.item_id || 0,
+            };
+            return this.actionService.doAction(action, { stackPosition: "replaceCurrentAction" });
         }
-        const result = await this.actionService.doAction({
-            type: "ir.actions.act_window",
-            res_model: "community.meeting",
-            res_id: meetingId,
-            views: [[false, "form"]],
-            target: "current",
-        });
-        this.clearMinutesPreviewRoute();
-        return result;
-    }
-
-    async backToOrigin() {
-        const meetingId = this.state.meetingId;
-        const returnTo = this.state.returnTo;
-        this.clearMinutesPreviewRoute();
+        if (returnTo === "approved_minutes") {
+            return this.actionService.doAction({
+                type: "ir.actions.act_window",
+                res_model: "community.meeting.revision",
+                views: [[false, "list"]],
+                domain: [["status", "=", "approved"]],
+                target: "current",
+            }, { stackPosition: "replaceCurrentAction" });
+        }
         if (returnTo === "list") {
             return this.actionService.doAction({
                 type: "ir.actions.act_window",
                 res_model: "community.meeting",
                 views: [[false, "list"], [false, "form"]],
                 target: "current",
-            });
+            }, { stackPosition: "replaceCurrentAction" });
         }
         if (returnTo === "live") {
             if (this.state.itemId) {
@@ -171,7 +200,8 @@ export class MinutesPreview extends Component {
                 "action_open_live_meeting",
                 [[meetingId]],
             );
-            return this.actionService.doAction(action);
+            action.params = { ...action.params, active_agenda_item_id: this.state.itemId || 0 };
+            return this.actionService.doAction(action, { stackPosition: "replaceCurrentAction" });
         }
         return this.actionService.doAction({
             type: "ir.actions.act_window",
@@ -179,22 +209,7 @@ export class MinutesPreview extends Component {
             res_id: meetingId,
             views: [[false, "form"]],
             target: "current",
-        });
-    }
-
-    clearMinutesPreviewRoute() {
-        this.router.pushState(
-            {
-                cm_minutes_preview: 0,
-                cm_minutes_meeting_id: 0,
-                cm_minutes_revision_id: 0,
-                cm_minutes_return_to: "",
-                cm_minutes_item_id: 0,
-                cm_minutes_return_meeting_id: 0,
-                cm_minutes_return_item_id: 0,
-            },
-            { sync: true },
-        );
+        }, { stackPosition: "replaceCurrentAction" });
     }
 }
 

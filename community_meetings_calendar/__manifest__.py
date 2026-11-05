@@ -13,6 +13,8 @@
     "assets": {
         "web.assets_backend": [
             "community_meetings_calendar/static/src/calendar_popover.js",
+            "community_meetings_calendar/static/src/navigation_action.js",
+            "community_meetings_calendar/static/src/navigation_action.xml",
         ],
     },
     "uninstall_hook": "uninstall_hook",

@@ -685,7 +685,7 @@ class CommunityMeeting(models.Model):
             "type": "ir.actions.client",
             "tag": "community_meetings.live_meeting",
             "name": _("Meeting"),
-            "target": "main",
+            "target": "current",
             "context": {
                 "active_model": self._name,
                 "active_id": self.id,

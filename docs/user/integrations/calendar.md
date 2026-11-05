@@ -21,8 +21,10 @@ so everyone sees them next to their other events.
 
 Click a meeting event in the calendar grid to open its read-only details, then
 choose **View** to open the event form and **Open Meeting** to return to the
-meeting. Attendance-response buttons are hidden for these managed events;
-ordinary Calendar events keep their usual response controls.
+meeting. Odoo breadcrumbs let you move back through the event and meeting when
+they are already in the navigation history. Attendance-response buttons are
+hidden for these managed events; ordinary Calendar events keep their usual
+response controls.
 
 ![Read-only meeting event in the Calendar grid](../img/calendar-popover.png)
 

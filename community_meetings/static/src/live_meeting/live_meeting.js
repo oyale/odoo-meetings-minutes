@@ -8,9 +8,31 @@ import { router } from "@web/core/browser/router";
 import { loadBundle } from "@web/core/assets";
 import { ensureJQuery } from "@web/core/ensure_jquery";
 import { useService } from "@web/core/utils/hooks";
+import { useSetupAction } from "@web/search/action_hook";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { usePopover } from "@web/core/popover/popover_hook";
+import { Breadcrumbs } from "@web/search/breadcrumbs/breadcrumbs";
 import { createMentionAnchor, createMentionElement, detectMentionTrigger, DiscussionMentionPicker } from "./discussion_mention_picker";
+
+export function ancestorBreadcrumb(env, model, recordId) {
+    const escapedModel = model.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const route = new RegExp(`(?:^|/)${escapedModel}/${recordId}(?:/|$)`);
+    return [...(env.config?.breadcrumbs || [])]
+        .slice(0, -1)
+        .reverse()
+        .find((breadcrumb) => route.test(breadcrumb.url || "")) || false;
+}
+
+export async function restoreBreadcrumb(actionService, breadcrumb) {
+    if (!breadcrumb?.jsId) return false;
+    try {
+        await actionService.restore(breadcrumb.jsId);
+        return true;
+    } catch (error) {
+        if (error?.name === "ControllerNotFoundError") return false;
+        throw error;
+    }
+}
 
 const { DateTime } = luxon;
 
@@ -34,6 +56,8 @@ const MEETING_STATES = {
 
 export class LiveMeeting extends Component {
     static template = "community_meetings.LiveMeeting";
+    static displayName = _t("Live meeting");
+    static components = { Breadcrumbs };
     static props = ["action", "*", "close?"];
 
     setup() {
@@ -50,7 +74,6 @@ export class LiveMeeting extends Component {
         this.canApproveMinutes = false;
         this.orm = useService("orm");
         this.actionService = useService("action");
-        this.router = router;
         this.notification = useService("notification");
         this.dialog = useService("dialog");
         this.mentionListeners = new Map();
@@ -78,6 +101,15 @@ export class LiveMeeting extends Component {
                 ev.returnValue = "";
             }
         };
+        useSetupAction({
+            beforeLeave: async () => {
+                const canLeave = await this.flushEditors();
+                if (!canLeave) {
+                    this.notification.add(_t("Save the pending edits before leaving this meeting."), { type: "warning" });
+                }
+                return canLeave;
+            },
+        });
         onWillStart(async () => {
             await ensureJQuery();
             await loadBundle("web_editor.backend_assets_wysiwyg");
@@ -90,18 +122,17 @@ export class LiveMeeting extends Component {
             this.mentionAnchor?.remove();
             for (const remove of this.mentionListeners.values()) remove();
             window.removeEventListener("beforeunload", this.beforeUnload);
-            void this.flushEditors();
         });
     }
 
     get meetingId() {
         const action = this.props.action || {};
-        const routeIds = [...window.location.pathname.matchAll(/(?:^|\/)community\.meeting\/(\d+)(?=\/|$)/g)];
-        return action.params?.meeting_id || action.context?.active_id || action.context?.params?.id
-            || Number(routeIds.at(-1)?.[1]) || false;
+        return action.params?.meeting_id || action.params?.resId || action.params?.active_id
+            || action.context?.active_id || action.context?.params?.id || false;
     }
     reviewedMinutesKey(id) { return `community_meetings.reviewed_minutes.${this.meetingId}.${id}`; }
     reviewReturnItemKey(id = this.meetingId) { return `community_meetings.review_return_item.${id}`; }
+    previewReturnItemKey(id = this.meetingId) { return `community_meetings.preview_return_item.${id}`; }
     get locked() { return !this.state.capabilities?.can_edit || ["approved", "cancelled"].includes(this.state.meeting.state); }
     get meetingPaused() { return Boolean(this.state.meeting.actual_paused_at); }
     get readOnly() { return this.locked || this.meetingPaused; }
@@ -117,7 +148,10 @@ export class LiveMeeting extends Component {
         );
     }
     get draftingMinutes() { return ["held", "minutes_draft"].includes(this.state.meeting.state); }
-    get backLabel() { return this.state.returnMeeting ? _t("Back to live meeting") : _t("Back to Meetings"); }
+    get breadcrumbs() { return this.env.config?.breadcrumbs || []; }
+    get backLabel() {
+        return this.state.returnMeeting ? _t("Back to live meeting") : _t("Back to Meetings");
+    }
     get canPreviewMinutes() {
         return this.draftingMinutes && Boolean(this.state.capabilities?.can_preview_minutes);
     }
@@ -129,7 +163,15 @@ export class LiveMeeting extends Component {
             this.notification.add(_t("Could not identify the meeting to open. Return to the Meetings list and open it again."), { type: "danger" });
             return;
         }
-        const liveReturn = this.props.action?.params?.live_return;
+        const params = this.props.action?.params || {};
+        const liveReturn = params.live_return || (
+            Number(params.live_return_meeting_id)
+                ? {
+                      meeting_id: Number(params.live_return_meeting_id),
+                      item_id: Number(params.live_return_item_id) || false,
+                  }
+                : false
+        );
         this.state.returnMeeting = liveReturn?.meeting_id
             ? { meeting_id: liveReturn.meeting_id, item_id: liveReturn.item_id || false }
             : false;
@@ -145,6 +187,13 @@ export class LiveMeeting extends Component {
             editorial ? this.orm.searchRead("community.meeting.editor.note", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "content"], { order: "id" }) : Promise.resolve([]),
         ]);
         this.state.meeting = meetings[0];
+        this.env.config.setDisplayName?.(_t("Live meeting: %s", this.state.meeting.name));
+        this.props.updateActionState?.({
+            resId: this.meetingId,
+            active_id: this.meetingId,
+            live_return_meeting_id: this.state.returnMeeting?.meeting_id || 0,
+            live_return_item_id: this.state.returnMeeting?.item_id || 0,
+        });
         this.state.followupDefaults = await this.orm.call("community.meeting", "get_followup_defaults", [[this.meetingId]]);
         this.state.activityTypes = await this.orm.searchRead("mail.activity.type", [["active", "=", true]], ["name"], { order: "sequence, name" });
         this.state.attendeeIds = [...meetings[0].attendee_partner_ids];
@@ -248,13 +297,26 @@ export class LiveMeeting extends Component {
         this.state.privateNotes = privateNotes;
         this.state.users = users;
         this.state.expanded = Object.fromEntries(items.map((item, index) => [item.id, index === 0]));
-        this.state.activeItemId = items[0]?.id || false;
-        const returnItemId = Number(sessionStorage.getItem(this.reviewReturnItemKey()));
+        const routeItemId =
+            Number(router.current.active_agenda_item_id)
+            || Number(this.props.action?.params?.active_agenda_item_id);
+        this.state.activeItemId = items.some((item) => item.id === routeItemId)
+            ? routeItemId
+            : items[0]?.id || false;
+        const reviewReturnItemId = Number(sessionStorage.getItem(this.reviewReturnItemKey()));
+        const previewReturnItemId = Number(sessionStorage.getItem(this.previewReturnItemKey()));
+        const returnItemId = reviewReturnItemId || previewReturnItemId;
         if (items.some((item) => item.id === returnItemId)) {
             this.state.expanded[returnItemId] = true;
             this.state.activeItemId = returnItemId;
-            sessionStorage.removeItem(this.reviewReturnItemKey());
+            if (reviewReturnItemId) sessionStorage.removeItem(this.reviewReturnItemKey());
+            if (previewReturnItemId) sessionStorage.removeItem(this.previewReturnItemKey());
         }
+        this.props.updateActionState?.({
+            resId: this.meetingId,
+            active_id: this.meetingId,
+            active_agenda_item_id: this.state.activeItemId || 0,
+        });
         this.state.expandedNotes = {};
         this.state.relatedTopicOpenId = false;
         this.state.relatedActionOpenId = false;
@@ -340,6 +402,7 @@ export class LiveMeeting extends Component {
         this.state.relatedTopicOpenId = false;
         this.state.relatedActionOpenId = false;
         this.state.activeItemId = item.id;
+        this.props.updateActionState?.({ active_agenda_item_id: item.id });
         this.state.expanded[item.id] = true;
         document.getElementById(`agenda-card-${item.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
@@ -783,6 +846,7 @@ export class LiveMeeting extends Component {
     beginReopen(item) {
         this.state.expanded[item.id] = true;
         this.state.activeItemId = item.id;
+        this.props.updateActionState?.({ active_agenda_item_id: item.id });
         this.state.reopening[item.id] = "";
     }
     canCompletePoint(item) {
@@ -823,7 +887,10 @@ export class LiveMeeting extends Component {
     }
     toggle(item) {
         this.state.expanded[item.id] = !this.state.expanded[item.id];
-        if (this.state.expanded[item.id]) this.state.activeItemId = item.id;
+        if (this.state.expanded[item.id]) {
+            this.state.activeItemId = item.id;
+            this.props.updateActionState?.({ active_agenda_item_id: item.id });
+        }
     }
     toggleTypeEditor(item) { this.state.editingTypes[item.id] = !this.state.editingTypes[item.id]; }
     toggleAll() {
@@ -834,6 +901,7 @@ export class LiveMeeting extends Component {
         this.state.showPendingOnly = !this.state.showPendingOnly;
         if (!this.visibleItems.some((item) => item.id === this.state.activeItemId)) {
             this.state.activeItemId = this.visibleItems[0]?.id || false;
+            this.props.updateActionState?.({ active_agenda_item_id: this.state.activeItemId || 0 });
             if (this.state.activeItemId) this.state.expanded[this.state.activeItemId] = true;
         }
     }
@@ -842,6 +910,7 @@ export class LiveMeeting extends Component {
         if (this.state.focusMode) {
             const active = this.visibleItems.find((item) => item.id === this.state.activeItemId) || this.visibleItems[0];
             this.state.activeItemId = active?.id || false;
+            this.props.updateActionState?.({ active_agenda_item_id: this.state.activeItemId || 0 });
             for (const item of this.state.items) this.state.expanded[item.id] = item.id === this.state.activeItemId;
             if (active) {
                 this.state.expandedNotes[active.id] = false;
@@ -879,6 +948,7 @@ export class LiveMeeting extends Component {
         }
         for (const item of this.state.items) this.state.expanded[item.id] = false;
         this.state.activeItemId = next.id;
+        this.props.updateActionState?.({ active_agenda_item_id: next.id });
         this.state.expanded[next.id] = true;
         document.getElementById(`agenda-card-${next.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
@@ -1004,9 +1074,9 @@ export class LiveMeeting extends Component {
         action.params = {
             ...action.params,
             review_return: { meeting_id: this.meetingId, item_id: item.id },
+            origin_js_id: this.props.action?.jsId || 0,
         };
         const result = await this.actionService.doAction(action);
-        this.setMinutesPreviewRoute(id, action.params.review_return);
         return result;
     }
 
@@ -1471,18 +1541,25 @@ export class LiveMeeting extends Component {
             this.notification.add(_t("Save the pending edits before leaving this meeting."), { type: "warning" });
             return;
         }
-        if (this.state.returnMeeting?.meeting_id) return this.returnToSourceMeeting();
         if (this.props.close) return this.props.close();
-        return this.actionService.doAction({ type: "ir.actions.act_window", res_model: "community.meeting", views: [[false, "list"], [false, "form"]], target: "current" });
+        if (await this.restoreOrigin()) return;
+        return this.actionService.doAction({
+            type: "ir.actions.act_window",
+            res_model: "community.meeting",
+            views: [[false, "list"], [false, "form"]],
+            target: "current",
+        }, { stackPosition: "replaceCurrentAction" });
     }
-    async returnToSourceMeeting() {
-        const returnMeeting = this.state.returnMeeting;
-        this.state.returnMeeting = false;
-        if (returnMeeting.item_id) {
-            sessionStorage.setItem(this.reviewReturnItemKey(returnMeeting.meeting_id), String(returnMeeting.item_id));
+    async restoreOrigin() {
+        const jsId = Number(this.props.action?.params?.origin_js_id || this.props.action?.jsId);
+        if (!jsId) return false;
+        try {
+            await this.actionService.restore(jsId);
+            return true;
+        } catch (error) {
+            if (error?.name === "ControllerNotFoundError") return false;
+            throw error;
         }
-        const action = await this.orm.call("community.meeting", "action_open_live_meeting", [[returnMeeting.meeting_id]]);
-        return this.actionService.doAction(action);
     }
     async previewMinutes() {
         if (!await this.flushEditors()) {
@@ -1497,12 +1574,26 @@ export class LiveMeeting extends Component {
         const action = {
             type: "ir.actions.client",
             tag: "community_meetings.minutes_preview",
+            name: _t("Minutes preview"),
             target: "current",
-            params: { meeting_id: this.meetingId },
+            params: {
+                meeting_id: this.meetingId,
+                return_to: "live",
+                item_id: this.state.activeItemId || 0,
+                origin_js_id: this.props.action?.jsId || 0,
+            },
         };
-        const result = await this.actionService.doAction(action);
-        this.setMinutesPreviewRoute(this.meetingId);
-        return result;
+        const returnItemKey = this.previewReturnItemKey();
+        sessionStorage.removeItem(returnItemKey);
+        if (this.state.activeItemId) {
+            sessionStorage.setItem(returnItemKey, String(this.state.activeItemId));
+        }
+        try {
+            return await this.actionService.doAction(action);
+        } catch (error) {
+            sessionStorage.removeItem(returnItemKey);
+            throw error;
+        }
     }
 
     async viewApprovedMinutes() {
@@ -1513,21 +1604,11 @@ export class LiveMeeting extends Component {
             return_to: "live",
             meeting_id: this.meetingId,
             item_id: this.state.activeItemId || 0,
+            origin_js_id: this.props.action?.jsId || 0,
         };
         return this.actionService.doAction(action);
     }
 
-    setMinutesPreviewRoute(meetingId, reviewReturn = false) {
-        this.router.pushState({
-            cm_minutes_preview: 1,
-            cm_minutes_meeting_id: meetingId,
-            cm_minutes_revision_id: 0,
-            cm_minutes_return_to: "",
-            cm_minutes_item_id: 0,
-            cm_minutes_return_meeting_id: reviewReturn?.meeting_id || 0,
-            cm_minutes_return_item_id: reviewReturn?.item_id || 0,
-        }, { sync: true });
-    }
 }
 
 registry.category("actions").add("community_meetings.live_meeting", LiveMeeting);

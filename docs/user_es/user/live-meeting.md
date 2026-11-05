@@ -9,7 +9,8 @@ Meeting** en el formulario.
 
 ## Barra superior
 
-- **Volver a reuniones** — salida segura (avisa de ediciones pendientes).
+- **Navegación** — las migas de pan de Odoo permiten volver a la pantalla desde la que se abrió la reunión en vivo cuando ese origen está disponible. Si entraste directamente, aparece el botón **Volver a reuniones**. Los cambios pendientes se guardan antes de salir.
+- **Vista previa del borrador** — pulsa **Preview Minutes** para leer el borrador guardado. La miga de pan de la vista previa vuelve aquí y restaura el punto de agenda seleccionado; antes de salir de la reunión en vivo se guardan los cambios pendientes.
 - **Botones de flujo** — dependen del estado y la política:
   - *Iniciar reunión / Pausar / Reanudar* — solo con seguimiento de tiempo **on**.
   - *Finalizar reunión* — cierra la reunión (con tiempo de tiempo desactivado está

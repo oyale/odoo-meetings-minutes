@@ -4535,7 +4535,7 @@ msgstr "Fecha de creación"
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Create Meeting"
-msgstr "Cancelar reunión"
+msgstr "Crear reunión"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_series_wizard
