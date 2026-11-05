@@ -4,7 +4,7 @@ from markupsafe import Markup
 
 from odoo import api, fields, models
 from odoo.tools import is_html_empty
-from odoo.tools.misc import format_datetime
+from odoo.tools.misc import format_date, format_datetime
 
 
 class MeetingRevisionReport(models.AbstractModel):
@@ -103,6 +103,18 @@ class MeetingRevisionReport(models.AbstractModel):
         return prepared
 
     @api.model
+    def _prepare_project_tasks(self, action, lang):
+        return [
+            {
+                **task,
+                "deadline_display": format_date(self.env, task["deadline"], lang_code=lang)
+                if task.get("deadline")
+                else "",
+            }
+            for task in action.get("project_tasks", [])
+        ]
+
+    @api.model
     def _prepare_document(self, snapshot, revision=None, draft=False, lang=None):
         lang = lang or self.env.lang or self.env.user.lang
         meeting = snapshot["meeting"]
@@ -135,6 +147,7 @@ class MeetingRevisionReport(models.AbstractModel):
         for action in snapshot["actions"]:
             prepared = {
                 **action,
+                "project_tasks": self._prepare_project_tasks(action, lang),
                 "description_html": Markup(action.get("description") or ""),
                 "state_label": action_states.get(action.get("state"), action.get("state", "")),
                 "kind_label": action_kinds.get(action.get("followup_kind"), action.get("followup_kind", "")),

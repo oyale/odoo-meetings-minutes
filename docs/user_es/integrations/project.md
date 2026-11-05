@@ -47,12 +47,21 @@ Policy** de la serie:
 
 ## Reglas que protegen la historia
 
-- Los **detalles de las tareas no forman parte de las instantáneas del acta
-  aprobada** — los cambios posteriores en la tarea nunca reescriben actas históricas.
+- El nombre, la fecha límite (si está definida) y las personas asignadas de cada
+  tarea vinculada legible aparecen por separado de las personas responsables del
+  seguimiento. Las nuevas actas aprobadas capturan esos datos en su instantánea;
+  los cambios posteriores en la tarea nunca reescriben actas históricas. Las
+  revisiones ya aprobadas mantienen su instantánea original y no incorporan
+  detalles de tareas retroactivamente.
 - El cierre registra la política vigente en ese momento; los cambios posteriores de
   política afectan solo a resoluciones futuras.
 - Mientras un TODO resuelto dependa de una tarea, eliminar la tarea o sacarla del
   ámbito queda rechazado.
+
+La vista previa y el acta aprobada muestran cada tarea bajo su seguimiento y
+separan las personas asignadas a la tarea de las responsables del seguimiento:
+
+![Detalles de tareas de Project en el acta](../img/project-task-minutes.png)
 
 ## Encontrar los vínculos desde una tarea
 

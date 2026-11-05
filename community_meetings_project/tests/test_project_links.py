@@ -1,7 +1,9 @@
+import json
 from unittest.mock import patch
 
 from odoo.exceptions import AccessError, ValidationError
 from odoo.tests import TransactionCase, tagged
+from odoo.tools.misc import format_date
 
 
 @tagged("post_install", "-at_install")
@@ -231,6 +233,237 @@ class TestCommunityMeetingProjectLinks(TransactionCase):
 
         self.assertEqual(returned[0]["project_task_ids"], [])
         self.assertEqual(set(agenda.with_user(self.editor).project_task_ids.ids), set(self.tasks.ids))
+
+    def test_minutes_project_tasks_are_snapshotted_and_rendered_separately(self):
+        meeting = self.meetings[0].with_user(self.editor)
+        item = (
+            self.env["community.meeting.agenda.item"]
+            .with_user(self.editor)
+            .create({"meeting_id": meeting.id, "name": "Project delivery", "kind": "todo"})
+        )
+        extra = self.env["res.users"].create(
+            {
+                "name": "Task Owner <one>",
+                "login": "project-task-owner-snapshot",
+                "groups_id": [
+                    (
+                        6,
+                        0,
+                        [
+                            self.env.ref("base.group_user").id,
+                            self.env.ref("project.group_project_user").id,
+                        ],
+                    )
+                ],
+            }
+        )
+        first, second = self.env["project.task"].create(
+            [
+                {
+                    "name": "Prepare <budget> & plan",
+                    "project_id": self.project.id,
+                    "date_deadline": "2026-11-20",
+                    "user_ids": [(6, 0, [self.editor.id, extra.id])],
+                },
+                {"name": "Publish minutes", "project_id": self.project.id, "user_ids": [(5, 0, 0)]},
+            ]
+        )
+        action = (
+            self.env["community.meeting.action"]
+            .with_user(self.editor)
+            .create(
+                {
+                    "meeting_id": meeting.id,
+                    "agenda_item_id": item.id,
+                    "name": "Coordinate delivery",
+                    "followup_kind": "project_task",
+                    "responsible_user_ids": [(6, 0, [self.editor.id])],
+                    "project_task_ids": [(6, 0, [first.id, second.id])],
+                }
+            )
+        )
+        revision_model = self.env["community.meeting.revision"].with_user(self.editor)
+        snapshot = revision_model._build_public_content(meeting)
+        action_row = next(row for row in snapshot["actions"] if row["name"] == action.name)
+        self.assertEqual(action_row["responsibles"], [self.editor.name])
+        self.assertEqual(
+            action_row["project_tasks"],
+            [
+                {
+                    "name": first.name,
+                    "deadline": "2026-11-20",
+                    "assignees": sorted([self.editor.name, extra.name]),
+                },
+                {"name": second.name, "deadline": "", "assignees": []},
+            ],
+        )
+        report_model = self.env["report.community_meetings.report_revision_document"]
+        doc = report_model._prepare_document(snapshot=snapshot, draft=True)
+        self.assertEqual(
+            doc["actions"][0]["project_tasks"][0]["deadline_display"],
+            format_date(self.env, "2026-11-20", lang_code=self.env.lang),
+        )
+        rendered = self.env["ir.qweb"]._render("community_meetings.report_revision_content", {"doc": doc})
+        rendered_text = str(rendered)
+        self.assertIn("Follow-up responsible", rendered_text)
+        self.assertIn("Task assignees", rendered_text)
+        self.assertIn("Prepare &lt;budget&gt; &amp; plan", rendered_text)
+        self.assertNotIn("Prepare <budget> & plan", rendered_text)
+        self.assertIn("Task Owner &lt;one&gt;", rendered_text)
+
+    def test_approved_minutes_keep_project_task_snapshot_after_task_changes(self):
+        meeting = self.meetings[0].with_user(self.editor)
+        meeting.write({"reader_user_ids": [(4, self.editor.id)]})
+        item = (
+            self.env["community.meeting.agenda.item"]
+            .with_user(self.editor)
+            .create({"meeting_id": meeting.id, "name": "Frozen Project task"})
+        )
+        task = self.env["project.task"].create(
+            {
+                "name": "Frozen task name",
+                "project_id": self.project.id,
+                "date_deadline": "2026-11-20",
+                "user_ids": [(4, self.editor.id)],
+            }
+        )
+        self.env["community.meeting.action"].with_user(self.editor).create(
+            {
+                "meeting_id": meeting.id,
+                "agenda_item_id": item.id,
+                "name": "Frozen follow-up",
+                "followup_kind": "project_task",
+                "responsible_user_id": self.editor.id,
+                "project_task_ids": [(4, task.id)],
+            }
+        )
+        meeting.action_schedule()
+        meeting.action_mark_held()
+        meeting.action_draft_minutes()
+        approver = self.env["res.users"].create(
+            {
+                "name": "Project Minutes Approver",
+                "login": "project-minutes-snapshot-approver",
+                "groups_id": [
+                    (
+                        6,
+                        0,
+                        [
+                            self.env.ref("base.group_user").id,
+                            self.env.ref("community_meetings.group_meeting_approver").id,
+                        ],
+                    )
+                ],
+            }
+        )
+        meeting.write({"reader_user_ids": [(4, approver.id)]})
+        report_model = self.env["ir.actions.report"]
+        with patch.object(
+            type(report_model),
+            "_render_qweb_pdf",
+            return_value=(b"%PDF-1.4\nminutes snapshot fixture\n", "pdf"),
+        ):
+            meeting.with_user(approver).action_approve_minutes()
+        revision = meeting.approved_revision_id
+        frozen_json = revision.snapshot_json
+        report_document = self.env["report.community_meetings.report_revision_document"]
+        snapshot = json.loads(frozen_json)
+        frozen_document = report_document._prepare_document(snapshot=snapshot, revision=revision)
+        frozen_render = str(
+            self.env["ir.qweb"]._render("community_meetings.report_revision_content", {"doc": frozen_document})
+        )
+        self.assertIn("Frozen task name", frozen_render)
+        task.write({"name": "Changed live task", "date_deadline": False, "user_ids": [(5, 0, 0)]})
+        self.assertEqual(revision.snapshot_json, frozen_json)
+        rerendered_document = report_document._prepare_document(
+            snapshot=json.loads(revision.snapshot_json), revision=revision
+        )
+        rerendered = str(
+            self.env["ir.qweb"]._render("community_meetings.report_revision_content", {"doc": rerendered_document})
+        )
+        self.assertEqual(rerendered, frozen_render)
+
+    def test_project_task_minutes_projection_omits_inaccessible_tasks(self):
+        reader = self.env["res.users"].create(
+            {
+                "name": "Minutes reader without Project access",
+                "login": "minutes-reader-without-project",
+                "groups_id": [
+                    (
+                        6,
+                        0,
+                        [
+                            self.env.ref("base.group_user").id,
+                            self.env.ref("community_meetings.group_meeting_reader").id,
+                        ],
+                    )
+                ],
+            }
+        )
+        meeting = self.meetings[0].with_user(self.editor)
+        meeting.write({"reader_user_ids": [(4, reader.id)]})
+        item = (
+            self.env["community.meeting.agenda.item"]
+            .with_user(self.editor)
+            .create({"meeting_id": meeting.id, "name": "Private task link"})
+        )
+        task = self.env["project.task"].create(
+            {
+                "name": "Secret task name",
+                "project_id": self.project.id,
+                "date_deadline": "2026-11-20",
+                "user_ids": [(4, self.editor.id)],
+            }
+        )
+        self.env["community.meeting.action"].with_user(self.editor).create(
+            {
+                "meeting_id": meeting.id,
+                "agenda_item_id": item.id,
+                "name": "Visible follow-up",
+                "followup_kind": "project_task",
+                "responsible_user_id": self.editor.id,
+                "project_task_ids": [(4, task.id)],
+            }
+        )
+        task_model = type(self.env["project.task"])
+        original_search = task_model.search
+        calls = 0
+
+        def hide_task_during_link_read(recordset, *args, **kwargs):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                raise AccessError("task is hidden")
+            return original_search(recordset, *args, **kwargs)
+
+        with patch.object(task_model, "search", hide_task_during_link_read):
+            snapshot = (
+                self.env["community.meeting.revision"]
+                .with_user(reader)
+                ._build_public_content(meeting.with_user(reader))
+            )
+        self.assertEqual(snapshot["actions"][0]["project_tasks"], [])
+
+    def test_legacy_project_action_snapshot_renders_without_task_details(self):
+        meeting = self.meetings[0].with_user(self.editor)
+        item = (
+            self.env["community.meeting.agenda.item"]
+            .with_user(self.editor)
+            .create({"meeting_id": meeting.id, "name": "Legacy snapshot point"})
+        )
+        action = (
+            self.env["community.meeting.action"]
+            .with_user(self.editor)
+            .create({"meeting_id": meeting.id, "agenda_item_id": item.id, "name": "Old action"})
+        )
+        legacy = self.env["community.meeting.revision"]._build_public_content(meeting)
+        legacy["actions"][0].pop("project_tasks", None)
+        legacy["actions"][0].pop("id", None)
+        legacy["actions"][0]["name"] = action.name
+        document = self.env["report.community_meetings.report_revision_document"]._prepare_document(legacy, draft=True)
+        rendered = str(self.env["ir.qweb"]._render("community_meetings.report_revision_preview", {"doc": document}))
+        self.assertIn("Old action", rendered)
+        self.assertNotIn("o_minutes_project_task", rendered)
 
     def test_todo_cannot_close_without_project_task_on_followup_action(self):
         self.series.write({"meeting_todo_requirement": "project"})

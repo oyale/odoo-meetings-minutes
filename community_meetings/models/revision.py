@@ -312,6 +312,7 @@ class CommunityMeetingRevision(models.Model):
             ],
             "actions": [
                 {
+                    "id": action.id,
                     "name": action.name,
                     "description": self._clean_html(action.description),
                     "resolution": action.resolution_id.title if action.resolution_id else "",
@@ -329,7 +330,17 @@ class CommunityMeetingRevision(models.Model):
             "dissents": dissents,
             "carryovers": carryovers,
         }
+        extensions = self._get_actions_snapshot_extensions(
+            meeting.action_ids.sorted(lambda row: (row.deadline or fields.Date.today(), row.id))
+        )
+        for action_snapshot in snapshot["actions"]:
+            action_snapshot.update(extensions.get(action_snapshot["id"], {}))
         return snapshot
+
+    @api.model
+    def _get_actions_snapshot_extensions(self, actions):
+        """Return optional addon-specific public fields keyed by follow-up ID."""
+        return {}
 
     @api.model
     def _build_snapshot(self, meeting, approver, approved_at, approval_point=None, offline=False, origin="form"):

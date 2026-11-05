@@ -11796,3 +11796,18 @@ msgstr "al preparar"
 #~ "Aquí se pueden aprobar actas anteriores durante una reunión en directo "
 #~ "(Editor con permiso de edición) o al preparar el acta de una reunión "
 #~ "celebrada sin usar la pantalla de reunión en directo (Aprobador)."
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Follow-up responsible"
+msgstr "Responsable del seguimiento"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Task due date"
+msgstr "Fecha límite de la tarea"
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Task assignees"
+msgstr "Personas asignadas a la tarea"

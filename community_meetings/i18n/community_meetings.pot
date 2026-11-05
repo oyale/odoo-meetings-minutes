@@ -11135,3 +11135,18 @@ msgstr ""
 #: code:addons/community_meetings/static/src/live_meeting/minutes_preview.js:0
 msgid "Minutes preview"
 msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Follow-up responsible"
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Task due date"
+msgstr ""
+
+#. module: community_meetings
+#: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
+msgid "Task assignees"
+msgstr ""

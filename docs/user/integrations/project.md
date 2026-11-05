@@ -44,12 +44,20 @@ Two levels configure how TODO points treat tasks — company settings
 
 ## Rules that protect history
 
-- Task **details are not part of approved minute snapshots** — later task
-  changes never rewrite historical minutes.
+- Each readable linked task's name, due date (when set) and assignees are shown
+  separately from the follow-up's responsible people. Newly approved minutes
+  capture those details in the revision snapshot; later task changes never
+  rewrite historical minutes. Existing approved revisions keep their original
+  snapshots and do not gain task details retroactively.
 - Closure records the policy in force at that moment; later policy changes
   affect only future resolutions.
 - While a resolved TODO depends on a task, removing the task or moving it out of
   scope is rejected.
+
+The preview and approved minutes keep each task under its follow-up and show
+task assignees separately from the follow-up's responsible people:
+
+![Project task details in English minutes](../img/project-task-minutes.png)
 
 ## Finding meeting links from a task
 

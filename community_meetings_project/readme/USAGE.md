@@ -9,4 +9,9 @@ normal Project write access, but does not gain access to its meeting or follow-u
 record. Reopening a task does not reopen a completed follow-up. Approved minutes
 remain unchanged when linked tasks change.
 
+Draft minutes previews and newly approved minutes show the name of each readable
+linked task, its due date when set, and its assigned users separately from the
+follow-up's responsible people. Approval stores those details in the immutable
+revision snapshot; older approved revisions are not changed retroactively.
+
 See the [Project integration guide](https://oyale.github.io/odoo-meetings-minutes/html-en/integrations/project.html).

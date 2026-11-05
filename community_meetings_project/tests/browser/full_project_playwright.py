@@ -13,6 +13,10 @@ from full_meeting_playwright import ACTIONS as CORE_ACTIONS
 from full_meeting_playwright import BASE_URL, FullMeetingBrowserChecks, run_suite
 
 PROJECT_ACTIONS = {
+    "test_minutes_preview_shows_project_task_details": [
+        "open draft minutes preview",
+        "review linked task details and separate follow-up responsibility",
+    ],
     "test_related_followup_preview_links_project_task": [
         "open a promoted follow-up preview",
         "see linked Project task details and open the task",
@@ -34,6 +38,63 @@ PROJECT_ACTIONS = {
 
 
 class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
+    def test_minutes_preview_shows_project_task_details(self):
+        self.rpc(
+            "community.meeting", "write",
+            [[self.meeting_id], {"name": "Project task minutes preview"}],
+        )
+        company_id = self.record(
+            "community.meeting", self.meeting_id, ["company_id"]
+        )["company_id"][0]
+        project_name = "Minutes preview project " + uuid.uuid4().hex[:6]
+        project_id = self.rpc(
+            "project.project", "create",
+            [{"name": project_name, "company_id": company_id}],
+        )
+        self.addCleanup(self.rpc, "project.project", "unlink", [[project_id]])
+        task_name = "Minutes task & budget " + uuid.uuid4().hex[:6]
+        task_id = self.rpc(
+            "project.task", "create",
+            [{
+                "name": task_name,
+                "project_id": project_id,
+                "date_deadline": "2026-11-20",
+                "user_ids": [(6, 0, [self.current_user()])],
+            }],
+        )
+        self.addCleanup(self.rpc, "project.task", "unlink", [[task_id]])
+        self.rpc(
+            "community.meeting.action", "create",
+            [{
+                "meeting_id": self.meeting_id,
+                "agenda_item_id": self.item_ids["discussion"],
+                "name": "Prepare project minutes",
+                "followup_kind": "project_task",
+                "responsible_user_ids": [(6, 0, [self.current_user()])],
+                "project_task_ids": [(6, 0, [task_id])],
+            }],
+        )
+        self.fixture.prepare_minutes_draft()
+        self.open_form()
+        self.page.get_by_role(
+            "button", name=self.ui_text("community_meetings", "Preview Minutes"), exact=True
+        ).click()
+        preview = self.page.locator(".o_community_minutes_preview")
+        expect(preview).to_contain_text("Prepare project minutes", timeout=30000)
+        expect(preview).to_contain_text(task_name)
+        expect(preview).to_contain_text(self.ui_text("community_meetings", "Follow-up responsible"))
+        expect(preview).to_contain_text(self.ui_text("community_meetings", "Task due date"))
+        expect(preview).to_contain_text(self.ui_text("community_meetings", "Task assignees"))
+        expect(preview).to_contain_text(self.record("res.users", self.current_user(), ["name"])["name"])
+        task_row = preview.locator(".o_minutes_project_task").filter(has_text=task_name)
+        for width, height in ((1440, 1000), (375, 812)):
+            self.page.set_viewport_size({"width": width, "height": height})
+            task_row.scroll_into_view_if_needed()
+            self.capture_visual_screenshot(
+                "project-task-minutes-preview-%s" % width,
+                viewport={"width": width, "height": height},
+            )
+
     def test_related_followup_preview_links_project_task(self):
         discussion_item = self.item_ids["discussion"]
         topic_id = self.record(

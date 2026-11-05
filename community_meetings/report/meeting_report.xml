@@ -199,11 +199,18 @@
                         </div>
                         <div class="o_minutes_action_meta">
                             <span t-if="action.get('agenda_item')"><span t-translation="on">From point</span>: <strong t-out="action['agenda_item']"/></span>
-                            <span t-if="action.get('responsibles') or action.get('responsible')"><span t-translation="on">Responsible</span>: <strong t-out="', '.join(action.get('responsibles', [])) or action['responsible']"/></span>
+                            <span t-if="action.get('responsibles') or action.get('responsible')"><span t-translation="on">Follow-up responsible</span>: <strong t-out="', '.join(action.get('responsibles', [])) or action['responsible']"/></span>
                             <span t-if="action.get('deadline')"><span t-translation="on">Due date</span>: <strong t-out="action['deadline']"/></span>
                             <span t-if="action.get('state_label')"><span t-translation="on">Status</span>: <strong t-out="action['state_label']"/></span>
                         </div>
                         <div t-if="action.get('description_html')" class="o_minutes_action_description" t-out="action['description_html']"/>
+                        <ul t-if="action.get('project_tasks')" class="o_minutes_project_tasks">
+                            <li t-foreach="action['project_tasks']" t-as="task" class="o_minutes_project_task">
+                                <strong t-out="task['name']"/>
+                                <span t-if="task.get('deadline_display')"> — <span t-translation="on">Task due date</span>: <t t-out="task['deadline_display']"/></span>
+                                <span t-if="task.get('assignees')"> — <span t-translation="on">Task assignees</span>: <t t-out="', '.join(task['assignees'])"/></span>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </section>
