@@ -58,15 +58,11 @@ def preview_is_read_only(context):
     expect(preview.get_by_role("textbox")).to_have_count(0)
 
 
-@then("I can choose Return to meeting to edit")
-def return_action_is_available(context):
-    expect(
-        context.page.get_by_role(
-            "button",
-            name=context.browser_session.ui_text("community_meetings", "Return to meeting to edit"),
-            exact=True,
-        )
-    ).to_be_visible()
+@then("the preview breadcrumb returns to the meeting")
+def preview_breadcrumb_returns_to_meeting(context):
+    breadcrumb = context.page.locator(".o_community_minutes_preview .o_breadcrumb .o_back_button a")
+    expect(breadcrumb).to_be_visible()
+    expect(breadcrumb).to_contain_text(context.meeting_name)
 
 
 @then("the meeting and saved draft remain unchanged")
@@ -87,11 +83,9 @@ def preview_did_not_write(context):
     assert html_after == html_before, "Preview changed the rendered saved minutes"
 
 
-@when("I choose Return to meeting to edit")
+@when("I use the preview breadcrumb to return to the meeting")
 def return_to_meeting_editor(context):
-    context.page.get_by_role(
-        "button", name=context.browser_session.ui_text("community_meetings", "Return to meeting to edit"), exact=True
-    ).click()
+    context.page.locator(".o_community_minutes_preview .o_breadcrumb .o_back_button a").click()
 
 
 @then("I return to the meeting editor")

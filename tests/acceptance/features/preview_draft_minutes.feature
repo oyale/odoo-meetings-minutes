@@ -11,8 +11,8 @@ Feature: Preview draft minutes before approval
     Given the meeting is Held or has draft minutes
     When I choose Preview Minutes
     Then the saved minutes open in a read-only preview
-    And I can choose Return to meeting to edit
+    And the preview breadcrumb returns to the meeting
     And the meeting and saved draft remain unchanged
-    When I choose Return to meeting to edit
+    When I use the preview breadcrumb to return to the meeting
     Then I return to the meeting editor
     And the meeting and saved draft remain unchanged
