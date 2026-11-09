@@ -3,6 +3,12 @@
 Optional addon connecting meeting follow-ups to Odoo **Project** tasks.
 Requires `project` and `community_meetings`.
 
+![A linked Project task on a live meeting follow-up](../img/live-project-task-point.png)
+
+In the live agenda, the linked task name appears on its follow-up. To create or
+link a task from the live meeting, choose **Create Project task**; in the meeting
+form, use **Create Task**.
+
 ![Follow-up with project task](../img/project-task.png)
 
 ## Linking a project when creating a series
@@ -17,12 +23,13 @@ off by default; leaving it off keeps the series unlinked.
 
 ## Creating a task from a follow-up
 
-On any follow-up action (live meeting card, meeting form tab, or the follow-up's
-own form) press **Create Task**:
+On a live meeting card, choose **Create Project task**; in the meeting form tab
+or the follow-up form, choose **Create Task**:
 
 1. Choose **link an existing task** or **create a new one**.
 2. For a new task: pick the project (pre-filled by policy, see below) and name.
-3. **Create and Link** — the task appears as a tag on the follow-up/agenda line.
+3. **Create and Link** — the task appears as a tag on the follow-up and in the
+   live agenda card.
 
 Requirements: Project task creation rights; the task must belong to a
 company-compatible project. An existing task is linked, never duplicated.

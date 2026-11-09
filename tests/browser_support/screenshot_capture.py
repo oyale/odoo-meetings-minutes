@@ -66,6 +66,14 @@ def capture_checkpoint(
         size = viewport or original
         viewports = [{"name": "custom" if viewport else "current", **size}]
     paths = []
+    documentation_captures = {}
+    if os.environ.get("MM_DOCUMENTATION_CAPTURE_MAP"):
+        try:
+            documentation_captures = json.loads(os.environ["MM_DOCUMENTATION_CAPTURE_MAP"])
+        except json.JSONDecodeError as error:
+            raise ValueError("MM_DOCUMENTATION_CAPTURE_MAP must contain a JSON object") from error
+        if not isinstance(documentation_captures, dict):
+            raise TypeError("MM_DOCUMENTATION_CAPTURE_MAP must contain a JSON object")
     try:
         for size in viewports:
             page.set_viewport_size({"width": size["width"], "height": size["height"]})
@@ -83,6 +91,11 @@ def capture_checkpoint(
                 capture_target.screenshot(path=str(path))
             path.chmod(0o600)
             paths.append(path)
+            documentation_path = documentation_captures.get(f"{name}:{size['width']}x{size['height']}")
+            if documentation_path and capture_target is None:
+                export_path = Path(documentation_path).expanduser()
+                export_path.parent.mkdir(parents=True, exist_ok=True)
+                page.screenshot(path=str(export_path), full_page=True)
     finally:
         page.set_viewport_size(original)
     return paths

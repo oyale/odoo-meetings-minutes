@@ -59,6 +59,8 @@ meetings and automatic points. Go back to **When** to extend the duration, or
 adjust the included points. The warning disappears once the agenda fits within
 the planned time.
 
+![The meeting review warns when the agenda exceeds its planned duration](../img/meeting-duration-warning.png)
+
 <a id="reading-a-meeting"></a>
 
 ## Reading a meeting (reader track)

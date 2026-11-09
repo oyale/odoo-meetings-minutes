@@ -3,6 +3,13 @@
 Módulo opcional que conecta los seguimientos de las reuniones con las tareas de
 **Project** de Odoo. Requiere `project` y `community_meetings`.
 
+![Una tarea de Project vinculada al seguimiento de la reunión en vivo](../img/live-project-task-point.png)
+
+En la agenda en vivo, el nombre de la tarea vinculada aparece en su
+seguimiento. Para crear o vincular una tarea desde la reunión en vivo, pulsa
+**Crear tarea de proyecto**; en el formulario de la reunión, el botón se llama
+**Crear tarea**.
+
 ![Seguimiento con tarea de proyecto](../img/project-task.png)
 
 ## Vincular un proyecto al crear una serie
@@ -18,14 +25,14 @@ queda vinculada a ningún proyecto.
 
 ## Crear una tarea desde un seguimiento
 
-En cualquier acción de seguimiento (tarjeta de la reunión en vivo, pestaña del
-formulario o el propio formulario del seguimiento) pulsa **Crear tarea**:
+En la tarjeta de una reunión en vivo, pulsa **Crear tarea de proyecto**; en la
+pestaña del formulario de reunión o en el propio seguimiento, pulsa **Crear tarea**:
 
 1. Elige **vincular una tarea existente** o **crear una nueva**.
 2. Para una nueva: elige el proyecto (pre-rellenado según la política, ver abajo) y
    el nombre.
-3. **Create and Link** — la tarea aparece como etiqueta en el seguimiento/línea de
-   agenda.
+3. **Crear y vincular** — la tarea aparece como etiqueta en el seguimiento y en
+   la tarjeta de agenda de la reunión en vivo.
 
 Requisitos: permisos de creación de tareas de Project; la tarea debe pertenecer a un
 proyecto de compañía compatible. Una tarea existente se vincula, nunca se duplica.

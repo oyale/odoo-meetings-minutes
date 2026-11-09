@@ -2,8 +2,8 @@
 
 The **live meeting** screen is a full-page workspace designed to be projected
 during the meeting while taking notes at the same time. Open it from any
-scheduled/held meeting: the ▶ button on the list or **Open Live Meeting** on
-the form.
+scheduled/held meeting: the ▶ button on the list or **Live meeting** on the
+form.
 
 ![Live meeting overview](../img/live-meeting.png)
 

@@ -2,8 +2,8 @@
 
 La pantalla **reunión en vivo** es un espacio de trabajo a página completa pensado
 para proyectarse durante la reunión mientras se toman notas a la vez. Ábrela desde
-cualquier reunión programada/celebrada: el botón ▶ en la lista o **Open Live
-Meeting** en el formulario.
+cualquier reunión programada/celebrada: el botón ▶ en la lista o **Reunión en
+vivo** en el formulario.
 
 ![Reunión en vivo](../img/live-meeting.png)
 
@@ -18,7 +18,7 @@ En pantallas estrechas, las migas de pan mantienen una fila propia sobre los bot
 ## Barra superior
 
 - **Navegación** — las migas de pan de Odoo permiten volver a la pantalla desde la que se abrió la reunión en vivo cuando ese origen está disponible. Si entraste directamente, aparece el botón **Volver a reuniones**. Los cambios pendientes se guardan antes de salir.
-- **Vista previa del borrador** — pulsa **Preview Minutes** para leer el borrador guardado. La miga de pan de la vista previa vuelve aquí y restaura el punto de agenda seleccionado; antes de salir de la reunión en vivo se guardan los cambios pendientes.
+- **Vista previa del borrador** — pulsa **Vista previa del acta** para leer el borrador guardado. La miga de pan de la vista previa vuelve aquí y restaura el punto de agenda seleccionado; antes de salir de la reunión en vivo se guardan los cambios pendientes.
 - **Botones de flujo** — dependen del estado y la política:
   - *Iniciar reunión / Pausar / Reanudar* — solo con seguimiento de tiempo **on**.
   - *Finalizar reunión* — cierra la reunión (con tiempo de tiempo desactivado está

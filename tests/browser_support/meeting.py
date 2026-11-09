@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import uuid
 from dataclasses import dataclass
@@ -27,8 +28,12 @@ class LiveMeetingFixture:
 
     @classmethod
     def create_minutes_draft_without_agenda(cls, session: OdooBrowserSession, label: str) -> LiveMeetingFixture:
-        start = (datetime.now(timezone.utc) + timedelta(days=1)).replace(microsecond=0)
-        unique_name = f"Browser {label} {uuid.uuid4().hex[:8]}"
+        if os.environ.get("MM_DOCUMENTATION_CAPTURE"):
+            start = datetime(2026, 11, 10, 10, 0, tzinfo=timezone.utc)
+            unique_name = "Quarterly planning review"
+        else:
+            start = (datetime.now(timezone.utc) + timedelta(days=1)).replace(microsecond=0)
+            unique_name = f"Browser {label} {uuid.uuid4().hex[:8]}"
         meeting_id = session.rpc(
             "community.meeting",
             "create",
@@ -41,8 +46,12 @@ class LiveMeetingFixture:
 
     @classmethod
     def create_scheduled_live_meeting(cls, session: OdooBrowserSession, label: str) -> LiveMeetingFixture:
-        start = (datetime.now(timezone.utc) + timedelta(days=1)).replace(microsecond=0)
-        unique_name = f"Browser {label} {uuid.uuid4().hex[:8]}"
+        if os.environ.get("MM_DOCUMENTATION_CAPTURE"):
+            start = datetime(2026, 11, 10, 10, 0, tzinfo=timezone.utc)
+            unique_name = "Product planning"
+        else:
+            start = (datetime.now(timezone.utc) + timedelta(days=1)).replace(microsecond=0)
+            unique_name = f"Browser {label} {uuid.uuid4().hex[:8]}"
         meeting_id = session.rpc(
             "community.meeting",
             "create",
@@ -138,7 +147,7 @@ def open_live_meeting(
             f"web#model=community.meeting&id={meeting_id}&view_type=form",
         )
     )
-    page.get_by_role("button", name=re.compile(r"^(Open Meeting|Abrir reunión)$", re.IGNORECASE)).click(
+    page.get_by_role("button", name=re.compile(r"^(Live meeting|Reunión en vivo)$", re.IGNORECASE)).click(
         timeout=timeout
     )
     try:
