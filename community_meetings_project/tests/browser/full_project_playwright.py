@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Project browser extension: all core scenarios plus Project-specific behavior."""
 
+import os
+import re
 import sys
 import uuid
 from pathlib import Path
@@ -39,20 +41,29 @@ PROJECT_ACTIONS = {
 
 class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
     def test_minutes_preview_shows_project_task_details(self):
+        documentation_capture = bool(os.environ.get("MM_DOCUMENTATION_CAPTURE"))
+        spanish = self.effective_locale().lower().startswith("es")
+        meeting_name = (
+            "Planificación del producto" if spanish else "Product planning"
+        )
+        project_name = "Lanzamiento Atlas" if spanish else "Atlas launch"
+        task_name = "Revisar presupuesto y calendario" if spanish else "Review budget and timeline"
         self.rpc(
             "community.meeting", "write",
-            [[self.meeting_id], {"name": "Project task minutes preview"}],
+            [[self.meeting_id], {"name": meeting_name if documentation_capture else "Project task minutes preview"}],
         )
         company_id = self.record(
             "community.meeting", self.meeting_id, ["company_id"]
         )["company_id"][0]
-        project_name = "Minutes preview project " + uuid.uuid4().hex[:6]
+        if not documentation_capture:
+            project_name = "Minutes preview project " + uuid.uuid4().hex[:6]
         project_id = self.rpc(
             "project.project", "create",
             [{"name": project_name, "company_id": company_id}],
         )
         self.addCleanup(self.rpc, "project.project", "unlink", [[project_id]])
-        task_name = "Minutes task & budget " + uuid.uuid4().hex[:6]
+        if not documentation_capture:
+            task_name = "Minutes task & budget " + uuid.uuid4().hex[:6]
         task_id = self.rpc(
             "project.task", "create",
             [{
@@ -68,7 +79,11 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
             [{
                 "meeting_id": self.meeting_id,
                 "agenda_item_id": self.item_ids["discussion"],
-                "name": "Prepare project minutes",
+                "name": (
+                    "Preparar las actas del proyecto"
+                    if spanish
+                    else "Prepare project minutes"
+                ),
                 "followup_kind": "project_task",
                 "responsible_user_ids": [(6, 0, [self.current_user()])],
                 "project_task_ids": [(6, 0, [task_id])],
@@ -80,7 +95,12 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
             "button", name=self.ui_text("community_meetings", "Preview Minutes"), exact=True
         ).click()
         preview = self.page.locator(".o_community_minutes_preview")
-        expect(preview).to_contain_text("Prepare project minutes", timeout=30000)
+        expected_followup = (
+            "Preparar las actas del proyecto"
+            if spanish
+            else "Prepare project minutes"
+        )
+        expect(preview).to_contain_text(expected_followup, timeout=30000)
         expect(preview).to_contain_text(task_name)
         expect(preview).to_contain_text(self.ui_text("community_meetings", "Follow-up responsible"))
         expect(preview).to_contain_text(self.ui_text("community_meetings", "Task due date"))
@@ -89,6 +109,14 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         task_row = preview.locator(".o_minutes_project_task").filter(has_text=task_name)
         for width, height in ((1440, 1000), (375, 812)):
             self.page.set_viewport_size({"width": width, "height": height})
+            if width == 375:
+                breadcrumb = self.page.locator(
+                    ".o_community_minutes_preview_toolbar .o_breadcrumb"
+                )
+                gap = breadcrumb.evaluate(
+                    "el => parseFloat(getComputedStyle(el).columnGap)"
+                )
+                self.assertGreaterEqual(gap, 8)
             task_row.scroll_into_view_if_needed()
             self.capture_visual_screenshot(
                 "project-task-minutes-preview-%s" % width,
@@ -264,6 +292,8 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         expect(self.outcome("todo")).to_have_text(self.ui_text("community_meetings", "Resolved"))
 
     def test_project_task_wizard_can_link_an_existing_task(self):
+        documentation_capture = bool(os.environ.get("MM_DOCUMENTATION_CAPTURE"))
+        spanish = self.effective_locale().lower().startswith("es")
         calendar_fields = self.rpc(
             "community.meeting", "fields_get", [["calendar_event_ids"]]
         )
@@ -285,14 +315,22 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         company_id = self.record(
             "community.meeting", self.meeting_id, ["company_id"]
         )["company_id"][0]
-        project_name = "Existing-task project " + uuid.uuid4().hex[:6]
+        project_name = (
+            ("Lanzamiento Atlas" if spanish else "Atlas launch")
+            if documentation_capture
+            else "Existing-task project " + uuid.uuid4().hex[:6]
+        )
         project_id = self.rpc(
             "project.project",
             "create",
             [{"name": project_name, "company_id": company_id}],
         )
         self.addCleanup(self.rpc, "project.project", "unlink", [[project_id]])
-        task_name = "Existing task " + uuid.uuid4().hex[:6]
+        task_name = (
+            ("Revisar el presupuesto de temporada" if spanish else "Review the seasonal budget")
+            if documentation_capture
+            else "Existing task " + uuid.uuid4().hex[:6]
+        )
         user_id = self.current_user()
         task_id = self.rpc(
             "project.task",
@@ -301,12 +339,17 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
                 {
                     "name": task_name,
                     "project_id": project_id,
+                    "date_deadline": "2026-11-20" if documentation_capture else False,
                     "user_ids": [(6, 0, [user_id])],
                 }
             ],
         )
         self.addCleanup(self.rpc, "project.task", "unlink", [[task_id]])
-        followup_name = "Link existing Project task " + uuid.uuid4().hex[:6]
+        followup_name = (
+            ("Revisar el presupuesto de temporada" if spanish else "Review the seasonal budget")
+            if documentation_capture
+            else "Link existing Project task " + uuid.uuid4().hex[:6]
+        )
         deadline = "2026-11-30"
         action_id = self.rpc(
             "community.meeting.action",
@@ -317,12 +360,40 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
                     "agenda_item_id": self.item_ids["todo"],
                     "name": followup_name,
                     "deadline": deadline,
+                    "responsible_user_id": user_id,
                     "responsible_user_ids": [(6, 0, [user_id])],
                     "followup_kind": "project_task",
+                    **({"project_task_ids": [(6, 0, [task_id])]} if documentation_capture else {}),
                 }
             ],
         )
 
+        if documentation_capture:
+            self.page.goto(
+                "%s/web#model=project.task&id=%s&view_type=form" % (BASE_URL, task_id)
+            )
+            expect(self.page.locator(".o_form_view")).to_be_visible(timeout=30000)
+            expect(self.page.locator('.o_form_view .o_field_widget[name="name"] textarea')).to_have_value(followup_name)
+            expect(self.page.locator('.o_form_view .o_field_widget[name="project_id"] input')).to_have_value(project_name)
+            self.capture_visual_screenshot("followup-task")
+            self.page.goto(
+                "%s/web#model=community.meeting&id=%s&view_type=form"
+                % (BASE_URL, self.meeting_id)
+            )
+            expect(self.page.locator(".o_form_view")).to_be_visible(timeout=30000)
+            task_tab = self.page.get_by_role("tab", name=self.ui_text("community_meetings", "Follow-up Actions"))
+            if not task_tab.count():
+                task_tab = self.page.get_by_role("tab", name=re.compile("Follow-up Actions|Acciones de seguimiento", re.I))
+            task_tab.click()
+            expect(self.page.locator('.o_field_widget[name="action_ids"]')).to_contain_text(followup_name)
+            expect(self.page.locator('.o_field_widget[name="action_ids"]')).to_contain_text(task_name)
+            self.capture_visual_screenshot("project-task")
+            self.open_live(self.meeting_id)
+            project_task_badge = self.card("todo").locator(".o_live_project_task").filter(has_text=task_name)
+            expect(project_task_badge).to_be_visible()
+            project_task_badge.scroll_into_view_if_needed()
+            self.capture_visual_screenshot("project-task-live-point")
+            return
         self.open_live(self.meeting_id)
         card = self.card("todo")
         card.get_by_role("button", name=self.ui_text("community_meetings_project", "Create Project task")).click()
@@ -355,7 +426,6 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         expect(dialog.locator('[name="project_choice"]')).to_be_hidden()
         dialog.locator('button[name="action_create"]').click()
         expect(dialog).not_to_be_visible()
-
         task = self.record("project.task", task_id, ["name", "project_id", "user_ids"])
         self.assertEqual(task["name"], task_name)
         self.assertEqual(task["project_id"][0], project_id)
@@ -364,6 +434,10 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
             "community.meeting.action", action_id, ["project_task_ids"]
         )["project_task_ids"]
         self.assertEqual(linked, [task_id])
+        self.open_live(self.meeting_id)
+        expect(
+            self.card("todo").locator(".o_live_project_task").filter(has_text=task_name)
+        ).to_be_visible()
 
     def test_convert_project_todo_to_project_task(self):
         self.open_live(self.meeting_id)

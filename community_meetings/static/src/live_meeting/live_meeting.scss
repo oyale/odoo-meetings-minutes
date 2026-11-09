@@ -19,6 +19,12 @@
     .o_live_reorder_rail .btn { display: inline-grid; width: 34px; height: 34px; place-items: center; padding: 0; }
     .o_live_topbar { justify-content: space-between; position: sticky; top: 0; z-index: 5; gap: 14px; margin: -24px -24px 0; padding: 8px 24px; border-bottom: 1px solid var(--border-color, #e5e7eb); background: var(--body-bg, #fff); box-shadow: 0 2px 8px rgba(32, 36, 40, .06); }
     .o_live_topbar_navigation, .o_live_topbar_feedback { display: flex; align-items: center; min-width: 0; }
+    .o_live_topbar_navigation .o_breadcrumb,
+    .o_live_topbar_navigation .o_breadcrumb * { background-color: transparent; }
+    .o_live_topbar_navigation .o_breadcrumb { gap: .25rem .55rem; }
+    .o_live_topbar_navigation .o_breadcrumb a { border-radius: .25rem; text-underline-offset: .15em; }
+    .o_live_topbar_navigation .o_breadcrumb a:hover { background-color: color-mix(in srgb, var(--o-brand-primary) 8%, transparent); }
+    .o_live_topbar_navigation .o_breadcrumb a:focus-visible { outline: 2px solid var(--o-brand-primary); outline-offset: 2px; }
     .o_live_topbar_feedback { flex: 1; justify-content: flex-end; color: var(--body-color, #495057); font-size: .875rem; text-align: right; }
     .o_live_topbar_feedback [role="alert"] { max-width: 560px; }
     .o_live_meeting_state { flex: none; padding: .45em .7em; border-radius: 999px; }

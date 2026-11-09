@@ -8185,10 +8185,12 @@ msgid "Open"
 msgstr "Abierto"
 
 #. module: community_meetings
+#. odoo-javascript
+#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_list
-msgid "Open Meeting"
-msgstr "Abrir reunión"
+msgid "Live meeting"
+msgstr "Reunión en vivo"
 
 #. module: community_meetings
 #. odoo-javascript
@@ -8756,7 +8758,7 @@ msgstr "Personas a invitar"
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_meeting_create_wizard
 msgid "Plan this meeting"
-msgstr "¿Cancelar esta reunión?"
+msgstr "Planifica esta reunión"
 
 #. module: community_meetings
 #: model_terms:ir.ui.view,arch_db:community_meetings.view_community_meeting_form
@@ -11811,12 +11813,6 @@ msgstr "Fecha límite de la tarea"
 #: model_terms:ir.ui.view,arch_db:community_meetings.report_revision_content
 msgid "Task assignees"
 msgstr "Personas asignadas a la tarea"
-
-#. module: community_meetings
-#. odoo-javascript
-#: code:addons/community_meetings/static/src/live_meeting/live_meeting.js:0
-msgid "Live meeting"
-msgstr "Reunión en vivo"
 
 #. module: community_meetings
 #. odoo-javascript

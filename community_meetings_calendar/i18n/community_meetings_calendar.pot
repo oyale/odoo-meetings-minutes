@@ -74,7 +74,7 @@ msgstr ""
 
 #. module: community_meetings_calendar
 #: model_terms:ir.ui.view,arch_db:community_meetings_calendar.view_calendar_event_form_community_meeting
-msgid "Open Meeting"
+msgid "Live meeting"
 msgstr ""
 
 #. module: community_meetings_calendar

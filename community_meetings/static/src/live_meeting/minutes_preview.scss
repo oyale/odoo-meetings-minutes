@@ -33,6 +33,14 @@
         background: var(--minutes-paper);
         border-bottom: 1px solid var(--minutes-rule);
 
+        .o_breadcrumb,
+        .o_breadcrumb * { background-color: transparent; }
+
+        .o_breadcrumb { gap: .25rem .55rem; }
+        .o_breadcrumb a { border-radius: .25rem; text-underline-offset: .15em; }
+        .o_breadcrumb a:hover { background-color: color-mix(in srgb, var(--o-brand-primary) 8%, transparent); }
+        .o_breadcrumb a:focus-visible { outline: 2px solid var(--o-brand-primary); outline-offset: 2px; }
+
         .btn {
             flex: 0 0 auto;
             white-space: nowrap;
@@ -481,6 +489,30 @@
                     padding: .25rem 0;
                     color: var(--minutes-ink);
                     font-size: .86rem;
+                }
+
+                .o_minutes_point_project_tasks {
+                    margin: .35rem 0 .1rem .25rem;
+                    padding: .35rem 0 0 .75rem;
+                    border-top: 1px solid var(--minutes-rule);
+                    list-style: none;
+
+                    li {
+                        padding: .1rem 0;
+                        color: var(--minutes-muted);
+                        font-size: .82rem;
+                        line-height: 1.5;
+
+                        .fa-tasks {
+                            margin-right: .35rem;
+                            color: var(--minutes-muted);
+                        }
+
+                        strong {
+                            color: var(--minutes-ink);
+                            font-weight: 600;
+                        }
+                    }
                 }
             }
 

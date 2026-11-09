@@ -18,7 +18,7 @@
                 <field name="state" column_invisible="1"/>
                 <field name="approved_revision_id" column_invisible="1"/>
                 <field name="display_state" widget="badge" string="Status"/>
-                <button name="action_open_live_meeting" type="object" icon="fa-play" title="Open Meeting" invisible="state in ['approved', 'cancelled']" groups="community_meetings.group_meeting_reader"/>
+                <button name="action_open_live_meeting" type="object" icon="fa-play" title="Live meeting" invisible="state in ['approved', 'cancelled']" groups="community_meetings.group_meeting_reader"/>
                 <button name="action_open_live_meeting" type="object" icon="fa-eye" title="Open read-only meeting" invisible="state not in ['approved', 'cancelled']" groups="community_meetings.group_meeting_reader"/>
                 <button name="action_view_approved_minutes_from_list" type="object" icon="fa-file-text-o" title="View approved minutes" invisible="not approved_revision_id" groups="community_meetings.group_meeting_reader" context="{'minutes_return_to': 'list'}"/>
             </list>
@@ -42,7 +42,7 @@
         <field name="arch" type="xml">
             <form string="Meeting" class="o_meeting_persistent_form">
                 <header>
-                    <button name="action_open_live_meeting" type="object" string="Open Meeting" class="oe_highlight" groups="community_meetings.group_meeting_reader"/>
+                    <button name="action_open_live_meeting" type="object" string="Live meeting" class="oe_highlight" groups="community_meetings.group_meeting_reader"/>
                     <button name="action_schedule" type="object" string="Schedule" invisible="state != 'draft'" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_start_meeting" type="object" string="Start Meeting" invisible="state != 'scheduled' or actual_start_datetime or not time_tracking_enabled" groups="community_meetings.group_meeting_editor"/>
                     <button name="action_pause_meeting" type="object" string="Pause Meeting" invisible="state != 'scheduled' or not actual_start_datetime or actual_paused_at or not time_tracking_enabled" groups="community_meetings.group_meeting_editor"/>

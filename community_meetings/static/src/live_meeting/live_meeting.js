@@ -187,7 +187,7 @@ export class LiveMeeting extends Component {
             editorial ? this.orm.searchRead("community.meeting.editor.note", [["meeting_id", "=", this.meetingId]], ["agenda_item_id", "content"], { order: "id" }) : Promise.resolve([]),
         ]);
         this.state.meeting = meetings[0];
-        this.env.config.setDisplayName?.(_t("Live meeting: %s", this.state.meeting.name));
+        this.env.config.setDisplayName?.(_t("Live meeting"));
         this.props.updateActionState?.({
             resId: this.meetingId,
             active_id: this.meetingId,

@@ -170,6 +170,14 @@
                                         <span t-if="action.get('responsibles') or action.get('responsible')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="', '.join(action.get('responsibles', [])) or action['responsible']"/></span>
                                         <span t-if="action.get('state_label')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="action['state_label']"/></span>
                                         <span t-if="action.get('deadline')"><span class="o_minutes_separator" aria-hidden="true"/> <t t-out="action['deadline']"/></span>
+                                        <ul t-if="action.get('project_tasks')" class="o_minutes_point_project_tasks">
+                                            <li t-foreach="action['project_tasks']" t-as="task">
+                                                <i class="fa fa-tasks" aria-hidden="true"/>
+                                                <strong t-out="task['name']"/>
+                                                <span t-if="task.get('deadline_display')"><span class="o_minutes_separator" aria-hidden="true"/> <span t-translation="on">Task due date</span>: <t t-out="task['deadline_display']"/></span>
+                                                <span t-if="task.get('assignees')"><span class="o_minutes_separator" aria-hidden="true"/> <span t-translation="on">Task assignees</span>: <t t-out="', '.join(task['assignees'])"/></span>
+                                            </li>
+                                        </ul>
                                     </li>
                                 </ul>
                             </div>

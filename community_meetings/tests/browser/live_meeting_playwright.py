@@ -118,20 +118,11 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
     def rpc(self, model, method, args, kwargs=None, page=None):
         return self.session.rpc(model, method, args, kwargs, page=page)
 
-    def _prepare_documentation_fixture(self, spanish):
+    def _prepare_documentation_fixture(self, spanish, reviewer_partner_id):
         editor_uid = self.session.session_info()["uid"]
         editor = self.rpc("res.users", "read", [[editor_uid], ["partner_id"]])[0]
-        self.rpc(
-            "res.partner",
-            "write",
-            [[editor["partner_id"][0]], {"name": "Elena Navarro"}],
-        )
-        partner_a = self.rpc(
-            "res.partner",
-            "create",
-            [{"name": "Laura Méndez" if spanish else "Laura Mendez"}],
-        )
-        partner_b = self.rpc("res.partner", "create", [{"name": "Carlos Ruiz"}])
+        partner_a = editor["partner_id"][0]
+        partner_b = reviewer_partner_id
         self.rpc(
             "community.meeting",
             "write",
@@ -273,7 +264,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                     else "<p>Share the draft and collect feedback before Friday.</p>"
                 ),
                 "responsible_user_id": editor_uid,
-                "deadline": "2026-10-30",
+                "deadline": "2026-11-13",
                 "followup_kind": "activity",
                 "followup_activity_type_id": activity_type_id,
                 "state": "open",
@@ -301,7 +292,9 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         self.meeting_id = self.fixture.meeting_id
         self.item_ids = self.fixture.item_ids
         self.addCleanup(self.cleanup_meeting)
-        if os.environ.get("MM_CAPTURE_MINUTES_PREVIEW"):
+        if os.environ.get("MM_CAPTURE_MINUTES_PREVIEW") or os.environ.get(
+            "MM_DOCUMENTATION_CAPTURE"
+        ):
             capture_language = os.environ.get("MM_CAPTURE_LANGUAGE", "en_US")
             fixture_language = os.environ.get("MM_CAPTURE_FIXTURE_LANGUAGE", capture_language)
             spanish_fixture = fixture_language.lower().startswith("es")
@@ -310,11 +303,15 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
             )
             self.assertEqual(len(reviewer_ids), 1, "expected one disposable reviewer")
             reviewer = self.rpc("res.users", "read", [reviewer_ids, ["partner_id"]])[0]
+            if os.environ.get("MM_DOCUMENTATION_CAPTURE"):
+                self.rpc("community.meeting", "write", [[self.meeting_id], {
+                    "start_datetime": "2026-11-10 10:00:00",
+                }])
             self.rpc("community.meeting", "write", [[self.meeting_id], {
                 "name": (
-                    "Planificación del segundo trimestre"
+                    "Planificación del producto"
                     if spanish_fixture
-                    else "Planning for the second quarter"
+                    else "Product planning"
                 ),
                 "location": "Sala de reuniones" if spanish_fixture else "Meeting room",
                 "description": (
@@ -331,16 +328,16 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
             }])
             agenda_names = (
                 {
-                    "information": "Apertura y acuerdos anteriores",
-                    "discussion": "Seguimiento del proyecto comunitario",
-                    "decision": "Presupuesto del próximo trimestre",
+                    "information": "Acuerdos anteriores",
+                    "discussion": "Calendario del proyecto",
+                    "decision": "Presupuesto trimestral",
                     "todo": "Preparar calendario de actividades",
                 }
                 if spanish_fixture
                 else {
-                    "information": "Opening and previous decisions",
-                    "discussion": "Community project update",
-                    "decision": "Next quarter budget",
+                    "information": "Previous agreements",
+                    "discussion": "Project timeline",
+                    "decision": "Quarterly budget",
                     "todo": "Prepare the activity calendar",
                 }
             )
@@ -353,7 +350,9 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                         else "<p>The team reviews progress and risks.</p>"
                     )
                 self.rpc("community.meeting.agenda.item", "write", [[item_id], values])
-            self._prepare_documentation_fixture(spanish_fixture)
+            self._prepare_documentation_fixture(
+                spanish_fixture, reviewer["partner_id"][0]
+            )
         else:
             try:
                 open_live_meeting(self.session, self.meeting_id)
@@ -371,7 +370,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         self.fixture.cleanup()
 
     def card(self, kind, begin=True):
-        card = self.page.locator(".o_live_agenda_card").filter(has_text="Browser %s case" % kind.title())
+        card = self.page.locator(".o_live_agenda_card").filter(has_text=self.agenda_name(kind))
         if begin:
             expand = card.locator(".o_live_expand")
             if expand.get_attribute("aria-expanded") == "false":
@@ -388,6 +387,17 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                 card.get_by_role("button", name=button_name).click()
                 expect(card.get_by_role("button", name=self.ui_text("community_meetings", "Pause point"))).to_be_visible()
         return card
+
+    def agenda_name(self, kind):
+        if os.environ.get("MM_DOCUMENTATION_CAPTURE"):
+            spanish = self.effective_locale().lower().startswith("es")
+            return {
+                "information": "Acuerdos anteriores" if spanish else "Previous agreements",
+                "discussion": "Calendario del proyecto" if spanish else "Project timeline",
+                "decision": "Presupuesto trimestral" if spanish else "Quarterly budget",
+                "todo": "Preparar calendario de actividades" if spanish else "Prepare the activity calendar",
+            }[kind]
+        return "Browser %s case" % kind.title()
 
     def outcome(self, kind):
         return self.card(kind, begin=False).locator(".o_live_outcome_badge")
@@ -546,19 +556,36 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         self.assertGreaterEqual(after["card"]["top"], after["main"]["top"], after)
 
     def test_previous_discussion_is_read_only_and_can_be_cleared_or_restored(self):
+        documentation_capture = bool(os.environ.get("MM_DOCUMENTATION_CAPTURE"))
+        spanish = self.effective_locale().lower().startswith("es")
+        source_meeting_name = (
+            ("Planificación y revisión del presupuesto" if spanish else "Planning and budget review")
+            if documentation_capture
+            else "Earlier discussion source"
+        )
+        source_item_name = (
+            ("Revisar propuestas de proveedores" if spanish else "Review supplier proposals")
+            if documentation_capture
+            else "Earlier discussion source"
+        )
+        source_notes = (
+            "El equipo comparará los presupuestos antes de elegir proveedor."
+            if spanish
+            else "The team will compare the updated estimates before choosing a supplier."
+        )
         destination = self.record("community.meeting", self.meeting_id, ["start_datetime"])
         source_start = datetime.strptime(destination["start_datetime"], "%Y-%m-%d %H:%M:%S") - timedelta(days=1)
         source_meeting = self.rpc("community.meeting", "create", [{
-            "name": "Earlier discussion source",
+            "name": source_meeting_name,
             "start_datetime": source_start.strftime("%Y-%m-%d %H:%M:%S"),
         }])
         self.addCleanup(self.cleanup_meeting_record, source_meeting)
         source_item = self.rpc("community.meeting.agenda.item", "create", [{
             "meeting_id": source_meeting,
-            "name": "Earlier discussion source",
+            "name": source_item_name,
         }])
         self.rpc("community.meeting.agenda.item", "write", [[source_item], {
-            "discussion_notes": "<p>Context from the earlier meeting</p>",
+            "discussion_notes": f"<p>{source_notes}</p>",
         }])
         transfer = self.rpc("community.meeting.carryover", "create", [{
             "origin_model": "agenda_item",
@@ -568,8 +595,9 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         self.rpc("community.meeting.carryover", "action_accept", [[transfer]])
         current_item = self.record("community.meeting.carryover", transfer, ["destination_item_id"])["destination_item_id"][0]
         item_state = self.record("community.meeting.agenda.item", current_item, ["name", "discussion_history", "previous_discussion_html"])
-        self.assertIn("Context from the earlier meeting", item_state["previous_discussion_html"], repr(item_state))
+        self.assertIn(source_notes, item_state["previous_discussion_html"], repr(item_state))
 
+        open_live_meeting(self.session, self.meeting_id)
         self.page.reload(wait_until="domcontentloaded")
         expect(self.page.locator(".o_community_live_meeting")).to_be_visible(timeout=20000)
         carried_card = self.page.locator("#agenda-card-%s" % current_item)
@@ -578,7 +606,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
             carried_card.locator(".o_live_expand").click()
         history = carried_card.locator(".o_live_previous_discussion")
         expect(history).to_be_visible(timeout=20000)
-        expect(history.get_by_text("Context from the earlier meeting")).to_be_visible()
+        expect(history.get_by_text(source_notes)).to_be_visible()
         expect(history.get_by_text(self.ui_text("community_meetings", "Read-only context from earlier meetings. It is not added to these minutes."))).to_be_visible()
 
         self.capture_checkpoint("discussion-history-desktop", capture_target=history)
@@ -616,7 +644,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         self.assertTrue(self.record("community.meeting.agenda.item", current_item, ["discard_previous_discussion"])["discard_previous_discussion"])
 
         history.get_by_role("button", name=self.ui_text("community_meetings", "Show previous notes")).click()
-        expect(history.get_by_text("Context from the earlier meeting")).to_be_visible()
+        expect(history.get_by_text(source_notes)).to_be_visible()
         self.assertFalse(self.record("community.meeting.agenda.item", current_item, ["discard_previous_discussion"])["discard_previous_discussion"])
 
     def cleanup_meeting_record(self, meeting_id):
@@ -821,8 +849,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
             self.record("community.meeting", self.meeting_id, ["name"])["name"]
         )
         expect(self.page.locator(".o_community_live_meeting .o_breadcrumb")).to_contain_text(
-            self.ui_text("community_meetings", "Live meeting: %s")
-            % self.record("community.meeting", self.meeting_id, ["name"])["name"]
+            self.ui_text("community_meetings", "Live meeting")
         )
         self.assertEqual(self.page.locator(".o_live_topbar_navigation .btn").count(), 0)
         self.assertFalse(self.console_errors[self.errors_before:])
@@ -879,7 +906,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         )
         self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
         self.page.get_by_role(
-            "button", name=self.ui_text("community_meetings", "Open Meeting")
+            "button", name=self.ui_text("community_meetings", "Live meeting")
         ).click(timeout=30000)
         self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
         active_item = self.item_ids["information"]
@@ -933,6 +960,21 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         capture_language = os.environ.get("MM_CAPTURE_LANGUAGE")
         self.rpc("community.meeting", "action_mark_held", [[self.meeting_id]])
         self.rpc("community.meeting", "action_draft_minutes", [[self.meeting_id]])
+        if capture_path and os.environ.get("MM_DOCUMENTATION_CAPTURE"):
+            actual_end = self.record(
+                "community.meeting", self.meeting_id, ["actual_end_datetime"]
+            )["actual_end_datetime"]
+            self.assertTrue(actual_end, "the documentation meeting needs an end time")
+            scheduled_start = datetime.strptime(
+                actual_end, "%Y-%m-%d %H:%M:%S"
+            ) - timedelta(hours=1)
+            self.rpc(
+                "community.meeting",
+                "write",
+                [[self.meeting_id], {
+                    "start_datetime": scheduled_start.strftime("%Y-%m-%d %H:%M:%S")
+                }],
+            )
         if capture_language:
             localized_html = self.rpc(
                 "community.meeting",
@@ -956,7 +998,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                 Path(html_trace).write_text(localized_html)
         self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
         self.page.get_by_role(
-            "button", name=self.ui_text("community_meetings", "Open Meeting")
+            "button", name=self.ui_text("community_meetings", "Live meeting")
         ).click(timeout=30000)
         self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
         for width, height in ((1440, 1000), (375, 812)):
@@ -1097,7 +1139,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         }])
         self.rpc("community.meeting", "action_schedule", [[meeting_id]])
         self.page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, meeting_id))
-        self.page.get_by_role("button", name=self.ui_text("community_meetings", "Open Meeting")).click(timeout=30000)
+        self.page.get_by_role("button", name=self.ui_text("community_meetings", "Live meeting")).click(timeout=30000)
         self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
         self.page.get_by_role("button", name=self.ui_text("community_meetings", "Expand / Collapse all")).click()
         expect(self.page.locator(self.ui_selector("community_meetings", '[aria-label="Next meeting date"]', "Next meeting date"))).to_be_visible()
@@ -1120,7 +1162,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
             f"{BASE_URL}/web#model=community.meeting&id={self.meeting_id}&view_type=form"
         )
         expect(self.page.get_by_role("button", name=self.ui_text("community_meetings", "Approve Minutes"), exact=True)).to_have_count(0)
-        self.page.get_by_role("button", name=self.ui_text("community_meetings", "Open Meeting")).click()
+        self.page.get_by_role("button", name=self.ui_text("community_meetings", "Live meeting")).click()
         expect(self.page.locator(".o_community_live_meeting")).to_be_visible()
         expect(self.page.get_by_role("button", name=self.ui_text("community_meetings", "Approve Minutes"), exact=True)).to_have_count(0)
         approval_notice = self.ui_text(
@@ -1150,7 +1192,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         }])
         self.rpc("community.meeting", "action_schedule", [[current]])
         self.page.goto(f"{BASE_URL}/web#model=community.meeting&id={current}&view_type=form")
-        self.page.get_by_role("button", name=self.ui_text("community_meetings", "Open Meeting")).click()
+        self.page.get_by_role("button", name=self.ui_text("community_meetings", "Live meeting")).click()
         expect(self.page.locator(".o_community_live_meeting")).to_be_visible()
         if self.page.locator(".o_live_expand").first.get_attribute("aria-expanded") == "false":
             self.page.locator(".o_live_expand").first.click()
@@ -1239,7 +1281,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         self.assertEqual(self.record("community.meeting", self.meeting_id, ["state"])["state"], "approved")
         previous_code = self.record("community.meeting", self.meeting_id, ["code"])["code"]
         self.page.goto(f"{BASE_URL}/web#model=community.meeting&id={current}&view_type=form")
-        self.page.get_by_role("button", name=self.ui_text("community_meetings", "Open Meeting")).click()
+        self.page.get_by_role("button", name=self.ui_text("community_meetings", "Live meeting")).click()
         self.page.locator(".o_live_agenda_card").first.wait_for(timeout=30000)
         if self.page.locator(".o_live_expand").first.get_attribute("aria-expanded") == "false":
             self.page.locator(".o_live_expand").first.click()
@@ -1288,7 +1330,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         self.rpc("community.meeting", "action_start_meeting", [[current]])
         self.page.goto(f"{BASE_URL}/web#model=community.meeting&id={current}&view_type=form")
         expect(self.page.get_by_role("button", name=self.ui_text("community_meetings", "Cancel"), exact=True)).to_have_count(0)
-        self.page.get_by_role("button", name=self.ui_text("community_meetings", "Open Meeting")).click()
+        self.page.get_by_role("button", name=self.ui_text("community_meetings", "Live meeting")).click()
         expect(self.page.get_by_role("button", name=self.ui_text("community_meetings", "Cancel Meeting"), exact=True)).to_have_count(0)
 
         approval = self.page.locator(".o_live_minutes_approval")
@@ -1345,9 +1387,13 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         login = os.environ.get("ODOO_REVIEWER_LOGIN")
         if not login:
             self.fail("This regression requires a disposable reviewer without Editor")
-        series = self.rpc("community.meeting.series", "create", [{
-            "name": "Programme planning " + uuid.uuid4().hex[:8],
-        }])
+        spanish = self.effective_locale().lower().startswith("es")
+        series_name = (
+            ("Planificación del programa" if spanish else "Programme planning")
+            if os.environ.get("MM_DOCUMENTATION_CAPTURE")
+            else "Programme planning " + uuid.uuid4().hex[:8]
+        )
+        series = self.rpc("community.meeting.series", "create", [{"name": series_name}])
         context = self.browser.new_context()
         try:
             page = context.new_page()
@@ -1488,7 +1534,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
             page.locator('button[type="submit"]').click()
             page.wait_for_url("**/odoo**")
             page.goto(f"{BASE_URL}/web#model=community.meeting&id={self.meeting_id}&view_type=form")
-            page.get_by_role("button", name=self.ui_text("community_meetings", "Open Meeting")).click()
+            page.get_by_role("button", name=self.ui_text("community_meetings", "Live meeting")).click()
             if page.locator(".o_live_expand").first.get_attribute("aria-expanded") == "false":
                 page.locator(".o_live_expand").first.click()
             approval = page.locator(".o_live_minutes_approval")
@@ -1560,7 +1606,7 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
             page.locator('button[type="submit"]').click()
             page.wait_for_url("**/odoo**")
             page.goto("%s/web#model=community.meeting&id=%s&view_type=form" % (BASE_URL, self.meeting_id))
-            page.get_by_role("button", name=self.ui_text("community_meetings", "Open Meeting")).click()
+            page.get_by_role("button", name=self.ui_text("community_meetings", "Live meeting")).click()
             expect(page.get_by_role("button", name=self.ui_text("community_meetings", "Approve Minutes"), exact=True)).to_be_visible()
             expect(page.get_by_role("button", name=self.ui_text("community_meetings", "Add Point"), exact=True)).to_have_count(0)
             expect(page.locator('[contenteditable="true"]')).to_have_count(0)
@@ -1914,6 +1960,25 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
             self.page.unroute(pattern, suggestions)
 
     def test_discussion_mentions_persist_and_allow_literal_at(self):
+        if os.environ.get("MM_DOCUMENTATION_CAPTURE"):
+            self.open_live(self.meeting_id)
+            discussion = self.page.locator(
+                "#agenda-card-%s" % self.item_ids["discussion"]
+            )
+            discussion.get_by_role(
+                "button",
+                name=self.ui_text("community_meetings", "Undo point result"),
+            ).click()
+            spanish = self.effective_locale().lower().startswith("es")
+            discussion.locator(".o_live_reopen_form input").fill(
+                "Revisar los acuerdos antes de la siguiente reunión."
+                if spanish
+                else "Review the agreements before the next meeting."
+            )
+            discussion.get_by_role(
+                "button",
+                name=self.ui_text("community_meetings", "Reopen point"),
+            ).click()
         trace = LiveWriteTrace(self.page)
         self.addCleanup(trace.stop)
         try:
@@ -1932,12 +1997,35 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         user = self.rpc("res.users", "read", [[self.session.session_info()["uid"]], ["partner_id"]])[0]
         partner_id = user["partner_id"][0]
         name = self.rpc("res.partner", "read", [[partner_id], ["name"]])[0]["name"]
-        example = self.rpc("res.partner", "search_read", [[("name", "in", ["Administrator", "Administrador"])]], {
-            "fields": ["name"], "limit": 1,
-        })
-        if example:
-            partner_id, name = example[0]["id"], example[0]["name"]
-        for viewport in ({"width": 1440, "height": 1000}, {"width": 390, "height": 844}, {"width": 844, "height": 390}):
+        if os.environ.get("MM_DOCUMENTATION_CAPTURE"):
+            reviewer_ids = self.rpc(
+                "res.users",
+                "search",
+                [[("login", "=", os.environ["ODOO_REVIEWER_LOGIN"])]],
+            )
+            self.assertEqual(len(reviewer_ids), 1, "expected one disposable reviewer")
+            reviewer = self.rpc("res.users", "read", [reviewer_ids, ["partner_id"]])[0]
+            partner_id = reviewer["partner_id"][0]
+            name = self.rpc("res.partner", "read", [[partner_id], ["name"]])[0]["name"]
+        else:
+            example = self.rpc(
+                "res.partner",
+                "search_read",
+                [[("name", "in", ["Administrator", "Administrador"])]],
+                {"fields": ["name"], "limit": 1},
+            )
+            if example:
+                partner_id, name = example[0]["id"], example[0]["name"]
+        viewports = (
+            ({"width": 1440, "height": 1000},)
+            if os.environ.get("MM_DOCUMENTATION_CAPTURE")
+            else (
+                {"width": 1440, "height": 1000},
+                {"width": 390, "height": 844},
+                {"width": 844, "height": 390},
+            )
+        )
+        for viewport in viewports:
             self.page.set_viewport_size(viewport)
             card = self.card("discussion")
             if viewport["width"] == 844:
@@ -2014,8 +2102,12 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         editor.click()
         editor.press("Control+End")
         self.page.keyboard.type(" immediate leave")
-        self.page.get_by_role("button", name=self.ui_text("community_meetings", "Back to Meetings")).click()
-        expect(self.page.locator('.o_list_view')).to_be_visible()
+        meeting_breadcrumb = self.page.locator(
+            ".o_live_topbar_navigation .o_breadcrumb a"
+        )
+        expect(meeting_breadcrumb).to_be_visible()
+        meeting_breadcrumb.click()
+        expect(self.page.locator(".o_form_view")).to_be_visible()
         saved = self.record("community.meeting.agenda.item", self.item_ids["discussion"], ["discussion_notes"])["discussion_notes"]
         self.assertIn("immediate leave", saved)
         self.page.goto(f"{BASE_URL}/web#model=community.meeting.agenda.item&id={self.item_ids['discussion']}&view_type=form")
