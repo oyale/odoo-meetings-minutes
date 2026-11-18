@@ -259,12 +259,12 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
                     else "Send the proposal to the team"
                 ),
                 "description": (
-                    "<p>Compartir el borrador y recoger comentarios antes del viernes.</p>"
+                    "<p>Compartir el borrador con el equipo y recoger comentarios antes de fin de noviembre.</p>"
                     if spanish
-                    else "<p>Share the draft and collect feedback before Friday.</p>"
+                    else "<p>Share the draft with the team and collect feedback by the end of November.</p>"
                 ),
                 "responsible_user_id": editor_uid,
-                "deadline": "2026-11-13",
+                "deadline": "2026-11-30",
                 "followup_kind": "activity",
                 "followup_activity_type_id": activity_type_id,
                 "state": "open",
@@ -1255,9 +1255,11 @@ class LiveMeetingBrowserChecks(LocalizedUI, unittest.TestCase):
         preview = self.page.locator(".o_community_minutes_preview")
         expect(preview).to_contain_text(self.ui_text("community_meetings", "Draft preview · saved content"))
         expect(preview).to_contain_text("Draft text for the previous meeting.")
-        preview.get_by_role(
+        return_button = preview.get_by_role(
             "button", name=re.compile("Back to live meeting|Volver a la reunión en vivo", re.IGNORECASE)
-        ).click()
+        )
+        expect(return_button).to_be_visible()
+        return_button.click()
         expect(self.page.locator(".o_community_live_meeting")).to_be_visible()
         approval = self.page.locator(".o_live_minutes_approval")
         self.assertIn(

@@ -4,7 +4,7 @@
         <main class="o_community_minutes_preview">
             <header class="o_community_minutes_preview_toolbar">
                 <Breadcrumbs breadcrumbs="env.config.breadcrumbs"/>
-                <button t-if="breadcrumbs.length &lt;= 1" class="btn btn-secondary o_minutes_preview_back" type="button" t-on-click="backToMeeting">
+                <button class="btn btn-secondary o_minutes_preview_back" type="button" t-on-click="backToMeeting">
                     <i class="fa fa-arrow-left me-1" aria-hidden="true"/><t t-out="backToMeetingLabel"/>
                 </button>
                 <span class="o_minutes_preview_toolbar_label" t-out="previewLabel"/>
