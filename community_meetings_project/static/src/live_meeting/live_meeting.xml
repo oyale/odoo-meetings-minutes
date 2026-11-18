@@ -3,8 +3,13 @@
     <t t-name="community_meetings_project.LiveMeetingProjectTasks"
        t-inherit="community_meetings.LiveMeeting" t-inherit-mode="extension">
         <xpath expr="//li[@t-foreach='pointActions(item)']//div[contains(@class, 'o_live_followup_badges')]/span[last()]" position="after">
-            <span t-foreach="state.projectTasksByAction[task.id] || []" t-as="projectTask" t-key="projectTask.id"
-                  class="badge text-bg-info o_live_project_task"><t t-out="projectTask.display_name"/></span>
+            <button t-foreach="state.projectTasksByAction[task.id] || []" t-as="projectTask" t-key="projectTask.id"
+                    type="button" class="btn btn-sm btn-outline-primary o_live_project_task"
+                    t-on-click="() => this.openProjectTask(projectTask.id)">
+                <i class="fa fa-external-link" aria-hidden="true"/>
+                <span class="o_live_project_task_name" t-out="projectTask.display_name"/>
+                <span class="visually-hidden">Open Project task</span>
+            </button>
             <button t-if="!locked and task.followup_kind === 'project_task' and !(state.projectTasksByAction[task.id] || []).length" class="btn btn-sm btn-outline-primary o_live_create_project_task"
                     t-on-click="() => this.createProjectTask(task)">Create Project task</button>
         </xpath>

@@ -392,10 +392,18 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
             expand = live_point.locator(".o_live_expand")
             if expand.get_attribute("aria-expanded") == "false":
                 expand.click()
-            project_task_badge = live_point.locator(".o_live_project_task").filter(
-                has_text=task_name
+            project_task_badge = live_point.get_by_role(
+                "button", name=re.compile(re.escape(task_name))
             )
             expect(project_task_badge).to_be_visible()
+            expect(project_task_badge).to_have_class(
+                re.compile(r"\bo_live_project_task\b")
+            )
+            project_task_name = project_task_badge.locator(
+                ".o_live_project_task_name"
+            )
+            expect(project_task_name).to_have_text(task_name)
+            project_task_badge.scroll_into_view_if_needed()
             live_point.scroll_into_view_if_needed()
             self.page.goto(
                 "%s/web#model=project.task&id=%s&view_type=form" % (BASE_URL, task_id)
@@ -416,9 +424,14 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
             expect(self.page.locator('.o_field_widget[name="action_ids"]')).to_contain_text(task_name)
             self.capture_visual_screenshot("project-task")
             self.open_live(self.meeting_id)
-            project_task_badge = self.card("todo").locator(".o_live_project_task").filter(has_text=task_name)
-            expect(project_task_badge).to_be_visible()
-            project_task_badge.scroll_into_view_if_needed()
+            # Capture the linked task in the agenda card, where users open it.
+            live_point = self.card("todo")
+            project_task_button = live_point.get_by_role(
+                "button", name=re.compile(re.escape(task_name))
+            )
+            expect(project_task_button).to_be_visible()
+            project_task_button.scroll_into_view_if_needed()
+            live_point.evaluate("el => el.scrollIntoView({block: 'center'})")
             self.capture_visual_screenshot("followup-task")
             return
         self.open_live(self.meeting_id)
@@ -462,9 +475,16 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         )["project_task_ids"]
         self.assertEqual(linked, [task_id])
         self.open_live(self.meeting_id)
+        project_task_button = self.card("todo").get_by_role(
+            "button", name=re.compile(re.escape(task_name))
+        )
+        expect(project_task_button).to_be_visible()
+        project_task_button.click()
+        task_dialog = self.page.locator(".o_dialog .o_form_view")
+        expect(task_dialog).to_be_visible(timeout=30000)
         expect(
-            self.card("todo").locator(".o_live_project_task").filter(has_text=task_name)
-        ).to_be_visible()
+            task_dialog.locator('.o_field_widget[name="name"] textarea')
+        ).to_have_value(task_name)
 
     def test_convert_project_todo_to_project_task(self):
         self.open_live(self.meeting_id)

@@ -1,0 +1,21 @@
+.o_community_live_meeting {
+    .o_live_followup_badges {
+        align-items: center;
+    }
+
+    .o_live_project_task {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 6px;
+        max-width: 100%;
+        min-width: 0;
+        min-height: 32px;
+        white-space: normal;
+        text-align: start;
+    }
+
+    .o_live_project_task_name {
+        overflow-wrap: anywhere;
+    }
+}

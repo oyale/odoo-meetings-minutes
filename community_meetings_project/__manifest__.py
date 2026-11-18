@@ -19,6 +19,7 @@
         "web.assets_backend": [
             "community_meetings_project/static/src/live_meeting/live_meeting.js",
             "community_meetings_project/static/src/live_meeting/live_meeting.xml",
+            "community_meetings_project/static/src/live_meeting/live_meeting.scss",
         ],
     },
     "installable": True,
