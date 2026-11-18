@@ -2638,25 +2638,62 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
 
     def test_mobile_point_wizard_and_keyboard_cancel(self):
         try:
+            documentation_capture = bool(os.environ.get("MM_DOCUMENTATION_CAPTURE"))
+            if documentation_capture:
+                self.page.set_viewport_size({"width": 1440, "height": 1900})
             self.open_live(self.meeting_id)
             self.page.get_by_role("button", name=self.ui_text("community_meetings", "Add Point"), exact=True).click()
             dialog = self.page.get_by_role("dialog").last
             expect(dialog).to_be_visible()
-            if os.environ.get("MM_DOCUMENTATION_CAPTURE"):
+            if documentation_capture:
                 spanish = self.effective_locale().startswith("es")
-                title_value = "Revisar el plan de actividades" if spanish else "Review the activity plan"
-                description_value = (
-                    "Acordar prioridades, responsables y próximos pasos para el trimestre."
+                title_value = (
+                    "Confirmar hitos del lanzamiento de abril"
                     if spanish
-                    else "Agree priorities, owners, and next steps for the quarter."
+                    else "Confirm the product launch milestones"
+                )
+                description_value = (
+                    "Revisar responsables y dependencias para el lanzamiento de abril con los equipos de producto y soporte."
+                    if spanish
+                    else "Review owners and dependencies for the April release with the product and support teams."
                 )
                 dialog.locator('.o_field_widget[name="name"] input').fill(title_value)
                 dialog.locator(
                     '.o_field_widget[name="description"] [contenteditable="true"]'
                 ).fill(description_value)
+                presenter = dialog.locator('.o_field_widget[name="presenter_partner_id"] input')
+                presenter.fill("Elena Navarro")
+                presenter_option = self.page.locator(".o-autocomplete--dropdown-item").filter(
+                    has_text="Elena Navarro"
+                ).first
+                expect(presenter_option).to_be_visible()
+                presenter_option.click()
+                dialog.locator(".modal-header").click()
             self.capture_visual_screenshot(
-                "add-agenda-point" if os.environ.get("MM_DOCUMENTATION_CAPTURE") else "add-point-wizard"
+                "add-agenda-point" if documentation_capture else "add-point-wizard"
             )
+            if documentation_capture:
+                wizard_title = (
+                    "Preparar difusión de primavera"
+                    if self.effective_locale().startswith("es")
+                    else "Prepare the April outreach schedule"
+                )
+                wizard_description = (
+                    "Confirmar fechas y responsables para la campaña de primavera con colaboradores."
+                    if self.effective_locale().startswith("es")
+                    else "Confirm dates and owners for the spring partner campaign."
+                )
+                dialog.get_by_role(
+                    "radio",
+                    name=("Tarea pendiente" if self.effective_locale().startswith("es") else "TODO"),
+                    exact=True,
+                ).click()
+                dialog.locator('.o_field_widget[name="name"] input').fill(wizard_title)
+                dialog.locator(
+                    '.o_field_widget[name="description"] [contenteditable="true"]'
+                ).fill(wizard_description)
+                dialog.locator('.o_field_widget[name="name"] input').click()
+                self.capture_visual_screenshot("point-wizard")
             self.assertEqual(dialog.get_attribute("role"), "dialog")
             self.page.set_viewport_size({"width": 390, "height": 844})
             expect(dialog).to_be_visible()
@@ -2692,22 +2729,56 @@ class FullMeetingBrowserChecks(LiveMeetingBrowserChecks):
                 ),
                 0,
             )
-            if os.environ.get("MM_DOCUMENTATION_CAPTURE"):
-                self.page.set_viewport_size({"width": 1440, "height": 1000})
-                self.page.goto(f"{BASE_URL}/odoo/action-community_meetings.action_propose_point")
+            if documentation_capture:
+                self.page.set_viewport_size({"width": 1440, "height": 1900})
+                spanish = self.effective_locale().startswith("es")
+                series_name = (
+                    "Planificación de alianzas"
+                    if spanish
+                    else "Partner outreach planning"
+                )
+                proposal_series = self.rpc(
+                    "community.meeting.series", "create", [{"name": series_name}]
+                )
+                self.addCleanup(
+                    self.rpc, "community.meeting.series", "unlink", [[proposal_series]]
+                )
+                self.page.goto(
+                    "%s/web#model=community.meeting.series&id=%s&view_type=form"
+                    % (BASE_URL, proposal_series)
+                )
+                expect(self.page.locator(".o_form_view")).to_be_visible()
+                self.page.get_by_role(
+                    "button", name=self.ui_text("community_meetings", "Propose a point")
+                ).click()
                 proposal = self.page.get_by_role("dialog").last
                 expect(proposal).to_be_visible()
-                spanish = self.effective_locale().startswith("es")
+                proposal_name = (
+                    "Planificar la difusión de primavera"
+                    if spanish
+                    else "Coordinate the spring outreach calendar"
+                )
+                proposal_description = (
+                    "Acordar fechas de lanzamiento, responsables y anuncios de colaboración antes de la campaña de abril."
+                    if spanish
+                    else "Align launch dates, owners, and partner announcements before the April campaign."
+                )
                 proposal.locator('.o_field_widget[name="name"] input').fill(
-                    "Compartir el plan de actividades" if spanish else "Share the activity plan"
+                    proposal_name
                 )
                 proposal.locator(
                     '.o_field_widget[name="description"] [contenteditable="true"]'
-                ).fill(
-                    "Propuesta para coordinar las actividades del trimestre."
-                    if spanish
-                    else "A proposal to coordinate activities for the quarter."
+                ).fill(proposal_description)
+                presenter = proposal.locator(
+                    '.o_field_widget[name="presenter_partner_id"] input'
                 )
+                presenter.fill("Elena Navarro")
+                presenter_option = self.page.locator(".o-autocomplete--dropdown-item").filter(
+                    has_text="Elena Navarro"
+                ).first
+                expect(presenter_option).to_be_visible()
+                presenter_option.click()
+                proposal.locator(".modal-header").click()
                 self.capture_visual_screenshot("propose-point")
                 proposal.get_by_role(
                     "button", name=self.ui_text("community_meetings", "Cancel"), exact=True

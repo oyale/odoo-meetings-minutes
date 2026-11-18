@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import uuid
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from playwright.sync_api import expect
@@ -90,6 +91,21 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
             }],
         )
         self.fixture.prepare_minutes_draft()
+        if documentation_capture:
+            actual_end = self.record(
+                "community.meeting", self.meeting_id, ["actual_end_datetime"]
+            )["actual_end_datetime"]
+            self.assertTrue(actual_end, "the documentation meeting needs an end time")
+            scheduled_start = datetime.strptime(
+                actual_end, "%Y-%m-%d %H:%M:%S"
+            ) - timedelta(hours=1)
+            self.rpc(
+                "community.meeting",
+                "write",
+                [[self.meeting_id], {
+                    "start_datetime": scheduled_start.strftime("%Y-%m-%d %H:%M:%S")
+                }],
+            )
         self.open_form()
         self.page.get_by_role(
             "button", name=self.ui_text("community_meetings", "Preview Minutes"), exact=True
@@ -107,7 +123,7 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         expect(preview).to_contain_text(self.ui_text("community_meetings", "Task assignees"))
         expect(preview).to_contain_text(self.record("res.users", self.current_user(), ["name"])["name"])
         task_row = preview.locator(".o_minutes_project_task").filter(has_text=task_name)
-        for width, height in ((1440, 1000), (375, 812)):
+        for width, height in ((1440, 1900), (375, 812)):
             self.page.set_viewport_size({"width": width, "height": height})
             if width == 375:
                 breadcrumb = self.page.locator(
@@ -117,7 +133,9 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
                     "el => parseFloat(getComputedStyle(el).columnGap)"
                 )
                 self.assertGreaterEqual(gap, 8)
-            task_row.scroll_into_view_if_needed()
+                task_row.scroll_into_view_if_needed()
+            else:
+                preview.evaluate("el => { el.scrollTop = 0; }")
             self.capture_visual_screenshot(
                 "project-task-minutes-preview-%s" % width,
                 viewport={"width": width, "height": height},
@@ -369,13 +387,22 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         )
 
         if documentation_capture:
+            self.open_live(self.meeting_id)
+            live_point = self.card("todo")
+            expand = live_point.locator(".o_live_expand")
+            if expand.get_attribute("aria-expanded") == "false":
+                expand.click()
+            project_task_badge = live_point.locator(".o_live_project_task").filter(
+                has_text=task_name
+            )
+            expect(project_task_badge).to_be_visible()
+            live_point.scroll_into_view_if_needed()
             self.page.goto(
                 "%s/web#model=project.task&id=%s&view_type=form" % (BASE_URL, task_id)
             )
             expect(self.page.locator(".o_form_view")).to_be_visible(timeout=30000)
             expect(self.page.locator('.o_form_view .o_field_widget[name="name"] textarea')).to_have_value(followup_name)
             expect(self.page.locator('.o_form_view .o_field_widget[name="project_id"] input')).to_have_value(project_name)
-            self.capture_visual_screenshot("followup-task")
             self.page.goto(
                 "%s/web#model=community.meeting&id=%s&view_type=form"
                 % (BASE_URL, self.meeting_id)
@@ -392,7 +419,7 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
             project_task_badge = self.card("todo").locator(".o_live_project_task").filter(has_text=task_name)
             expect(project_task_badge).to_be_visible()
             project_task_badge.scroll_into_view_if_needed()
-            self.capture_visual_screenshot("project-task-live-point")
+            self.capture_visual_screenshot("followup-task")
             return
         self.open_live(self.meeting_id)
         card = self.card("todo")
