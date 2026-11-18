@@ -1,1 +1,1 @@
-The English and Spanish follow-up guide now shows a linked Project task in its live agenda point, and the minutes preview screenshots show the agenda from its opening points with linked task details.
+The English and Spanish follow-up guide now shows a linked Project task opened from a live meeting follow-up, with realistic meeting, task, project and owner details.

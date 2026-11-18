@@ -142,6 +142,25 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
             )
 
     def test_related_followup_preview_links_project_task(self):
+        documentation_capture = bool(os.environ.get("MM_DOCUMENTATION_CAPTURE"))
+        spanish = self.effective_locale().lower().startswith("es")
+        capture_text = {
+            "project": "Lanzamiento Atlas" if spanish else "Atlas launch",
+            "task": (
+                "Revisar el presupuesto de temporada"
+                if spanish else "Review the seasonal budget"
+            ),
+            "meeting": "Seguimiento trimestral" if spanish else "Quarterly follow-up",
+            "point": "Coordinación del presupuesto" if spanish else "Budget coordination",
+            "followup": (
+                "Validar la propuesta presupuestaria"
+                if spanish else "Review the budget proposal"
+            ),
+            "description": (
+                "Comprobar el desglose de costes con el equipo financiero."
+                if spanish else "Confirm the cost breakdown with the finance team."
+            ),
+        }
         discussion_item = self.item_ids["discussion"]
         topic_id = self.record(
             "community.meeting.agenda.item", discussion_item, ["topic_id"]
@@ -150,13 +169,19 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         company_id = self.record(
             "community.meeting", self.meeting_id, ["company_id"]
         )["company_id"][0]
-        project_name = "Related follow-up project " + uuid.uuid4().hex[:6]
+        project_name = (
+            capture_text["project"]
+            if documentation_capture else "Related follow-up project " + uuid.uuid4().hex[:6]
+        )
         project_id = self.rpc(
             "project.project", "create",
             [{"name": project_name, "company_id": company_id}],
         )
         self.addCleanup(self.rpc, "project.project", "unlink", [[project_id]])
-        task_name = "Linked source task " + uuid.uuid4().hex[:6]
+        task_name = (
+            capture_text["task"]
+            if documentation_capture else "Linked source task " + uuid.uuid4().hex[:6]
+        )
         task_id = self.rpc(
             "project.task", "create",
             [{
@@ -168,7 +193,10 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         self.addCleanup(self.rpc, "project.task", "unlink", [[task_id]])
         outside_meeting_id = self.rpc(
             "community.meeting", "create",
-            [{"name": "Follow-up destination " + uuid.uuid4().hex[:6]}],
+            [{
+                "name": capture_text["meeting"] if documentation_capture else "Follow-up destination " + uuid.uuid4().hex[:6],
+                **({"start_datetime": "2026-10-22 10:00:00", "duration_minutes": 60} if documentation_capture else {}),
+            }],
         )
         self.addCleanup(
             self.rpc, "community.meeting", "action_cancel", [[outside_meeting_id]]
@@ -182,7 +210,7 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
             "community.meeting.agenda.item", "create",
             [{
                 "meeting_id": outside_meeting_id,
-                "name": "Promoted task point",
+                "name": capture_text["point"] if documentation_capture else "Promoted task point",
                 "kind": "discussion",
                 "agenda_type_id": outside_type,
             }],
@@ -192,8 +220,8 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
             [{
                 "meeting_id": outside_meeting_id,
                 "agenda_item_id": outside_item,
-                "name": "Promoted task follow-up",
-                "description": "Context from the original follow-up.",
+                "name": capture_text["followup"] if documentation_capture else "Promoted task follow-up",
+                "description": capture_text["description"] if documentation_capture else "Context from the original follow-up.",
                 "followup_kind": "project_task",
                 "responsible_user_ids": [(6, 0, [user_id])],
                 "project_task_ids": [(6, 0, [task_id])],
@@ -207,16 +235,29 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         self.open_live(self.meeting_id)
         card = self.card("discussion")
         chip = card.locator(
-            ".o_live_related_point", has_text="Promoted task follow-up"
+            ".o_live_related_point",
+            has_text=capture_text["followup"] if documentation_capture else "Promoted task follow-up"
         )
         chip.click()
         preview = card.get_by_role(
-            "region", name="Follow-up details: Promoted task follow-up"
+            "region",
+            name=(
+                "Follow-up details: " + capture_text["followup"]
+                if documentation_capture else "Follow-up details: Promoted task follow-up"
+            )
         )
         expect(preview).to_contain_text(task_name)
         expect(preview).to_contain_text(project_name)
-        expect(preview.get_by_role("button", name=self.ui_text("community_meetings_project", "Open Project task"))).to_be_visible()
-        preview.get_by_role("button", name=self.ui_text("community_meetings_project", "Open Project task")).click()
+        task_button = preview.get_by_role(
+            "button", name=self.ui_text("community_meetings_project", "Open Project task")
+        )
+        expect(task_button).to_be_visible()
+        if documentation_capture:
+            task_facts = preview.locator(".o_live_relation_tasks")
+            expect(task_facts).to_contain_text(project_name)
+            self.capture_checkpoint("followup-task", capture_target=preview)
+            return
+        task_button.click()
         dialog = self.page.locator(".o_dialog .o_form_view")
         expect(self.page.get_by_text(task_name, exact=True)).to_be_visible()
 
@@ -386,54 +427,6 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
             ],
         )
 
-        if documentation_capture:
-            self.open_live(self.meeting_id)
-            live_point = self.card("todo")
-            expand = live_point.locator(".o_live_expand")
-            if expand.get_attribute("aria-expanded") == "false":
-                expand.click()
-            project_task_badge = live_point.get_by_role(
-                "button", name=re.compile(re.escape(task_name))
-            )
-            expect(project_task_badge).to_be_visible()
-            expect(project_task_badge).to_have_class(
-                re.compile(r"\bo_live_project_task\b")
-            )
-            project_task_name = project_task_badge.locator(
-                ".o_live_project_task_name"
-            )
-            expect(project_task_name).to_have_text(task_name)
-            project_task_badge.scroll_into_view_if_needed()
-            live_point.scroll_into_view_if_needed()
-            self.page.goto(
-                "%s/web#model=project.task&id=%s&view_type=form" % (BASE_URL, task_id)
-            )
-            expect(self.page.locator(".o_form_view")).to_be_visible(timeout=30000)
-            expect(self.page.locator('.o_form_view .o_field_widget[name="name"] textarea')).to_have_value(followup_name)
-            expect(self.page.locator('.o_form_view .o_field_widget[name="project_id"] input')).to_have_value(project_name)
-            self.page.goto(
-                "%s/web#model=community.meeting&id=%s&view_type=form"
-                % (BASE_URL, self.meeting_id)
-            )
-            expect(self.page.locator(".o_form_view")).to_be_visible(timeout=30000)
-            task_tab = self.page.get_by_role("tab", name=self.ui_text("community_meetings", "Follow-up Actions"))
-            if not task_tab.count():
-                task_tab = self.page.get_by_role("tab", name=re.compile("Follow-up Actions|Acciones de seguimiento", re.I))
-            task_tab.click()
-            expect(self.page.locator('.o_field_widget[name="action_ids"]')).to_contain_text(followup_name)
-            expect(self.page.locator('.o_field_widget[name="action_ids"]')).to_contain_text(task_name)
-            self.capture_visual_screenshot("project-task")
-            self.open_live(self.meeting_id)
-            # Capture the linked task in the agenda card, where users open it.
-            live_point = self.card("todo")
-            project_task_button = live_point.get_by_role(
-                "button", name=re.compile(re.escape(task_name))
-            )
-            expect(project_task_button).to_be_visible()
-            project_task_button.scroll_into_view_if_needed()
-            live_point.evaluate("el => el.scrollIntoView({block: 'center'})")
-            self.capture_visual_screenshot("followup-task")
-            return
         self.open_live(self.meeting_id)
         card = self.card("todo")
         card.get_by_role("button", name=self.ui_text("community_meetings_project", "Create Project task")).click()
@@ -475,10 +468,16 @@ class ProjectMeetingBrowserChecks(FullMeetingBrowserChecks):
         )["project_task_ids"]
         self.assertEqual(linked, [task_id])
         self.open_live(self.meeting_id)
-        project_task_button = self.card("todo").get_by_role(
+        live_point = self.page.locator(".o_live_agenda_card").filter(
+            has_text=self.record(
+                "community.meeting.agenda.item", self.item_ids["todo"], ["name"]
+            )["name"]
+        )
+        project_task_button = live_point.get_by_role(
             "button", name=re.compile(re.escape(task_name))
         )
         expect(project_task_button).to_be_visible()
+        project_task_button.scroll_into_view_if_needed()
         project_task_button.click()
         task_dialog = self.page.locator(".o_dialog .o_form_view")
         expect(task_dialog).to_be_visible(timeout=30000)

@@ -4,7 +4,7 @@ Un **seguimiento** es el registro durable de "quién hace qué" que nace de un p
 de agenda. Sobrevive entre reuniones y mantiene la trazabilidad con su punto de
 origen.
 
-![Tarea de seguimiento](img/followup-task.png)
+![Tarea de Project enlazada desde un seguimiento en la reunión en vivo](../img/followup-task.png)
 
 ## Crear uno
 

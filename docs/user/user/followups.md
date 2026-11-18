@@ -3,7 +3,7 @@
 A **follow-up** is the durable "who does what" record born from an agenda point.
 It survives across meetings and keeps traceability to its origin point.
 
-![Follow-up task](img/followup-task.png)
+![A linked Project task opened from a follow-up in the live meeting](../img/followup-task.png)
 
 ## Creating one
 
