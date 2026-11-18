@@ -35,7 +35,7 @@ repos:
       - id: oca-gen-addon-readme
         exclude: ^(community_meetings|community_meetings_project|community_meetings_calendar|community_meetings_extension_demo)/readme/newsfragments/
         args:
-          [--addons-dir=., --repo-name=odoo-meetings-minutes, --branch=18.0, --org-name=oyale, --convert-fragments-to-markdown]
+          [--addons-dir=., --repo-name=odoo-meetings-minutes, --branch=18.0, --org-name=oyale, --convert-fragments-to-markdown, --if-source-changed]
         always_run: false
         files: ^(community_meetings|community_meetings_project|community_meetings_calendar|community_meetings_extension_demo)/(readme/.*|__manifest__\.py)$
       - id: oca-gen-metapackage
