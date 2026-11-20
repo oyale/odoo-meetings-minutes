@@ -67,7 +67,7 @@ def hold_meeting_in_live_agenda(context):
     )
     assert_meeting_form(context.page, context.meeting_name)
     context.page.get_by_role(
-        "button", name=context.browser_session.ui_text("community_meetings", "Open Meeting"), exact=True
+        "button", name=context.browser_session.ui_text("community_meetings", "Live meeting"), exact=True
     ).click()
     context.page.get_by_role(
         "button", name=context.browser_session.ui_text("community_meetings", "Start Meeting"), exact=True
