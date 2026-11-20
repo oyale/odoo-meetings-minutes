@@ -13,6 +13,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          fetch-tags: true
       - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
@@ -41,6 +42,16 @@ jobs:
             base="$PUSH_BASE"
           else
             base="$(git rev-parse HEAD^)"
+          fi
+          if ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
+            echo "Push base $base is unavailable (for example, after a force-push)."
+            if release_base="$(git describe --tags --abbrev=0 "$GITHUB_SHA" 2>/dev/null)"; then
+              base="$release_base"
+              echo "Checking all changes since the latest reachable release tag: $base"
+            else
+              base="$(git rev-parse HEAD^)"
+              echo "No reachable release tag; checking the current commit against $base"
+            fi
           fi
           echo "base=$base" >> "$GITHUB_OUTPUT"
       - name: Require a Towncrier fragment for each changed addon
