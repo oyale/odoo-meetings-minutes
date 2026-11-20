@@ -4,6 +4,21 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings Project 18.0.3.1.10 (2026-11-20)
+======================================================
+
+## Release notes
+
+### Bugfixes
+
+- Linked Project task names now appear on live meeting agenda follow-ups, alongside the Project task details shown in meeting forms and minutes previews.
+- Linked Project tasks in the live agenda now open from a compact, aligned action beside the follow-up type and status.
+
+### Improved Documentation
+
+- The English and Spanish browser documentation fixtures use representative project, task and meeting details instead of generic test labels.
+- The English and Spanish follow-up guide now shows a linked Project task opened from a live meeting follow-up, with realistic meeting, task, project and owner details.
+
 ## Community Meetings Project 18.0.3.1.9 (2026-11-05)
 =====================================================
 

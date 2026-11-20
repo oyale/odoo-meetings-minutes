@@ -1,1 +1,0 @@
-English and Spanish guides now show the complete point and proposal dialogs with realistic meeting details, a selected series and a named presenter. The discussion-history captures use notes from an earlier meeting as context.

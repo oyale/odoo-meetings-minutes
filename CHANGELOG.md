@@ -7,6 +7,57 @@ Each addon changelog starts with its first release prepared after this change;
 the combined history below retains the existing suite release notes.
 
 <!-- towncrier release notes start -->
+## Odoo Meetings Minutes 18.0.20261120.0 (2026-11-20)
+
+### Addon versions
+
+| Addon | Odoo module version |
+|---|---:|
+| [Community Meetings](community_meetings/CHANGELOG.md) | `18.0.6.2.13` |
+| [Calendar Integration](community_meetings_calendar/CHANGELOG.md) | `18.0.1.0.9` |
+| [Project Integration](community_meetings_project/CHANGELOG.md) | `18.0.3.1.10` |
+| [Extension Demo](community_meetings_extension_demo/CHANGELOG.md) | `18.0.1.0.1` |
+
+=====================================================
+
+## Community Meetings
+
+### Bugfixes
+
+- Draft and approved minutes show linked Project tasks beneath their follow-up in the agenda point, including the task due date and assignees when available.
+- Minutes previews opened while reviewing earlier pending minutes in a live meeting now keep an explicit return button, so reviewers can resume the live meeting after reading the preview.
+- The Live Meeting and Minutes Preview breadcrumbs now blend into their toolbars and keep the meeting link separated from the current screen title on narrow layouts.
+- The Spanish meeting-creation wizard now labels its planning step as “Planifica esta reunión” instead of asking users to cancel it.
+- The meeting form identifies its meeting screen as **Live meeting**, including when the screen is opened before or after the meeting itself.
+
+### Improved Documentation
+
+- English and Spanish guides now show the complete point and proposal dialogs with realistic meeting details, a selected series and a named presenter. The discussion-history captures use notes from an earlier meeting as context.
+- The English and Spanish guides use consistent company, meeting, and discussion examples in their screenshots.
+- The English and Spanish live meeting guides now use the labels shown on the meeting form for opening the meeting and previewing its minutes.
+## Calendar Integration
+
+### Bugfixes
+
+- Calendar event forms identify the link back to their meeting as **Live meeting**.
+
+### Improved Documentation
+
+- The English and Spanish Calendar guides now call the action that opens a meeting **Live meeting** and **Reunión en vivo**, matching the interface.
+## Project Integration
+
+### Bugfixes
+
+- Linked Project task names now appear on live meeting agenda follow-ups, alongside the Project task details shown in meeting forms and minutes previews.
+- Linked Project tasks in the live agenda now open from a compact, aligned action beside the follow-up type and status.
+
+### Improved Documentation
+
+- The English and Spanish browser documentation fixtures use representative project, task and meeting details instead of generic test labels.
+- The English and Spanish follow-up guide now shows a linked Project task opened from a live meeting follow-up, with realistic meeting, task, project and owner details.
+## Extension Demo
+
+No significant changes.
 ## Odoo Meetings Minutes 18.0.20261105.1 (2026-11-05)
 
 ### Addon versions

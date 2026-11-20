@@ -4,6 +4,19 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings Calendar 18.0.1.0.9 (2026-11-20)
+======================================================
+
+## Release notes
+
+### Bugfixes
+
+- Calendar event forms identify the link back to their meeting as **Live meeting**.
+
+### Improved Documentation
+
+- The English and Spanish Calendar guides now call the action that opens a meeting **Live meeting** and **Reunión en vivo**, matching the interface.
+
 ## Community Meetings Calendar 18.0.1.0.8 (2026-11-05)
 ======================================================
 

@@ -4,6 +4,25 @@ Addon release notes. For suite-wide summaries, see the [suite changelog](../CHAN
 
 <!-- towncrier release notes start -->
 
+## Community Meetings 18.0.6.2.13 (2026-11-20)
+==============================================
+
+## Release notes
+
+### Bugfixes
+
+- Draft and approved minutes show linked Project tasks beneath their follow-up in the agenda point, including the task due date and assignees when available.
+- Minutes previews opened while reviewing earlier pending minutes in a live meeting now keep an explicit return button, so reviewers can resume the live meeting after reading the preview.
+- The Live Meeting and Minutes Preview breadcrumbs now blend into their toolbars and keep the meeting link separated from the current screen title on narrow layouts.
+- The Spanish meeting-creation wizard now labels its planning step as “Planifica esta reunión” instead of asking users to cancel it.
+- The meeting form identifies its meeting screen as **Live meeting**, including when the screen is opened before or after the meeting itself.
+
+### Improved Documentation
+
+- English and Spanish guides now show the complete point and proposal dialogs with realistic meeting details, a selected series and a named presenter. The discussion-history captures use notes from an earlier meeting as context.
+- The English and Spanish guides use consistent company, meeting, and discussion examples in their screenshots.
+- The English and Spanish live meeting guides now use the labels shown on the meeting form for opening the meeting and previewing its minutes.
+
 ## Community Meetings 18.0.6.2.12 (2026-11-05)
 ==============================================
 
